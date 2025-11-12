@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 interface Vino {
@@ -55,14 +52,14 @@ const regionCoordinates: { [key: string]: [number, number] } = {
 const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState("");
-  const [showTokenInput, setShowTokenInput] = useState(true);
   const { toast } = useToast();
 
-  const initializeMap = (token: string) => {
-    if (!mapContainer.current) return;
+  const MAPBOX_TOKEN = "pk.eyJ1Ijoib2ZpY2lvc29zIiwiYSI6ImNtaHZubTFhcDAyOGIybHNneWtrNjY0NjcifQ.yVfJCOCYXbs6VrOkDWOQtg";
 
-    mapboxgl.accessToken = token;
+  const initializeMap = () => {
+    if (!mapContainer.current || map.current) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     try {
       map.current = new mapboxgl.Map({
@@ -83,12 +80,10 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       map.current.on('load', () => {
         addWineMarkers();
       });
-
-      setShowTokenInput(false);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Token de Mapbox inválido",
+        description: "Error al cargar el mapa",
         variant: "destructive",
       });
     }
@@ -154,62 +149,13 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     });
   };
 
-  const handleTokenSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mapboxToken.trim()) {
-      initializeMap(mapboxToken);
-    } else {
-      toast({
-        title: "Error",
-        description: "Por favor introduce un token de Mapbox válido",
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
+    initializeMap();
+    
     return () => {
       map.current?.remove();
     };
   }, []);
-
-  if (showTokenInput) {
-    return (
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Mapa Mundial de Vinos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleTokenSubmit} className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Para ver el mapa interactivo de los orígenes de nuestros vinos, necesitas un token público de Mapbox.
-                Consigue uno gratis en{" "}
-                <a 
-                  href="https://mapbox.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-accent hover:underline"
-                >
-                  mapbox.com
-                </a>
-              </p>
-              <Input
-                type="text"
-                placeholder="pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJjbGV4YW1wbGUifQ..."
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                className="mb-3"
-              />
-            </div>
-            <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
-              Cargar Mapa
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="mb-8">
