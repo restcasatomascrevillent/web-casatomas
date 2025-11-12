@@ -117,16 +117,32 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    /* Scroll suave en toda la aplicación */
+    scroll-behavior: smooth;
+    /* Prevenir scroll horizontal */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
   body {
     @apply bg-background text-foreground;
     /* Mejorar scroll en móvil */
     -webkit-overflow-scrolling: touch;
     overflow-y: scroll;
+    /* Prevenir scroll horizontal */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
   }
 
-  /* Scroll suave en toda la aplicación */
-  html {
-    scroll-behavior: smooth;
+  /* Prevenir scroll horizontal en todos los contenedores */
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 
   /* Mejorar el scroll en móvil */
@@ -144,6 +160,14 @@ All colors MUST be HSL.
   .mapboxgl-map {
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
+    /* Prevenir overflow */
+    max-width: 100% !important;
+  }
+
+  /* Asegurar que el canvas del mapa no cause overflow */
+  .mapboxgl-canvas-container,
+  .mapboxgl-canvas {
+    max-width: 100% !important;
   }
 
   /* Estilos mejorados para popups en móvil */
@@ -181,5 +205,16 @@ All colors MUST be HSL.
       width: 40px !important;
       height: 40px !important;
     }
+  }
+
+  /* Asegurar que ningún elemento cause overflow horizontal */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Prevenir que elementos en grid o flex causen overflow */
+  .container, section, div {
+    max-width: 100%;
   }
 }

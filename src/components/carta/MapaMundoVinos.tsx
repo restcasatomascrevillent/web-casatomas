@@ -298,14 +298,15 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   }, []);
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 w-full overflow-hidden">
       <h3 className="text-xl md:text-2xl font-bold text-center mb-3 md:mb-4 px-4">Origen de Nuestros Vinos</h3>
       <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base px-4">
         Toca los marcadores para ver los vinos de cada región
       </p>
       <div 
         ref={mapContainer} 
-        className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y"
+        className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
+        style={{ maxWidth: '100%', overflow: 'hidden' }}
       />
     </div>
   );
