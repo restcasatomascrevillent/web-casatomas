@@ -1,0 +1,631 @@
+{
+  "restaurant": {
+    "name": "Casa Tomás",
+    "address": "Carrer Santa Maria de la Cabeza, 2, Crevillent (Alicante)",
+    "source_url": "https://casatomas.buenacarta.com/#",
+    "collected_at": "2025-11-12T06:25:37"
+  },
+  "menu": [
+    {
+      "category": "NOVEDADES DEL DÍA",
+      "items": [
+        {
+          "name": "Setas silvestres a la parrilla",
+          "price_eur": 13.5
+        },
+        {
+          "name": "Berberechos",
+          "price_eur": 16.5
+        },
+        {
+          "name": "Sashimi de atún rojo con puré de tomate seco",
+          "price_eur": 22.5
+        },
+        {
+          "name": "Aguacate a la parrilla con pesto de cilantro, queso feta y olivas de kalamata",
+          "price_eur": 16.5
+        },
+        {
+          "name": "Alcachofas fritas",
+          "price_eur": 13.5
+        },
+        {
+          "name": "Gilda de antxoa del Cantábrico (unid.)",
+          "unit": "unidad",
+          "price_eur": 2.6
+        },
+        {
+          "name": "Tataki de chuleta de vaca, pimiento caramelizado y salsa de sésamo",
+          "price_eur": 19.9,
+          "allergens_note": "La salsa de sésamo contiene gluten y huevo."
+        },
+        {
+          "name": "Hígado de rape frito",
+          "price_eur": 14.5
+        },
+        {
+          "name": "Escarapota (kg)",
+          "unit": "kg",
+          "price_eur": 70.0
+        },
+        {
+          "name": "Salmonetes fritos (kg)",
+          "unit": "kg",
+          "price_eur": 55.0
+        }
+      ]
+    },
+    {
+      "category": "SNACK",
+      "items": [
+        {
+          "name": "Berberechos Peperete 30/40 piezas",
+          "price_eur": 46.0
+        },
+        {
+          "name": "Berberechos Peperete 20/30",
+          "price_eur": 59.0
+        },
+        {
+          "name": "El Navarrico Espárragos Extra",
+          "price_eur": 12.5
+        },
+        {
+          "name": "Mejillones Ramón Franco 7/10",
+          "price_eur": 13.8
+        },
+        {
+          "name": "P.f Almejas al natural Rías Gallegas",
+          "price_eur": 30.0
+        },
+        {
+          "name": "P.f Navajas al natural Rías Gallegas",
+          "price_eur": 17.5
+        },
+        {
+          "name": "P.f. Boquerón en aceite",
+          "price_eur": 6.5
+        },
+        {
+          "name": "P.f. Ventresca atún claro",
+          "price_eur": 7.9
+        },
+        {
+          "name": "Ventresca de atún rojo Herpac (grande)",
+          "price_eur": 28.5
+        },
+        {
+          "name": "Ventresca de atún rojo Herpac (pequeña)",
+          "price_eur": 14.5
+        },
+        {
+          "name": "Anchoas El Capricho - Santoña",
+          "price_eur": 26.5
+        },
+        {
+          "name": "Filetes de anchoa Asun Velar",
+          "price_eur": 22.5
+        },
+        {
+          "name": "Caviar oscietra 30 g",
+          "price_eur": 55.0
+        },
+        {
+          "name": "Mejillones Ramón Franco 6-8",
+          "price_eur": 16.5
+        },
+        {
+          "name": "Berberechos Peperetes 40/50",
+          "price_eur": 36.0
+        }
+      ]
+    },
+    {
+      "category": "SALAZONES",
+      "items": [
+        {
+          "name": "Bonito en salazón (100 g)",
+          "unit": "100 g",
+          "price_eur": 6.0
+        },
+        {
+          "name": "Hueva atún almadraba (100 g)",
+          "unit": "100 g",
+          "price_eur": 21.0
+        },
+        {
+          "name": "Hueva de maruca (100 g)",
+          "unit": "100 g",
+          "price_eur": 10.0
+        },
+        {
+          "name": "Hueva mujol (100 g)",
+          "unit": "100 g",
+          "price_eur": 13.5
+        },
+        {
+          "name": "Mojama (100 g)",
+          "unit": "100 g",
+          "price_eur": 10.0
+        }
+      ]
+    },
+    {
+      "category": "ENSALADAS",
+      "items": [
+        {
+          "name": "E. Salazones 1px",
+          "price_eur": 5.5
+        },
+        {
+          "name": "Ensalada mixta",
+          "price_eur": 15.5
+        },
+        {
+          "name": "Ensalada parmesano",
+          "price_eur": 12.9,
+          "description": "Ensalada con lechuga fresca (trocadero o Batavia), taquitos de jamón serrano, mix de frutos secos y escamas de parmesano.",
+          "allergens_note": "Puede contener trazas de gluten."
+        },
+        {
+          "name": "Tomate 6 anchoas",
+          "price_eur": 16.5
+        },
+        {
+          "name": "Tomate con bonito",
+          "price_eur": 15.5
+        },
+        {
+          "name": "Tomate con capellán",
+          "price_eur": 14.5
+        },
+        {
+          "name": "Tomate con ventresca de bonito",
+          "price_eur": 22.0
+        },
+        {
+          "name": "Tomate 4 anchoas",
+          "price_eur": 12.5
+        },
+        {
+          "name": "Tomate 8 anchoas",
+          "price_eur": 20.5
+        },
+        {
+          "name": "Tomate 10 anchoas",
+          "price_eur": 24.5
+        },
+        {
+          "name": "Tomate 12 anchoas",
+          "price_eur": 28.5
+        },
+        {
+          "name": "Tartar de atún rojo",
+          "price_eur": 20.95
+        },
+        {
+          "name": "Ensalada de perdiz en escabeche con foie, cebolla con virutas de jamón",
+          "price_eur": 17.5
+        }
+      ]
+    },
+    {
+      "category": "ENTRANTES FRÍOS",
+      "items": [
+        {
+          "name": "Ajo y tomate",
+          "price_eur": 2.9
+        },
+        {
+          "name": "Anchoa elaborada",
+          "price_eur": 2.3
+        },
+        {
+          "name": "Bonito en escabeche",
+          "price_eur": 19.5
+        },
+        {
+          "name": "Ensaladilla de marisco",
+          "price_eur": 8.75
+        },
+        {
+          "name": "Ensaladilla rusa",
+          "price_eur": 8.1
+        },
+        {
+          "name": "Jamón 100% bellota",
+          "price_eur": 26.0
+        },
+        {
+          "name": "Lomo Sánchez Romero",
+          "price_eur": 18.5
+        },
+        {
+          "name": "Pan de cristal",
+          "price_eur": 3.5
+        },
+        {
+          "name": "Pan gallego",
+          "price_eur": 3.0
+        },
+        {
+          "name": "Perdiz en escabeche",
+          "price_eur": 19.5
+        },
+        {
+          "name": "Queso curado de oveja",
+          "price_eur": 12.0
+        },
+        {
+          "name": "Queso trufa",
+          "price_eur": 16.0
+        },
+        {
+          "name": "Tartar de atún rojo",
+          "price_eur": 20.95
+        },
+        {
+          "name": "Tosta de atún rojo con trufa",
+          "price_eur": 8.2,
+          "allergens_note": "Disponible sin gluten con pan sin gluten (consultar)."
+        },
+        {
+          "name": "Cecina de wagyu",
+          "price_eur": 28.0
+        },
+        {
+          "name": "Salmón marinado con yema curada y caviar de cítricos",
+          "price_eur": 19.5
+        },
+        {
+          "name": "Ensaladilla de pulpo con pan al carbón",
+          "price_eur": 10.5
+        }
+      ]
+    },
+    {
+      "category": "ENTRANTES CALIENTES",
+      "items": [
+        {
+          "name": "Calamar rebozado",
+          "price_eur": 16.5,
+          "allergens_note": "Puede pedirse sin gluten; avise al camarero."
+        },
+        {
+          "name": "Croqueta de carrillera ibérica (ud.)",
+          "unit": "unidad",
+          "price_eur": 2.4
+        },
+        {
+          "name": "Croqueta de gamba roja al ajillo (ud.)",
+          "unit": "unidad",
+          "price_eur": 2.5
+        },
+        {
+          "name": "Croquetas de jamón ibérico (ud.)",
+          "unit": "unidad",
+          "price_eur": 2.2
+        },
+        {
+          "name": "Pulpo a la gallega",
+          "price_eur": 19.9
+        },
+        {
+          "name": "Pulpo a la parrilla de carbón sobre fondo de tomate asado a las brasas",
+          "price_eur": 19.5
+        },
+        {
+          "name": "Pulpo al horno estilo murciano",
+          "price_eur": 18.0
+        },
+        {
+          "name": "Pulpo rebozado con mahonesa hoisin y salsa kimchi",
+          "price_eur": 17.5
+        },
+        {
+          "name": "Revuelto de alcachofas crujientes con queso parmesano",
+          "price_eur": 13.5,
+          "description": "Finas láminas de alcachofas crujientes con parmesano y huevos de corral fritos que el camarero rompe en mesa."
+        },
+        {
+          "name": "Calamar Bahía plancha (kg)",
+          "unit": "kg",
+          "price_eur": 70.0
+        },
+        {
+          "name": "Cocochas de merluza al ajillo",
+          "price_eur": 22.8
+        },
+        {
+          "name": "Calamares encebollados al Albariño",
+          "price_eur": 15.5
+        },
+        {
+          "name": "Mollejas de cordero",
+          "price_eur": 18.4,
+          "description": "Salteadas con ajos tiernos."
+        }
+      ]
+    },
+    {
+      "category": "MARISCOS",
+      "items": [
+        {
+          "name": "Nécoras cocidas (100 g)",
+          "unit": "100 g",
+          "price_eur": 11.0
+        },
+        {
+          "name": "Bogavante de la ría (kg)",
+          "unit": "kg",
+          "price_eur": 95.0
+        },
+        {
+          "name": "Buey de la ría (kg)",
+          "unit": "kg",
+          "price_eur": 58.0
+        },
+        {
+          "name": "Cañaíllas (100 g)",
+          "unit": "100 g",
+          "price_eur": 10.0
+        },
+        {
+          "name": "Cigala (100 g)",
+          "unit": "100 g",
+          "price_eur": 16.0
+        },
+        {
+          "name": "Navajas",
+          "price_eur": 15.5
+        },
+        {
+          "name": "Ostras",
+          "price_eur": 4.9,
+          "description": "Disponemos de ostras gallegas y francesas (royal n.º 2)."
+        },
+        {
+          "name": "Quisquilla de la bahía (100 g)",
+          "unit": "100 g",
+          "price_eur": 13.0
+        },
+        {
+          "name": "Zamburiñas (ud.)",
+          "unit": "unidad",
+          "price_eur": 2.95
+        },
+        {
+          "name": "Almeja Carril (100 g)",
+          "unit": "100 g",
+          "price_eur": 19.5
+        },
+        {
+          "name": "Almeja gallega plancha",
+          "price_eur": 18.25
+        },
+        {
+          "name": "Almejas marinera",
+          "price_eur": 19.0
+        },
+        {
+          "name": "Carabinero (100 g)",
+          "unit": "100 g",
+          "price_eur": 23.0
+        },
+        {
+          "name": "Gamba blanca (100 g)",
+          "unit": "100 g",
+          "price_eur": 13.0
+        },
+        {
+          "name": "Gamba roja (100 g)",
+          "unit": "100 g",
+          "price_eur": 25.0
+        },
+        {
+          "name": "Langosta (kg)",
+          "unit": "kg",
+          "price_eur": 140.0
+        },
+        {
+          "name": "Ostras gallegas",
+          "price_eur": 4.9
+        }
+      ]
+    },
+    {
+      "category": "ARROCES",
+      "items": [
+        {
+          "name": "Arroz meloso de bogavante",
+          "price_eur": 25.5
+        },
+        {
+          "name": "Arroz meloso de langosta",
+          "price_eur": 28.5
+        },
+        {
+          "name": "Arroz meloso con mero",
+          "price_eur": 24.0
+        },
+        {
+          "name": "Arroz meloso de rape",
+          "price_eur": 21.0
+        },
+        {
+          "name": "Arroz meloso con corvina",
+          "price_eur": 21.0
+        }
+      ]
+    },
+    {
+      "category": "PESCADOS",
+      "items": [
+        {
+          "name": "Atún ijada (kg)",
+          "unit": "kg",
+          "price_eur": 80.0
+        },
+        {
+          "name": "Corvina salvaje (kg)",
+          "unit": "kg",
+          "price_eur": 70.0
+        },
+        {
+          "name": "Denton (kg)",
+          "unit": "kg",
+          "price_eur": 85.0
+        },
+        {
+          "name": "Dorada salvaje (kg)",
+          "unit": "kg",
+          "price_eur": 80.0
+        },
+        {
+          "name": "Gallo Pedro (kg)",
+          "unit": "kg",
+          "price_eur": 80.0
+        },
+        {
+          "name": "Lenguado salvaje (kg)",
+          "unit": "kg",
+          "price_eur": 75.0
+        },
+        {
+          "name": "Lubina salvaje (kg)",
+          "unit": "kg",
+          "price_eur": 78.0
+        },
+        {
+          "name": "Rape a la plancha",
+          "price_eur": 23.0
+        },
+        {
+          "name": "Rape con ajetes tiernos",
+          "price_eur": 22.0
+        },
+        {
+          "name": "Rodaballo gallego (kg)",
+          "unit": "kg",
+          "price_eur": 90.0
+        },
+        {
+          "name": "Mero del Mediterráneo (kg)",
+          "unit": "kg",
+          "price_eur": 85.0
+        }
+      ]
+    },
+    {
+      "category": "CARNES",
+      "items": [
+        {
+          "name": "Chuletón vaca madurada 70 días (kg)",
+          "unit": "kg",
+          "price_eur": 85.0
+        },
+        {
+          "name": "Chuletón ternera (kg)",
+          "unit": "kg",
+          "price_eur": 69.0
+        },
+        {
+          "name": "Chuletón T-bone (kg)",
+          "unit": "kg",
+          "price_eur": 75.0
+        },
+        {
+          "name": "Entrecotte gallego",
+          "price_eur": 24.5
+        },
+        {
+          "name": "Paletilla asada al estilo tradicional",
+          "price_eur": 27.0
+        },
+        {
+          "name": "Pluma de bellota 5J",
+          "price_eur": 23.0
+        },
+        {
+          "name": "Solomillo de ternera con foie y salsa PX",
+          "price_eur": 27.9
+        },
+        {
+          "name": "Solomillo gallego",
+          "price_eur": 24.5
+        },
+        {
+          "name": "Solomillo trinchado salteado con ajetes",
+          "price_eur": 24.5
+        }
+      ]
+    },
+    {
+      "category": "POSTRES",
+      "items": [
+        {
+          "name": "Arroz con leche",
+          "price_eur": 5.0
+        },
+        {
+          "name": "Caña gallega (2 und.)",
+          "price_eur": 5.0
+        },
+        {
+          "name": "Coulant de chocolate",
+          "price_eur": 7.0,
+          "allergens_note": "Elaborado sin gluten; la galleta base del helado lleva gluten. Puede contener trazas de cacahuetes y frutos de cáscara."
+        },
+        {
+          "name": "Crème brûlée con helado de yema tostada",
+          "price_eur": 8.0
+        },
+        {
+          "name": "Flan",
+          "price_eur": 5.5
+        },
+        {
+          "name": "Fruta",
+          "price_eur": 5.0
+        },
+        {
+          "name": "Helado (2 und.)",
+          "price_eur": 6.5,
+          "description": "Sabores: turrón, vainilla, yema tostada, chocolate, limón, frambuesa, mantecado.",
+          "allergens_note": "Para los alérgenos consultar al personal del establecimiento."
+        },
+        {
+          "name": "Milhoja de hojaldre caramelizado con crema de limón y merengue",
+          "price_eur": 7.5,
+          "allergens_note": "Puede contener trazas de cacahuetes."
+        },
+        {
+          "name": "Sorbete (limón, frambuesa)",
+          "price_eur": 5.5
+        },
+        {
+          "name": "Tarta de chocolate con galletas",
+          "price_eur": 6.0,
+          "allergens_note": "Puede contener trazas de cacahuetes y frutos de cáscara."
+        },
+        {
+          "name": "Tarta de queso de cabra con helado de frambuesa",
+          "price_eur": 7.5
+        },
+        {
+          "name": "Tarta Santiago",
+          "price_eur": 5.5
+        },
+        {
+          "name": "Torrija de brioche de mantequilla con crema de turrón",
+          "price_eur": 7.5,
+          "description": "Brioche 100% mantequilla, leche merengada y caramelización con azúcar moreno."
+        },
+        {
+          "name": "Couland de pistacho con helado de yogurt",
+          "price_eur": 8.5
+        }
+      ]
+    }
+  ]
+}
