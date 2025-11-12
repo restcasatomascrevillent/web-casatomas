@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Receipt, Plus, Minus } from "lucide-react";
-import { motion } from "framer-motion";
+import { Trash2, Receipt, Plus, Minus, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PedidoItem {
   name: string;
@@ -17,6 +17,9 @@ interface PedidoItem {
 const PreviewPedido = () => {
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [showBanner, setShowBanner] = useState(() => {
+    return localStorage.getItem('hidePedidoBanner') !== 'true';
+  });
 
   useEffect(() => {
     const loadPedido = () => {
@@ -40,6 +43,11 @@ const PreviewPedido = () => {
   const clearPedido = () => {
     setPedido([]);
     localStorage.setItem('pedido', JSON.stringify([]));
+  };
+
+  const dismissBanner = () => {
+    setShowBanner(false);
+    localStorage.setItem('hidePedidoBanner', 'true');
   };
 
   const updateCantidad = (index: number, newCantidad: number) => {
@@ -86,6 +94,33 @@ const PreviewPedido = () => {
 
   return (
     <>
+      {/* Banner informativo */}
+      <AnimatePresence>
+        {showBanner && pedido.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full mx-4"
+          >
+            <div className="bg-accent text-accent-foreground rounded-lg shadow-lg p-4 flex items-start gap-3">
+              <Receipt className="w-5 h-5 mt-0.5 flex-shrink-0" />
+              <p className="text-sm flex-1">
+                Tu pedido está guardado. Toca el botón flotante para ver y editar el ticket completo.
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={dismissBanner}
+                className="h-6 w-6 p-0 hover:bg-accent-foreground/10"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Botón flotante */}
       {pedido.length > 0 && (
         <Dialog open={isTicketOpen} onOpenChange={setIsTicketOpen}>
