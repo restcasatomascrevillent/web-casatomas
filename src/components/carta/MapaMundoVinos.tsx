@@ -134,20 +134,34 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     mapboxgl.accessToken = MAPBOX_TOKEN;
     
     try {
+      // Detectar si es móvil
+      const isMobile = window.innerWidth < 768;
+      
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        center: [0, 30],
-        zoom: 1.5,
+        center: isMobile ? [0, 20] : [0, 30],
+        zoom: isMobile ? 1 : 1.5,
         projection: 'mercator' as any,
+        // Mejorar la experiencia táctil en móvil
+        touchZoomRotate: true,
+        touchPitch: false,
+        dragRotate: false,
       });
 
+      // Controles de navegación adaptados a móvil
       map.current.addControl(
         new mapboxgl.NavigationControl({
-          visualizePitch: true,
+          visualizePitch: false,
+          showCompass: !isMobile,
         }),
         'top-right'
       );
+
+      // Deshabilitar scroll zoom en móvil para no interferir con el scroll de la página
+      if (isMobile) {
+        map.current.scrollZoom.disable();
+      }
 
       map.current.on('load', () => {
         addWineMarkers();
@@ -165,6 +179,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     if (!map.current) return;
 
     const regionCount: { [key: string]: { count: number; vinos: Vino[] } } = {};
+    const isMobile = window.innerWidth < 768;
 
     vinos.forEach(vino => {
       const region = vino.ubicacion_region;
@@ -180,12 +195,15 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     Object.entries(regionCount).forEach(([region, data]) => {
       const coords = regionCoordinates[region];
       if (coords && map.current) {
+        const markerSize = isMobile ? 35 : 40;
+        const fontSize = isMobile ? 12 : 14;
+        
         const el = document.createElement('div');
         el.className = 'wine-marker';
         el.style.cssText = `
           background-color: hsl(var(--accent));
-          width: 40px;
-          height: 40px;
+          width: ${markerSize}px;
+          height: ${markerSize}px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -195,7 +213,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           cursor: pointer;
           border: 3px solid white;
           box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          font-size: 14px;
+          font-size: ${fontSize}px;
         `;
         el.textContent = data.count.toString();
 
@@ -204,22 +222,22 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           const hasMore = data.vinos.length > 5;
           
           return `
-            <div style="padding: 12px; max-height: 400px; overflow-y: auto; min-width: 250px;">
-              <h3 style="font-weight: bold; margin-bottom: 8px; color: #b6842f; font-size: 16px;">${region}</h3>
-              <p style="margin-bottom: 12px; color: #686461; font-size: 13px; font-weight: 600;">${data.count} ${data.count === 1 ? 'vino' : 'vinos'}</p>
-              <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="padding: ${isMobile ? '10px' : '12px'}; max-height: ${isMobile ? '300px' : '400px'}; overflow-y: auto; min-width: ${isMobile ? '200px' : '250px'};">
+              <h3 style="font-weight: bold; margin-bottom: 8px; color: #b6842f; font-size: ${isMobile ? '14px' : '16px'};">${region}</h3>
+              <p style="margin-bottom: 12px; color: #686461; font-size: ${isMobile ? '12px' : '13px'}; font-weight: 600;">${data.count} ${data.count === 1 ? 'vino' : 'vinos'}</p>
+              <div style="display: flex; flex-direction: column; gap: ${isMobile ? '6px' : '8px'};">
                 ${displayVinos.map(vino => `
-                  <div style="padding: 8px; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #b6842f;">
-                    <p style="font-weight: 600; font-size: 13px; color: #363e45; margin-bottom: 4px;">${vino.nombre}</p>
-                    ${vino.denominacion_origen ? `<p style="font-size: 11px; color: #988b81; margin-bottom: 4px;">${vino.denominacion_origen}</p>` : ''}
-                    <p style="font-size: 14px; color: #b6842f; font-weight: bold;">${vino.precio_eur}€</p>
+                  <div style="padding: ${isMobile ? '6px' : '8px'}; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #b6842f;">
+                    <p style="font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; color: #363e45; margin-bottom: 4px;">${vino.nombre}</p>
+                    ${vino.denominacion_origen ? `<p style="font-size: ${isMobile ? '10px' : '11px'}; color: #988b81; margin-bottom: 4px;">${vino.denominacion_origen}</p>` : ''}
+                    <p style="font-size: ${isMobile ? '13px' : '14px'}; color: #b6842f; font-weight: bold;">${vino.precio_eur}€</p>
                   </div>
                 `).join('')}
               </div>
               ${hasMore && !showAll ? `
                 <button 
                   id="show-all-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}" 
-                  style="margin-top: 12px; width: 100%; padding: 8px; background: #b6842f; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;"
+                  style="margin-top: 12px; width: 100%; padding: ${isMobile ? '10px' : '8px'}; background: #b6842f; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; -webkit-tap-highlight-color: transparent;"
                 >
                   Ver todos los ${data.vinos.length} vinos
                 </button>
@@ -227,7 +245,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
               ${showAll && hasMore ? `
                 <button 
                   id="show-less-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}" 
-                  style="margin-top: 12px; width: 100%; padding: 8px; background: #686461; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;"
+                  style="margin-top: 12px; width: 100%; padding: ${isMobile ? '10px' : '8px'}; background: #686461; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; -webkit-tap-highlight-color: transparent;"
                 >
                   Ver menos
                 </button>
@@ -237,9 +255,12 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         };
 
         const popup = new mapboxgl.Popup({ 
-          offset: 25,
-          maxWidth: '350px',
-          className: 'wine-popup'
+          offset: isMobile ? 20 : 25,
+          maxWidth: isMobile ? '280px' : '350px',
+          className: 'wine-popup',
+          closeButton: true,
+          closeOnClick: false,
+          focusAfterOpen: false,
         }).setHTML(createPopupContent(false));
 
         // Handle button clicks in popup
@@ -278,13 +299,13 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
 
   return (
     <div className="mb-8">
-      <h3 className="text-2xl font-bold text-center mb-4">Origen de Nuestros Vinos</h3>
-      <p className="text-center text-muted-foreground mb-6">
-        Haz clic en los marcadores para ver los vinos de cada región
+      <h3 className="text-xl md:text-2xl font-bold text-center mb-3 md:mb-4 px-4">Origen de Nuestros Vinos</h3>
+      <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base px-4">
+        Toca los marcadores para ver los vinos de cada región
       </p>
       <div 
         ref={mapContainer} 
-        className="w-full h-[500px] rounded-lg shadow-xl border-2 border-border"
+        className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y"
       />
     </div>
   );

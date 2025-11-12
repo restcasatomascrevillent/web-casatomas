@@ -119,5 +119,67 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    /* Mejorar scroll en móvil */
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+  }
+
+  /* Scroll suave en toda la aplicación */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Mejorar el scroll en móvil */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Optimizar interacciones táctiles */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Mejorar rendimiento del mapa en móvil */
+  .mapboxgl-map {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Estilos mejorados para popups en móvil */
+  .mapboxgl-popup {
+    max-width: 90vw !important;
+  }
+
+  .mapboxgl-popup-content {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  }
+
+  .mapboxgl-popup-close-button {
+    font-size: 24px !important;
+    padding: 8px 12px !important;
+    color: hsl(var(--accent)) !important;
+  }
+
+  @media (max-width: 768px) {
+    .mapboxgl-popup-close-button {
+      font-size: 28px !important;
+      padding: 10px 14px !important;
+    }
+  }
+
+  /* Mejorar controles de navegación del mapa en móvil */
+  .mapboxgl-ctrl-group button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  @media (max-width: 768px) {
+    .mapboxgl-ctrl-group button {
+      width: 40px !important;
+      height: 40px !important;
+    }
   }
 }
