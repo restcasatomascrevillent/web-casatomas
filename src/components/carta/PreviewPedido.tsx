@@ -20,6 +20,15 @@ const PreviewPedido = () => {
   const [showBanner, setShowBanner] = useState(() => {
     return localStorage.getItem('hidePedidoBanner') !== 'true';
   });
+  const [showTooltip, setShowTooltip] = useState(true);
+
+  useEffect(() => {
+    // Ocultar el tooltip después de 5 segundos
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const loadPedido = () => {
@@ -130,6 +139,25 @@ const PreviewPedido = () => {
               animate={{ scale: 1 }}
               className="fixed bottom-6 right-6 z-50"
             >
+              {/* Tooltip/bocadillo */}
+              <AnimatePresence>
+                {showTooltip && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute bottom-full right-0 mb-3 w-48"
+                  >
+                    <div className="bg-accent text-accent-foreground rounded-lg shadow-xl p-3 relative">
+                      <p className="text-sm font-medium text-center">
+                        Aquí se ve la previsualización
+                      </p>
+                      {/* Flecha del bocadillo */}
+                      <div className="absolute -bottom-2 right-6 w-4 h-4 bg-accent transform rotate-45"></div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <Button
                 size="lg"
                 className="h-14 w-14 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground"
