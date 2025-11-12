@@ -7,7 +7,11 @@ import cartaData from "@/data/carta.json";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
-const CartaPlatos = () => {
+interface CartaPlatosProps {
+  showAddButton: boolean;
+}
+
+const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { toast } = useToast();
@@ -48,66 +52,70 @@ const CartaPlatos = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-4">
+        <div className="relative max-w-md mx-auto w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
             placeholder="Buscar platos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 py-6 text-lg"
           />
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"}
+              onClick={() => setSelectedCategory(category)}
+              className={`rounded-full ${selectedCategory === category ? "bg-accent hover:bg-accent/90" : ""}`}
+            >
+              {category === "all" ? "Todos" : category}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Category Filters */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <Button
-            key={category}
-            variant={selectedCategory === category ? "default" : "outline"}
-            onClick={() => setSelectedCategory(category)}
-            className={selectedCategory === category ? "bg-accent hover:bg-accent/90" : ""}
-          >
-            {category === "all" ? "Todos" : category}
-          </Button>
-        ))}
-      </div>
-
       {/* Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
+            transition={{ duration: 0.4, delay: index * 0.03 }}
           >
-            <Card className="h-full hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg">{item.name}</CardTitle>
+            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl leading-tight">{item.name}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-2">{item.category}</p>
+              <CardContent className="space-y-3">
+                <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.category}</p>
                 {item.allergens_note && (
-                  <p className="text-xs text-destructive italic mb-2">{item.allergens_note}</p>
+                  <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
+                    {item.allergens_note}
+                  </p>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between items-center">
-                <span className="text-xl font-bold text-accent">
+              <CardFooter className="flex justify-between items-center pt-4 border-t">
+                <span className="text-2xl font-bold text-accent">
                   {item.price_eur}€
-                  {item.unit && ` / ${item.unit}`}
+                  {item.unit && <span className="text-sm font-normal text-muted-foreground"> / {item.unit}</span>}
                 </span>
-                <Button
-                  size="sm"
-                  onClick={() => addToPedido(item)}
-                  className="bg-accent hover:bg-accent/90"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Añadir
-                </Button>
+                {showAddButton && (
+                  <Button
+                    size="sm"
+                    onClick={() => addToPedido(item)}
+                    className="bg-accent hover:bg-accent/90 rounded-full px-4"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Añadir
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           </motion.div>
@@ -115,8 +123,8 @@ const CartaPlatos = () => {
       </div>
 
       {filteredItems.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No se encontraron platos con los filtros seleccionados
+        <div className="text-center py-16 text-muted-foreground">
+          <p className="text-xl">No se encontraron platos con los filtros seleccionados</p>
         </div>
       )}
     </div>

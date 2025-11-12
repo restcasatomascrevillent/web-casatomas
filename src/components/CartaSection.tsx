@@ -1,10 +1,16 @@
 import { motion } from "framer-motion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { UtensilsCrossed, Wine, Receipt } from "lucide-react";
 import CartaPlatos from "./carta/CartaPlatos";
 import CartaVinos from "./carta/CartaVinos";
 import PreviewPedido from "./carta/PreviewPedido";
 
+type Section = "platos" | "vinos" | "pedido" | null;
+
 const CartaSection = () => {
+  const [activeSection, setActiveSection] = useState<Section>(null);
+
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
       <motion.div
@@ -21,25 +27,86 @@ const CartaSection = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="platos" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
-            <TabsTrigger value="platos">Platos</TabsTrigger>
-            <TabsTrigger value="vinos">Vinos</TabsTrigger>
-            <TabsTrigger value="preview">Mi Pedido</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="platos">
-            <CartaPlatos />
-          </TabsContent>
-          
-          <TabsContent value="vinos">
+        {/* Botones principales */}
+        <div className="flex flex-col items-center gap-6 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              size="lg"
+              onClick={() => setActiveSection(activeSection === "platos" ? null : "platos")}
+              className={`px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "platos" 
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
+                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              }`}
+            >
+              <UtensilsCrossed className="w-5 h-5 mr-2" />
+              Carta de Platos
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => setActiveSection(activeSection === "vinos" ? null : "vinos")}
+              className={`px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "vinos" 
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
+                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              }`}
+            >
+              <Wine className="w-5 h-5 mr-2" />
+              Carta de Vinos
+            </Button>
+          </div>
+
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => setActiveSection(activeSection === "pedido" ? null : "pedido")}
+            className={`px-8 py-6 text-lg font-semibold rounded-full border-2 transition-all duration-300 hover:scale-105 ${
+              activeSection === "pedido" 
+                ? "bg-accent/10 border-accent text-accent" 
+                : "border-border"
+            }`}
+          >
+            <Receipt className="w-5 h-5 mr-2" />
+            Mi Pedido
+          </Button>
+        </div>
+
+        {/* Contenido de las secciones */}
+        {activeSection === "platos" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <CartaPlatos showAddButton={false} />
+          </motion.div>
+        )}
+
+        {activeSection === "vinos" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <CartaVinos />
-          </TabsContent>
-          
-          <TabsContent value="preview">
-            <PreviewPedido />
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        )}
+
+        {activeSection === "pedido" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-center mb-6">Arma tu pedido</h3>
+              <CartaPlatos showAddButton={true} />
+            </div>
+            <div className="mt-12">
+              <PreviewPedido />
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </section>
   );

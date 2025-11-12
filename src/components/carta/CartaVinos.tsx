@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import MapaMundi from "./MapaMundi";
+import MapaMundoVinos from "./MapaMundoVinos";
 
 const CartaVinos = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,7 +84,7 @@ const CartaVinos = () => {
 
   if (isAdult === false) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-16">
         <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
         <p className="text-xl text-muted-foreground">
           Lo sentimos, debes ser mayor de 18 años para ver esta sección
@@ -96,64 +96,64 @@ const CartaVinos = () => {
   return (
     <div className="space-y-8">
       {/* Mapa Mundial */}
-      <MapaMundi vinos={vinosData.menu.flatMap(cat => cat.items)} />
+      <MapaMundoVinos vinos={vinosData.menu.flatMap(cat => cat.items)} />
 
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-4">
+        <div className="relative max-w-md mx-auto w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
             placeholder="Buscar vinos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 py-6 text-lg"
           />
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? "default" : "outline"}
+              onClick={() => setSelectedCategory(category)}
+              className={`rounded-full ${selectedCategory === category ? "bg-accent hover:bg-accent/90" : ""}`}
+            >
+              {category === "all" ? "Todos" : category}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Category Filters */}
-      <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <Button
-            key={category}
-            variant={selectedCategory === category ? "default" : "outline"}
-            onClick={() => setSelectedCategory(category)}
-            className={selectedCategory === category ? "bg-accent hover:bg-accent/90" : ""}
-          >
-            {category === "all" ? "Todos" : category}
-          </Button>
-        ))}
-      </div>
-
       {/* Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
+            transition={{ duration: 0.4, delay: index * 0.03 }}
           >
-            <Card className="h-full hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-start gap-2">
+            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl flex items-start gap-2 leading-tight">
                   <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
                   <span>{item.name}</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="text-sm font-semibold text-muted-foreground">{item.category}</p>
+              <CardContent className="space-y-3">
+                <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.category}</p>
                 {item.denominacion_origen && (
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-medium">DO:</span> {item.denominacion_origen}
+                    <span className="font-semibold">DO:</span> {item.denominacion_origen}
                   </p>
                 )}
                 {item.ubicacion && (
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-medium">Origen:</span> {item.ubicacion.region}, {item.ubicacion.pais}
+                    <span className="font-semibold">Origen:</span> {item.ubicacion.region}, {item.ubicacion.pais}
                   </p>
                 )}
-                <p className="text-2xl font-bold text-accent mt-4">
+                <p className="text-2xl font-bold text-accent pt-2">
                   {item.price_eur}€
                 </p>
               </CardContent>
@@ -163,8 +163,8 @@ const CartaVinos = () => {
       </div>
 
       {filteredItems.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No se encontraron vinos con los filtros seleccionados
+        <div className="text-center py-16 text-muted-foreground">
+          <p className="text-xl">No se encontraron vinos con los filtros seleccionados</p>
         </div>
       )}
     </div>
