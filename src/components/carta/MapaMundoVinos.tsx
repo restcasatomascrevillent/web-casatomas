@@ -4,13 +4,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useToast } from "@/hooks/use-toast";
 
 interface Vino {
-  name: string;
-  price_eur: number;
+  nombre: string;
+  precio_eur: number;
   denominacion_origen?: string;
-  ubicacion?: {
-    pais: string;
-    region: string;
-  };
+  ubicacion_pais?: string;
+  ubicacion_region?: string;
 }
 
 interface MapaMundoVinosProps {
@@ -169,8 +167,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     const regionCount: { [key: string]: { count: number; vinos: Vino[] } } = {};
 
     vinos.forEach(vino => {
-      if (vino.ubicacion) {
-        const region = vino.ubicacion.region;
+      const region = vino.ubicacion_region;
+      if (region) {
         if (!regionCount[region]) {
           regionCount[region] = { count: 0, vinos: [] };
         }
@@ -212,9 +210,9 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
               <div style="display: flex; flex-direction: column; gap: 8px;">
                 ${displayVinos.map(vino => `
                   <div style="padding: 8px; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #b6842f;">
-                    <p style="font-weight: 600; font-size: 13px; color: #363e45; margin-bottom: 4px;">${vino.name}</p>
+                    <p style="font-weight: 600; font-size: 13px; color: #363e45; margin-bottom: 4px;">${vino.nombre}</p>
                     ${vino.denominacion_origen ? `<p style="font-size: 11px; color: #988b81; margin-bottom: 4px;">${vino.denominacion_origen}</p>` : ''}
-                    <p style="font-size: 14px; color: #b6842f; font-weight: bold;">${vino.price_eur}€</p>
+                    <p style="font-size: 14px; color: #b6842f; font-weight: bold;">${vino.precio_eur}€</p>
                   </div>
                 `).join('')}
               </div>

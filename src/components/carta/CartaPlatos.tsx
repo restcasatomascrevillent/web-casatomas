@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Plus } from "lucide-react";
-import cartaData from "@/data/carta.json";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface CartaPlatosProps {
   showAddButton: boolean;
@@ -14,32 +15,57 @@ interface CartaPlatosProps {
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [platos, setPlatos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const categories = useMemo(() => {
-    return ["all", ...cartaData.menu.map(cat => cat.category)];
+  useEffect(() => {
+    fetchPlatos();
   }, []);
 
+  const fetchPlatos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('platos')
+        .select('*')
+        .eq('activado', true)
+        .order('categoria', { ascending: true })
+        .order('orden', { ascending: true });
+
+      if (error) throw error;
+      setPlatos(data || []);
+    } catch (error) {
+      console.error('Error fetching platos:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los platos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set(platos.map(p => p.categoria));
+    return ["all", ...Array.from(uniqueCategories)];
+  }, [platos]);
+
   const filteredItems = useMemo(() => {
-    let items = cartaData.menu.flatMap(category => 
-      category.items.map(item => ({
-        ...item,
-        category: category.category
-      }))
-    );
+    let items = platos;
 
     if (selectedCategory !== "all") {
-      items = items.filter(item => item.category === selectedCategory);
+      items = items.filter(item => item.categoria === selectedCategory);
     }
 
     if (searchTerm) {
       items = items.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, platos]);
 
   const addToPedido = (item: any) => {
     const pedido = JSON.parse(localStorage.getItem('pedido') || '[]');
@@ -47,9 +73,17 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     localStorage.setItem('pedido', JSON.stringify(pedido));
     toast({
       title: "Añadido al pedido",
-      description: `${item.name} añadido a tu preview de pedido`,
+      description: `${item.nombre} añadido a tu preview de pedido`,
     });
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-xl text-muted-foreground">Cargando carta...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -84,27 +118,44 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => (
           <motion.div
-            key={index}
+            key={item.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.03 }}
           >
             <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="pb-4">
-                <CardTitle className="text-xl leading-tight">{item.name}</CardTitle>
+                <CardTitle className="text-xl leading-tight">{item.nombre}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.category}</p>
-                {item.allergens_note && (
+                <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.categoria}</p>
+                {item.descripcion && (
+                  <p className="text-sm text-muted-foreground">{item.descripcion}</p>
+                )}
+                {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
+                  <div className="flex flex-wrap gap-1">
+                    {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
+                      <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
+                        {alergeno}
+                      </Badge>
+                    ))}
+                    {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
+                      <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
+                        {alergeno}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {item.alergenos_notas && (
                   <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
-                    {item.allergens_note}
+                    {item.alergenos_notas}
                   </p>
                 )}
               </CardContent>
               <CardFooter className="flex justify-between items-center pt-4 border-t">
                 <span className="text-2xl font-bold text-accent">
-                  {item.price_eur}€
-                  {item.unit && <span className="text-sm font-normal text-muted-foreground"> / {item.unit}</span>}
+                  {item.precio_eur}€
+                  {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
                 </span>
                 {showAddButton && (
                   <Button

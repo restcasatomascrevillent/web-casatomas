@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Wine, AlertCircle } from "lucide-react";
-import vinosData from "@/data/vinos.json";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -13,37 +12,66 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MapaMundoVinos from "./MapaMundoVinos";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const CartaVinos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
   const [showAgeDialog, setShowAgeDialog] = useState(true);
+  const [vinos, setVinos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const categories = useMemo(() => {
-    return ["all", ...vinosData.menu.map(cat => cat.category)];
+  useEffect(() => {
+    fetchVinos();
   }, []);
 
+  const fetchVinos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vinos')
+        .select('*')
+        .eq('activado', true)
+        .order('categoria', { ascending: true })
+        .order('orden', { ascending: true });
+
+      if (error) throw error;
+      setVinos(data || []);
+    } catch (error) {
+      console.error('Error fetching vinos:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los vinos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set(vinos.map(v => v.categoria));
+    return ["all", ...Array.from(uniqueCategories)];
+  }, [vinos]);
+
   const filteredItems = useMemo(() => {
-    let items = vinosData.menu.flatMap(category => 
-      category.items.map(item => ({
-        ...item,
-        category: category.category
-      }))
-    );
+    let items = vinos;
 
     if (selectedCategory !== "all") {
-      items = items.filter(item => item.category === selectedCategory);
+      items = items.filter(item => item.categoria === selectedCategory);
     }
 
     if (searchTerm) {
       items = items.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, vinos]);
 
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
@@ -96,7 +124,7 @@ const CartaVinos = () => {
   return (
     <div className="space-y-8">
       {/* Mapa Mundial */}
-      <MapaMundoVinos vinos={vinosData.menu.flatMap(cat => cat.items)} />
+      {!loading && <MapaMundoVinos vinos={vinos} />}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
@@ -126,43 +154,71 @@ const CartaVinos = () => {
       </div>
 
       {/* Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredItems.map((item, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.03 }}
-          >
-            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl flex items-start gap-2 leading-tight">
-                  <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
-                  <span>{item.name}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.category}</p>
-                {item.denominacion_origen && (
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold">DO:</span> {item.denominacion_origen}
+      {loading ? (
+        <div className="text-center py-16">
+          <p className="text-xl text-muted-foreground">Cargando vinos...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredItems.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.03 }}
+            >
+              <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-xl flex items-start gap-2 leading-tight">
+                    <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
+                    <span>{item.nombre}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.categoria}</p>
+                  {item.denominacion_origen && (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-semibold">DO:</span> {item.denominacion_origen}
+                    </p>
+                  )}
+                  {item.ubicacion_region && (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-semibold">Origen:</span> {item.ubicacion_region}{item.ubicacion_pais && `, ${item.ubicacion_pais}`}
+                    </p>
+                  )}
+                  {item.descripcion && (
+                    <p className="text-sm text-muted-foreground">{item.descripcion}</p>
+                  )}
+                  {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
+                    <div className="flex flex-wrap gap-1">
+                      {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
+                        <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
+                          {alergeno}
+                        </Badge>
+                      ))}
+                      {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
+                        <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
+                          {alergeno}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {item.alergenos_notas && (
+                    <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
+                      {item.alergenos_notas}
+                    </p>
+                  )}
+                  <p className="text-2xl font-bold text-accent pt-2">
+                    {item.precio_eur}€
                   </p>
-                )}
-                {item.ubicacion && (
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-semibold">Origen:</span> {item.ubicacion.region}, {item.ubicacion.pais}
-                  </p>
-                )}
-                <p className="text-2xl font-bold text-accent pt-2">
-                  {item.price_eur}€
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-      {filteredItems.length === 0 && (
+      {!loading && filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-xl">No se encontraron vinos con los filtros seleccionados</p>
         </div>

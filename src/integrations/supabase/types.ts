@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      platos: {
+        Row: {
+          activado: boolean
+          alergenos_inferidos: string[] | null
+          alergenos_notas: string | null
+          alergenos_oficiales: string[] | null
+          categoria: string
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          orden: number | null
+          precio_eur: number
+          unidad: string | null
+          updated_at: string
+        }
+        Insert: {
+          activado?: boolean
+          alergenos_inferidos?: string[] | null
+          alergenos_notas?: string | null
+          alergenos_oficiales?: string[] | null
+          categoria: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          orden?: number | null
+          precio_eur: number
+          unidad?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activado?: boolean
+          alergenos_inferidos?: string[] | null
+          alergenos_notas?: string | null
+          alergenos_oficiales?: string[] | null
+          categoria?: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          orden?: number | null
+          precio_eur?: number
+          unidad?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vinos: {
+        Row: {
+          activado: boolean
+          alergenos_inferidos: string[] | null
+          alergenos_notas: string | null
+          alergenos_oficiales: string[] | null
+          categoria: string
+          created_at: string
+          denominacion_origen: string | null
+          descripcion: string | null
+          id: string
+          nombre: string
+          orden: number | null
+          precio_eur: number
+          ubicacion_pais: string | null
+          ubicacion_region: string | null
+          updated_at: string
+        }
+        Insert: {
+          activado?: boolean
+          alergenos_inferidos?: string[] | null
+          alergenos_notas?: string | null
+          alergenos_oficiales?: string[] | null
+          categoria: string
+          created_at?: string
+          denominacion_origen?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          orden?: number | null
+          precio_eur: number
+          ubicacion_pais?: string | null
+          ubicacion_region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activado?: boolean
+          alergenos_inferidos?: string[] | null
+          alergenos_notas?: string | null
+          alergenos_oficiales?: string[] | null
+          categoria?: string
+          created_at?: string
+          denominacion_origen?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          orden?: number | null
+          precio_eur?: number
+          ubicacion_pais?: string | null
+          ubicacion_region?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
