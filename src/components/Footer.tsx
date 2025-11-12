@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Footer = () => {
@@ -56,9 +55,9 @@ const Footer = () => {
           </p>
           
           <div className="flex gap-4 items-center">
-            <Link to="/admin/login" className="text-xs text-stone hover:text-accent transition-colors">
+            <a href="/admin/login" className="text-xs text-stone hover:text-accent transition-colors">
               Administración
-            </Link>
+            </a>
             <span className="text-stone">|</span>
             <Button variant="link" className="text-xs text-stone hover:text-accent p-0 h-auto">
               Términos y Condiciones
