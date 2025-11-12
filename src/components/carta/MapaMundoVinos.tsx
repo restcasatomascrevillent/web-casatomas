@@ -37,26 +37,49 @@ const regionCoordinates: { [key: string]: [number, number] } = {
   "Provenza (Provence-Alpes-Côte d'Azur)": [6.0, 43.5],
   "Mosela (estimado)": [6.5, 49.8],
   
-  // España
-  "La Rioja": [-2.5, 42.3],
+  // España - Galicia
+  "Galicia (Pontevedra)": [-8.6, 42.4],
+  "Galicia (Valdeorras, Ourense)": [-7.0, 42.4],
+  "Galicia (Ourense)": [-7.9, 42.3],
+  "Galicia (Ribeira Sacra – Lugo)": [-7.5, 42.5],
+  
+  // España - Castilla y León
   "Castilla y León": [-4.5, 41.8],
   "Castilla y León (Valladolid/Segovia)": [-4.7, 41.4],
   "Castilla y León (Segovia)": [-4.1, 41.0],
   "Castilla y León (El Bierzo, León)": [-6.6, 42.6],
   "Castilla y León (Valladolid)": [-4.7, 41.65],
-  "Galicia (Pontevedra)": [-8.6, 42.4],
-  "Galicia (Valdeorras, Ourense)": [-7.0, 42.4],
-  "Galicia (Ourense)": [-7.9, 42.3],
-  "Galicia (Ribeira Sacra – Lugo)": [-7.5, 42.5],
+  "Castilla y León (Zamora)": [-5.75, 41.5],
+  
+  // España - La Rioja y País Vasco
+  "La Rioja": [-2.5, 42.3],
+  "País Vasco (Rioja Alavesa, Álava)": [-2.7, 42.5],
+  
+  // España - Navarra
   "Navarra": [-1.65, 42.7],
   "Navarra)": [-1.65, 42.7],
+  "Navarra (Vino de Pago Otazu)": [-1.65, 42.7],
+  
+  // España - Cataluña
   "Cataluña (Barcelona)": [2.15, 41.4],
   "Cataluña (Penedès)": [1.5, 41.3],
   "Cataluña (Priorat, Tarragona)": [0.7, 41.2],
+  
+  // España - Comunidad Valenciana
   "Comunidad Valenciana (Alicante)": [-0.5, 38.3],
   "Comunidad Valenciana (Valencia)": [-0.4, 39.5],
+  
+  // España - Región de Murcia
+  "Región de Murcia (Jumilla)": [-1.3, 38.5],
+  
+  // España - Castilla-La Mancha
   "Castilla‑La Mancha (Albacete)": [-1.85, 39.0],
+  "Castilla‑La Mancha (Ciudad Real)": [-3.9, 38.9],
+  
+  // España - Islas Canarias
   "Islas Canarias (Lanzarote)": [-13.6, 29.0],
+  
+  // España - Andalucía
   "Andalucía (Jerez, Cádiz)": [-6.0, 36.7],
   "Andalucía (Málaga)": [-4.4, 36.7],
   
@@ -71,6 +94,7 @@ const regionCoordinates: { [key: string]: [number, number] } = {
   "Valle del Duero (Norte de Portugal)": [-7.8, 41.2],
   "Alentejo": [-7.9, 38.5],
   "Norte (Vinho Verde)": [-8.5, 41.5],
+  "Lisboa (Alenquer)": [-9.0, 39.1],
   
   // Alemania
   "Rheingau": [8.0, 50.0],
@@ -97,9 +121,6 @@ const regionCoordinates: { [key: string]: [number, number] } = {
   // Sudáfrica
   "Stellenbosch (Provincia Occidental del Cabo)": [18.9, -33.9],
   "Western Cape (Elgin)": [19.0, -34.2],
-  
-  // Regiones genéricas/por confirmar
-  "Por confirmar": [0, 0],
 };
 
 const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
