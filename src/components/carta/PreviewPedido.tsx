@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Trash2, Receipt, Plus, Minus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PedidoItem {
-  name: string;
-  price_eur: number;
-  category?: string;
+  nombre: string;
+  precio_eur: number;
+  categoria?: string;
   unidad?: string;
   cantidad?: number;
 }
@@ -91,7 +91,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
 
   const total = pedido.reduce((sum, item) => {
     const cantidad = item.cantidad || 1;
-    return sum + (item.price_eur || 0) * cantidad;
+    return sum + (item.precio_eur || 0) * cantidad;
   }, 0);
 
   if (pedido.length === 0) {
@@ -180,6 +180,9 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                 <Receipt className="w-6 h-6 text-accent" />
                 Ticket del Pedido
               </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                Preview de tu pedido. Puedes editar cantidades antes de confirmar con el camarero.
+              </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4 font-mono text-sm">
@@ -190,16 +193,16 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
               
               {pedido.map((item, index) => {
                 const cantidad = item.cantidad || 1;
-                const subtotal = (item.price_eur || 0) * cantidad;
+                const subtotal = (item.precio_eur || 0) * cantidad;
                 const isWeight = item.unidad === 'kg' || item.unidad === 'g';
                 
                 return (
                   <div key={index} className="space-y-2 pb-3 border-b border-dashed border-border">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1">
-                        <p className="font-medium">{item.name}</p>
-                        {item.category && (
-                          <p className="text-xs text-muted-foreground">{item.category}</p>
+                        <p className="font-medium">{item.nombre}</p>
+                        {item.categoria && (
+                          <p className="text-xs text-muted-foreground">{item.categoria}</p>
                         )}
                       </div>
                       <Button
@@ -248,7 +251,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                       
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">
-                          {item.price_eur?.toFixed(2)}€ × {cantidad.toFixed(isWeight ? 1 : 0)}
+                          {item.precio_eur?.toFixed(2)}€ × {cantidad.toFixed(isWeight ? 1 : 0)}
                         </p>
                         <p className="font-bold">
                           {subtotal.toFixed(2)}€
@@ -328,7 +331,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
               <CardContent className="pt-6 space-y-3 font-mono text-sm">
                 {pedido.map((item, index) => {
                   const cantidad = item.cantidad || 1;
-                  const subtotal = (item.price_eur || 0) * cantidad;
+                  const subtotal = (item.precio_eur || 0) * cantidad;
                   
                   return (
                     <motion.div
@@ -339,9 +342,9 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                       className="flex justify-between items-start gap-4 pb-2 border-b border-dashed border-border"
                     >
                       <div className="flex-1">
-                        <p className="font-medium">{item.name}</p>
-                        {item.category && (
-                          <p className="text-xs text-muted-foreground">{item.category}</p>
+                        <p className="font-medium">{item.nombre}</p>
+                        {item.categoria && (
+                          <p className="text-xs text-muted-foreground">{item.categoria}</p>
                         )}
                         <p className="text-xs text-muted-foreground">
                           {cantidad.toFixed(item.unidad === 'kg' || item.unidad === 'g' ? 1 : 0)} {item.unidad || 'ud'}
