@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import cartaCompleta from "@/data/carta_completa.json";
-import vinosData from "@/data/vinos.json";
+import cartaData from "@/data/carta.json";
+import vinosCompleto from "@/data/vinos_completo.json";
 
 export const migrateDataToSupabase = async () => {
   try {
@@ -8,17 +8,18 @@ export const migrateDataToSupabase = async () => {
 
     // Migrar platos
     const platosToInsert = [];
-    for (const category of cartaCompleta.menu) {
+    for (const category of cartaData.menu) {
       for (const item of category.items) {
+        const itemAny = item as any;
         platosToInsert.push({
-          nombre: item.name,
+          nombre: itemAny.name,
           categoria: category.category,
-          precio_eur: item.price_eur,
-          unidad: (item as any).unit || null,
-          descripcion: (item as any).description || null,
-          alergenos_oficiales: item.alergenos?.oficiales || [],
-          alergenos_inferidos: item.alergenos?.inferidos || [],
-          alergenos_notas: item.alergenos?.notas || null,
+          precio_eur: itemAny.price_eur,
+          unidad: itemAny.unit || null,
+          descripcion: itemAny.description || null,
+          alergenos_oficiales: itemAny.alergenos?.oficiales || [],
+          alergenos_inferidos: itemAny.alergenos?.inferidos || [],
+          alergenos_notas: itemAny.alergenos?.notas || null,
           activado: true,
         });
       }
@@ -38,7 +39,7 @@ export const migrateDataToSupabase = async () => {
 
     // Migrar vinos
     const vinosToInsert = [];
-    for (const category of vinosData.menu) {
+    for (const category of vinosCompleto.menu) {
       for (const vino of category.items) {
         vinosToInsert.push({
           nombre: vino.name,
