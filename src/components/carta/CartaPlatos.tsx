@@ -71,6 +71,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     const pedido = JSON.parse(localStorage.getItem('pedido') || '[]');
     pedido.push(item);
     localStorage.setItem('pedido', JSON.stringify(pedido));
+    window.dispatchEvent(new Event('pedidoUpdated'));
     toast({
       title: "Añadido al pedido",
       description: `${item.nombre} añadido a tu preview de pedido`,

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { UtensilsCrossed, Wine, Receipt } from "lucide-react";
 import CartaPlatos from "./carta/CartaPlatos";
 import CartaVinos from "./carta/CartaVinos";
@@ -10,6 +11,26 @@ type Section = "platos" | "vinos" | "pedido" | null;
 
 const CartaSection = () => {
   const [activeSection, setActiveSection] = useState<Section>(null);
+  const [pedidoCount, setPedidoCount] = useState(0);
+
+  useEffect(() => {
+    const updatePedidoCount = () => {
+      const saved = JSON.parse(localStorage.getItem('pedido') || '[]');
+      setPedidoCount(saved.length);
+    };
+    
+    updatePedidoCount();
+    
+    // Listen for storage changes
+    window.addEventListener('storage', updatePedidoCount);
+    // Also listen for custom event when items are added
+    window.addEventListener('pedidoUpdated', updatePedidoCount);
+    
+    return () => {
+      window.removeEventListener('storage', updatePedidoCount);
+      window.removeEventListener('pedidoUpdated', updatePedidoCount);
+    };
+  }, []);
 
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
@@ -56,19 +77,28 @@ const CartaSection = () => {
             </Button>
           </div>
 
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => setActiveSection(activeSection === "pedido" ? null : "pedido")}
-            className={`px-8 py-6 text-lg font-semibold rounded-full border-2 transition-all duration-300 hover:scale-105 ${
-              activeSection === "pedido" 
-                ? "bg-accent/10 border-accent text-accent" 
-                : "border-border"
-            }`}
-          >
-            <Receipt className="w-5 h-5 mr-2" />
-            Mi Pedido
-          </Button>
+          <div className="relative">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setActiveSection(activeSection === "pedido" ? null : "pedido")}
+              className={`px-8 py-6 text-lg font-semibold rounded-full border-2 transition-all duration-300 hover:scale-105 ${
+                activeSection === "pedido" 
+                  ? "bg-accent/10 border-accent text-accent" 
+                  : "border-border"
+              }`}
+            >
+              <Receipt className="w-5 h-5 mr-2" />
+              Mi Pedido
+            </Button>
+            {pedidoCount > 0 && (
+              <Badge 
+                className="absolute -top-2 -right-2 h-6 w-6 flex items-center justify-center rounded-full bg-accent text-accent-foreground p-0 animate-scale-in"
+              >
+                {pedidoCount}
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Contenido de las secciones */}

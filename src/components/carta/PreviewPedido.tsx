@@ -51,11 +51,13 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
     const newPedido = pedido.filter((_, i) => i !== index);
     setPedido(newPedido);
     localStorage.setItem('pedido', JSON.stringify(newPedido));
+    window.dispatchEvent(new Event('pedidoUpdated'));
   };
 
   const clearPedido = () => {
     setPedido([]);
     localStorage.setItem('pedido', JSON.stringify([]));
+    window.dispatchEvent(new Event('pedidoUpdated'));
   };
 
   const dismissBanner = () => {
@@ -69,6 +71,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
     newPedido[index] = { ...newPedido[index], cantidad: newCantidad };
     setPedido(newPedido);
     localStorage.setItem('pedido', JSON.stringify(newPedido));
+    window.dispatchEvent(new Event('pedidoUpdated'));
   };
 
   const incrementCantidad = (index: number) => {
