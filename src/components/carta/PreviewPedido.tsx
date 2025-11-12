@@ -14,7 +14,11 @@ interface PedidoItem {
   cantidad?: number;
 }
 
-const PreviewPedido = () => {
+interface PreviewPedidoProps {
+  showFloatingButton?: boolean;
+}
+
+const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(() => {
@@ -131,7 +135,7 @@ const PreviewPedido = () => {
       </AnimatePresence>
 
       {/* Botón flotante */}
-      {pedido.length > 0 && (
+      {showFloatingButton && pedido.length > 0 && (
         <Dialog open={isTicketOpen} onOpenChange={setIsTicketOpen}>
           <DialogTrigger asChild>
             <motion.div

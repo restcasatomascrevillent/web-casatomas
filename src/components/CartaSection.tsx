@@ -103,7 +103,7 @@ const CartaSection = () => {
               <CartaPlatos showAddButton={true} />
             </div>
             <div className="mt-12">
-              <PreviewPedido />
+              <PreviewPedido showFloatingButton={true} />
             </div>
           </motion.div>
         )}
