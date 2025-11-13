@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Wine, AlertCircle, ChevronDown } from "lucide-react";
+import { Search, Wine, AlertCircle, ChevronDown, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -21,8 +21,14 @@ import MapaMundoVinos from "./MapaMundoVinos";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
+import appetizerImg from "@/assets/platos/appetizer.jpg";
 
-const CartaVinos = () => {
+interface CartaVinosProps {
+  showAddButton?: boolean;
+}
+
+const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
@@ -56,6 +62,16 @@ const CartaVinos = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const addToPedido = (item: any) => {
+    const pedido = getUserPedido();
+    pedido.push(item);
+    setUserPedido(pedido);
+    toast({
+      title: "Añadido al pedido",
+      description: `${item.nombre} añadido a tu preview de pedido`,
+    });
   };
 
   const categories = useMemo(() => {
@@ -212,27 +228,38 @@ const CartaVinos = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.03 }}
             >
-              <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl flex items-start gap-2 leading-tight">
+              <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
+                  <img 
+                    src={appetizerImg} 
+                    alt={item.nombre}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                      {item.categoria}
+                    </Badge>
+                  </div>
+                </div>
+                <CardHeader className="pb-3 flex-shrink-0">
+                  <CardTitle className="text-lg flex items-start gap-2 leading-tight line-clamp-2 min-h-[3.5rem]">
                     <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
                     <span>{item.nombre}</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.categoria}</p>
+                <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
                   {item.denominacion_origen && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground line-clamp-1">
                       <span className="font-semibold">DO:</span> {item.denominacion_origen}
                     </p>
                   )}
                   {item.ubicacion_region && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground line-clamp-1">
                       <span className="font-semibold">Origen:</span> {item.ubicacion_region}{item.ubicacion_pais && `, ${item.ubicacion_pais}`}
                     </p>
                   )}
                   {item.descripcion && (
-                    <p className="text-sm text-muted-foreground">{item.descripcion}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
                   )}
                   {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
                     <div className="flex flex-wrap gap-1">
@@ -249,14 +276,26 @@ const CartaVinos = () => {
                     </div>
                   )}
                   {item.alergenos_notas && (
-                    <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
+                    <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
                       {item.alergenos_notas}
                     </p>
                   )}
-                  <p className="text-2xl font-bold text-accent pt-2">
-                    {item.precio_eur}€
-                  </p>
                 </CardContent>
+                <div className="flex justify-between items-center px-6 py-3 border-t bg-muted/30 flex-shrink-0 mt-auto">
+                  <span className="text-2xl font-bold text-accent">
+                    {item.precio_eur}€
+                  </span>
+                  {showAddButton && (
+                    <Button
+                      size="sm"
+                      onClick={() => addToPedido(item)}
+                      className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Añadir
+                    </Button>
+                  )}
+                </div>
               </Card>
             </motion.div>
           ))}

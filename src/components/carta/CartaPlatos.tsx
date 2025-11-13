@@ -186,8 +186,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.03 }}
           >
-            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-              <div className="relative h-48 overflow-hidden bg-muted">
+            <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+              <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
                 <img 
                   src={getCategoryImage(item.categoria)} 
                   alt={item.nombre}
@@ -199,10 +199,10 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                   </Badge>
                 </div>
               </div>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg leading-tight line-clamp-2">{item.nombre}</CardTitle>
+              <CardHeader className="pb-3 flex-shrink-0">
+                <CardTitle className="text-lg leading-tight line-clamp-2 min-h-[3.5rem]">{item.nombre}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 pb-4">
+              <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
                 {item.descripcion && (
                   <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
                 )}
@@ -226,7 +226,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                   </p>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between items-center pt-3 border-t bg-muted/30">
+              <CardFooter className="flex justify-between items-center pt-3 border-t bg-muted/30 flex-shrink-0 mt-auto">
                 <span className="text-2xl font-bold text-accent">
                   {item.precio_eur}€
                   {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}

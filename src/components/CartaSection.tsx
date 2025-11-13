@@ -2,13 +2,14 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UtensilsCrossed, Wine, Receipt } from "lucide-react";
+import { UtensilsCrossed, Wine, Receipt, Beer } from "lucide-react";
 import CartaPlatos from "./carta/CartaPlatos";
 import CartaVinos from "./carta/CartaVinos";
+import CartaBebidas from "./carta/CartaBebidas";
 import PreviewPedido from "./carta/PreviewPedido";
 import { getUserPedido } from "@/utils/sessionManager";
 
-type Section = "platos" | "vinos" | "pedido" | null;
+type Section = "platos" | "vinos" | "bebidas" | "pedido" | null;
 
 const CartaSection = () => {
   const [activeSection, setActiveSection] = useState<Section>(null);
@@ -76,6 +77,18 @@ const CartaSection = () => {
               <Wine className="w-5 h-5 mr-2" />
               Carta de Vinos
             </Button>
+            <Button
+              size="lg"
+              onClick={() => setActiveSection(activeSection === "bebidas" ? null : "bebidas")}
+              className={`px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "bebidas" 
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
+                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              }`}
+            >
+              <Beer className="w-5 h-5 mr-2" />
+              Carta de Bebidas
+            </Button>
           </div>
 
           <div className="relative">
@@ -123,18 +136,39 @@ const CartaSection = () => {
           </motion.div>
         )}
 
+        {activeSection === "bebidas" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <CartaBebidas showAddButton={false} />
+          </motion.div>
+        )}
+
         {activeSection === "pedido" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-center mb-6">Arma tu pedido</h3>
-              <CartaPlatos showAddButton={true} />
-            </div>
-            <div className="mt-12">
-              <PreviewPedido showFloatingButton={true} />
+            <div className="space-y-12">
+              <div>
+                <h3 className="text-2xl font-bold text-center mb-6">Platos</h3>
+                <CartaPlatos showAddButton={true} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-center mb-6">Vinos</h3>
+                <CartaVinos showAddButton={true} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-center mb-6">Bebidas</h3>
+                <CartaBebidas showAddButton={true} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-center mb-6">Tu Pedido</h3>
+                <PreviewPedido showFloatingButton={true} />
+              </div>
             </div>
           </motion.div>
         )}
