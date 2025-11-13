@@ -242,89 +242,91 @@ const EspaciosSection = () => {
 
         {/* Diálogo de Menús del Día */}
         <Dialog open={showMenus} onOpenChange={setShowMenus}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Menús del Mediodía Anteriores</DialogTitle>
-            </DialogHeader>
-            <Carousel className="w-full px-4 md:px-0" opts={{ align: "start", loop: true }}>
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {menusDelDia.map((menu, idx) => (
-                  <CarouselItem key={idx} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                    <Card className="h-full">
-                      <CardHeader>
-                        <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                          <ChefHat className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                          {format(menu.date, "EEEE d 'de' MMMM", { locale: es })}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <h4 className="font-semibold text-primary mb-1">Primeros</h4>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {menu.primeros.map((plato, i) => (
-                              <li key={i}>• {plato}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-primary mb-1">Segundos</h4>
-                          <ul className="text-sm text-muted-foreground space-y-1">
-                            {menu.segundos.map((plato, i) => (
-                              <li key={i}>• {plato}</li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-primary mb-1">Postre</h4>
-                          <p className="text-sm text-muted-foreground">• {menu.postre}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden md:flex" />
-              <CarouselNext className="hidden md:flex" />
-            </Carousel>
-          </DialogContent>
+            <DialogContent className="w-[92vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
+              <DialogHeader>
+                <DialogTitle>Menús del Mediodía Anteriores</DialogTitle>
+              </DialogHeader>
+              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">Desliza para ver más</p>
+              <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
+                <CarouselContent className="-ml-3 sm:-ml-4">
+                  {menusDelDia.map((menu, idx) => (
+                    <CarouselItem key={idx} className="pl-3 sm:pl-4 basis-[88%] sm:basis-1/2 lg:basis-1/3">
+                      <Card className="h-full shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-base md:text-lg flex items-center gap-2 capitalize">
+                            <ChefHat className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                            {format(menu.date, "EEEE d 'de' MMMM", { locale: es })}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-primary mb-1">Primeros</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              {menu.primeros.map((plato, i) => (
+                                <li key={i}>• {plato}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-primary mb-1">Segundos</h4>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                              {menu.segundos.map((plato, i) => (
+                                <li key={i}>• {plato}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-primary mb-1">Postre</h4>
+                            <p className="text-sm text-muted-foreground">• {menu.postre}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex" />
+              </Carousel>
+            </DialogContent>
         </Dialog>
 
         {/* Diálogo de Tapas Semanales */}
         <Dialog open={showTapas} onOpenChange={setShowTapas}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Tapas de los Jueves</DialogTitle>
-            </DialogHeader>
-            <Carousel className="w-full px-4 md:px-0" opts={{ align: "start", loop: true }}>
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {tapasSemanales.map((semana, idx) => (
-                  <CarouselItem key={idx} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                    <Card className="h-full">
-                      <CardHeader>
-                        <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                          <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                          {format(semana.date, "EEEE d MMM", { locale: es })}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <h4 className="font-semibold text-primary mb-2">Tapas del día</h4>
-                        <ul className="text-sm text-muted-foreground space-y-2">
-                          {semana.tapas.map((tapa, i) => (
-                            <li key={i} className="flex items-start">
-                              <span className="text-primary mr-2">•</span>
-                              <span>{tapa}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden md:flex" />
-              <CarouselNext className="hidden md:flex" />
-            </Carousel>
-          </DialogContent>
+            <DialogContent className="w-[92vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
+              <DialogHeader>
+                <DialogTitle>Tapas de los Jueves</DialogTitle>
+              </DialogHeader>
+              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">Desliza para ver más</p>
+              <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
+                <CarouselContent className="-ml-3 sm:-ml-4">
+                  {tapasSemanales.map((semana, idx) => (
+                    <CarouselItem key={idx} className="pl-3 sm:pl-4 basis-[88%] sm:basis-1/2 lg:basis-1/3">
+                      <Card className="h-full shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-base md:text-lg flex items-center gap-2 capitalize">
+                            <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                            {format(semana.date, "EEEE d MMM", { locale: es })}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <h4 className="font-semibold text-primary mb-2">Tapas del día</h4>
+                          <ul className="text-sm text-muted-foreground space-y-2">
+                            {semana.tapas.map((tapa, i) => (
+                              <li key={i} className="flex items-start">
+                                <span className="text-primary mr-2">•</span>
+                                <span>{tapa}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex" />
+              </Carousel>
+            </DialogContent>
         </Dialog>
       </motion.div>
     </section>
