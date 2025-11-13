@@ -8,21 +8,24 @@ const NosotrosSection = () => {
     {
       nombre: "Tomás",
       rol: "Jefe y Dueño del Restaurante",
-      descripcion: "Con más de 30 años de experiencia, Tomás ha convertido la tradición familiar en un arte culinario único. Su pasión por los productos locales y las recetas tradicionales es el corazón de Casa Tomás.",
+      descripcion:
+        "Con más de 30 años de experiencia, Tomás ha convertido la tradición familiar en un arte culinario único. Su pasión por los productos locales de su tierra y las recetas tradicionales es el corazón de Casa Tomás.",
       icon: Crown,
       imagen: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&h=400&fit=crop",
     },
     {
       nombre: "Hugo",
-      rol: "Camarero - La Siguiente Generación",
-      descripcion: "Mano izquierda de Tomás, Hugo representa la nueva generación que honra la tradición mientras aporta su energía y visión fresca al servicio del restaurante.",
+      rol: "La Siguiente Generación",
+      descripcion:
+        "Mano izquierda de Tomás, Hugo representa la nueva generación que honra la tradición mientras aporta su energía y visión fresca al servicio del restaurante.",
       icon: Users,
       imagen: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
     },
     {
       nombre: "Antxon",
       rol: "Jefe de Cocina",
-      descripcion: "Experto en la perfecta ejecución de cada plato, Antxon lidera nuestro equipo de cocina con maestría y dedicación, asegurando la excelencia en cada servicio.",
+      descripcion:
+        "Experto en la perfecta ejecución de cada plato, Antxon lidera nuestro equipo de cocina con maestría y dedicación, asegurando la excelencia en cada servicio.",
       icon: ChefHat,
       imagen: "https://images.unsplash.com/photo-1583394293214-28ded15ee548?w=400&h=400&fit=crop",
     },
@@ -56,9 +59,9 @@ const NosotrosSection = () => {
             className="max-w-3xl mx-auto"
           >
             <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              Casa Tomás nació del sueño de compartir la auténtica cocina tradicional de Crevillent con el mundo. 
-              Lo que comenzó como un pequeño restaurante familiar ha crecido hasta convertirse en un referente 
-              gastronómico, manteniendo siempre nuestros valores: calidad, tradición y amor por la cocina.
+              Casa Tomás nació del sueño de compartir la auténtica cocina tradicional de Crevillent con el mundo. Lo que
+              comenzó como un pequeño restaurante familiar ha crecido hasta convertirse en un referente gastronómico,
+              manteniendo siempre nuestros valores: calidad, tradición y amor por la cocina.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
               <div className="flex flex-col items-center">
@@ -119,9 +122,7 @@ const NosotrosSection = () => {
                         <h4 className="text-xl font-bold mb-1">{persona.nombre}</h4>
                         <p className="text-sm text-accent font-medium mb-3">{persona.rol}</p>
                       </div>
-                      <p className="text-muted-foreground leading-relaxed text-center">
-                        {persona.descripcion}
-                      </p>
+                      <p className="text-muted-foreground leading-relaxed text-center">{persona.descripcion}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
