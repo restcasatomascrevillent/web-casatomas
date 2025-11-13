@@ -53,8 +53,8 @@ const Hero = () => {
             alt="Casa Tomás Restaurante"
             className="w-64 md:w-96 lg:w-[28rem] h-auto mx-auto mb-6 drop-shadow-2xl"
           />
-          <p className="text-xl md:text-2xl text-foreground/80 max-w-2xl mx-auto leading-relaxed">
-            'Nunca e longo o camino que conduce a casa un amigo'
+          <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
+            Nunca e longo o camino que conduce a casa un amigo
           </p>
         </motion.div>
 
