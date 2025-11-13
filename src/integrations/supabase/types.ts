@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      bebidas: {
+        Row: {
+          activado: boolean
+          categoria: string
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          orden: number | null
+          precio_eur: number
+          tamano: string | null
+          updated_at: string
+        }
+        Insert: {
+          activado?: boolean
+          categoria: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          orden?: number | null
+          precio_eur: number
+          tamano?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activado?: boolean
+          categoria?: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          orden?: number | null
+          precio_eur?: number
+          tamano?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platos: {
         Row: {
           activado: boolean
