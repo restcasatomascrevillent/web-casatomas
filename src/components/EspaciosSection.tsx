@@ -227,14 +227,14 @@ const EspaciosSection = () => {
                         <img 
                           src={image} 
                           alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
-                          className="w-full h-[400px] object-cover rounded-lg"
+                          className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
                         />
                       </div>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex" />
               </Carousel>
             )}
           </DialogContent>
@@ -242,18 +242,18 @@ const EspaciosSection = () => {
 
         {/* Diálogo de Menús del Día */}
         <Dialog open={showMenus} onOpenChange={setShowMenus}>
-          <DialogContent className="max-w-5xl">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Menús del Mediodía Anteriores</DialogTitle>
             </DialogHeader>
-            <Carousel className="w-full" opts={{ align: "start" }}>
-              <CarouselContent className="-ml-4">
+            <Carousel className="w-full px-4 md:px-0" opts={{ align: "start", loop: true }}>
+              <CarouselContent className="-ml-2 md:-ml-4">
                 {menusDelDia.map((menu, idx) => (
-                  <CarouselItem key={idx} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <CarouselItem key={idx} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
                     <Card className="h-full">
                       <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <ChefHat className="w-5 h-5 text-primary" />
+                        <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                          <ChefHat className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                           {format(menu.date, "EEEE d 'de' MMMM", { locale: es })}
                         </CardTitle>
                       </CardHeader>
@@ -283,26 +283,26 @@ const EspaciosSection = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
             </Carousel>
           </DialogContent>
         </Dialog>
 
         {/* Diálogo de Tapas Semanales */}
         <Dialog open={showTapas} onOpenChange={setShowTapas}>
-          <DialogContent className="max-w-5xl">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Tapas de los Jueves</DialogTitle>
             </DialogHeader>
-            <Carousel className="w-full" opts={{ align: "start" }}>
-              <CarouselContent className="-ml-4">
+            <Carousel className="w-full px-4 md:px-0" opts={{ align: "start", loop: true }}>
+              <CarouselContent className="-ml-2 md:-ml-4">
                 {tapasSemanales.map((semana, idx) => (
-                  <CarouselItem key={idx} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <CarouselItem key={idx} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
                     <Card className="h-full">
                       <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Clock className="w-5 h-5 text-primary" />
+                        <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                          <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                           {format(semana.date, "EEEE d MMM", { locale: es })}
                         </CardTitle>
                       </CardHeader>
@@ -321,8 +321,8 @@ const EspaciosSection = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
+              <CarouselPrevious className="hidden md:flex" />
+              <CarouselNext className="hidden md:flex" />
             </Carousel>
           </DialogContent>
         </Dialog>
