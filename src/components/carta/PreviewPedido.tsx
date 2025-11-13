@@ -129,151 +129,121 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
   }
 
   return (
-    <>
-      {/* Botón flotante */}
-      {showFloatingButton && pedido.length > 0 && (
-        <Dialog open={isTicketOpen} onOpenChange={setIsTicketOpen}>
-          <DialogTrigger asChild>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="fixed bottom-20 right-6 z-50"
-            >
-              <Button
-                size="lg"
-                className="h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 border-4 border-background hover:scale-110 transition-transform duration-200"
-              >
-                <Receipt className="w-8 h-8 text-accent-foreground" />
-                <span className="sr-only">Ver ticket del pedido</span>
-              </Button>
-            </motion.div>
-          </DialogTrigger>
-          
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Receipt className="w-6 h-6 text-accent" />
-                Ticket del Pedido
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                Preview de tu pedido. Puedes editar cantidades antes de confirmar con el camarero.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 font-mono text-sm">
-              <div className="border-b-2 border-dashed border-border pb-2">
-                <p className="font-bold">Casa Tomás Restaurante</p>
-                <p className="text-xs text-muted-foreground">Preview de Pedido</p>
+    <div className="space-y-4 font-mono text-sm">
+      <div className="border-b-2 border-dashed border-border pb-2">
+        <p className="font-bold">Casa Tomás Restaurante</p>
+        <p className="text-xs text-muted-foreground">Preview de Pedido</p>
+      </div>
+      
+      {pedido.map((item, index) => {
+        const cantidad = item.cantidad || 1;
+        const subtotal = (item.precio_eur || 0) * cantidad;
+        const isWeight = item.unidad === 'kg' || item.unidad === 'g';
+        
+        return (
+          <div key={index} className="space-y-3 pb-4 border-b border-dashed border-border">
+            <div className="flex gap-3">
+              <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                <img 
+                  src={getCategoryImage(item.categoria)} 
+                  alt={item.nombre}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              
-              {pedido.map((item, index) => {
-                const cantidad = item.cantidad || 1;
-                const subtotal = (item.precio_eur || 0) * cantidad;
-                const isWeight = item.unidad === 'kg' || item.unidad === 'g';
-                
-                return (
-                  <div key={index} className="space-y-3 pb-4 border-b border-dashed border-border">
-                    <div className="flex gap-3">
-                      <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                        <img 
-                          src={getCategoryImage(item.categoria)} 
-                          alt={item.nombre}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm leading-tight truncate">{item.nombre}</p>
-                            {item.categoria && (
-                              <p className="text-xs text-muted-foreground mt-0.5">{item.categoria}</p>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between gap-3 pl-2">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => decrementCantidad(index)}
-                          className="h-8 w-8 p-0 rounded-full"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        
-                        <Input
-                          type="number"
-                          step={isWeight ? "0.1" : "1"}
-                          min="0.1"
-                          value={cantidad.toFixed(isWeight ? 1 : 0)}
-                          onChange={(e) => updateCantidad(index, parseFloat(e.target.value) || 0.1)}
-                          className="w-16 h-8 text-center font-mono text-sm"
-                        />
-                        
-                        <span className="text-xs text-muted-foreground min-w-[25px]">
-                          {item.unidad || 'ud'}
-                        </span>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => incrementCantidad(index)}
-                          className="h-8 w-8 p-0 rounded-full"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">
-                          {item.precio_eur?.toFixed(2)}€ × {cantidad.toFixed(isWeight ? 1 : 0)}
-                        </p>
-                        <p className="font-bold text-accent">
-                          {subtotal.toFixed(2)}€
-                        </p>
-                      </div>
-                    </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm leading-tight truncate">{item.nombre}</p>
+                    {item.categoria && (
+                      <p className="text-xs text-muted-foreground truncate">{item.categoria}</p>
+                    )}
                   </div>
-                );
-              })}
-              
-              <div className="pt-4 border-t-2 border-dashed border-border">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>TOTAL</span>
-                  <span className="text-accent text-2xl">{total.toFixed(2)}€</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeItem(index)}
+                    className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between mt-2 gap-2">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => decrementCantidad(index)}
+                      disabled={cantidad <= 1 || isWeight}
+                      className="h-7 w-7 p-0"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    
+                    <Input
+                      type="number"
+                      value={cantidad}
+                      onChange={(e) => updateCantidad(index, parseFloat(e.target.value))}
+                      className="w-16 h-7 text-center text-xs"
+                      min="0.01"
+                      step={isWeight ? "0.1" : "1"}
+                    />
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => incrementCantidad(index)}
+                      disabled={isWeight}
+                      className="h-7 w-7 p-0"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                    
+                    {item.unidad && (
+                      <span className="text-xs text-muted-foreground ml-1">
+                        {item.unidad}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-muted-foreground">
+                      {item.precio_eur?.toFixed(2)}€ × {cantidad.toFixed(isWeight ? 2 : 0)}
+                    </p>
+                    <p className="font-bold text-accent">
+                      {subtotal.toFixed(2)}€
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={clearPedido}
-                  className="flex-1"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Limpiar Todo
-                </Button>
-              </div>
-              
-              <p className="text-xs text-muted-foreground text-center pt-2 font-sans">
-                * Este es un preview. Confirma tu pedido con el camarero
-              </p>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
+          </div>
+        );
+      })}
+      
+      <div className="border-t-2 border-dashed border-border pt-4">
+        <div className="flex justify-between items-center">
+          <span className="font-bold text-lg">TOTAL:</span>
+          <span className="font-bold text-2xl text-accent">{total.toFixed(2)}€</span>
+        </div>
+      </div>
+      
+      <div className="flex gap-2 pt-2">
+        <Button
+          variant="outline"
+          onClick={clearPedido}
+          className="flex-1 border-destructive/50 text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Vaciar Pedido
+        </Button>
+      </div>
+      
+      <div className="text-xs text-muted-foreground text-center pt-2 border-t border-dashed border-border">
+        <p>Preview de pedido - No vinculante</p>
+        <p>Confirma con el camarero</p>
+      </div>
+    </div>
   );
 };
 
