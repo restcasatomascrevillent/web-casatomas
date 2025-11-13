@@ -6,6 +6,7 @@ import { UtensilsCrossed, Wine, Receipt } from "lucide-react";
 import CartaPlatos from "./carta/CartaPlatos";
 import CartaVinos from "./carta/CartaVinos";
 import PreviewPedido from "./carta/PreviewPedido";
+import { getUserPedido } from "@/utils/sessionManager";
 
 type Section = "platos" | "vinos" | "pedido" | null;
 
@@ -15,7 +16,7 @@ const CartaSection = () => {
 
   useEffect(() => {
     const updatePedidoCount = () => {
-      const saved = JSON.parse(localStorage.getItem('pedido') || '[]');
+      const saved = getUserPedido();
       setPedidoCount(saved.length);
     };
     

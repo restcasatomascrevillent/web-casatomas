@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Trash2, Receipt, Plus, Minus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 
 interface PedidoItem {
   nombre: string;
@@ -27,16 +28,16 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
   const [showTooltip, setShowTooltip] = useState(true);
 
   useEffect(() => {
-    // Ocultar el tooltip después de 5 segundos
+    // Ocultar el tooltip después de 3 segundos
     const timer = setTimeout(() => {
       setShowTooltip(false);
-    }, 5000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     const loadPedido = () => {
-      const saved = JSON.parse(localStorage.getItem('pedido') || '[]');
+      const saved = getUserPedido();
       setPedido(saved);
     };
     
@@ -44,20 +45,22 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
     
     // Listen for changes
     window.addEventListener('storage', loadPedido);
-    return () => window.removeEventListener('storage', loadPedido);
+    window.addEventListener('pedidoUpdated', loadPedido);
+    return () => {
+      window.removeEventListener('storage', loadPedido);
+      window.removeEventListener('pedidoUpdated', loadPedido);
+    };
   }, []);
 
   const removeItem = (index: number) => {
     const newPedido = pedido.filter((_, i) => i !== index);
     setPedido(newPedido);
-    localStorage.setItem('pedido', JSON.stringify(newPedido));
-    window.dispatchEvent(new Event('pedidoUpdated'));
+    setUserPedido(newPedido);
   };
 
   const clearPedido = () => {
     setPedido([]);
-    localStorage.setItem('pedido', JSON.stringify([]));
-    window.dispatchEvent(new Event('pedidoUpdated'));
+    setUserPedido([]);
   };
 
   const dismissBanner = () => {
@@ -70,8 +73,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
     const newPedido = [...pedido];
     newPedido[index] = { ...newPedido[index], cantidad: newCantidad };
     setPedido(newPedido);
-    localStorage.setItem('pedido', JSON.stringify(newPedido));
-    window.dispatchEvent(new Event('pedidoUpdated'));
+    setUserPedido(newPedido);
   };
 
   const incrementCantidad = (index: number) => {
@@ -153,23 +155,23 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-full right-0 mb-3 w-48"
+                    className="absolute bottom-full right-0 mb-4 w-56"
                   >
-                    <div className="bg-accent text-accent-foreground rounded-lg shadow-xl p-3 relative">
-                      <p className="text-sm font-medium text-center">
-                        Aquí se ve la previsualización
+                    <div className="bg-primary text-primary-foreground rounded-xl shadow-2xl p-4 relative">
+                      <p className="text-sm font-semibold text-center leading-relaxed">
+                        Aquí tienes tu pedido
                       </p>
                       {/* Flecha del bocadillo */}
-                      <div className="absolute -bottom-2 right-6 w-4 h-4 bg-accent transform rotate-45"></div>
+                      <div className="absolute -bottom-2 right-6 w-4 h-4 bg-primary transform rotate-45"></div>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
               <Button
                 size="lg"
-                className="h-14 w-14 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground"
+                className="h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground border-4 border-background"
               >
-                <Receipt className="w-6 h-6" />
+                <Receipt className="w-7 h-7" />
               </Button>
             </motion.div>
           </DialogTrigger>

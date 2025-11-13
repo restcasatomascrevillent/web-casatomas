@@ -2,11 +2,18 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 
 interface CartaPlatosProps {
   showAddButton: boolean;
@@ -14,7 +21,7 @@ interface CartaPlatosProps {
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -46,15 +53,44 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
   };
 
+  const CATEGORY_ORDER = [
+    "Novedades del día",
+    "Entrantes fríos",
+    "Entrantes calientes",
+    "Ensaladas",
+    "Snacks",
+    "Salazones",
+    "Mariscos",
+    "Pescados",
+    "Carnes",
+    "Arroces",
+    "Postres",
+    "Todos"
+  ];
+
   const categories = useMemo(() => {
     const uniqueCategories = new Set(platos.map(p => p.categoria));
-    return ["all", ...Array.from(uniqueCategories)];
+    const allCategories = Array.from(uniqueCategories);
+    
+    // Ordenar según CATEGORY_ORDER
+    const ordered = CATEGORY_ORDER.filter(cat => 
+      cat === "Todos" || allCategories.includes(cat)
+    );
+    
+    // Añadir categorías no contempladas al final
+    allCategories.forEach(cat => {
+      if (!CATEGORY_ORDER.includes(cat)) {
+        ordered.splice(ordered.length - 1, 0, cat);
+      }
+    });
+    
+    return ordered;
   }, [platos]);
 
   const filteredItems = useMemo(() => {
     let items = platos;
 
-    if (selectedCategory !== "all") {
+    if (selectedCategory !== "Todos") {
       items = items.filter(item => item.categoria === selectedCategory);
     }
 
@@ -68,10 +104,9 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   }, [searchTerm, selectedCategory, platos]);
 
   const addToPedido = (item: any) => {
-    const pedido = JSON.parse(localStorage.getItem('pedido') || '[]');
+    const pedido = getUserPedido();
     pedido.push(item);
-    localStorage.setItem('pedido', JSON.stringify(pedido));
-    window.dispatchEvent(new Event('pedidoUpdated'));
+    setUserPedido(pedido);
     toast({
       title: "Añadido al pedido",
       description: `${item.nombre} añadido a tu preview de pedido`,
@@ -100,18 +135,34 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           />
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap gap-3 justify-center">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
-              className={`rounded-full ${selectedCategory === category ? "bg-accent hover:bg-accent/90" : ""}`}
-            >
-              {category === "all" ? "Todos" : category}
-            </Button>
-          ))}
+        {/* Category Filter Dropdown */}
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-64 justify-between bg-background hover:bg-muted"
+              >
+                <span className="font-medium">{selectedCategory}</span>
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-64 max-h-96 overflow-y-auto bg-background">
+              {categories.map((category) => (
+                <DropdownMenuItem
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`cursor-pointer ${
+                    selectedCategory === category 
+                      ? "bg-accent text-accent-foreground font-semibold" 
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  {category}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
