@@ -120,7 +120,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="fixed bottom-6 right-6 z-50"
+              className="fixed bottom-20 right-6 z-50"
             >
               {/* Tooltip/bocadillo */}
               <AnimatePresence>
