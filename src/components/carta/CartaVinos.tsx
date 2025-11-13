@@ -229,23 +229,16 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               transition={{ duration: 0.4, delay: index * 0.03 }}
             >
               <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
-                  <img 
-                    src={vinosImg} 
-                    alt={item.nombre}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                  <div className="absolute top-2 right-2">
-                    <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                <CardHeader className="pb-3 flex-shrink-0">
+                  <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-lg flex items-start gap-2 leading-tight line-clamp-2 min-h-[3.5rem] flex-grow">
+                      <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
+                      <span>{item.nombre}</span>
+                    </CardTitle>
+                    <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md flex-shrink-0">
                       {item.categoria}
                     </Badge>
                   </div>
-                </div>
-                <CardHeader className="pb-3 flex-shrink-0">
-                  <CardTitle className="text-lg flex items-start gap-2 leading-tight line-clamp-2 min-h-[3.5rem]">
-                    <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
-                    <span>{item.nombre}</span>
-                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
                   {item.denominacion_origen && (
