@@ -63,7 +63,7 @@ const Header = () => {
           </motion.button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-6">
             {navItems.map((item) => (
               <NavLink
                 key={item.id}
@@ -72,6 +72,7 @@ const Header = () => {
                   e.preventDefault();
                   scrollToSection(item.id);
                 }}
+                className="text-foreground/80 hover:text-foreground font-medium transition-colors px-3 py-2"
               >
                 {item.label}
               </NavLink>
