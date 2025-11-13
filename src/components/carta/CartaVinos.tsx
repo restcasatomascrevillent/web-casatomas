@@ -158,8 +158,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
 
   return (
     <div className="space-y-8">
-      {/* Mapa Mundial */}
-      {!loading && <MapaMundoVinos vinos={vinos} />}
+      {/* Mapa Mundial - solo cuando NO estamos en modo "añadir" */}
+      {!loading && !showAddButton && <MapaMundoVinos vinos={vinos} />}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
