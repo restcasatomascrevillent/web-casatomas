@@ -112,7 +112,6 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
 
   return (
     <>
-
       {/* Botón flotante */}
       {showFloatingButton && pedido.length > 0 && (
         <Dialog open={isTicketOpen} onOpenChange={setIsTicketOpen}>
@@ -122,25 +121,6 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
               animate={{ scale: 1 }}
               className="fixed bottom-20 right-6 z-50"
             >
-              {/* Tooltip/bocadillo */}
-              <AnimatePresence>
-                {showTooltip && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-full right-0 mb-4 w-56"
-                  >
-                    <div className="bg-primary text-primary-foreground rounded-xl shadow-2xl p-4 relative">
-                      <p className="text-sm font-semibold text-center leading-relaxed">
-                        Aquí tienes tu pedido
-                      </p>
-                      {/* Flecha del bocadillo */}
-                      <div className="absolute -bottom-2 right-6 w-4 h-4 bg-primary transform rotate-45"></div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
               <Button
                 size="lg"
                 className="h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 border-4 border-background hover:scale-110 transition-transform duration-200"
@@ -264,100 +244,6 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
           </DialogContent>
         </Dialog>
       )}
-
-      {/* Vista de resumen */}
-      <div className="max-w-2xl mx-auto">
-        {pedido.length === 0 ? (
-          <div className="text-center py-12">
-            <Receipt className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <p className="text-xl text-muted-foreground">
-              Tu preview de pedido está vacío
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Añade platos desde la carta para comenzar
-            </p>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="bg-gradient-to-br from-background to-muted border-2 border-accent/20">
-              <CardHeader className="border-b-2 border-dashed border-accent/30">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2">
-                    <Receipt className="w-6 h-6 text-accent" />
-                    Preview del Pedido
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearPedido}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Limpiar
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground font-mono mt-2">
-                  Casa Tomás Restaurante
-                </p>
-              </CardHeader>
-              
-              <CardContent className="pt-6 space-y-3 font-mono text-sm">
-                {pedido.map((item, index) => {
-                  const cantidad = item.cantidad || 1;
-                  const subtotal = (item.precio_eur || 0) * cantidad;
-                  
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="flex justify-between items-start gap-4 pb-2 border-b border-dashed border-border"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium">{item.nombre}</p>
-                        {item.categoria && (
-                          <p className="text-xs text-muted-foreground">{item.categoria}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {cantidad.toFixed(item.unidad === 'kg' || item.unidad === 'g' ? 1 : 0)} {item.unidad || 'ud'}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold whitespace-nowrap">
-                          {subtotal.toFixed(2)}€
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeItem(index)}
-                          className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </CardContent>
-
-              <CardFooter className="border-t-2 border-dashed border-accent/30 flex-col items-stretch">
-                <div className="flex justify-between items-center font-mono text-lg font-bold pt-4">
-                  <span>TOTAL</span>
-                  <span className="text-accent text-2xl">{total.toFixed(2)}€</span>
-                </div>
-                <p className="text-xs text-muted-foreground text-center mt-4 font-sans">
-                  * Toca el botón flotante para ver y editar el ticket completo
-                </p>
-              </CardFooter>
-            </Card>
-          </motion.div>
-        )}
-      </div>
     </>
   );
 };
