@@ -35,11 +35,8 @@ const Hero = () => {
           <img 
             src={logo} 
             alt="Casa Tomás Restaurante" 
-            className="w-48 md:w-64 h-auto mx-auto mb-6 drop-shadow-2xl"
+            className="w-64 md:w-96 lg:w-[28rem] h-auto mx-auto mb-6 drop-shadow-2xl"
           />
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-background mb-4 tracking-tight">
-            Casa Tomás
-          </h1>
           <p className="text-xl md:text-2xl text-stone max-w-2xl mx-auto leading-relaxed">
             Donde la tradición familiar se convierte en arte culinario
           </p>
