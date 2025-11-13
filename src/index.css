@@ -57,7 +57,7 @@ All colors MUST be HSL.
     --transition-bounce: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     
     /* Animations */
-    --pulse-duration: 3s;
+    --pulse-duration: 5s;
 
     --sidebar-background: 0 0% 98%;
 
