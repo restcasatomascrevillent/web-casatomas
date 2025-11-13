@@ -1,23 +1,30 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChefHat, Heart, Clock } from "lucide-react";
+import { Crown, Users, ChefHat, Heart, Clock } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const NosotrosSection = () => {
   const equipo = [
     {
       nombre: "Tomás",
-      rol: "Fundador y Chef Principal",
+      rol: "Jefe y Dueño del Restaurante",
       descripcion: "Con más de 30 años de experiencia, Tomás ha convertido la tradición familiar en un arte culinario único. Su pasión por los productos locales y las recetas tradicionales es el corazón de Casa Tomás.",
+      icon: Crown,
+      imagen: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&h=400&fit=crop",
     },
     {
       nombre: "Hugo",
-      rol: "Segundo Chef",
-      descripcion: "Hijo de Tomás, Hugo representa la nueva generación que honra la tradición mientras aporta innovación y técnicas modernas a nuestra cocina.",
+      rol: "Camarero - La Siguiente Generación",
+      descripcion: "Mano izquierda de Tomás, Hugo representa la nueva generación que honra la tradición mientras aporta su energía y visión fresca al servicio del restaurante.",
+      icon: Users,
+      imagen: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
     },
     {
       nombre: "Antxon",
       rol: "Jefe de Cocina",
       descripcion: "Experto en la perfecta ejecución de cada plato, Antxon lidera nuestro equipo de cocina con maestría y dedicación, asegurando la excelencia en cada servicio.",
+      icon: ChefHat,
+      imagen: "https://images.unsplash.com/photo-1583394293214-28ded15ee548?w=400&h=400&fit=crop",
     },
   ];
 
@@ -82,33 +89,44 @@ const NosotrosSection = () => {
             viewport={{ once: true }}
             className="text-3xl font-bold text-primary text-center mb-12"
           >
-            Nuestro Equipo
+            Nosotros
           </motion.h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {equipo.map((persona, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="mb-4">
-                      <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                        <ChefHat className="w-8 h-8 text-accent" />
+            {equipo.map((persona, index) => {
+              const IconComponent = persona.icon;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="h-full hover:shadow-xl transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col items-center text-center mb-4">
+                        <Avatar className="w-32 h-32 mb-4 border-4 border-primary/20">
+                          <AvatarImage src={persona.imagen} alt={persona.nombre} />
+                          <AvatarFallback className="text-2xl bg-accent/10 text-accent">
+                            {persona.nombre.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="mb-3">
+                          <div className="inline-flex items-center justify-center w-12 h-12 bg-accent/10 rounded-full mb-2">
+                            <IconComponent className="w-6 h-6 text-accent" />
+                          </div>
+                        </div>
+                        <h4 className="text-xl font-bold mb-1">{persona.nombre}</h4>
+                        <p className="text-sm text-accent font-medium mb-3">{persona.rol}</p>
                       </div>
-                      <h4 className="text-xl font-bold mb-1">{persona.nombre}</h4>
-                      <p className="text-sm text-accent font-medium">{persona.rol}</p>
-                    </div>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {persona.descripcion}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      <p className="text-muted-foreground leading-relaxed text-center">
+                        {persona.descripcion}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </motion.div>
