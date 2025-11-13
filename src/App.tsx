@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import MigrationHelper from "./pages/MigrationHelper";
 import NotFound from "./pages/NotFound";
+import Reservas from "./pages/Reservas";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/reservas" element={<Reservas />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/migrate-data" element={<MigrationHelper />} />
           <Route path="/touza-cocktail" element={<NotFound />} />
