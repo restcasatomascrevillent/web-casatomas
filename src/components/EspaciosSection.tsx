@@ -98,21 +98,21 @@ const EspaciosSection = () => {
                     <p className="text-muted-foreground mb-4">{espacio.description}</p>
                     {espacio.hasGallery ? (
                       <Button 
-                        variant="outline" 
-                        className="w-full"
+                        variant="default" 
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         onClick={() => setSelectedEspacio(index)}
                       >
-                        <Camera className="w-4 h-4 mr-2" />
-                        Ver Galería
+                        <Camera className="w-5 h-5 mr-2" />
+                        Ver Galería de Fotos
                       </Button>
                     ) : (
                       <Button 
-                        variant="outline" 
-                        className="w-full"
+                        variant="default" 
+                        className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         asChild
                       >
                         <Link to={espacio.link || "#"}>
-                          <ExternalLink className="w-4 h-4 mr-2" />
+                          <ExternalLink className="w-5 h-5 mr-2" />
                           Visitar Touza Cocktail
                         </Link>
                       </Button>
