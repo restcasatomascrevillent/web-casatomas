@@ -68,17 +68,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     "TODOS"
   ];
 
-  const categories = useMemo(() => {
-    const uniqueCategories = new Set(platos.map(p => p.categoria.toUpperCase()));
-    const categoriesArray = Array.from(uniqueCategories);
-    
-    // Filtrar el orden predefinido manteniendo solo las categorías que existen
-    const orderedCategories = CATEGORY_ORDER.filter(cat => 
-      cat === "TODOS" || categoriesArray.includes(cat)
-    );
-    
-    return orderedCategories;
-  }, [platos]);
+  // Mostrar siempre el orden exacto solicitado, independientemente de si hay platos en esa categoría
+  const categories = CATEGORY_ORDER;
 
   const filteredItems = useMemo(() => {
     let items = platos;
