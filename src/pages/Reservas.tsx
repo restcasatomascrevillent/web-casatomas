@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, Calendar as CalendarIcon, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,8 @@ const Reservas = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [availability, setAvailability] = useState<any>(null);
 
   const form = useForm<ReservaForm>({
     resolver: zodResolver(reservaSchema),
@@ -90,6 +92,55 @@ const Reservas = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const checkAvailability = async () => {
+    const fecha = form.getValues("fecha");
+    
+    if (!fecha) {
+      toast({
+        title: "Selecciona una fecha",
+        description: "Primero debes seleccionar una fecha para consultar disponibilidad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCheckingAvailability(true);
+    setAvailability(null);
+    
+    try {
+      const fechaStr = format(fecha, "yyyy-MM-dd", { locale: es });
+      const response = await fetch(
+        `https://n8npersonal.miguelbenito.space/webhook-test/3e0585ce-c923-40c9-a423-b4f3c1a66a86?fecha=${fechaStr}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error al consultar disponibilidad");
+      }
+
+      const data = await response.json();
+      setAvailability(data);
+      
+      toast({
+        title: "Disponibilidad consultada",
+        description: "Se ha actualizado la información de disponibilidad.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo consultar la disponibilidad. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingAvailability(false);
     }
   };
 
@@ -275,6 +326,56 @@ const Reservas = () => {
                       </FormItem>
                     )}
                   />
+
+                  <div className="space-y-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={checkAvailability}
+                      disabled={isCheckingAvailability}
+                    >
+                      {isCheckingAvailability ? (
+                        "Consultando..."
+                      ) : (
+                        <>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          Consultar Disponibilidad
+                        </>
+                      )}
+                    </Button>
+
+                    {availability && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-muted rounded-lg space-y-3"
+                      >
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Disponibilidad
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                          {availability.espacios && availability.espacios.length > 0 ? (
+                            availability.espacios.map((espacio: any, index: number) => (
+                              <div key={index} className="border-l-2 border-accent pl-3">
+                                <p className="font-medium">{espacio.sala || espacio.nombre}</p>
+                                {espacio.horarios && espacio.horarios.length > 0 && (
+                                  <p className="text-muted-foreground">
+                                    Horarios: {espacio.horarios.join(", ")}
+                                  </p>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-muted-foreground">
+                              {availability.mensaje || "No hay información de disponibilidad"}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
 
                   <Button
                     type="submit"
