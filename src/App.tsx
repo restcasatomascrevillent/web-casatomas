@@ -21,7 +21,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/reservas" element={<Reservas />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/migrate-data" element={<MigrationHelper />} />
           <Route path="/touza-cocktail" element={<NotFound />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

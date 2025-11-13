@@ -56,29 +56,40 @@ const NosotrosSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto"
+            className="max-w-4xl mx-auto space-y-6"
           >
-            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              Casa Tomás nació del sueño de compartir la auténtica cocina tradicional de Crevillent con el mundo. Lo que
-              comenzó como un pequeño restaurante familiar ha crecido hasta convertirse en un referente gastronómico,
-              manteniendo siempre nuestros valores: calidad, tradición y amor por la cocina.
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Allá por 1998, Tomás Vázquez González dejó su tierra, A Touza (Ourense), para empezar una nueva vida en Crevillente. Venía con una maleta llena de ilusión y una idea muy clara: levantar un bar familiar donde se comiera bien y se sintiera aún mejor.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              <div className="flex flex-col items-center">
-                <Clock className="w-12 h-12 text-accent mb-3" />
-                <h3 className="font-semibold mb-2">Más de 30 años</h3>
-                <p className="text-sm text-muted-foreground">de tradición culinaria</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <Heart className="w-12 h-12 text-accent mb-3" />
-                <h3 className="font-semibold mb-2">Familia y pasión</h3>
-                <p className="text-sm text-muted-foreground">en cada plato</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <ChefHat className="w-12 h-12 text-accent mb-3" />
-                <h3 className="font-semibold mb-2">Cocina tradicional</h3>
-                <p className="text-sm text-muted-foreground">con toques modernos</p>
-              </div>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Ese sueño empezó en el antiguo Bar Manuel, el bar de sus tíos Rosa y Manuel, que confiaron en Tomás para seguir dando vida a aquel pequeño rincón del poble. Con el tiempo pasó a llamarse Bar Tomás, y ese toque gallego que Tomás trajo consigo convirtió aquella esquina en un lugar especial para muchos vecinos.
+            </p>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Los años, el boca a boca y el cariño de la gente hicieron posible dar un paso más: de bar familiar a restaurante. Así nació Casa Tomás, en la calle Santa María de la Cabeza, donde seguimos hoy, intentando que cada visita se sienta como llegar a casa.
+            </p>
+
+            <div className="pt-6">
+              <h3 className="text-2xl font-bold text-primary mb-4">Mucho más que un restaurante</h3>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+                Casa Tomás siempre ha sido un lugar sencillo, cercano y muy nuestro.
+                El amor por la gastronomía y las inquietudes profesionales de Tomás han hecho que el restaurante no deje de evolucionar:
+                productos de calidad, recetas cuidadas al detalle y un trato de tú a tú con cada persona que se sienta a la mesa.
+              </p>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Las ampliaciones del local han llegado gracias a todos aquellos que han querido venir a probar nuestras recetas y repetir una y otra vez. Poco a poco, Casa Tomás se ha convertido en un pequeño referente gastronómico en la provincia de Alicante, sin perder nunca su esencia de bar de barrio de toda la vida.
+              </p>
+            </div>
+
+            <div className="pt-6">
+              <h3 className="text-2xl font-bold text-primary mb-4">De padres a hijos</h3>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-4">
+                Hoy, la historia continúa de la manera más bonita posible:
+                Hugo, el hijo de Tomás, está mano a mano con su padre en el día a día del restaurante, aprendiendo todo lo que puede –desde lo más sencillo hasta los pequeños detalles que hacen que cada cliente se sienta especial.
+              </p>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Casa Tomás es, al final, eso: la evolución personal y profesional de una familia que ama la cocina tradicional y que, desde 1998, tiene un único objetivo:
+                que cada persona que se siente en nuestra casa viva una experiencia cercana, sabrosa y difícil de olvidar.
+              </p>
             </div>
           </motion.div>
         </div>
