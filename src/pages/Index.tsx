@@ -4,6 +4,7 @@ import CartaSection from "@/components/CartaSection";
 import NovedadesSection from "@/components/NovedadesSection";
 import ReservasSection from "@/components/ReservasSection";
 import EspaciosSection from "@/components/EspaciosSection";
+import ReviewsSection from "@/components/ReviewsSection";
 import NosotrosSection from "@/components/NosotrosSection";
 import ContactoSection from "@/components/ContactoSection";
 import Footer from "@/components/Footer";
@@ -16,8 +17,9 @@ const Index = () => {
       <Hero />
       <CartaSection />
       <NovedadesSection />
-      <ReservasSection />
       <EspaciosSection />
+      <ReservasSection />
+      <ReviewsSection />
       <NosotrosSection />
       <ContactoSection />
       <Footer />
