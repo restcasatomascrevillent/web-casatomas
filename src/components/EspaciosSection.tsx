@@ -28,7 +28,7 @@ const EspaciosSection = () => {
   ];
 
   return (
-    <section className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-muted to-background">
+    <section id="espacios" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-muted to-background">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}

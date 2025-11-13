@@ -5,7 +5,7 @@ import { Calendar, Clock, Users, Phone } from "lucide-react";
 
 const ReservasSection = () => {
   return (
-    <section className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-dark-slate to-primary relative overflow-hidden">
+    <section id="reservas" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-dark-slate to-primary relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-64 h-64 bg-accent rounded-full blur-3xl" />

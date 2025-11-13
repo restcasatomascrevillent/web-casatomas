@@ -22,7 +22,7 @@ const NosotrosSection = () => {
   ];
 
   return (
-    <section className="py-20 px-4 md:px-8 lg:px-16 bg-background">
+    <section id="nosotros" className="py-20 px-4 md:px-8 lg:px-16 bg-background">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}

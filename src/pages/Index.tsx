@@ -1,3 +1,4 @@
+import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import CartaSection from "@/components/CartaSection";
 import NovedadesSection from "@/components/NovedadesSection";
@@ -9,7 +10,9 @@ import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <Header />
+      <div className="min-h-screen bg-background">
       <Hero />
       <CartaSection />
       <NovedadesSection />
@@ -18,7 +21,8 @@ const Index = () => {
       <NosotrosSection />
       <ContactoSection />
       <Footer />
-    </div>
+      </div>
+    </>
   );
 };
 
