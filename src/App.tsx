@@ -8,6 +8,7 @@ import AdminLogin from "./pages/AdminLogin";
 import MigrationHelper from "./pages/MigrationHelper";
 import NotFound from "./pages/NotFound";
 import Reservas from "./pages/Reservas";
+import CookieConsent from "./components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <CookieConsent />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
