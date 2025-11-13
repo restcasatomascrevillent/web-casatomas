@@ -150,24 +150,34 @@ const CartaVinos = () => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-64 justify-between bg-background hover:bg-muted"
+                className="w-72 h-12 justify-between bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold"
               >
-                <span className="font-medium">{selectedCategory}</span>
-                <ChevronDown className="w-4 h-4 ml-2" />
+                <span className="flex items-center gap-2">
+                  <Wine className="w-5 h-5 text-accent" />
+                  {selectedCategory}
+                </span>
+                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 max-h-96 overflow-y-auto bg-background">
+            <DropdownMenuContent className="w-72 max-h-[28rem] overflow-y-auto bg-background/95 backdrop-blur-lg border-2 border-border shadow-2xl rounded-xl p-2">
               {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`cursor-pointer ${
+                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 ${
                     selectedCategory === category 
-                      ? "bg-accent text-accent-foreground font-semibold" 
-                      : "hover:bg-muted"
+                      ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
+                      : "hover:bg-muted/70 hover:translate-x-1"
                   }`}
                 >
-                  {category}
+                  <span className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full ${
+                      selectedCategory === category 
+                        ? "bg-accent-foreground" 
+                        : "bg-accent/40"
+                    }`} />
+                    {category}
+                  </span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
