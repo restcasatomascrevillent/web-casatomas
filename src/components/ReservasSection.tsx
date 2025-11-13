@@ -2,8 +2,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock, Users, Phone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ReservasSection = () => {
+  const navigate = useNavigate();
+  
   return (
     <section id="reservas" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-dark-slate to-primary relative overflow-hidden">
       {/* Decorative elements */}
@@ -99,7 +102,7 @@ const ReservasSection = () => {
                 <Button
                   size="lg"
                   className="bg-accent hover:bg-accent/90 text-accent-foreground px-12 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  onClick={() => window.open('https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent', '_blank')}
+                  onClick={() => navigate('/reservas')}
                 >
                   Reservar Ahora
                 </Button>
