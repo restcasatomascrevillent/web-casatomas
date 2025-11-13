@@ -2,26 +2,32 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Wine, UtensilsCrossed } from "lucide-react";
+import pulpoImage from "@/assets/pulpo-plato.jpg";
+import carneImage from "@/assets/carne-plato.png";
+import champanImage from "@/assets/champan.png";
 
 const NovedadesSection = () => {
   const novedades = [
     {
-      title: "Nuevas Setas de Temporada",
-      description: "Setas silvestres a la parrilla, recién llegadas de nuestros proveedores locales",
+      title: "Pulpo a la Gallega Premium",
+      description: "Pulpo fresco cocido a la perfección con patata, pimentón dulce y aceite de oliva virgen extra",
       icon: UtensilsCrossed,
-      badge: "Nuevo Plato"
+      badge: "Especialidad",
+      image: pulpoImage
     },
     {
-      title: "Experiencia de Maridaje",
-      description: "Descubre nuestra nueva experiencia de maridaje con vinos selectos de Rioja",
+      title: "Carnes Premium a la Brasa",
+      description: "Selección de las mejores carnes maduradas, cocinadas en nuestro horno de leña",
+      icon: UtensilsCrossed,
+      badge: "Destacado",
+      image: carneImage
+    },
+    {
+      title: "Champán y Cavas Selectos",
+      description: "Nueva selección de champán Laurent-Perrier y cavas premium para tus celebraciones",
       icon: Wine,
-      badge: "Experiencia"
-    },
-    {
-      title: "Cata de Vinos Premium",
-      description: "Únete a nuestras catas mensuales guiadas por nuestro sumiller",
-      icon: Sparkles,
-      badge: "Evento"
+      badge: "Novedad",
+      image: champanImage
     }
   ];
 
@@ -66,7 +72,16 @@ const NovedadesSection = () => {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 viewport={{ once: true }}
               >
-                <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+                  {novedad.image && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={novedad.image} 
+                        alt={novedad.title}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
                       <div className="p-3 bg-accent/10 rounded-lg">

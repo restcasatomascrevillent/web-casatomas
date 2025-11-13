@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
+import logo from "@/assets/logo-casa-tomas.png";
 
 const Hero = () => {
   const ref = useRef(null);
@@ -31,6 +32,11 @@ const Hero = () => {
           transition={{ duration: 1, delay: 0.2 }}
           className="mb-8"
         >
+          <img 
+            src={logo} 
+            alt="Casa Tomás Restaurante" 
+            className="w-48 md:w-64 h-auto mx-auto mb-6 drop-shadow-2xl"
+          />
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-background mb-4 tracking-tight">
             Casa Tomás
           </h1>
