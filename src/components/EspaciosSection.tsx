@@ -1,29 +1,46 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, Utensils, TreePine, Wine } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Home, Utensils, TreePine, Wine, Camera, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import carnePlato from "@/assets/carne-plato.png";
+import pulpoPlato from "@/assets/pulpo-plato.jpg";
+import vinosMarques from "@/assets/vinos-marqués.jpeg";
 
 const EspaciosSection = () => {
+  const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
+
   const espacios = [
     {
       title: "Salón Principal",
       description: "Amplio y acogedor, perfecto para celebraciones familiares y eventos especiales",
       icon: Home,
+      hasGallery: true,
+      images: [carnePlato, pulpoPlato, vinosMarques],
     },
     {
       title: "Comedor Privado",
       description: "Espacio íntimo ideal para comidas de negocio o reuniones privadas",
       icon: Utensils,
+      hasGallery: true,
+      images: [pulpoPlato, vinosMarques, carnePlato],
     },
     {
       title: "Terraza Exterior",
       description: "Disfruta de nuestros platos al aire libre en un ambiente relajado",
       icon: TreePine,
+      hasGallery: true,
+      images: [vinosMarques, carnePlato, pulpoPlato],
     },
     {
       title: "Touza Cocktail Bar",
       description: "Coctelería de autor en un ambiente sofisticado y exclusivo",
       icon: Wine,
+      hasGallery: false,
+      link: "/touza-cocktail",
     },
   ];
 
@@ -78,7 +95,28 @@ const EspaciosSection = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">{espacio.description}</p>
+                    <p className="text-muted-foreground mb-4">{espacio.description}</p>
+                    {espacio.hasGallery ? (
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => setSelectedEspacio(index)}
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Ver Galería
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        asChild
+                      >
+                        <Link to={espacio.link || "#"}>
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Visitar Touza Cocktail
+                        </Link>
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -118,6 +156,34 @@ const EspaciosSection = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Diálogo del carrusel de fotos */}
+        <Dialog open={selectedEspacio !== null} onOpenChange={() => setSelectedEspacio(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{selectedEspacio !== null ? espacios[selectedEspacio].title : ''}</DialogTitle>
+            </DialogHeader>
+            {selectedEspacio !== null && espacios[selectedEspacio].images && (
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {espacios[selectedEspacio].images.map((image, idx) => (
+                    <CarouselItem key={idx}>
+                      <div className="p-1">
+                        <img 
+                          src={image} 
+                          alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
+                          className="w-full h-[400px] object-cover rounded-lg"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+            )}
+          </DialogContent>
+        </Dialog>
       </motion.div>
     </section>
   );
