@@ -112,32 +112,6 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
 
   return (
     <>
-      {/* Banner informativo */}
-      <AnimatePresence>
-        {showBanner && pedido.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full mx-4"
-          >
-            <div className="bg-accent text-accent-foreground rounded-lg shadow-lg p-4 flex items-start gap-3">
-              <Receipt className="w-5 h-5 mt-0.5 flex-shrink-0" />
-              <p className="text-sm flex-1">
-                Tu pedido está guardado. Toca el botón flotante para ver y editar el ticket completo.
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={dismissBanner}
-                className="h-6 w-6 p-0 hover:bg-accent-foreground/10"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Botón flotante */}
       {showFloatingButton && pedido.length > 0 && (
@@ -169,7 +143,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
               </AnimatePresence>
               <Button
                 size="lg"
-                className="h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground border-4 border-background hover:scale-110 transition-transform duration-200 animate-pulse-organic"
+                className="h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground border-4 border-background hover:scale-110 transition-transform duration-200"
               >
                 <Receipt className="w-8 h-8" />
                 <span className="sr-only">Ver ticket del pedido</span>
