@@ -55,7 +55,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
   const CATEGORY_ORDER = [
     "NOVEDADES DEL DÍA",
-    "SNACKS",
+    "SNACK",
     "ENTRANTES FRÍOS",
     "ENTRANTES CALIENTES",
     "ENSALADAS",
