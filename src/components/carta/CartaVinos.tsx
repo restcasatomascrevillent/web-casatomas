@@ -21,7 +21,6 @@ import MapaMundoVinos from "./MapaMundoVinos";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import vinosImage from "@/assets/vinos-marqués.jpeg";
 
 const CartaVinos = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -143,26 +142,6 @@ const CartaVinos = () => {
 
   return (
     <div className="space-y-8">
-      {/* Banner de vinos */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative rounded-2xl overflow-hidden h-64 md:h-80"
-      >
-        <img 
-          src={vinosImage} 
-          alt="Selección de vinos Marqués de Riscal"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent flex items-end">
-          <div className="p-8">
-            <h3 className="text-3xl md:text-4xl font-bold text-background mb-2">Selección Premium</h3>
-            <p className="text-lg text-background/90">Descubre nuestros vinos selectos</p>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Mapa Mundial */}
       {!loading && <MapaMundoVinos vinos={vinos} />}
 
