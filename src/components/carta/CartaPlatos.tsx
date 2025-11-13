@@ -21,7 +21,7 @@ interface CartaPlatosProps {
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
+  const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -53,20 +53,29 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
   };
 
+  const CATEGORY_ORDER = [
+    "NOVEDADES DEL DÍA",
+    "SNACKS",
+    "ENTRANTES FRÍOS",
+    "ENTRANTES CALIENTES",
+    "ENSALADAS",
+    "SALAZONES",
+    "MARISCOS",
+    "PESCADOS",
+    "CARNES",
+    "ARROCES",
+    "POSTRES",
+    "TODOS"
+  ];
+
   const categories = useMemo(() => {
-    // Mantener el orden de las categorías tal como vienen de la BD
-    const seen = new Set<string>();
-    const orderedCategories: string[] = [];
+    const uniqueCategories = new Set(platos.map(p => p.categoria.toUpperCase()));
+    const categoriesArray = Array.from(uniqueCategories);
     
-    platos.forEach(plato => {
-      if (!seen.has(plato.categoria)) {
-        seen.add(plato.categoria);
-        orderedCategories.push(plato.categoria);
-      }
-    });
-    
-    // Añadir "Todos" al final
-    orderedCategories.push("Todos");
+    // Filtrar el orden predefinido manteniendo solo las categorías que existen
+    const orderedCategories = CATEGORY_ORDER.filter(cat => 
+      cat === "TODOS" || categoriesArray.includes(cat)
+    );
     
     return orderedCategories;
   }, [platos]);
@@ -74,8 +83,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const filteredItems = useMemo(() => {
     let items = platos;
 
-    if (selectedCategory !== "Todos") {
-      items = items.filter(item => item.categoria === selectedCategory);
+    if (selectedCategory !== "TODOS") {
+      items = items.filter(item => item.categoria.toUpperCase() === selectedCategory);
     }
 
     if (searchTerm) {
