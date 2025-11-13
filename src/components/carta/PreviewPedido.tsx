@@ -12,6 +12,7 @@ import saladImg from "@/assets/platos/salad.jpg";
 import riceImg from "@/assets/platos/rice.jpg";
 import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
+import logoImg from "@/assets/logo-casa-tomas.png";
 
 interface PedidoItem {
   nombre: string;
@@ -133,10 +134,17 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
       <div className="bg-white text-black p-6 rounded-lg shadow-lg font-mono text-xs border-2 border-dashed border-gray-300">
         {/* Header */}
         <div className="text-center border-b-2 border-black pb-3 mb-3">
+          <div className="flex justify-center mb-2">
+            <img 
+              src={logoImg} 
+              alt="Casa Tomás Logo" 
+              className="h-16 w-auto object-contain"
+            />
+          </div>
           <p className="text-lg font-bold tracking-wider">CASA TOMÁS</p>
           <p className="text-[10px] mt-1">RESTAURANTE</p>
           <p className="text-[10px] mt-2">================================</p>
-          <p className="text-[10px] mt-1">{new Date().toLocaleDateString('es-ES', { 
+          <p className="text-[10px] mt-1">{new Date().toLocaleDateString('es-ES', {
             year: 'numeric', 
             month: '2-digit', 
             day: '2-digit',
