@@ -14,6 +14,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
+import seafoodImg from "@/assets/platos/seafood.jpg";
+import meatImg from "@/assets/platos/meat.jpg";
+import saladImg from "@/assets/platos/salad.jpg";
+import riceImg from "@/assets/platos/rice.jpg";
+import dessertImg from "@/assets/platos/dessert.jpg";
+import appetizerImg from "@/assets/platos/appetizer.jpg";
 
 interface CartaPlatosProps {
   showAddButton: boolean;
@@ -86,6 +92,17 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
     return items;
   }, [searchTerm, selectedCategory, platos]);
+
+  const getCategoryImage = (categoria: string) => {
+    const cat = categoria.toUpperCase();
+    if (cat.includes('MARISCO') || cat.includes('PESCADO')) return seafoodImg;
+    if (cat.includes('CARNE')) return meatImg;
+    if (cat.includes('ENSALADA')) return saladImg;
+    if (cat.includes('ARROZ')) return riceImg;
+    if (cat.includes('POSTRE')) return dessertImg;
+    if (cat.includes('ENTRANTE') || cat.includes('SNACK') || cat.includes('SALAZÓN')) return appetizerImg;
+    return appetizerImg;
+  };
 
   const addToPedido = (item: any) => {
     const pedido = getUserPedido();
@@ -169,14 +186,25 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.03 }}
           >
-            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl leading-tight">{item.nombre}</CardTitle>
+            <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+              <div className="relative h-48 overflow-hidden bg-muted">
+                <img 
+                  src={getCategoryImage(item.categoria)} 
+                  alt={item.nombre}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                    {item.categoria}
+                  </Badge>
+                </div>
+              </div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg leading-tight line-clamp-2">{item.nombre}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm font-medium text-accent uppercase tracking-wide">{item.categoria}</p>
+              <CardContent className="space-y-3 pb-4">
                 {item.descripcion && (
-                  <p className="text-sm text-muted-foreground">{item.descripcion}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
                 )}
                 {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
                   <div className="flex flex-wrap gap-1">
@@ -193,12 +221,12 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                   </div>
                 )}
                 {item.alergenos_notas && (
-                  <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
+                  <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
                     {item.alergenos_notas}
                   </p>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between items-center pt-4 border-t">
+              <CardFooter className="flex justify-between items-center pt-3 border-t bg-muted/30">
                 <span className="text-2xl font-bold text-accent">
                   {item.precio_eur}€
                   {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
@@ -207,7 +235,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                   <Button
                     size="sm"
                     onClick={() => addToPedido(item)}
-                    className="bg-accent hover:bg-accent/90 rounded-full px-4"
+                    className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Añadir

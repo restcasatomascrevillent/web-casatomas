@@ -6,6 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Trash2, Receipt, Plus, Minus, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
+import seafoodImg from "@/assets/platos/seafood.jpg";
+import meatImg from "@/assets/platos/meat.jpg";
+import saladImg from "@/assets/platos/salad.jpg";
+import riceImg from "@/assets/platos/rice.jpg";
+import dessertImg from "@/assets/platos/dessert.jpg";
+import appetizerImg from "@/assets/platos/appetizer.jpg";
 
 interface PedidoItem {
   nombre: string;
@@ -91,6 +97,18 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
     updateCantidad(index, newCantidad);
   };
 
+  const getCategoryImage = (categoria?: string) => {
+    if (!categoria) return appetizerImg;
+    const cat = categoria.toUpperCase();
+    if (cat.includes('MARISCO') || cat.includes('PESCADO')) return seafoodImg;
+    if (cat.includes('CARNE')) return meatImg;
+    if (cat.includes('ENSALADA')) return saladImg;
+    if (cat.includes('ARROZ')) return riceImg;
+    if (cat.includes('POSTRE')) return dessertImg;
+    if (cat.includes('ENTRANTE') || cat.includes('SNACK') || cat.includes('SALAZÓN')) return appetizerImg;
+    return appetizerImg;
+  };
+
   const total = pedido.reduce((sum, item) => {
     const cantidad = item.cantidad || 1;
     return sum + (item.precio_eur || 0) * cantidad;
@@ -154,31 +172,42 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                 const isWeight = item.unidad === 'kg' || item.unidad === 'g';
                 
                 return (
-                  <div key={index} className="space-y-2 pb-3 border-b border-dashed border-border">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="flex-1">
-                        <p className="font-medium">{item.nombre}</p>
-                        {item.categoria && (
-                          <p className="text-xs text-muted-foreground">{item.categoria}</p>
-                        )}
+                  <div key={index} className="space-y-3 pb-4 border-b border-dashed border-border">
+                    <div className="flex gap-3">
+                      <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                        <img 
+                          src={getCategoryImage(item.categoria)} 
+                          alt={item.nombre}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(index)}
-                        className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm leading-tight truncate">{item.nombre}</p>
+                            {item.categoria && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{item.categoria}</p>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeItem(index)}
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-3 pl-2">
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => decrementCantidad(index)}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 rounded-full"
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -189,10 +218,10 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                           min="0.1"
                           value={cantidad.toFixed(isWeight ? 1 : 0)}
                           onChange={(e) => updateCantidad(index, parseFloat(e.target.value) || 0.1)}
-                          className="w-20 h-8 text-center font-mono"
+                          className="w-16 h-8 text-center font-mono text-sm"
                         />
                         
-                        <span className="text-xs text-muted-foreground min-w-[30px]">
+                        <span className="text-xs text-muted-foreground min-w-[25px]">
                           {item.unidad || 'ud'}
                         </span>
                         
@@ -200,7 +229,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                           variant="outline"
                           size="sm"
                           onClick={() => incrementCantidad(index)}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 rounded-full"
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -210,7 +239,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                         <p className="text-xs text-muted-foreground">
                           {item.precio_eur?.toFixed(2)}€ × {cantidad.toFixed(isWeight ? 1 : 0)}
                         </p>
-                        <p className="font-bold">
+                        <p className="font-bold text-accent">
                           {subtotal.toFixed(2)}€
                         </p>
                       </div>
