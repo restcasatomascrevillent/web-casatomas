@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import appetizerImg from "@/assets/platos/appetizer.jpg";
+import vinosImg from "@/assets/vinos-marqués.jpeg";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
@@ -231,7 +231,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                 <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
                   <img 
-                    src={appetizerImg} 
+                    src={vinosImg} 
                     alt={item.nombre}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   />

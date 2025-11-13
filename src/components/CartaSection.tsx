@@ -10,9 +10,11 @@ import PreviewPedido from "./carta/PreviewPedido";
 import { getUserPedido } from "@/utils/sessionManager";
 
 type Section = "platos" | "vinos" | "bebidas" | "pedido" | null;
+type PedidoSubSection = "platos" | "vinos" | "bebidas" | null;
 
 const CartaSection = () => {
   const [activeSection, setActiveSection] = useState<Section>(null);
+  const [pedidoSubSection, setPedidoSubSection] = useState<PedidoSubSection>(null);
   const [pedidoCount, setPedidoCount] = useState(0);
 
   useEffect(() => {
@@ -152,24 +154,69 @@ const CartaSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="space-y-12">
-              <div>
-                <h3 className="text-2xl font-bold text-center mb-6">Platos</h3>
-                <CartaPlatos showAddButton={true} />
+            {/* Botones de subsección dentro de Mi Pedido */}
+            {!pedidoSubSection ? (
+              <div className="space-y-8">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    size="lg"
+                    onClick={() => setPedidoSubSection("platos")}
+                    className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  >
+                    <UtensilsCrossed className="w-5 h-5 mr-2" />
+                    Añadir Platos
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={() => setPedidoSubSection("vinos")}
+                    className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  >
+                    <Wine className="w-5 h-5 mr-2" />
+                    Añadir Vinos
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={() => setPedidoSubSection("bebidas")}
+                    className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  >
+                    <Beer className="w-5 h-5 mr-2" />
+                    Añadir Bebidas
+                  </Button>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-center mb-6">Tu Pedido</h3>
+                  <PreviewPedido showFloatingButton={true} />
+                </div>
               </div>
-              <div>
-                <h3 className="text-2xl font-bold text-center mb-6">Vinos</h3>
-                <CartaVinos showAddButton={true} />
+            ) : (
+              <div className="space-y-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setPedidoSubSection(null)}
+                  className="mb-4"
+                >
+                  ← Volver a Mi Pedido
+                </Button>
+                {pedidoSubSection === "platos" && (
+                  <div>
+                    <h3 className="text-2xl font-bold text-center mb-6">Añadir Platos</h3>
+                    <CartaPlatos showAddButton={true} />
+                  </div>
+                )}
+                {pedidoSubSection === "vinos" && (
+                  <div>
+                    <h3 className="text-2xl font-bold text-center mb-6">Añadir Vinos</h3>
+                    <CartaVinos showAddButton={true} />
+                  </div>
+                )}
+                {pedidoSubSection === "bebidas" && (
+                  <div>
+                    <h3 className="text-2xl font-bold text-center mb-6">Añadir Bebidas</h3>
+                    <CartaBebidas showAddButton={true} />
+                  </div>
+                )}
               </div>
-              <div>
-                <h3 className="text-2xl font-bold text-center mb-6">Bebidas</h3>
-                <CartaBebidas showAddButton={true} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-center mb-6">Tu Pedido</h3>
-                <PreviewPedido showFloatingButton={true} />
-              </div>
-            </div>
+            )}
           </motion.div>
         )}
       </motion.div>
