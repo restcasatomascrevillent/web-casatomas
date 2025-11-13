@@ -169,9 +169,10 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
               </AnimatePresence>
               <Button
                 size="lg"
-                className="h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground border-4 border-background"
+                className="h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground border-4 border-background hover:scale-110 transition-transform duration-200"
               >
-                <Receipt className="w-7 h-7" />
+                <Receipt className="w-8 h-8" />
+                <span className="sr-only">Ver ticket del pedido</span>
               </Button>
             </motion.div>
           </DialogTrigger>
