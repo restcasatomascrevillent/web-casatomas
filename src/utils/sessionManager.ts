@@ -5,16 +5,13 @@
 export const getSessionId = (): string => {
   const SESSION_KEY = 'user_session_id';
   
-  // Intentar obtener el ID de sesión existente solo de sessionStorage (no de localStorage)
+  // Intentar obtener el ID de sesión existente
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   
-  // Si no existe, generar uno nuevo y limpiar pedidos anteriores
+  // Si no existe, generar uno nuevo
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     sessionStorage.setItem(SESSION_KEY, sessionId);
-    // Limpiar todos los pedidos al iniciar nueva sesión (recarga de página)
-    localStorage.removeItem('pedidos');
-    localStorage.removeItem('pedido');
   }
   
   return sessionId;
@@ -22,24 +19,22 @@ export const getSessionId = (): string => {
 
 /**
  * Obtiene el pedido del usuario actual basado en su sessionId
+ * Usa sessionStorage que se borra automáticamente al recargar la página
  */
 export const getUserPedido = (): any[] => {
   const sessionId = getSessionId();
-  const allPedidos = JSON.parse(localStorage.getItem('pedidos') || '{}');
+  const allPedidos = JSON.parse(sessionStorage.getItem('pedidos') || '{}');
   return allPedidos[sessionId] || [];
 };
 
 /**
- * Guarda el pedido del usuario actual
+ * Guarda el pedido del usuario actual en sessionStorage (temporal)
  */
 export const setUserPedido = (pedido: any[]): void => {
   const sessionId = getSessionId();
-  const allPedidos = JSON.parse(localStorage.getItem('pedidos') || '{}');
+  const allPedidos = JSON.parse(sessionStorage.getItem('pedidos') || '{}');
   allPedidos[sessionId] = pedido;
-  localStorage.setItem('pedidos', JSON.stringify(allPedidos));
-  
-  // También actualizar el pedido legacy para compatibilidad
-  localStorage.setItem('pedido', JSON.stringify(pedido));
+  sessionStorage.setItem('pedidos', JSON.stringify(allPedidos));
   
   // Disparar evento para actualizar UI
   window.dispatchEvent(new Event('pedidoUpdated'));
