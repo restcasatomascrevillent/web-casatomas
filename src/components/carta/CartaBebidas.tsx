@@ -163,20 +163,13 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
             transition={{ duration: 0.4, delay: index * 0.03 }}
           >
             <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-              <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
-                <img 
-                  src={champanImg} 
-                  alt={item.nombre}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-                <div className="absolute top-2 right-2">
-                  <span className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md px-3 py-1 rounded-full text-sm font-semibold">
+              <CardHeader className="pb-3 flex-shrink-0">
+                <div className="flex justify-between items-start gap-2">
+                  <CardTitle className="text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex-grow">{item.nombre}</CardTitle>
+                  <span className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0">
                     {item.categoria}
                   </span>
                 </div>
-              </div>
-              <CardHeader className="pb-3 flex-shrink-0">
-                <CardTitle className="text-lg leading-tight line-clamp-2 min-h-[3.5rem]">{item.nombre}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
                 {item.descripcion && (
