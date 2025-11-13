@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import appetizerImg from "@/assets/platos/appetizer.jpg";
+import champanImg from "@/assets/champan.png";
 
 interface CartaBebidasProps {
   showAddButton: boolean;
@@ -165,7 +165,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
             <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
               <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
                 <img 
-                  src={appetizerImg} 
+                  src={champanImg} 
                   alt={item.nombre}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 />
