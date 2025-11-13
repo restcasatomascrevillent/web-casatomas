@@ -129,62 +129,70 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
   }
 
   return (
-    <div className="space-y-4 font-mono text-sm">
-      <div className="border-b-2 border-dashed border-border pb-2">
-        <p className="font-bold">Casa Tomás Restaurante</p>
-        <p className="text-xs text-muted-foreground">Preview de Pedido</p>
-      </div>
-      
-      {pedido.map((item, index) => {
-        const cantidad = item.cantidad || 1;
-        const subtotal = (item.precio_eur || 0) * cantidad;
-        const isWeight = item.unidad === 'kg' || item.unidad === 'g';
+    <div className="max-w-md mx-auto">
+      <div className="bg-white text-black p-6 rounded-lg shadow-lg font-mono text-xs border-2 border-dashed border-gray-300">
+        {/* Header */}
+        <div className="text-center border-b-2 border-black pb-3 mb-3">
+          <p className="text-lg font-bold tracking-wider">CASA TOMÁS</p>
+          <p className="text-[10px] mt-1">RESTAURANTE</p>
+          <p className="text-[10px] mt-2">================================</p>
+          <p className="text-[10px] mt-1">{new Date().toLocaleDateString('es-ES', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}</p>
+          <p className="text-[10px]">================================</p>
+        </div>
         
-        return (
-          <div key={index} className="space-y-3 pb-4 border-b border-dashed border-border">
-            <div className="flex gap-3">
-              <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                <img 
-                  src={getCategoryImage(item.categoria)} 
-                  alt={item.nombre}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm leading-tight truncate">{item.nombre}</p>
-                    {item.categoria && (
-                      <p className="text-xs text-muted-foreground truncate">{item.categoria}</p>
-                    )}
-                  </div>
+        {/* Items */}
+        <div className="space-y-3 mb-3">
+          {pedido.map((item, index) => {
+            const cantidad = item.cantidad || 1;
+            const subtotal = (item.precio_eur || 0) * cantidad;
+            const isWeight = item.unidad === 'kg' || item.unidad === 'g';
+            
+            return (
+              <div key={index} className="border-b border-dashed border-gray-400 pb-2">
+                {/* Nombre del producto */}
+                <div className="flex justify-between items-start mb-1">
+                  <p className="font-bold text-[11px] uppercase flex-1 pr-2 leading-tight">
+                    {item.nombre}
+                  </p>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => removeItem(index)}
-                    className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                    className="h-5 w-5 p-0 hover:bg-red-100 text-red-600 flex-shrink-0"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
                 </div>
                 
-                <div className="flex items-center justify-between mt-2 gap-2">
+                {/* Categoría si existe */}
+                {item.categoria && (
+                  <p className="text-[9px] text-gray-600 mb-1">({item.categoria})</p>
+                )}
+                
+                {/* Cantidad y controles */}
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => decrementCantidad(index)}
                       disabled={cantidad <= 1 || isWeight}
-                      className="h-7 w-7 p-0"
+                      className="h-5 w-5 p-0 border-black"
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus className="h-2 w-2" />
                     </Button>
                     
                     <Input
                       type="number"
                       value={cantidad}
                       onChange={(e) => updateCantidad(index, parseFloat(e.target.value))}
-                      className="w-16 h-7 text-center text-xs"
+                      className="w-12 h-5 text-center text-[10px] border-black"
                       min="0.01"
                       step={isWeight ? "0.1" : "1"}
                     />
@@ -194,54 +202,60 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                       size="sm"
                       onClick={() => incrementCantidad(index)}
                       disabled={isWeight}
-                      className="h-7 w-7 p-0"
+                      className="h-5 w-5 p-0 border-black"
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-2 w-2" />
                     </Button>
                     
                     {item.unidad && (
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {item.unidad}
-                      </span>
+                      <span className="text-[9px] ml-1">{item.unidad}</span>
                     )}
                   </div>
                   
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-xs text-muted-foreground">
-                      {item.precio_eur?.toFixed(2)}€ × {cantidad.toFixed(isWeight ? 2 : 0)}
+                  <div className="text-right">
+                    <p className="text-[9px] text-gray-600">
+                      {cantidad.toFixed(isWeight ? 2 : 0)} x {item.precio_eur?.toFixed(2)}€
                     </p>
-                    <p className="font-bold text-accent">
-                      {subtotal.toFixed(2)}€
-                    </p>
+                    <p className="font-bold text-[11px]">{subtotal.toFixed(2)}€</p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        );
-      })}
-      
-      <div className="border-t-2 border-dashed border-border pt-4">
-        <div className="flex justify-between items-center">
-          <span className="font-bold text-lg">TOTAL:</span>
-          <span className="font-bold text-2xl text-accent">{total.toFixed(2)}€</span>
+            );
+          })}
         </div>
-      </div>
-      
-      <div className="flex gap-2 pt-2">
+        
+        {/* Total */}
+        <div className="border-t-2 border-black pt-3 mb-3">
+          <p className="text-[10px]">================================</p>
+          <div className="flex justify-between items-center my-2">
+            <span className="font-bold text-sm">TOTAL:</span>
+            <span className="font-bold text-xl">{total.toFixed(2)}€</span>
+          </div>
+          <p className="text-[10px]">================================</p>
+        </div>
+        
+        {/* Footer */}
+        <div className="text-center text-[9px] text-gray-600 space-y-1 mb-3">
+          <p>PREVIEW DE PEDIDO</p>
+          <p>NO VINCULANTE</p>
+          <p>Confirme con el camarero</p>
+        </div>
+        
+        {/* Botón vaciar */}
         <Button
           variant="outline"
           onClick={clearPedido}
-          className="flex-1 border-destructive/50 text-destructive hover:bg-destructive/10"
+          className="w-full border-red-600 text-red-600 hover:bg-red-50 text-xs"
         >
-          <Trash2 className="w-4 h-4 mr-2" />
+          <Trash2 className="w-3 h-3 mr-2" />
           Vaciar Pedido
         </Button>
-      </div>
-      
-      <div className="text-xs text-muted-foreground text-center pt-2 border-t border-dashed border-border">
-        <p>Preview de pedido - No vinculante</p>
-        <p>Confirma con el camarero</p>
+        
+        <div className="text-center mt-3">
+          <p className="text-[10px]">********************************</p>
+          <p className="text-[9px] mt-1">Gracias por su visita</p>
+          <p className="text-[10px] mt-1">********************************</p>
+        </div>
       </div>
     </div>
   );
