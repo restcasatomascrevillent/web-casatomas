@@ -169,7 +169,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
               </AnimatePresence>
               <Button
                 size="lg"
-                className="h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground border-4 border-background hover:scale-110 transition-transform duration-200 animate-pulse"
+                className="h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground border-4 border-background hover:scale-110 transition-transform duration-200 animate-pulse-organic"
               >
                 <Receipt className="w-8 h-8" />
                 <span className="sr-only">Ver ticket del pedido</span>
