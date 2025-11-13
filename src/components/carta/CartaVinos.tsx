@@ -59,8 +59,21 @@ const CartaVinos = () => {
   };
 
   const categories = useMemo(() => {
-    const uniqueCategories = new Set(vinos.map(v => v.categoria));
-    return ["Todos", ...Array.from(uniqueCategories)];
+    // Mantener el orden de las categorías tal como vienen de la BD
+    const seen = new Set<string>();
+    const orderedCategories: string[] = [];
+    
+    vinos.forEach(vino => {
+      if (!seen.has(vino.categoria)) {
+        seen.add(vino.categoria);
+        orderedCategories.push(vino.categoria);
+      }
+    });
+    
+    // Añadir "Todos" al final
+    orderedCategories.push("Todos");
+    
+    return orderedCategories;
   }, [vinos]);
 
   const filteredItems = useMemo(() => {

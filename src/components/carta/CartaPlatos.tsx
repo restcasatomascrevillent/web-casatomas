@@ -21,7 +21,7 @@ interface CartaPlatosProps {
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Novedades del día");
+  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -53,29 +53,20 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
   };
 
-  const CATEGORY_ORDER = [
-    "Novedades del día",
-    "Entrantes fríos",
-    "Entrantes calientes",
-    "Ensaladas",
-    "Snacks",
-    "Salazones",
-    "Mariscos",
-    "Pescados",
-    "Carnes",
-    "Arroces",
-    "Postres",
-    "Todos"
-  ];
-
   const categories = useMemo(() => {
-    const uniqueCategories = new Set(platos.map(p => p.categoria));
-    const categoriesArray = Array.from(uniqueCategories);
+    // Mantener el orden de las categorías tal como vienen de la BD
+    const seen = new Set<string>();
+    const orderedCategories: string[] = [];
     
-    // Filtrar solo las categorías que existen en CATEGORY_ORDER y que hay en los datos
-    const orderedCategories = CATEGORY_ORDER.filter(cat => 
-      cat === "Todos" || categoriesArray.includes(cat)
-    );
+    platos.forEach(plato => {
+      if (!seen.has(plato.categoria)) {
+        seen.add(plato.categoria);
+        orderedCategories.push(plato.categoria);
+      }
+    });
+    
+    // Añadir "Todos" al final
+    orderedCategories.push("Todos");
     
     return orderedCategories;
   }, [platos]);
