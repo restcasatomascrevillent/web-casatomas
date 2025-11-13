@@ -21,7 +21,7 @@ interface CartaPlatosProps {
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
+  const [selectedCategory, setSelectedCategory] = useState<string>("Novedades del día");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -70,21 +70,14 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
   const categories = useMemo(() => {
     const uniqueCategories = new Set(platos.map(p => p.categoria));
-    const allCategories = Array.from(uniqueCategories);
+    const categoriesArray = Array.from(uniqueCategories);
     
-    // Ordenar según CATEGORY_ORDER
-    const ordered = CATEGORY_ORDER.filter(cat => 
-      cat === "Todos" || allCategories.includes(cat)
+    // Filtrar solo las categorías que existen en CATEGORY_ORDER y que hay en los datos
+    const orderedCategories = CATEGORY_ORDER.filter(cat => 
+      cat === "Todos" || categoriesArray.includes(cat)
     );
     
-    // Añadir categorías no contempladas al final
-    allCategories.forEach(cat => {
-      if (!CATEGORY_ORDER.includes(cat)) {
-        ordered.splice(ordered.length - 1, 0, cat);
-      }
-    });
-    
-    return ordered;
+    return orderedCategories;
   }, [platos]);
 
   const filteredItems = useMemo(() => {
