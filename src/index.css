@@ -223,17 +223,29 @@ All colors MUST be HSL.
   
   /* Animación de pulso orgánico personalizada */
   @keyframes pulse-organic {
-    0%, 100% {
+    0% {
       opacity: 1;
       transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
     }
-    50% {
-      opacity: 0.75;
-      transform: scale(1.05);
+    35% {
+      opacity: 0.9;
+      transform: scale(1.12);
+      box-shadow: 0 0 0 14px hsl(var(--accent) / 0.18);
+    }
+    60% {
+      opacity: 0.85;
+      transform: scale(1.08);
+      box-shadow: 0 0 0 8px hsl(var(--accent) / 0.12);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
     }
   }
   
   .animate-pulse-organic {
-    animation: pulse-organic var(--pulse-duration, 3s) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse-organic var(--pulse-duration, 5s) cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
 }
