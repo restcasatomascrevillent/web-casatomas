@@ -21,10 +21,8 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent" 
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <a
+                  href="/reservas"
                   className="hover:text-accent transition-colors"
                 >
                   Reservar Mesa
