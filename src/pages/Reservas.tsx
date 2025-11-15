@@ -130,18 +130,10 @@ const Reservas = () => {
     setSelectedHour("");
     
     try {
-      const payload = {
-        sala: sala,
-      };
-
       const response = await fetch(
-        "https://oficiososia.app.n8n.cloud/webhook-test/7e7fae99-44b9-48fd-b4d8-52be8cf0a518",
+        `https://oficiososia.app.n8n.cloud/webhook-test/7e7fae99-44b9-48fd-b4d8-52be8cf0a518?sala=${encodeURIComponent(sala)}`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+          method: "GET",
         }
       );
 
