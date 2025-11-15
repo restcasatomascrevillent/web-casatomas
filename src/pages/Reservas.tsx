@@ -23,6 +23,9 @@ const reservaSchema = z.object({
   email: z.string().email("Email inválido").max(255),
   comensales: z.string().min(1, "Número de comensales requerido"),
   sala: z.string().min(1, "Selecciona una sala"),
+  fecha: z.date({
+    required_error: "Selecciona una fecha",
+  }),
 });
 
 type ReservaForm = z.infer<typeof reservaSchema>;
@@ -32,8 +35,6 @@ const Reservas = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
-  const [availableDates, setAvailableDates] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableHours, setAvailableHours] = useState<string[]>([]);
   const [selectedHour, setSelectedHour] = useState<string>("");
 
@@ -41,7 +42,6 @@ const Reservas = () => {
     resolver: zodResolver(reservaSchema),
     defaultValues: {
       nombre: "",
-      telefono: "",
       email: "",
       comensales: "",
       sala: "",
@@ -49,14 +49,6 @@ const Reservas = () => {
   });
 
   const onSubmit = async (data: ReservaForm) => {
-    if (!selectedDate) {
-      toast({
-        title: "Selecciona una fecha",
-        description: "Primero debes consultar disponibilidad y seleccionar una fecha.",
-        variant: "destructive",
-      });
-      return;
-    }
     
     if (!selectedHour) {
       toast({
@@ -75,7 +67,7 @@ const Reservas = () => {
         email: data.email,
         comensales: parseInt(data.comensales),
         sala: data.sala,
-        fecha: selectedDate,
+        fecha: format(data.fecha, "yyyy-MM-dd", { locale: es }),
         hora: selectedHour,
       };
 
@@ -113,6 +105,7 @@ const Reservas = () => {
 
   const checkAvailability = async () => {
     const sala = form.getValues("sala");
+    const fecha = form.getValues("fecha");
 
     if (!sala) {
       toast({
@@ -123,15 +116,23 @@ const Reservas = () => {
       return;
     }
 
+    if (!fecha) {
+      toast({
+        title: "Selecciona una fecha",
+        description: "Primero debes seleccionar una fecha para consultar disponibilidad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCheckingAvailability(true);
-    setAvailableDates([]);
-    setSelectedDate("");
     setAvailableHours([]);
     setSelectedHour("");
     
     try {
+      const fechaStr = format(fecha, "yyyy-MM-dd", { locale: es });
       const response = await fetch(
-        `https://oficiososia.app.n8n.cloud/webhook-test/7e7fae99-44b9-48fd-b4d8-52be8cf0a518?sala=${encodeURIComponent(sala)}`,
+        `https://oficiososia.app.n8n.cloud/webhook-test/7e7fae99-44b9-48fd-b4d8-52be8cf0a518?sala=${encodeURIComponent(sala)}&fecha=${encodeURIComponent(fechaStr)}`,
         {
           method: "GET",
         }
@@ -143,35 +144,23 @@ const Reservas = () => {
 
       const data = await response.json();
       
-      // Asumiendo que el webhook devuelve un array de fechas con sus horas disponibles
-      if (data.fechas && Array.isArray(data.fechas)) {
-        setAvailableDates(data.fechas);
+      // Asumiendo que el webhook devuelve un array de horas disponibles
+      if (data.horas && Array.isArray(data.horas)) {
+        setAvailableHours(data.horas);
         toast({
           title: "Disponibilidad consultada",
-          description: `Se encontraron ${data.fechas.length} fechas disponibles.`,
+          description: `Se encontraron ${data.horas.length} horarios disponibles.`,
         });
       } else {
         toast({
           title: "Sin disponibilidad",
-          description: "No hay fechas disponibles para la sala seleccionada.",
+          description: "No hay horarios disponibles para la fecha y sala seleccionadas.",
           variant: "destructive",
         });
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo consultar la disponibilidad. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
     } finally {
       setIsCheckingAvailability(false);
     }
-  };
-
-  const selectDate = (fecha: string, horas: string[]) => {
-    setSelectedDate(fecha);
-    setAvailableHours(horas);
-    setSelectedHour("");
   };
 
   return (
@@ -285,6 +274,48 @@ const Reservas = () => {
                     )}
                   />
 
+                  <FormField
+                    control={form.control}
+                    name="fecha"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: es })
+                                ) : (
+                                  <span>Selecciona una fecha</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date() || date < new Date("1900-01-01")
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <div className="space-y-4">
                     <Button
                       type="button"
@@ -303,37 +334,7 @@ const Reservas = () => {
                       )}
                     </Button>
 
-                    {availableDates.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-3"
-                      >
-                        <h3 className="font-semibold flex items-center gap-2">
-                          <CalendarIcon className="h-4 w-4" />
-                          Fechas Disponibles
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {availableDates.map((fechaData) => (
-                            <button
-                              key={fechaData.fecha}
-                              type="button"
-                              onClick={() => selectDate(fechaData.fecha, fechaData.horas || [])}
-                              className={cn(
-                                "p-3 rounded-lg border-2 transition-all text-sm font-medium",
-                                selectedDate === fechaData.fecha
-                                  ? "border-primary bg-primary text-primary-foreground shadow-md"
-                                  : "border-border hover:border-primary hover:bg-accent"
-                              )}
-                            >
-                              {format(new Date(fechaData.fecha), "PPP", { locale: es })}
-                            </button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {availableHours.length > 0 && selectedDate && (
+                    {availableHours.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
