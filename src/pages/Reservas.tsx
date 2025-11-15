@@ -144,14 +144,29 @@ const Reservas = () => {
 
       const data = await response.json();
       
-      // Asumiendo que el webhook devuelve un array de horas disponibles
-      if (data.horas && Array.isArray(data.horas)) {
-        setAvailableHours(data.horas);
-        toast({
-          title: "Disponibilidad consultada",
-          description: `Se encontraron ${data.horas.length} horarios disponibles.`,
-        });
+      // Filtrar por la sala seleccionada y extraer las horas únicas
+      if (Array.isArray(data) && data.length > 0) {
+        const horasDisponibles = data
+          .filter((slot: any) => slot.espacio.toLowerCase() === sala.toLowerCase())
+          .map((slot: any) => slot.hora.substring(0, 5)) // Extraer HH:MM
+          .filter((hora: string, index: number, self: string[]) => self.indexOf(hora) === index); // Únicas
+        
+        if (horasDisponibles.length > 0) {
+          setAvailableHours(horasDisponibles);
+          toast({
+            title: "Disponibilidad consultada",
+            description: `Se encontraron ${horasDisponibles.length} horarios disponibles.`,
+          });
+        } else {
+          setAvailableHours([]);
+          toast({
+            title: "Sin disponibilidad",
+            description: "No hay horarios disponibles para la fecha y sala seleccionadas.",
+            variant: "destructive",
+          });
+        }
       } else {
+        setAvailableHours([]);
         toast({
           title: "Sin disponibilidad",
           description: "No hay horarios disponibles para la fecha y sala seleccionadas.",
