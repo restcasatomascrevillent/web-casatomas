@@ -36,7 +36,8 @@ const Reservas = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
-  const [availability, setAvailability] = useState<any>(null);
+  const [availableHours, setAvailableHours] = useState<string[]>([]);
+  const [selectedHour, setSelectedHour] = useState<string>("");
 
   const form = useForm<ReservaForm>({
     resolver: zodResolver(reservaSchema),
@@ -51,6 +52,15 @@ const Reservas = () => {
   });
 
   const onSubmit = async (data: ReservaForm) => {
+    if (!selectedHour) {
+      toast({
+        title: "Selecciona una hora",
+        description: "Primero debes consultar disponibilidad y seleccionar una hora.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       const payload = {
@@ -60,7 +70,7 @@ const Reservas = () => {
         comensales: parseInt(data.comensales),
         sala: data.sala,
         fecha: format(data.fecha, "yyyy-MM-dd", { locale: es }),
-        hora: data.hora,
+        hora: selectedHour,
       };
 
       const response = await fetch(
@@ -97,6 +107,7 @@ const Reservas = () => {
 
   const checkAvailability = async () => {
     const fecha = form.getValues("fecha");
+    const sala = form.getValues("sala");
     
     if (!fecha) {
       toast({
@@ -107,18 +118,34 @@ const Reservas = () => {
       return;
     }
 
+    if (!sala) {
+      toast({
+        title: "Selecciona una sala",
+        description: "Primero debes seleccionar una sala para consultar disponibilidad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCheckingAvailability(true);
-    setAvailability(null);
+    setAvailableHours([]);
+    setSelectedHour("");
     
     try {
       const fechaStr = format(fecha, "yyyy-MM-dd", { locale: es });
+      const payload = {
+        fecha: fechaStr,
+        sala: sala,
+      };
+
       const response = await fetch(
-        `https://n8npersonal.miguelbenito.space/webhook-test/3e0585ce-c923-40c9-a423-b4f3c1a66a86?fecha=${fechaStr}`,
+        "https://oficiososia.app.n8n.cloud/webhook-test/7e7fae99-44b9-48fd-b4d8-52be8cf0a518",
         {
-          method: "GET",
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify(payload),
         }
       );
 
@@ -127,12 +154,21 @@ const Reservas = () => {
       }
 
       const data = await response.json();
-      setAvailability(data);
       
-      toast({
-        title: "Disponibilidad consultada",
-        description: "Se ha actualizado la información de disponibilidad.",
-      });
+      // Asumiendo que el webhook devuelve un array de horas disponibles
+      if (data.horas && Array.isArray(data.horas)) {
+        setAvailableHours(data.horas);
+        toast({
+          title: "Disponibilidad consultada",
+          description: `Se encontraron ${data.horas.length} horarios disponibles.`,
+        });
+      } else {
+        toast({
+          title: "Sin disponibilidad",
+          description: "No hay horarios disponibles para la fecha y sala seleccionadas.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -296,37 +332,6 @@ const Reservas = () => {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="hora"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hora</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecciona una hora" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="13:00">13:00</SelectItem>
-                            <SelectItem value="13:30">13:30</SelectItem>
-                            <SelectItem value="14:00">14:00</SelectItem>
-                            <SelectItem value="14:30">14:30</SelectItem>
-                            <SelectItem value="15:00">15:00</SelectItem>
-                            <SelectItem value="20:00">20:00</SelectItem>
-                            <SelectItem value="20:30">20:30</SelectItem>
-                            <SelectItem value="21:00">21:00</SelectItem>
-                            <SelectItem value="21:30">21:30</SelectItem>
-                            <SelectItem value="22:00">22:00</SelectItem>
-                            <SelectItem value="22:30">22:30</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <div className="space-y-4">
                     <Button
                       type="button"
@@ -345,33 +350,35 @@ const Reservas = () => {
                       )}
                     </Button>
 
-                    {availability && (
+                    {availableHours.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 bg-muted rounded-lg space-y-3"
+                        className="space-y-3"
                       >
                         <h3 className="font-semibold flex items-center gap-2">
                           <Clock className="h-4 w-4" />
-                          Disponibilidad
+                          Horas Disponibles
                         </h3>
-                        <div className="space-y-2 text-sm">
-                          {availability.espacios && availability.espacios.length > 0 ? (
-                            availability.espacios.map((espacio: any, index: number) => (
-                              <div key={index} className="border-l-2 border-accent pl-3">
-                                <p className="font-medium">{espacio.sala || espacio.nombre}</p>
-                                {espacio.horarios && espacio.horarios.length > 0 && (
-                                  <p className="text-muted-foreground">
-                                    Horarios: {espacio.horarios.join(", ")}
-                                  </p>
-                                )}
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-muted-foreground">
-                              {availability.mensaje || "No hay información de disponibilidad"}
-                            </p>
-                          )}
+                        <div className="grid grid-cols-3 gap-2">
+                          {availableHours.map((hora) => (
+                            <button
+                              key={hora}
+                              type="button"
+                              onClick={() => {
+                                setSelectedHour(hora);
+                                form.setValue("hora", hora);
+                              }}
+                              className={cn(
+                                "p-3 rounded-lg border-2 transition-all text-sm font-medium",
+                                selectedHour === hora
+                                  ? "border-primary bg-primary text-primary-foreground shadow-md"
+                                  : "border-border hover:border-primary hover:bg-accent"
+                              )}
+                            >
+                              {hora}
+                            </button>
+                          ))}
                         </div>
                       </motion.div>
                     )}
