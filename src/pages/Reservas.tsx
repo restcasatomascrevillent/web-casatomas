@@ -72,7 +72,7 @@ const Reservas = () => {
       };
 
       const response = await fetch(
-        "https://n8npersonal.miguelbenito.space/webhook-test/63431fb4-51b4-4f0b-8d48-2d1713dc418e",
+        "https://oficiososia.app.n8n.cloud/webhook-test/2c6ec220-85c7-4460-b876-a92515c7b135",
         {
           method: "POST",
           headers: {
