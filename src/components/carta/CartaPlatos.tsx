@@ -39,7 +39,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const fetchPlatos = async () => {
     try {
       const { data, error } = await supabase
-        .from('platos')
+        .from('Platos')
         .select('*')
         .eq('activado', true)
         .order('categoria', { ascending: true })
