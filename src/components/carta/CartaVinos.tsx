@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import vinosImg from "@/assets/vinos-marqués.jpeg";
+import vinosImg from "@/assets/vinos-marques.jpeg";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
