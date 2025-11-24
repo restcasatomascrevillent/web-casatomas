@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import carnePlato from "@/assets/carne-plato.png";
 import pulpoPlato from "@/assets/pulpo-plato.jpg";
-import vinosMarques from "@/assets/vinos-marqués.jpeg";
+import vinosMarques from "@/assets/vinos-marques.jpeg";
 
 const EspaciosSection = () => {
   const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
