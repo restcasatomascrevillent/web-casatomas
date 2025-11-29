@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,11 +37,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchVinos();
-  }, []);
-
-  const fetchVinos = async () => {
+  const fetchVinos = useCallback(async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('vinos')
@@ -62,7 +59,27 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchVinos();
+  }, [fetchVinos]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchVinos();
+      }
+    };
+
+    window.addEventListener("focus", fetchVinos);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", fetchVinos);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchVinos]);
 
   const addToPedido = (item: any) => {
     const pedido = getUserPedido();

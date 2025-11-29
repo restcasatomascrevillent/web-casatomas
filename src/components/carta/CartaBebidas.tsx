@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +26,8 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchBebidas();
-  }, []);
-
-  const fetchBebidas = async () => {
+  const fetchBebidas = useCallback(async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('bebidas')
@@ -51,7 +48,27 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchBebidas();
+  }, [fetchBebidas]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchBebidas();
+      }
+    };
+
+    window.addEventListener("focus", fetchBebidas);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", fetchBebidas);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchBebidas]);
 
   const CATEGORY_ORDER = [
     "Aguas",
