@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -21,14 +22,9 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-accent transition-colors"
-                >
+                <Link to="/reservas" className="hover:text-accent transition-colors">
                   Reservar Mesa
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="https://restaurantecasatomascrevillente.es/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
