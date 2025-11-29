@@ -3,10 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import { Calendar, UtensilsCrossed } from "lucide-react";
 import logo from "@/assets/logo-casa-tomas.png";
-import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
-  const navigate = useNavigate();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -69,7 +67,12 @@ const Hero = () => {
           <Button
             size="lg"
             className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-            onClick={() => navigate("/reservas")}
+            onClick={() =>
+              window.open(
+                "https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent",
+                "_blank",
+              )
+            }
           >
             <Calendar className="w-5 h-5 mr-2" />
             Reservar Mesa

@@ -4,12 +4,10 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-casa-tomas.png";
-import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,7 +84,7 @@ const Header = () => {
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
-              onClick={() => navigate('/reservas')}
+              onClick={() => window.open('https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent', '_blank')}
             >
               Reservar Mesa
             </Button>
@@ -144,7 +142,7 @@ const Header = () => {
                   size="lg"
                   className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
                   onClick={() => {
-                    navigate('/reservas');
+                    window.open('https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent', '_blank');
                     setIsMobileMenuOpen(false);
                   }}
                 >

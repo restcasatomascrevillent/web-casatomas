@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,11 +32,14 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchPlatos = useCallback(async () => {
-    setLoading(true);
+  useEffect(() => {
+    fetchPlatos();
+  }, []);
+
+  const fetchPlatos = async () => {
     try {
       const { data, error } = await supabase
-        .from('platos')
+        .from('Platos')
         .select('*')
         .eq('activado', true)
         .order('categoria', { ascending: true })
@@ -54,27 +57,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchPlatos();
-  }, [fetchPlatos]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchPlatos();
-      }
-    };
-
-    window.addEventListener("focus", fetchPlatos);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("focus", fetchPlatos);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [fetchPlatos]);
+  };
 
   const CATEGORY_ORDER = [
     "NOVEDADES DEL DÍA",

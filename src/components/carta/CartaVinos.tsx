@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import vinosImg from "@/assets/vinos-marques.jpeg";
+import vinosImg from "@/assets/vinos-marqués.jpeg";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
@@ -37,11 +37,14 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchVinos = useCallback(async () => {
-    setLoading(true);
+  useEffect(() => {
+    fetchVinos();
+  }, []);
+
+  const fetchVinos = async () => {
     try {
       const { data, error } = await supabase
-        .from('vinos')
+        .from('Vinos')
         .select('*')
         .eq('activado', true)
         .order('categoria', { ascending: true })
@@ -59,27 +62,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchVinos();
-  }, [fetchVinos]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchVinos();
-      }
-    };
-
-    window.addEventListener("focus", fetchVinos);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("focus", fetchVinos);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [fetchVinos]);
+  };
 
   const addToPedido = (item: any) => {
     const pedido = getUserPedido();
