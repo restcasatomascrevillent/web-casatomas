@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     // Insert platos
     const { error: platosError } = await supabaseClient
-      .from('platos')
+      .from('Platos')
       .insert(platosToInsert);
 
     if (platosError) throw platosError;
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
     // Insert vinos
     const { error: vinosError } = await supabaseClient
-      .from('vinos')
+      .from('Vinos')
       .insert(vinosToInsert);
 
     if (vinosError) throw vinosError;

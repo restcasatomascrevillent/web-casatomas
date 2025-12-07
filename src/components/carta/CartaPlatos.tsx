@@ -32,6 +32,19 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  const normalizeAlergenos = (value: unknown) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return value ? [value] : [];
+      }
+    }
+    return [];
+  };
+
   useEffect(() => {
     fetchPlatos();
   }, []);
@@ -39,14 +52,20 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const fetchPlatos = async () => {
     try {
       const { data, error } = await supabase
-        .from('platos')
+        .from('Platos')
         .select('*')
         .eq('activado', true)
         .order('categoria', { ascending: true })
         .order('orden', { ascending: true });
 
       if (error) throw error;
-      setPlatos(data || []);
+      setPlatos(
+        (data || []).map((item) => ({
+          ...item,
+          alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
+          alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
+        }))
+      );
     } catch (error) {
       console.error('Error fetching platos:', error);
       toast({
