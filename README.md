@@ -60,6 +60,16 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Conectar Supabase (base de datos)
+
+1. Crea un proyecto en Supabase y copia el `Project URL` y la `anon/public API key` desde **Settings > API**.
+2. Duplica `.env.example` a `.env` y pega ahí `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` (o `VITE_SUPABASE_ANON_KEY` si prefieres ese nombre).
+3. Si usas la CLI de Supabase (instálala con `npm i -g supabase` y haz `supabase login`), actualiza `supabase/config.toml` con tu `project_id` y ejecuta `supabase db push --project-ref <tu-project-id>` desde la raíz para crear las tablas (`platos`, `vinos`, `bebidas`) incluidas en `supabase/migrations`.
+4. (Opcional) Para poblar los datos de ejemplo de la carta, despliega e invoca la función edge `migrate-menu-data`:
+   - `supabase functions deploy migrate-menu-data --project-ref <tu-project-id>`
+   - `supabase functions invoke migrate-menu-data --project-ref <tu-project-id>`
+5. Arranca la app con `npm run dev`; la carta leerá directamente desde tu base de datos Supabase.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/400da6f8-7fa7-4353-9ce2-9842c4532f4f) and click on Share -> Publish.
