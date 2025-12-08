@@ -249,3 +249,16 @@ All colors MUST be HSL.
     animation: pulse-organic var(--pulse-duration, 5s) cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
 }
+
+@layer utilities {
+  .scroll-reveal-scale {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .scroll-reveal-scale.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

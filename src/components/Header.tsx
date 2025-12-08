@@ -84,7 +84,9 @@ const Header = () => {
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
-              onClick={() => window.open('https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent', '_blank')}
+              onClick={() => {
+                window.location.href = "/reservas";
+              }}
             >
               Reservar Mesa
             </Button>
@@ -142,7 +144,7 @@ const Header = () => {
                   size="lg"
                   className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
                   onClick={() => {
-                    window.open('https://www.covermanager.com/reserve/module_restaurant/restaurante-casa-tomas-crevillent', '_blank');
+                    window.location.href = "/reservas";
                     setIsMobileMenuOpen(false);
                   }}
                 >

@@ -140,6 +140,39 @@ export type Database = {
         }
         Relationships: []
       }
+      espacios_reserva: {
+        Row: {
+          activa: boolean
+          capacidad_maxima: number
+          caracteristicas: Json | null
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          capacidad_maxima: number
+          caracteristicas?: Json | null
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          capacidad_maxima?: number
+          caracteristicas?: Json | null
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platos: {
         Row: {
           activado: boolean

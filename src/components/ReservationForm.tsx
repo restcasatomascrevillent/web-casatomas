@@ -1,0 +1,572 @@
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { reservationSchema } from "@/lib/validations";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { CalendarIcon, CheckCircle, Loader2, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import * as z from "zod";
+
+interface DisponibilidadSlot {
+  fecha: string;
+  hora: string;
+  espacio_id: string;
+  espacio: string;
+  total_mesas_reservadas: number;
+  total_comensales: number;
+  total_reservas: number;
+  total_mesas_espacio: number;
+  capacidad_maxima: number;
+  capacidad_disponible: number;
+  porcentaje_ocupacion: number;
+}
+
+type ReservationFormData = z.infer<typeof reservationSchema>;
+
+type ReservationFormProps = {
+  onSuccessClose?: () => void;
+  navigateOnClose?: boolean;
+};
+
+export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [disponibilidad, setDisponibilidad] = useState<DisponibilidadSlot[]>([]);
+  const [selectedHour, setSelectedHour] = useState<string | null>(null);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [reservationDetails, setReservationDetails] = useState<{
+    fecha: Date;
+    hora: string;
+    comensales: number;
+  } | null>(null);
+  const navigate = useNavigate();
+
+  const { data: salas } = useQuery({
+    queryKey: ["espacios-reservas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("espacios_reserva")
+        .select("*")
+        .eq("activa", true)
+        .order("nombre");
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const form = useForm<ReservationFormData>({
+    resolver: zodResolver(reservationSchema),
+    defaultValues: {
+      nombre: "",
+      telefono: "",
+      email: "",
+      numero_comensales: 2,
+      notas_cliente: "",
+    },
+  });
+
+  const watchFecha = form.watch("fecha");
+  const watchSalaId = form.watch("sala_id");
+
+  const normalizeSlots = (slots: DisponibilidadSlot[]) =>
+    slots.map((slot) => ({
+      ...slot,
+      capacidad_disponible: Number(slot.capacidad_disponible ?? 0),
+      capacidad_maxima: Number(slot.capacidad_maxima ?? 0),
+      porcentaje_ocupacion: Number(slot.porcentaje_ocupacion ?? 0),
+      total_comensales: Number(slot.total_comensales ?? 0),
+      total_mesas_reservadas: Number(slot.total_mesas_reservadas ?? 0),
+      total_reservas: Number(slot.total_reservas ?? 0),
+      total_mesas_espacio: Number(slot.total_mesas_espacio ?? 0),
+    }));
+
+  const checkAvailability = async () => {
+    const fecha = form.getValues("fecha");
+    const salaId = form.getValues("sala_id");
+    const numeroComensales = form.getValues("numero_comensales");
+    
+    if (!fecha || !salaId || !numeroComensales) {
+      toast.error("Selecciona fecha, sala y número de comensales");
+      return;
+    }
+    
+    setIsCheckingAvailability(true);
+    try {
+      const response = await fetch(
+        "https://n8npersonal.miguelbenito.space/webhook/7e7fae99-44b9-48fd-b4d8-52be8cf0a518",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fecha: format(fecha, "yyyy-MM-dd"),
+            sala_id: salaId,
+            numero_comensales: numeroComensales
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const text = await response.text();
+      
+      const salaSeleccionada = salas?.find(s => s.id === salaId);
+      if (!salaSeleccionada) {
+        toast.error("No se pudo obtener información de la sala");
+        return;
+      }
+
+      const horariosComida = ["13:00:00", "13:30:00", "14:00:00", "14:30:00", "15:00:00", "15:30:00"];
+      const horariosCena = ["20:00:00", "20:30:00", "21:00:00", "21:30:00", "22:00:00", "22:30:00"];
+      const todosHorarios = [...horariosComida, ...horariosCena];
+
+      if (!text || text.trim() === '') {
+        const slotsDisponibles: DisponibilidadSlot[] = todosHorarios.map(hora => ({
+          fecha: format(fecha, "yyyy-MM-dd"),
+          hora: hora,
+          espacio_id: salaId,
+          espacio: salaSeleccionada.nombre,
+          total_mesas_reservadas: 0,
+          total_comensales: 0,
+          total_reservas: 0,
+          total_mesas_espacio: salaSeleccionada.capacidad_maxima,
+          capacidad_maxima: salaSeleccionada.capacidad_maxima,
+          capacidad_disponible: salaSeleccionada.capacidad_maxima,
+          porcentaje_ocupacion: 0
+        }));
+        
+        setDisponibilidad(normalizeSlots(slotsDisponibles));
+        setHasCheckedAvailability(true);
+        setSelectedHour(null);
+        toast.success("¡Disponibilidad completa para esta fecha!");
+        return;
+      }
+      
+      const data: DisponibilidadSlot[] = JSON.parse(text);
+      const slotsConOcupacion = data.filter(slot => slot.espacio_id === salaId);
+      
+      const occupationMap = new Map<string, DisponibilidadSlot>();
+      slotsConOcupacion.forEach(slot => {
+        occupationMap.set(slot.hora, slot);
+      });
+      
+      const allSlots: DisponibilidadSlot[] = todosHorarios.map(hora => {
+        const existingSlot = occupationMap.get(hora);
+        if (existingSlot) {
+          return existingSlot;
+        }
+        return {
+          fecha: format(fecha, "yyyy-MM-dd"),
+          hora: hora,
+          espacio_id: salaId,
+          espacio: salaSeleccionada.nombre,
+          total_mesas_reservadas: 0,
+          total_comensales: 0,
+          total_reservas: 0,
+          total_mesas_espacio: salaSeleccionada.capacidad_maxima,
+          capacidad_maxima: salaSeleccionada.capacidad_maxima,
+          capacidad_disponible: salaSeleccionada.capacidad_maxima,
+          porcentaje_ocupacion: 0
+        };
+      });
+      
+      setDisponibilidad(normalizeSlots(allSlots));
+      setHasCheckedAvailability(true);
+      setSelectedHour(null);
+      toast.success("Disponibilidad consultada");
+    } catch (error) {
+      console.error("Error al consultar disponibilidad:", error);
+      toast.error("Error al consultar disponibilidad", {
+        description: "Por favor, verifica tu conexión e intenta nuevamente"
+      });
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
+
+  const onSubmit = async (data: ReservationFormData) => {
+    if (!selectedHour) {
+      toast.error("Debes seleccionar una hora disponible");
+      return;
+    }
+
+    if (honeypot) {
+      console.log("Bot detectado por honeypot");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const salaSeleccionada = salas?.find(s => s.id === data.sala_id);
+      
+      const response = await fetch("https://n8npersonal.miguelbenito.space/webhook/2c6ec220-85c7-4460-b876-a92515c7b135", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: data.nombre,
+          telefono: data.telefono,
+          email: data.email,
+          fecha: format(data.fecha, "yyyy-MM-dd"),
+          hora: selectedHour.slice(0, 5),
+          numero_comensales: data.numero_comensales,
+          sala: salaSeleccionada?.nombre || "No especificada",
+          sala_id: data.sala_id,
+          notas_cliente: data.notas_cliente || "",
+          estado: "pendiente"
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al procesar la reserva");
+      }
+
+      setReservationDetails({
+        fecha: data.fecha,
+        hora: selectedHour.slice(0, 5),
+        comensales: data.numero_comensales
+      });
+      setShowSuccessDialog(true);
+
+      form.reset();
+      setDisponibilidad([]);
+      setSelectedHour(null);
+      setHasCheckedAvailability(false);
+    } catch (error: any) {
+      toast.error("Error al crear la reserva", {
+        description: "Por favor, inténtalo de nuevo o contacta con nosotros directamente.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    setDisponibilidad([]);
+    setSelectedHour(null);
+    setHasCheckedAvailability(false);
+  }, [watchFecha, watchSalaId]);
+
+  const handleCloseSuccessDialog = () => {
+    setShowSuccessDialog(false);
+    if (onSuccessClose) onSuccessClose();
+    if (navigateOnClose) navigate("/");
+  };
+
+  return (
+    <>
+      <Dialog open={showSuccessDialog} onOpenChange={handleCloseSuccessDialog}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader className="space-y-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+            <DialogTitle className="text-2xl font-serif">¡Reserva Confirmada!</DialogTitle>
+            <DialogDescription asChild>
+              <div className="text-base space-y-2">
+                {reservationDetails && (
+                  <>
+                    <p>Tu reserva para <strong>{reservationDetails.comensales} personas</strong> ha sido recibida.</p>
+                    <p>
+                      <strong>{format(reservationDetails.fecha, "d 'de' MMMM 'de' yyyy", { locale: es })}</strong> a las <strong>{reservationDetails.hora}</strong>
+                    </p>
+                    <p className="text-muted-foreground mt-4">Te contactaremos pronto para confirmar los detalles.</p>
+                  </>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <Button 
+            onClick={handleCloseSuccessDialog}
+            className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-full"
+          >
+            Volver al Inicio
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-6 pb-6 border-b border-border/30">
+                <h3 className="text-lg font-semibold text-foreground">Paso 1: Selecciona fecha, sala y comensales</h3>
+                
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="fecha"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="text-foreground font-medium">Fecha *</FormLabel>
+                        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "pl-3 text-left font-normal rounded-xl border-border/50 bg-white hover:bg-secondary",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: es })
+                                ) : (
+                                  <span>Selecciona una fecha</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={(date) => {
+                                field.onChange(date);
+                                setCalendarOpen(false);
+                              }}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                              className="pointer-events-auto rounded-xl"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="sala_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground font-medium">Sala preferida *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-2 border-border hover:border-primary transition-all rounded-xl bg-white">
+                              <SelectValue placeholder="Selecciona sala" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white border-2 border-border shadow-xl z-50 max-h-[300px] rounded-xl">
+                            {salas?.map((sala) => (
+                              <SelectItem 
+                                key={sala.id} 
+                                value={sala.id}
+                                className="cursor-pointer py-2.5 px-3 hover:bg-primary/10 hover:text-primary transition-all font-medium"
+                              >
+                                {sala.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="numero_comensales"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground font-medium">Número de comensales *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={20}
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          className="rounded-xl border-border/50 bg-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button
+                type="button"
+                onClick={checkAvailability}
+                disabled={!form.watch("fecha") || !form.watch("sala_id") || !form.watch("numero_comensales") || isCheckingAvailability}
+                className="w-full bg-secondary text-foreground hover:bg-secondary/80 rounded-full"
+              >
+                  {isCheckingAvailability ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Consultando disponibilidad...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Consultar Disponibilidad
+                    </>
+                  )}
+                </Button>
+
+              {hasCheckedAvailability && (
+                <div className="space-y-4 pb-6 border-b border-border/30">
+                  <h3 className="text-lg font-semibold text-foreground">Paso 2: Selecciona tu hora preferida</h3>
+                  <FormLabel className="text-foreground font-medium block">
+                    Horas Disponibles *
+                  </FormLabel>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {disponibilidad.map((slot) => {
+                      const numeroComensales = Number(form.getValues("numero_comensales") || 0);
+                      const capacidadDisponible = Number(slot.capacidad_disponible || 0);
+                      const isCompleto = capacidadDisponible < numeroComensales;
+                      
+                      const occupancyColor = isCompleto 
+                        ? "border-red-500 bg-red-50 opacity-60 cursor-not-allowed"
+                        : slot.porcentaje_ocupacion < 50 ? "border-green-500 bg-green-50 hover:bg-green-100" :
+                          slot.porcentaje_ocupacion < 70 ? "border-yellow-500 bg-yellow-50 hover:bg-yellow-100" :
+                          "border-orange-500 bg-orange-50 hover:bg-orange-100";
+                      
+                      return (
+                        <button
+                          key={slot.hora}
+                          type="button"
+                          onClick={() => !isCompleto && setSelectedHour(slot.hora)}
+                          disabled={isCompleto}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center transition-all duration-200",
+                            isCompleto ? "" : "cursor-pointer hover:scale-105 shadow-sm hover:shadow-md",
+                            selectedHour === slot.hora && !isCompleto
+                              ? "border-primary bg-primary text-white scale-105 shadow-lg"
+                              : occupancyColor
+                          )}
+                        >
+                          <span className={cn(
+                            "text-lg font-bold block",
+                            selectedHour === slot.hora && !isCompleto ? "text-white" : "text-foreground"
+                          )}>
+                            {slot.hora.slice(0, 5)}
+                          </span>
+                          {isCompleto && (
+                            <span className="text-xs text-red-600 font-medium">Completo</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-foreground">
+                  {hasCheckedAvailability ? "Paso 3: Completa tu información" : "Completa tu información"}
+                </h3>
+
+                <FormField
+                  control={form.control}
+                  name="nombre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground font-medium">Nombre completo *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tu nombre" {...field} className="rounded-xl border-border/50 bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="telefono"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground font-medium">Teléfono *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="612345678" {...field} className="rounded-xl border-border/50 bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground font-medium">Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="tu@email.com" {...field} className="rounded-xl border-border/50 bg-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="notas_cliente"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground font-medium">Notas especiales</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Alergias, preferencias, ocasión especial..."
+                          className="resize-none rounded-xl border-border/50 bg-white"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px" }} aria-hidden="true">
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+              </div>
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full bg-primary hover:bg-primary/90 text-lg py-6 rounded-full shadow-md hover:shadow-lg transition-all"
+              disabled={isSubmitting || !selectedHour}
+            >
+              {isSubmitting ? "Reservando..." : "Reservar Ahora"}
+            </Button>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Sistema de reservas online seguro y rápido
+            </p>
+          </form>
+        </Form>
+      </div>
+    </>
+  );
+};
+
+export default ReservationForm;
