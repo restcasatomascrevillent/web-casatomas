@@ -85,7 +85,15 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
 
   const addToPedido = (item: any) => {
     const pedido = getUserPedido();
-    pedido.push(item);
+    const clave = item.id || item.nombre;
+    const idx = pedido.findIndex((p) => (p.id || p.nombre) === clave);
+    if (idx >= 0) {
+      const actual = pedido[idx];
+      const nuevaCantidad = (actual.cantidad ?? 1) + 1;
+      pedido[idx] = { ...actual, cantidad: nuevaCantidad };
+    } else {
+      pedido.push({ ...item, cantidad: 1 });
+    }
     setUserPedido(pedido);
     toast({
       title: "Añadido al pedido",
