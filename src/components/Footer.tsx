@@ -50,7 +50,10 @@ const Footer = () => {
           </p>
           
           <div className="flex gap-4 items-center">
-            <a href="/admin/login" className="text-xs text-stone hover:text-accent transition-colors">
+            <a
+              href="https://adminpanelct.lovable.app"
+              className="text-xs text-stone hover:text-accent transition-colors"
+            >
               {t.footer.admin}
             </a>
             <span className="text-stone">|</span>
