@@ -30,7 +30,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dietFilter, setDietFilter] = useState<"todos" | "vegetariano" | "vegano" | "celiaco" | "sin_lactosa">("todos");
   const { toast } = useToast();
 
   const normalizeAlergenos = (value: unknown) => {
@@ -97,71 +96,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   // Mostrar siempre el orden exacto solicitado, independientemente de si hay platos en esa categoría
   const categories = CATEGORY_ORDER;
 
-  const getAllergens = (item: any) => (
-    [
-      ...(item.alergenos_oficiales || []),
-      ...(item.alergenos_inferidos || []),
-    ]
-      .filter(Boolean)
-      .map((a: string) => a.toLowerCase())
-  );
-
-  const isVegetarian = (item: any) => {
-    const allergens = getAllergens(item);
-
-    const forbidden = [
-      "carne",
-      "pescado",
-      "marisco",
-      "mariscos",
-      "crustaceo",
-      "crustáceo",
-      "molusco",
-      "pollo",
-      "vacuno",
-      "cerdo",
-      "cordero",
-      "jamon",
-      "jamón",
-      "atun",
-      "atún",
-    ];
-
-    return !allergens.some((a: string) => forbidden.some((f) => a.includes(f)));
-  };
-
-  const isVegan = (item: any) => {
-    if (!isVegetarian(item)) return false;
-
-    const allergens = getAllergens(item);
-
-    const noVegan = ["huevo", "huevos", "lacteo", "lácteo", "leche", "queso", "mantequilla", "nata", "miel", "manteca"];
-    return !allergens.some((a: string) => noVegan.some((f) => a.includes(f)));
-  };
-
-  const isCeliacSafe = (item: any) => {
-    const allergens = getAllergens(item);
-    const glutenWords = ["gluten", "trigo", "cebada", "centeno", "avena", "espelta", "kamut", "cuscus", "cuscús", "pan", "harina"];
-    return !allergens.some((a: string) => glutenWords.some((f) => a.includes(f)));
-  };
-
-  const isLactoseSafe = (item: any) => {
-    const allergens = getAllergens(item);
-    const dairy = ["lactosa", "leche", "queso", "mantequilla", "nata", "lacteo", "lácteo", "yogur", "yogurt", "crema"];
-    return !allergens.some((a: string) => dairy.some((f) => a.includes(f)));
-  };
-
-  const getUnidadInfo = (unidad?: string) => {
-    const u = (unidad || "").toLowerCase();
-    if (u.includes("kg")) {
-      return { base: 1, step: 0.1, tipo: "kg" as const };
-    }
-    if (u.includes("100") || u.includes(" g") || u === "g") {
-      return { base: 100, step: 50, tipo: "gramos" as const };
-    }
-    return { base: 1, step: 1, tipo: "unidad" as const };
-  };
-
   const filteredItems = useMemo(() => {
     let items = platos;
 
@@ -175,18 +109,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       );
     }
 
-    if (dietFilter === "vegetariano") {
-      items = items.filter((item) => isVegetarian(item));
-    } else if (dietFilter === "vegano") {
-      items = items.filter((item) => isVegan(item));
-    } else if (dietFilter === "celiaco") {
-      items = items.filter((item) => isCeliacSafe(item));
-    } else if (dietFilter === "sin_lactosa") {
-      items = items.filter((item) => isLactoseSafe(item));
-    }
-
     return items;
-  }, [searchTerm, selectedCategory, platos, dietFilter]);
+  }, [searchTerm, selectedCategory, platos]);
 
   const getCategoryImage = (categoria: string) => {
     const cat = categoria.toUpperCase();
@@ -200,22 +124,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   };
 
   const addToPedido = (item: any) => {
-    const unidadInfo = getUnidadInfo(item.unidad);
-    const baseCantidad = unidadInfo.base;
     const pedido = getUserPedido();
-
-    const clave = item.id || item.nombre;
-    const existenteIndex = pedido.findIndex((p) => (p.id || p.nombre) === clave);
-
-    if (existenteIndex >= 0) {
-      const existente = pedido[existenteIndex];
-      const cantidadActual = existente.cantidad ?? baseCantidad;
-      const nuevaCantidad = cantidadActual + baseCantidad;
-      pedido[existenteIndex] = { ...existente, cantidad: nuevaCantidad };
-    } else {
-      pedido.push({ ...item, cantidad: baseCantidad });
-    }
-
+    pedido.push(item);
     setUserPedido(pedido);
     toast({
       title: "Añadido al pedido",
@@ -283,38 +193,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        {/* Diet Filters */}
-        <div className="flex justify-center gap-3 flex-wrap">
-          <Button
-            variant={dietFilter === "vegetariano" ? "default" : "outline"}
-            onClick={() => setDietFilter(dietFilter === "vegetariano" ? "todos" : "vegetariano")}
-            className="rounded-full"
-          >
-            Vegetariano
-          </Button>
-          <Button
-            variant={dietFilter === "vegano" ? "default" : "outline"}
-            onClick={() => setDietFilter(dietFilter === "vegano" ? "todos" : "vegano")}
-            className="rounded-full"
-          >
-            Vegano
-          </Button>
-          <Button
-            variant={dietFilter === "celiaco" ? "default" : "outline"}
-            onClick={() => setDietFilter(dietFilter === "celiaco" ? "todos" : "celiaco")}
-            className="rounded-full"
-          >
-            Celíaco
-          </Button>
-          <Button
-            variant={dietFilter === "sin_lactosa" ? "default" : "outline"}
-            onClick={() => setDietFilter(dietFilter === "sin_lactosa" ? "todos" : "sin_lactosa")}
-            className="rounded-full"
-          >
-            Sin lactosa
-          </Button>
         </div>
       </div>
 
