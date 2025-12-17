@@ -8,49 +8,59 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 206 11% 25%;
+    /* 🎄 Navidad Theme - Colores festivos */
+    --background: 0 0% 99%;
+    --foreground: 350 40% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 206 11% 25%;
+    --card-foreground: 350 40% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 206 11% 25%;
+    --popover-foreground: 350 40% 20%;
 
-    --primary: 206 11% 25%;
+    /* Rojo navideño como primario */
+    --primary: 350 70% 40%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 25 13% 55%;
+    /* Verde navideño como secundario */
+    --secondary: 145 50% 32%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 25 13% 85%;
-    --muted-foreground: 15 4% 39%;
+    --muted: 40 30% 92%;
+    --muted-foreground: 350 20% 35%;
 
-    --accent: 38 59% 45%;
-    --accent-foreground: 0 0% 100%;
+    /* Dorado navideño como acento */
+    --accent: 42 85% 50%;
+    --accent-foreground: 350 40% 15%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 25 13% 85%;
-    --input: 25 13% 85%;
-    --ring: 38 59% 45%;
+    --border: 40 20% 85%;
+    --input: 40 20% 85%;
+    --ring: 42 85% 50%;
 
     --radius: 0.5rem;
     
-    /* Custom design tokens */
+    /* Custom design tokens navideños */
+    --christmas-red: 350 70% 40%;
+    --christmas-green: 145 50% 32%;
+    --christmas-gold: 42 85% 50%;
+    --christmas-cream: 40 30% 95%;
     --stone: 25 13% 55%;
-    --dark-slate: 206 11% 25%;
+    --dark-slate: 350 40% 20%;
     --mid-gray: 15 4% 39%;
-    --gold: 38 59% 45%;
+    --gold: 42 85% 50%;
     
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(206 11% 25% / 0.95), hsl(15 4% 39% / 0.9));
-    --gradient-section: linear-gradient(180deg, hsl(0 0% 100%), hsl(25 13% 95%));
+    /* Gradients navideños */
+    --gradient-hero: linear-gradient(135deg, hsl(350 70% 40% / 0.95), hsl(145 50% 32% / 0.9));
+    --gradient-section: linear-gradient(180deg, hsl(0 0% 100%), hsl(40 30% 96%));
+    --gradient-christmas: linear-gradient(135deg, hsl(350 70% 40%), hsl(350 70% 50%));
     
-    /* Shadows */
-    --shadow-soft: 0 4px 20px hsl(206 11% 25% / 0.1);
-    --shadow-elegant: 0 10px 40px hsl(206 11% 25% / 0.15);
+    /* Shadows con tono navideño */
+    --shadow-soft: 0 4px 20px hsl(350 70% 40% / 0.1);
+    --shadow-elegant: 0 10px 40px hsl(350 70% 40% / 0.15);
+    --shadow-glow-gold: 0 0 30px hsl(42 85% 50% / 0.4);
     
     /* Transitions */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,58 +70,51 @@ All colors MUST be HSL.
     --pulse-duration: 5s;
 
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-foreground: 350 40% 20%;
+    --sidebar-primary: 350 70% 40%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 145 50% 90%;
+    --sidebar-accent-foreground: 145 50% 25%;
+    --sidebar-border: 40 20% 85%;
+    --sidebar-ring: 42 85% 50%;
   }
 
   .dark {
-    --background: 206 11% 15%;
+    --background: 350 30% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 206 11% 20%;
+    --card: 350 30% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 206 11% 20%;
+    --popover: 350 30% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 38 59% 45%;
+    --primary: 350 65% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 25 13% 35%;
+    --secondary: 145 45% 35%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 206 11% 25%;
-    --muted-foreground: 25 13% 70%;
+    --muted: 350 20% 18%;
+    --muted-foreground: 40 20% 70%;
 
-    --accent: 38 59% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 42 85% 55%;
+    --accent-foreground: 350 40% 10%;
 
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 206 11% 30%;
-    --input: 206 11% 30%;
-    --ring: 38 59% 45%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 350 20% 20%;
+    --input: 350 20% 20%;
+    --ring: 42 85% 55%;
+    --sidebar-background: 350 30% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 350 65% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 145 40% 20%;
+    --sidebar-accent-foreground: 145 40% 80%;
+    --sidebar-border: 350 20% 18%;
+    --sidebar-ring: 42 85% 55%;
   }
 }
 
@@ -247,6 +250,37 @@ All colors MUST be HSL.
   
   .animate-pulse-organic {
     animation: pulse-organic var(--pulse-duration, 5s) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  /* 🎄 Animación de copos de nieve */
+  @keyframes snowfall {
+    0% {
+      transform: translateY(-10vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(110vh) rotate(360deg);
+      opacity: 0.3;
+    }
+  }
+
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+
+  .animate-snowfall {
+    animation: snowfall linear infinite;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 2s ease-in-out infinite;
   }
 }
 
