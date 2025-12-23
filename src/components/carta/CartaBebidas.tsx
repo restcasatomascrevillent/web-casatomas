@@ -13,13 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import champanImg from "@/assets/champan.png";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface CartaBebidasProps {
   showAddButton: boolean;
 }
 
 const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
+  const { t } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Aguas");
   const [bebidas, setBebidas] = useState<any[]>([]);
@@ -44,8 +45,8 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     } catch (error) {
       console.error('Error fetching bebidas:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar las bebidas",
+        title: t.bebidas.toasts.errorTitle,
+        description: t.bebidas.toasts.errorDescription,
         variant: "destructive",
       });
     } finally {
@@ -85,15 +86,18 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     pedido.push(item);
     setUserPedido(pedido);
     toast({
-      title: "Añadido al pedido",
-      description: `${item.nombre} añadido a tu preview de pedido`,
+      title: t.bebidas.toasts.addedTitle,
+      description: t.bebidas.toasts.addedDescription.replace("{name}", item.nombre),
     });
   };
+
+  const translateCategory = (category: string) =>
+    t.categories.bebidas[category as keyof typeof t.categories.bebidas] ?? category;
 
   if (loading) {
     return (
       <div className="text-center py-16">
-        <p className="text-xl text-muted-foreground">Cargando bebidas...</p>
+        <p className="text-xl text-muted-foreground">{t.bebidas.loading}</p>
       </div>
     );
   }
@@ -105,7 +109,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
         <div className="relative max-w-md mx-auto w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
-            placeholder="Buscar bebidas..."
+            placeholder={t.bebidas.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 py-6 text-lg"
@@ -122,7 +126,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
               >
                 <span className="flex items-center gap-2">
                   <Wine className="w-5 h-5 text-accent" />
-                  {selectedCategory}
+                  {translateCategory(selectedCategory)}
                 </span>
                 <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </Button>
@@ -144,7 +148,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                         ? "bg-accent-foreground" 
                         : "bg-accent/40"
                     }`} />
-                    {category}
+                    {translateCategory(category)}
                   </span>
                 </DropdownMenuItem>
               ))}
@@ -167,7 +171,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                 <div className="flex justify-between items-start gap-2">
                   <CardTitle className="text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex-grow">{item.nombre}</CardTitle>
                   <span className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0">
-                    {item.categoria}
+                    {translateCategory(item.categoria)}
                   </span>
                 </div>
               </CardHeader>
@@ -190,7 +194,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                     className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir
+                    {t.bebidas.add}
                   </Button>
                 )}
               </CardFooter>
@@ -201,7 +205,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
 
       {filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-xl">No se encontraron bebidas con los filtros seleccionados</p>
+          <p className="text-xl">{t.bebidas.empty}</p>
         </div>
       )}
     </div>

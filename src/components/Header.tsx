@@ -4,8 +4,10 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-casa-tomas.png";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const Header = () => {
+  const { t, language, setLanguage, languages } = useTranslations();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -27,12 +29,12 @@ const Header = () => {
   };
 
   const navItems = [
-    { id: "carta", label: "Carta" },
-    { id: "novedades", label: "Novedades" },
-    { id: "reservas", label: "Reservas" },
-    { id: "espacios", label: "Espacios" },
-    { id: "nosotros", label: "Nosotros" },
-    { id: "contacto", label: "Contacto" },
+    { id: "carta", label: t.header.nav.carta },
+    { id: "novedades", label: t.header.nav.novedades },
+    { id: "reservas", label: t.header.nav.reservas },
+    { id: "espacios", label: t.header.nav.espacios },
+    { id: "nosotros", label: t.header.nav.nosotros },
+    { id: "contacto", label: t.header.nav.contacto },
   ];
 
   return (
@@ -55,11 +57,7 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <img
-              src={logo}
-              alt="Casa Tomás"
-              className="h-10 md:h-12 w-auto"
-            />
+            <img src={logo} alt={t.hero.logoAlt} className="h-10 md:h-12 w-auto" />
           </motion.button>
 
           {/* Desktop Navigation */}
@@ -80,7 +78,20 @@ const Header = () => {
           </nav>
 
           {/* CTA Button Desktop */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex items-center gap-4">
+            <div className="flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-1 shadow-sm">
+              {languages.map((option) => (
+                <Button
+                  key={option.value}
+                  size="sm"
+                  variant={language === option.value ? "default" : "ghost"}
+                  className="h-8 px-3 rounded-full text-xs font-semibold"
+                  onClick={() => setLanguage(option.value)}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
@@ -88,7 +99,7 @@ const Header = () => {
                 window.location.href = "/reservas";
               }}
             >
-              Reservar Mesa
+              {t.header.cta}
             </Button>
           </div>
 
@@ -148,9 +159,22 @@ const Header = () => {
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  Reservar Mesa
+                  {t.header.cta}
                 </Button>
               </motion.div>
+              <div className="flex justify-center gap-2 pt-3">
+                {languages.map((option) => (
+                  <Button
+                    key={option.value}
+                    size="sm"
+                    variant={language === option.value ? "default" : "outline"}
+                    className="rounded-full px-4"
+                    onClick={() => setLanguage(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
             </nav>
           </motion.div>
         )}

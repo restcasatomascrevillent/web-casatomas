@@ -7,83 +7,26 @@ import { Home, Utensils, TreePine, Wine, Camera, ExternalLink, ChefHat, Clock } 
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import carnePlato from "@/assets/carne-plato.png";
 import pulpoPlato from "@/assets/pulpo-plato.jpg";
 import vinosMarques from "@/assets/vinos-marqués.jpeg";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const EspaciosSection = () => {
+  const { t, dateLocale } = useTranslations();
   const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
   const [showMenus, setShowMenus] = useState(false);
   const [showTapas, setShowTapas] = useState(false);
 
-  const menusDelDia = [
-    {
-      date: new Date(2025, 10, 6),
-      primeros: ["Ensalada de pulpo", "Crema de calabaza"],
-      segundos: ["Merluza a la gallega", "Solomillo al vino tinto"],
-      postre: "Tarta de Santiago",
-    },
-    {
-      date: new Date(2025, 9, 30),
-      primeros: ["Caldo gallego", "Ensalada mixta"],
-      segundos: ["Bacalao al pil-pil", "Ternera asada"],
-      postre: "Filloa con miel",
-    },
-    {
-      date: new Date(2025, 9, 23),
-      primeros: ["Sopa de marisco", "Pimientos de padrón"],
-      segundos: ["Pulpo a la gallega", "Churrasco de cerdo"],
-      postre: "Tarta de queso",
-    },
-  ];
-
-  const tapasSemanales = [
-    {
-      date: new Date(2025, 10, 13),
-      tapas: ["Pulpo a feira", "Zamburiñas gratinadas", "Croquetas de jamón", "Pimientos de padrón"],
-    },
-    {
-      date: new Date(2025, 10, 6),
-      tapas: ["Empanada de atún", "Chipirones a la plancha", "Chorizo al vino", "Patatas bravas"],
-    },
-    {
-      date: new Date(2025, 9, 30),
-      tapas: ["Navajas a la plancha", "Tortilla española", "Calamares fritos", "Queso de tetilla"],
-    },
-  ];
-
-
-  const espacios = [
-    {
-      title: "Salón Principal",
-      description: "Amplio y acogedor, perfecto para celebraciones familiares y eventos especiales",
-      icon: Home,
-      hasGallery: true,
-      images: [carnePlato, pulpoPlato, vinosMarques],
-    },
-    {
-      title: "Comedor Privado",
-      description: "Espacio íntimo ideal para comidas de negocio o reuniones privadas",
-      icon: Utensils,
-      hasGallery: true,
-      images: [pulpoPlato, vinosMarques, carnePlato],
-    },
-    {
-      title: "Terraza Exterior",
-      description: "Disfruta de nuestros platos al aire libre en un ambiente relajado",
-      icon: TreePine,
-      hasGallery: true,
-      images: [vinosMarques, carnePlato, pulpoPlato],
-    },
-    {
-      title: "Touza Cocktail Bar",
-      description: "Coctelería de autor en un ambiente sofisticado y exclusivo",
-      icon: Wine,
-      hasGallery: false,
-      link: "/touza-cocktail",
-    },
-  ];
+  const menusDelDia = t.espacios.menus;
+  const tapasSemanales = t.espacios.tapas;
+  const espacios = t.espacios.cards.map((card, index) => ({
+    ...card,
+    icon: index === 0 ? Home : index === 1 ? Utensils : index === 2 ? TreePine : Wine,
+    hasGallery: index !== 3,
+    images: index === 0 ? [carnePlato, pulpoPlato, vinosMarques] : index === 1 ? [pulpoPlato, vinosMarques, carnePlato] : index === 2 ? [vinosMarques, carnePlato, pulpoPlato] : undefined,
+    link: index === 3 ? "/touza-cocktail" : undefined,
+  }));
 
   return (
     <section id="espacios" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-muted to-background">
@@ -102,7 +45,7 @@ const EspaciosSection = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-primary mb-4"
           >
-            Nuestros Espacios
+            {t.espacios.title}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -111,7 +54,7 @@ const EspaciosSection = () => {
             viewport={{ once: true }}
             className="text-lg text-muted-foreground max-w-2xl mx-auto"
           >
-            Diferentes ambientes para cada ocasión
+            {t.espacios.subtitle}
           </motion.p>
         </div>
 
@@ -144,7 +87,7 @@ const EspaciosSection = () => {
                         onClick={() => setSelectedEspacio(index)}
                       >
                         <Camera className="w-5 h-5 mr-2" />
-                        Ver Galería de Fotos
+                        {t.espacios.galleryButton}
                       </Button>
                     ) : (
                       <Button 
@@ -154,7 +97,7 @@ const EspaciosSection = () => {
                       >
                         <Link to={espacio.link || "#"}>
                           <ExternalLink className="w-5 h-5 mr-2" />
-                          Visitar Touza Cocktail
+                          {t.espacios.visitTouza}
                         </Link>
                       </Button>
                     )}
@@ -175,11 +118,11 @@ const EspaciosSection = () => {
         >
           <Card className="bg-accent/5 border-accent/20">
             <CardHeader>
-              <CardTitle className="text-lg">Menú del Mediodía</CardTitle>
+              <CardTitle className="text-lg">{t.espacios.middayMenuTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                De martes a jueves, disfruta de nuestro menú del mediodía elaborado con productos frescos de temporada
+                {t.espacios.middayMenuDescription}
               </p>
               <Button 
                 variant="default" 
@@ -187,18 +130,18 @@ const EspaciosSection = () => {
                 onClick={() => setShowMenus(true)}
               >
                 <ChefHat className="w-5 h-5 mr-2" />
-                Ver Menús Anteriores
+                {t.espacios.middayMenuButton}
               </Button>
             </CardContent>
           </Card>
 
           <Card className="bg-accent/5 border-accent/20">
             <CardHeader>
-              <CardTitle className="text-lg">Tapas los Jueves</CardTitle>
+              <CardTitle className="text-lg">{t.espacios.tapasTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Cada jueves por la noche (excepto festivos), descubre nuestra selección especial de tapas
+                {t.espacios.tapasDescription}
               </p>
               <Button 
                 variant="default"
@@ -206,7 +149,7 @@ const EspaciosSection = () => {
                 onClick={() => setShowTapas(true)}
               >
                 <Clock className="w-5 h-5 mr-2" />
-                Ver Tapas de la Semana
+                {t.espacios.tapasButton}
               </Button>
             </CardContent>
           </Card>
@@ -244,9 +187,9 @@ const EspaciosSection = () => {
         <Dialog open={showMenus} onOpenChange={setShowMenus}>
             <DialogContent className="w-[92vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
               <DialogHeader>
-                <DialogTitle>Menús del Mediodía Anteriores</DialogTitle>
+                <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
               </DialogHeader>
-              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">Desliza para ver más</p>
+              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">{t.espacios.swipeHint}</p>
               <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
                 <CarouselContent className="-ml-3 sm:-ml-4">
                   {menusDelDia.map((menu, idx) => (
@@ -255,12 +198,12 @@ const EspaciosSection = () => {
                         <CardHeader>
                           <CardTitle className="text-base md:text-lg flex items-center gap-2 capitalize">
                             <ChefHat className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                            {format(menu.date, "EEEE d 'de' MMMM", { locale: es })}
+                            {format(menu.date, "EEEE d MMMM", { locale: dateLocale })}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div>
-                            <h4 className="font-semibold text-primary mb-1">Primeros</h4>
+                            <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.starters}</h4>
                             <ul className="text-sm text-muted-foreground space-y-1">
                               {menu.primeros.map((plato, i) => (
                                 <li key={i}>• {plato}</li>
@@ -268,7 +211,7 @@ const EspaciosSection = () => {
                             </ul>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-primary mb-1">Segundos</h4>
+                            <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.mains}</h4>
                             <ul className="text-sm text-muted-foreground space-y-1">
                               {menu.segundos.map((plato, i) => (
                                 <li key={i}>• {plato}</li>
@@ -276,7 +219,7 @@ const EspaciosSection = () => {
                             </ul>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-primary mb-1">Postre</h4>
+                            <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.dessert}</h4>
                             <p className="text-sm text-muted-foreground">• {menu.postre}</p>
                           </div>
                         </CardContent>
@@ -294,9 +237,9 @@ const EspaciosSection = () => {
         <Dialog open={showTapas} onOpenChange={setShowTapas}>
             <DialogContent className="w-[92vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
               <DialogHeader>
-                <DialogTitle>Tapas de los Jueves</DialogTitle>
+                <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
               </DialogHeader>
-              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">Desliza para ver más</p>
+              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">{t.espacios.swipeHint}</p>
               <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
                 <CarouselContent className="-ml-3 sm:-ml-4">
                   {tapasSemanales.map((semana, idx) => (
@@ -305,11 +248,11 @@ const EspaciosSection = () => {
                         <CardHeader>
                           <CardTitle className="text-base md:text-lg flex items-center gap-2 capitalize">
                             <Clock className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                            {format(semana.date, "EEEE d MMM", { locale: es })}
+                            {format(semana.date, "EEEE d MMM", { locale: dateLocale })}
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <h4 className="font-semibold text-primary mb-2">Tapas del día</h4>
+                          <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.tapasOfDay}</h4>
                           <ul className="text-sm text-muted-foreground space-y-2">
                             {semana.tapas.map((tapa, i) => (
                               <li key={i} className="flex items-start">

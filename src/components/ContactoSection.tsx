@@ -5,24 +5,26 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Phone, Mail, Gift } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const ContactoSection = () => {
+  const { t } = useTranslations();
   const [giftAmount, setGiftAmount] = useState("");
   const { toast } = useToast();
 
   const handleGiftPurchase = () => {
     if (!giftAmount || parseFloat(giftAmount) <= 0) {
       toast({
-        title: "Error",
-        description: "Por favor, introduce una cantidad válida",
+        title: t.contacto.toasts.errorTitle,
+        description: t.contacto.toasts.errorDescription,
         variant: "destructive",
       });
       return;
     }
     
     toast({
-      title: "Ticket Regalo",
-      description: `Procesando ticket de ${giftAmount}€. Contacta con nosotros para completar la compra.`,
+      title: t.contacto.toasts.giftTitle,
+      description: t.contacto.toasts.giftDescription.replace("{amount}", giftAmount),
     });
   };
 
@@ -43,7 +45,7 @@ const ContactoSection = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-primary mb-4"
           >
-            Contacto
+            {t.contacto.title}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -52,12 +54,12 @@ const ContactoSection = () => {
             viewport={{ once: true }}
             className="text-lg text-muted-foreground"
           >
-            Estamos aquí para atenderte
+            {t.contacto.subtitle}
           </motion.p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Información de Contacto */}
+          {/* Contact information */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -67,17 +69,20 @@ const ContactoSection = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Información de Contacto</CardTitle>
+                <CardTitle>{t.contacto.infoTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
                   <div>
-                    <p className="font-medium">Dirección</p>
+                    <p className="font-medium">{t.contacto.addressLabel}</p>
                     <p className="text-sm text-muted-foreground">
-                      Carrer Santa Maria de la Cabeza, 2<br />
-                      03330 Crevillent, Alicante<br />
-                      España
+                      {t.contacto.addressLines.map((line, index) => (
+                        <span key={line}>
+                          {line}
+                          {index < t.contacto.addressLines.length - 1 && <br />}
+                        </span>
+                      ))}
                     </p>
                   </div>
                 </div>
@@ -85,7 +90,7 @@ const ContactoSection = () => {
                 <div className="flex items-start gap-3">
                   <Phone className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
                   <div>
-                    <p className="font-medium">Teléfono</p>
+                    <p className="font-medium">{t.contacto.phoneLabel}</p>
                     <p className="text-sm text-muted-foreground">966 10 78 87</p>
                   </div>
                 </div>
@@ -93,7 +98,7 @@ const ContactoSection = () => {
                 <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
                   <div>
-                    <p className="font-medium">Email</p>
+                    <p className="font-medium">{t.contacto.emailLabel}</p>
                     <p className="text-sm text-muted-foreground">
                       casatomascrevillent@gmail.com
                     </p>
@@ -104,29 +109,15 @@ const ContactoSection = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Horario</CardTitle>
+                <CardTitle>{t.contacto.hoursTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium">Lunes</span>
-                  <span className="text-muted-foreground">Cerrado</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Martes - Jueves</span>
-                  <span className="text-muted-foreground">09:30 - 23:00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Viernes</span>
-                  <span className="text-muted-foreground">09:00 - 23:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Sábado</span>
-                  <span className="text-muted-foreground">10:30 - 23:30</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Domingo</span>
-                  <span className="text-muted-foreground">11:00 - 16:00</span>
-                </div>
+                {t.contacto.schedule.map((slot) => (
+                  <div key={slot.day} className="flex justify-between">
+                    <span className="font-medium">{slot.day}</span>
+                    <span className="text-muted-foreground">{slot.hours}</span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </motion.div>
@@ -142,23 +133,22 @@ const ContactoSection = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Gift className="w-6 h-6 text-accent" />
-                  Regala una Experiencia
+                  {t.contacto.giftTitle}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                  Sorprende a tus seres queridos con un ticket regalo de Casa Tomás. 
-                  Una experiencia gastronómica inolvidable.
+                  {t.contacto.giftDescription}
                 </p>
                 
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium mb-2 block">
-                      Importe del Ticket (€)
+                      {t.contacto.giftAmountLabel}
                     </label>
                     <Input
                       type="number"
-                      placeholder="50"
+                      placeholder={t.contacto.giftPlaceholder}
                       value={giftAmount}
                       onChange={(e) => setGiftAmount(e.target.value)}
                       min="1"
@@ -170,12 +160,12 @@ const ContactoSection = () => {
                     className="w-full bg-accent hover:bg-accent/90"
                     onClick={handleGiftPurchase}
                   >
-                    Comprar Ticket Regalo
+                    {t.contacto.giftButton}
                   </Button>
                 </div>
 
                 <div className="pt-4 border-t border-accent/20">
-                  <h4 className="font-medium mb-2">Tickets Sugeridos</h4>
+                  <h4 className="font-medium mb-2">{t.contacto.giftSuggested}</h4>
                   <div className="grid grid-cols-3 gap-2">
                     {[50, 100, 150].map((amount) => (
                       <Button
@@ -191,7 +181,7 @@ const ContactoSection = () => {
                 </div>
 
                 <p className="text-xs text-muted-foreground pt-4">
-                  * Los tickets regalo son válidos durante 12 meses desde la fecha de compra
+                  {t.contacto.giftNote}
                 </p>
               </CardContent>
             </Card>

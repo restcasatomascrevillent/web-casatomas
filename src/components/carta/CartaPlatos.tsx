@@ -20,12 +20,14 @@ import saladImg from "@/assets/platos/salad.jpg";
 import riceImg from "@/assets/platos/rice.jpg";
 import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface CartaPlatosProps {
   showAddButton: boolean;
 }
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
+  const { t } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platos, setPlatos] = useState<any[]>([]);
@@ -69,8 +71,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     } catch (error) {
       console.error('Error fetching platos:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los platos",
+        title: t.platos.toasts.errorTitle,
+        description: t.platos.toasts.errorDescription,
         variant: "destructive",
       });
     } finally {
@@ -128,15 +130,18 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     pedido.push(item);
     setUserPedido(pedido);
     toast({
-      title: "Añadido al pedido",
-      description: `${item.nombre} añadido a tu preview de pedido`,
+      title: t.platos.toasts.addedTitle,
+      description: t.platos.toasts.addedDescription.replace("{name}", item.nombre),
     });
   };
+
+  const translateCategory = (category: string) =>
+    t.categories.platos[category as keyof typeof t.categories.platos] ?? category;
 
   if (loading) {
     return (
       <div className="text-center py-16">
-        <p className="text-xl text-muted-foreground">Cargando carta...</p>
+        <p className="text-xl text-muted-foreground">{t.platos.loading}</p>
       </div>
     );
   }
@@ -148,7 +153,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
         <div className="relative max-w-md mx-auto w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
-            placeholder="Buscar platos..."
+            placeholder={t.platos.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 py-6 text-lg"
@@ -165,13 +170,13 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
               >
                 <span className="flex items-center gap-2">
                   <UtensilsCrossed className="w-5 h-5 text-accent" />
-                  {selectedCategory}
+                  {translateCategory(selectedCategory)}
                 </span>
                 <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72 max-h-[28rem] overflow-y-auto bg-background/95 backdrop-blur-lg border-2 border-border shadow-2xl rounded-xl p-2">
-              {categories.map((category, index) => (
+              {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -187,7 +192,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                         ? "bg-accent-foreground" 
                         : "bg-accent/40"
                     }`} />
-                    {category}
+                    {translateCategory(category)}
                   </span>
                 </DropdownMenuItem>
               ))}
@@ -214,7 +219,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                 />
                 <div className="absolute top-2 right-2">
                   <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                    {item.categoria}
+                    {translateCategory(item.categoria)}
                   </Badge>
                 </div>
               </div>
@@ -257,7 +262,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                     className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Añadir
+                    {t.platos.add}
                   </Button>
                 )}
               </CardFooter>
@@ -268,7 +273,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
       {filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-xl">No se encontraron platos con los filtros seleccionados</p>
+          <p className="text-xl">{t.platos.empty}</p>
         </div>
       )}
     </div>

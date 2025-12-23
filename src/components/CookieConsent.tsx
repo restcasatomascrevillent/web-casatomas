@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Cookie } from "lucide-react";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const CookieConsent = () => {
+  const { t } = useTranslations();
   const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
@@ -40,11 +42,11 @@ const CookieConsent = () => {
                 <Cookie className="w-8 h-8 text-accent" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold mb-2">Política de Cookies</h3>
+                <h3 className="text-lg font-bold mb-2">{t.cookie.title}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Utilizamos cookies propias y de terceros para mejorar nuestros servicios y mostrarle publicidad relacionada con sus preferencias mediante el análisis de sus hábitos de navegación. Si continúa navegando, consideramos que acepta su uso. Puede obtener más información en nuestra{" "}
+                  {t.cookie.message}{" "}
                   <a href="#" className="text-primary hover:underline font-medium">
-                    Política de Cookies
+                    {t.cookie.link}
                   </a>
                   .
                 </p>
@@ -56,14 +58,14 @@ const CookieConsent = () => {
                   size="sm"
                   className="w-full sm:w-auto"
                 >
-                  Rechazar
+                  {t.cookie.reject}
                 </Button>
                 <Button
                   onClick={handleAccept}
                   size="sm"
                   className="w-full sm:w-auto"
                 >
-                  Aceptar
+                  {t.cookie.accept}
                 </Button>
               </div>
             </div>

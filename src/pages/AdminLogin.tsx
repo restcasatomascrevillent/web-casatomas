@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const AdminLogin = () => {
+  const { t } = useTranslations();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -18,8 +20,8 @@ const AdminLogin = () => {
     
     // TODO: Implementar autenticación real con Lovable Cloud
     toast({
-      title: "Próximamente",
-      description: "El sistema de administración estará disponible próximamente",
+      title: t.adminLogin.comingSoonTitle,
+      description: t.adminLogin.comingSoonDescription,
     });
   };
 
@@ -30,19 +32,19 @@ const AdminLogin = () => {
           <div className="mx-auto mb-4 w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
             <Lock className="w-6 h-6 text-accent" />
           </div>
-          <CardTitle className="text-2xl">Administración</CardTitle>
+          <CardTitle className="text-2xl">{t.adminLogin.title}</CardTitle>
           <CardDescription>
-            Acceso para gestión del contenido del restaurante
+            {t.adminLogin.description}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.adminLogin.emailLabel}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@casatomas.com"
+                placeholder={t.adminLogin.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -50,7 +52,7 @@ const AdminLogin = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t.adminLogin.passwordLabel}</Label>
               <Input
                 id="password"
                 type="password"
@@ -64,7 +66,7 @@ const AdminLogin = () => {
               type="submit" 
               className="w-full bg-accent hover:bg-accent/90"
             >
-              Iniciar Sesión
+              {t.adminLogin.submit}
             </Button>
 
             <Button
@@ -73,7 +75,7 @@ const AdminLogin = () => {
               className="w-full"
               onClick={() => navigate("/")}
             >
-              Volver al inicio
+              {t.adminLogin.back}
             </Button>
           </form>
         </CardContent>
