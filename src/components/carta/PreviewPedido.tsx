@@ -20,6 +20,7 @@ import riceImg from "@/assets/platos/rice.jpg";
 import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
 import logoImg from "@/assets/logo-casa-tomas.png";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface PedidoItem {
   nombre: string;
@@ -34,6 +35,7 @@ interface PreviewPedidoProps {
 }
 
 const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
+  const { t, language } = useTranslations();
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(() => {
@@ -122,12 +124,21 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
     return sum + (item.precio_eur || 0) * cantidad;
   }, 0);
 
+  const translateCategory = (category?: string) => {
+    if (!category) return "";
+    return (
+      t.categories.platos[category as keyof typeof t.categories.platos] ||
+      t.categories.bebidas[category as keyof typeof t.categories.bebidas] ||
+      (category === "Todos" ? t.vinos.categoriesAll : category)
+    );
+  };
+
   if (pedido.length === 0) {
     return (
       <div className="text-center py-12">
         <Receipt className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-        <p className="text-xl text-muted-foreground">Tu preview de pedido está vacío</p>
-        <p className="text-sm text-muted-foreground mt-2">Añade platos desde la carta para comenzar</p>
+        <p className="text-xl text-muted-foreground">{t.preview.emptyTitle}</p>
+        <p className="text-sm text-muted-foreground mt-2">{t.preview.emptySubtitle}</p>
       </div>
     );
   }
@@ -138,11 +149,11 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
         {/* Header */}
         <div className="text-center border-b-2 border-black pb-3 mb-3">
           <div className="flex justify-center mb-2">
-            <img src={logoImg} alt="Casa Tomás Logo" className="h-24 w-auto object-contain" />
+            <img src={logoImg} alt={t.hero.logoAlt} className="h-24 w-auto object-contain" />
           </div>
           <p className="text-[10px] mt-2">================================</p>
           <p className="text-[10px] mt-1">
-            {new Date().toLocaleDateString("es-ES", {
+            {new Date().toLocaleDateString(language === "fr" ? "fr-FR" : "en-US", {
               year: "numeric",
               month: "2-digit",
               day: "2-digit",
@@ -176,7 +187,9 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
                 </div>
 
                 {/* Categoría si existe */}
-                {item.categoria && <p className="text-[9px] text-gray-600 mb-1">({item.categoria})</p>}
+                {item.categoria && (
+                  <p className="text-[9px] text-gray-600 mb-1">({translateCategory(item.categoria)})</p>
+                )}
 
                 {/* Cantidad y controles */}
                 <div className="flex items-center justify-between">
@@ -229,7 +242,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
         <div className="border-t-2 border-black pt-3 mb-3">
           <p className="text-[10px]">================================</p>
           <div className="flex justify-between items-center my-2">
-            <span className="font-bold text-sm">TOTAL:</span>
+            <span className="font-bold text-sm">{t.preview.totalLabel}:</span>
             <span className="font-bold text-xl">{total.toFixed(2)}€</span>
           </div>
           <p className="text-[10px]">================================</p>
@@ -237,9 +250,9 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
 
         {/* Footer */}
         <div className="text-center text-[9px] text-gray-600 space-y-1 mb-3">
-          <p>PREVIEW DE PEDIDO</p>
-          <p>NO VINCULANTE</p>
-          <p>Confirme con el camarero</p>
+          <p>{t.preview.previewLabel}</p>
+          <p>{t.preview.notBinding}</p>
+          <p>{t.preview.confirm}</p>
         </div>
 
         {/* Botón vaciar */}
@@ -249,12 +262,12 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
           className="w-full border-red-600 text-red-600 hover:bg-red-50 text-xs"
         >
           <Trash2 className="w-3 h-3 mr-2" />
-          Vaciar Pedido
+          {t.preview.clear}
         </Button>
 
         <div className="text-center mt-3">
           <p className="text-[10px]">********************************</p>
-          <p className="text-[9px] mt-1">Gracias por su visita</p>
+          <p className="text-[9px] mt-1">{t.preview.thanks}</p>
           <p className="text-[10px] mt-1">********************************</p>
         </div>
       </div>

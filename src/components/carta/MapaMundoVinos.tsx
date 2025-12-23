@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface Vino {
   nombre: string;
@@ -122,6 +123,7 @@ const regionCoordinates: { [key: string]: [number, number] } = {
 };
 
 const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
+  const { t } = useTranslations();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { toast } = useToast();
@@ -168,8 +170,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error al cargar el mapa",
+        title: t.map.errorTitle,
+        description: t.map.errorDescription,
         variant: "destructive",
       });
     }
@@ -224,7 +226,11 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           return `
             <div style="padding: ${isMobile ? '10px' : '12px'}; max-height: ${isMobile ? '300px' : '400px'}; overflow-y: auto; min-width: ${isMobile ? '200px' : '250px'};">
               <h3 style="font-weight: bold; margin-bottom: 8px; color: #b6842f; font-size: ${isMobile ? '14px' : '16px'};">${region}</h3>
-              <p style="margin-bottom: 12px; color: #686461; font-size: ${isMobile ? '12px' : '13px'}; font-weight: 600;">${data.count} ${data.count === 1 ? 'vino' : 'vinos'}</p>
+              <p style="margin-bottom: 12px; color: #686461; font-size: ${isMobile ? '12px' : '13px'}; font-weight: 600;">${
+                data.count === 1
+                  ? t.map.countSingle.replace("{count}", data.count.toString())
+                  : t.map.countPlural.replace("{count}", data.count.toString())
+              }</p>
               <div style="display: flex; flex-direction: column; gap: ${isMobile ? '6px' : '8px'};">
                 ${displayVinos.map(vino => `
                   <div style="padding: ${isMobile ? '6px' : '8px'}; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #b6842f;">
@@ -239,7 +245,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                   id="show-all-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}" 
                   style="margin-top: 12px; width: 100%; padding: ${isMobile ? '10px' : '8px'}; background: #b6842f; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; -webkit-tap-highlight-color: transparent;"
                 >
-                  Ver todos los ${data.vinos.length} vinos
+                  ${t.map.showAll.replace("{count}", data.vinos.length.toString())}
                 </button>
               ` : ''}
               ${showAll && hasMore ? `
@@ -247,7 +253,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                   id="show-less-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}" 
                   style="margin-top: 12px; width: 100%; padding: ${isMobile ? '10px' : '8px'}; background: #686461; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; -webkit-tap-highlight-color: transparent;"
                 >
-                  Ver menos
+                  ${t.map.showLess}
                 </button>
               ` : ''}
             </div>
@@ -290,18 +296,24 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   };
 
   useEffect(() => {
+    if (map.current) {
+      map.current.remove();
+      map.current = null;
+    }
+
     initializeMap();
-    
+
     return () => {
       map.current?.remove();
+      map.current = null;
     };
-  }, []);
+  }, [t]);
 
   return (
     <div className="mb-8 w-full overflow-hidden">
-      <h3 className="text-xl md:text-2xl font-bold text-center mb-3 md:mb-4 px-4">Origen de Nuestros Vinos</h3>
+      <h3 className="text-xl md:text-2xl font-bold text-center mb-3 md:mb-4 px-4">{t.map.title}</h3>
       <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base px-4">
-        Toca los marcadores para ver los vinos de cada región
+        {t.map.subtitle}
       </p>
       <div 
         ref={mapContainer} 

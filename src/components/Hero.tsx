@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import { Calendar, UtensilsCrossed } from "lucide-react";
 import logo from "@/assets/logo-casa-tomas.png";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const Hero = () => {
+  const { t } = useTranslations();
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -50,11 +52,11 @@ const Hero = () => {
         >
           <img
             src={logo}
-            alt="Casa Tomás Restaurante"
+            alt={t.hero.logoAlt}
             className="w-64 md:w-96 lg:w-[28rem] h-auto mx-auto mb-6 drop-shadow-2xl"
           />
           <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
-            Nunca e longo o camino que conduce a casa un amigo
+            {t.hero.motto}
           </p>
         </motion.div>
 
@@ -72,7 +74,7 @@ const Hero = () => {
             }}
           >
             <Calendar className="w-5 h-5 mr-2" />
-            Reservar Mesa
+            {t.hero.ctaPrimary}
           </Button>
           <Button
             size="lg"
@@ -81,7 +83,7 @@ const Hero = () => {
             onClick={() => scrollToSection("carta")}
           >
             <UtensilsCrossed className="w-5 h-5 mr-2" />
-            Ver Carta
+            {t.hero.ctaSecondary}
           </Button>
         </motion.div>
 

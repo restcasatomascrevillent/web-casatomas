@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { migrateDataToSupabase } from "@/utils/migrateData";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const MigrationHelper = () => {
+  const { t } = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const { toast } = useToast();
@@ -20,20 +22,24 @@ const MigrationHelper = () => {
       
       if (migrationResult.success) {
         toast({
-          title: "¡Migración exitosa!",
-          description: `Se han migrado ${migrationResult.platosInserted} platos y ${migrationResult.vinosInserted} vinos`,
+          title: t.migration.successTitle,
+          description: t.migration.successSummary
+            .replace("{platos}", String(migrationResult.platosInserted))
+            .replace("{platosLabel}", t.migration.platosLabel)
+            .replace("{vinos}", String(migrationResult.vinosInserted))
+            .replace("{vinosLabel}", t.migration.vinosLabel),
         });
       } else {
         toast({
-          title: "Error en la migración",
+          title: t.migration.errorTitle,
           description: migrationResult.error,
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error al ejecutar la migración",
+        title: t.migration.errorTitle,
+        description: t.migration.errorDescription,
         variant: "destructive",
       });
     } finally {
@@ -44,9 +50,9 @@ const MigrationHelper = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
       <Card className="p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-4">Migración de Datos</h1>
+        <h1 className="text-3xl font-bold text-center mb-4">{t.migration.title}</h1>
         <p className="text-muted-foreground text-center mb-6">
-          Migra los datos de la carta y vinos del JSON a la base de datos
+          {t.migration.description}
         </p>
 
         <Button
@@ -58,10 +64,10 @@ const MigrationHelper = () => {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Migrando datos...
+              {t.migration.loading}
             </>
           ) : (
-            "Iniciar Migración"
+            t.migration.start
           )}
         </Button>
 
@@ -74,13 +80,17 @@ const MigrationHelper = () => {
                 <XCircle className="h-5 w-5 text-red-500" />
               )}
               <h3 className="font-semibold">
-                {result.success ? '¡Migración exitosa!' : 'Error en la migración'}
+                {result.success ? t.migration.successTitle : t.migration.errorTitle}
               </h3>
             </div>
             {result.success ? (
               <div className="text-sm space-y-1">
-                <p>✅ {result.platosInserted} platos migrados</p>
-                <p>✅ {result.vinosInserted} vinos migrados</p>
+                <p>
+                  ✅ {t.migration.successLine.replace("{count}", String(result.platosInserted)).replace("{label}", t.migration.platosLabel)}
+                </p>
+                <p>
+                  ✅ {t.migration.successLine.replace("{count}", String(result.vinosInserted)).replace("{label}", t.migration.vinosLabel)}
+                </p>
               </div>
             ) : (
               <p className="text-sm text-red-500">{result.error}</p>
@@ -90,7 +100,7 @@ const MigrationHelper = () => {
 
         <div className="mt-6 text-center">
           <a href="/" className="text-sm text-primary hover:underline">
-            Volver al inicio
+            {t.migration.back}
           </a>
         </div>
       </Card>

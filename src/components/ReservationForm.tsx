@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { reservationSchema } from "@/lib/validations";
+import { createReservationSchema, type ReservationFormData } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import { CalendarIcon, CheckCircle, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import * as z from "zod";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface DisponibilidadSlot {
   fecha: string;
@@ -34,14 +33,13 @@ interface DisponibilidadSlot {
   porcentaje_ocupacion: number;
 }
 
-type ReservationFormData = z.infer<typeof reservationSchema>;
-
 type ReservationFormProps = {
   onSuccessClose?: () => void;
   navigateOnClose?: boolean;
 };
 
 export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
+  const { t, dateLocale } = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadSlot[]>([]);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
@@ -70,6 +68,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       return data || [];
     },
   });
+
+  const reservationSchema = useMemo(() => createReservationSchema(t.validation), [t]);
 
   const form = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
@@ -103,7 +103,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     const numeroComensales = form.getValues("numero_comensales");
     
     if (!fecha || !salaId || !numeroComensales) {
-      toast.error("Selecciona fecha, sala y número de comensales");
+      toast.error(t.reservationForm.toasts.missingFields);
       return;
     }
     
@@ -130,7 +130,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       
       const salaSeleccionada = salas?.find(s => s.id === salaId);
       if (!salaSeleccionada) {
-        toast.error("No se pudo obtener información de la sala");
+        toast.error(t.reservationForm.toasts.missingRoom);
         return;
       }
 
@@ -156,7 +156,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         setDisponibilidad(normalizeSlots(slotsDisponibles));
         setHasCheckedAvailability(true);
         setSelectedHour(null);
-        toast.success("¡Disponibilidad completa para esta fecha!");
+        toast.success(t.reservationForm.toasts.availabilityFull);
         return;
       }
       
@@ -191,11 +191,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       setDisponibilidad(normalizeSlots(allSlots));
       setHasCheckedAvailability(true);
       setSelectedHour(null);
-      toast.success("Disponibilidad consultada");
+      toast.success(t.reservationForm.toasts.availabilityChecked);
     } catch (error) {
-      console.error("Error al consultar disponibilidad:", error);
-      toast.error("Error al consultar disponibilidad", {
-        description: "Por favor, verifica tu conexión e intenta nuevamente"
+      console.error("Error checking availability:", error);
+      toast.error(t.reservationForm.toasts.availabilityErrorTitle, {
+        description: t.reservationForm.toasts.availabilityErrorDescription,
       });
     } finally {
       setIsCheckingAvailability(false);
@@ -204,12 +204,12 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
   const onSubmit = async (data: ReservationFormData) => {
     if (!selectedHour) {
-      toast.error("Debes seleccionar una hora disponible");
+      toast.error(t.reservationForm.toasts.missingTime);
       return;
     }
 
     if (honeypot) {
-      console.log("Bot detectado por honeypot");
+      console.log("Honeypot triggered, possible bot.");
       return;
     }
 
@@ -227,7 +227,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
           fecha: format(data.fecha, "yyyy-MM-dd"),
           hora: selectedHour.slice(0, 5),
           numero_comensales: data.numero_comensales,
-          sala: salaSeleccionada?.nombre || "No especificada",
+          sala: salaSeleccionada?.nombre || t.reservationForm.roomNotSpecified,
           sala_id: data.sala_id,
           notas_cliente: data.notas_cliente || "",
           estado: "pendiente"
@@ -235,7 +235,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       });
 
       if (!response.ok) {
-        throw new Error("Error al procesar la reserva");
+        throw new Error("Reservation processing error");
       }
 
       setReservationDetails({
@@ -250,8 +250,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       setSelectedHour(null);
       setHasCheckedAvailability(false);
     } catch (error: any) {
-      toast.error("Error al crear la reserva", {
-        description: "Por favor, inténtalo de nuevo o contacta con nosotros directamente.",
+      toast.error(t.reservationForm.toasts.submitErrorTitle, {
+        description: t.reservationForm.toasts.submitErrorDescription,
       });
     } finally {
       setIsSubmitting(false);
@@ -270,6 +270,16 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     if (navigateOnClose) navigate("/");
   };
 
+  const formattedSuccessDate = reservationDetails?.fecha
+    ? format(reservationDetails.fecha, "PPP", { locale: dateLocale })
+    : "";
+  const successDateLine =
+    reservationDetails && formattedSuccessDate
+      ? t.reservationForm.successLine2
+          .replace("{date}", formattedSuccessDate)
+          .replace("{time}", reservationDetails.hora)
+      : "";
+
   return (
     <>
       <Dialog open={showSuccessDialog} onOpenChange={handleCloseSuccessDialog}>
@@ -278,16 +288,14 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
-            <DialogTitle className="text-2xl font-serif">¡Reserva Confirmada!</DialogTitle>
+            <DialogTitle className="text-2xl font-serif">{t.reservationForm.successTitle}</DialogTitle>
             <DialogDescription asChild>
               <div className="text-base space-y-2">
                 {reservationDetails && (
                   <>
-                    <p>Tu reserva para <strong>{reservationDetails.comensales} personas</strong> ha sido recibida.</p>
-                    <p>
-                      <strong>{format(reservationDetails.fecha, "d 'de' MMMM 'de' yyyy", { locale: es })}</strong> a las <strong>{reservationDetails.hora}</strong>
-                    </p>
-                    <p className="text-muted-foreground mt-4">Te contactaremos pronto para confirmar los detalles.</p>
+                    <p>{t.reservationForm.successLine1.replace("{guests}", reservationDetails.comensales.toString())}</p>
+                    <p>{successDateLine}</p>
+                    <p className="text-muted-foreground mt-4">{t.reservationForm.successLine3}</p>
                   </>
                 )}
               </div>
@@ -297,7 +305,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             onClick={handleCloseSuccessDialog}
             className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-full"
           >
-            Volver al Inicio
+            {t.reservationForm.successButton}
           </Button>
         </DialogContent>
       </Dialog>
@@ -306,7 +314,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-6 pb-6 border-b border-border/30">
-                <h3 className="text-lg font-semibold text-foreground">Paso 1: Selecciona fecha, sala y comensales</h3>
+                <h3 className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</h3>
                 
                 <div className="grid sm:grid-cols-2 gap-6">
                   <FormField
@@ -314,7 +322,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                     name="fecha"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel className="text-foreground font-medium">Fecha *</FormLabel>
+                        <FormLabel className="text-foreground font-medium">{t.reservationForm.dateLabel}</FormLabel>
                         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -326,9 +334,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                                 )}
                               >
                                 {field.value ? (
-                                  format(field.value, "PPP", { locale: es })
+                                  format(field.value, "PPP", { locale: dateLocale })
                                 ) : (
-                                  <span>Selecciona una fecha</span>
+                                  <span>{t.reservationForm.datePlaceholder}</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
@@ -343,6 +351,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                                 setCalendarOpen(false);
                               }}
                               disabled={(date) => date < new Date()}
+                              locale={dateLocale}
                               initialFocus
                               className="pointer-events-auto rounded-xl"
                             />
@@ -358,11 +367,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                     name="sala_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">Sala preferida *</FormLabel>
+                        <FormLabel className="text-foreground font-medium">{t.reservationForm.roomLabel}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="border-2 border-border hover:border-primary transition-all rounded-xl bg-white">
-                              <SelectValue placeholder="Selecciona sala" />
+                              <SelectValue placeholder={t.reservationForm.roomPlaceholder} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-white border-2 border-border shadow-xl z-50 max-h-[300px] rounded-xl">
@@ -388,7 +397,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                   name="numero_comensales"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground font-medium">Número de comensales *</FormLabel>
+                      <FormLabel className="text-foreground font-medium">{t.reservationForm.guestsLabel}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -414,21 +423,21 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                   {isCheckingAvailability ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Consultando disponibilidad...
+                      {t.reservationForm.checkingAvailability}
                     </>
                   ) : (
                     <>
                       <Search className="mr-2 h-4 w-4" />
-                      Consultar Disponibilidad
+                      {t.reservationForm.checkAvailability}
                     </>
                   )}
                 </Button>
 
               {hasCheckedAvailability && (
                 <div className="space-y-4 pb-6 border-b border-border/30">
-                  <h3 className="text-lg font-semibold text-foreground">Paso 2: Selecciona tu hora preferida</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{t.reservationForm.stepTwo}</h3>
                   <FormLabel className="text-foreground font-medium block">
-                    Horas Disponibles *
+                    {t.reservationForm.timesLabel}
                   </FormLabel>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {disponibilidad.map((slot) => {
@@ -463,7 +472,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             {slot.hora.slice(0, 5)}
                           </span>
                           {isCompleto && (
-                            <span className="text-xs text-red-600 font-medium">Completo</span>
+                            <span className="text-xs text-red-600 font-medium">{t.reservationForm.fullLabel}</span>
                           )}
                         </button>
                       );
@@ -474,7 +483,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-foreground">
-                  {hasCheckedAvailability ? "Paso 3: Completa tu información" : "Completa tu información"}
+                  {hasCheckedAvailability ? t.reservationForm.stepThree : t.reservationForm.infoTitle}
                 </h3>
 
                 <FormField
@@ -482,9 +491,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                   name="nombre"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground font-medium">Nombre completo *</FormLabel>
+                      <FormLabel className="text-foreground font-medium">{t.reservationForm.nameLabel}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Tu nombre" {...field} className="rounded-xl border-border/50 bg-white" />
+                        <Input placeholder={t.reservationForm.namePlaceholder} {...field} className="rounded-xl border-border/50 bg-white" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -497,7 +506,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                     name="telefono"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">Teléfono *</FormLabel>
+                        <FormLabel className="text-foreground font-medium">{t.reservationForm.phoneLabel}</FormLabel>
                         <FormControl>
                           <Input placeholder="612345678" {...field} className="rounded-xl border-border/50 bg-white" />
                         </FormControl>
@@ -511,9 +520,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">Email *</FormLabel>
+                        <FormLabel className="text-foreground font-medium">{t.reservationForm.emailLabel}</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="tu@email.com" {...field} className="rounded-xl border-border/50 bg-white" />
+                          <Input type="email" placeholder={t.reservationForm.emailPlaceholder} {...field} className="rounded-xl border-border/50 bg-white" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -526,10 +535,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                   name="notas_cliente"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground font-medium">Notas especiales</FormLabel>
+                      <FormLabel className="text-foreground font-medium">{t.reservationForm.notesLabel}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Alergias, preferencias, ocasión especial..."
+                          placeholder={t.reservationForm.notesPlaceholder}
                           className="resize-none rounded-xl border-border/50 bg-white"
                           {...field}
                         />
@@ -554,14 +563,14 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             <Button
               type="submit"
               size="lg"
-              className="w-full bg-primary hover:bg-primary/90 text-lg py-6 rounded-full shadow-md hover:shadow-lg transition-all"
-              disabled={isSubmitting || !selectedHour}
-            >
-              {isSubmitting ? "Reservando..." : "Reservar Ahora"}
-            </Button>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Sistema de reservas online seguro y rápido
-            </p>
+            className="w-full bg-primary hover:bg-primary/90 text-lg py-6 rounded-full shadow-md hover:shadow-lg transition-all"
+            disabled={isSubmitting || !selectedHour}
+          >
+            {isSubmitting ? t.reservationForm.submitting : t.reservationForm.submit}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            {t.reservationForm.footer}
+          </p>
           </form>
         </Form>
       </div>

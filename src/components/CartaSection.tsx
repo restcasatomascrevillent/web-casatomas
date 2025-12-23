@@ -8,11 +8,13 @@ import CartaVinos from "./carta/CartaVinos";
 import CartaBebidas from "./carta/CartaBebidas";
 import PreviewPedido from "./carta/PreviewPedido";
 import { getUserPedido } from "@/utils/sessionManager";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 type Section = "platos" | "vinos" | "bebidas" | "pedido" | null;
 type PedidoSubSection = "platos" | "vinos" | "bebidas" | null;
 
 const CartaSection = () => {
+  const { t } = useTranslations();
   const [activeSection, setActiveSection] = useState<Section>(null);
   const [pedidoSubSection, setPedidoSubSection] = useState<PedidoSubSection>(null);
   const [pedidoCount, setPedidoCount] = useState(0);
@@ -46,9 +48,9 @@ const CartaSection = () => {
         className="max-w-7xl mx-auto"
       >
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">Nuestra Carta</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">{t.carta.title}</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Descubre nuestra selección de platos y vinos cuidadosamente elegidos
+            {t.carta.subtitle}
           </p>
         </div>
 
@@ -65,7 +67,7 @@ const CartaSection = () => {
               }`}
             >
               <UtensilsCrossed className="w-5 h-5 mr-2" />
-              Carta de Platos
+              {t.carta.buttons.platos}
             </Button>
             <Button
               size="lg"
@@ -77,7 +79,7 @@ const CartaSection = () => {
               }`}
             >
               <Wine className="w-5 h-5 mr-2" />
-              Carta de Vinos
+              {t.carta.buttons.vinos}
             </Button>
             <Button
               size="lg"
@@ -89,7 +91,7 @@ const CartaSection = () => {
               }`}
             >
               <Beer className="w-5 h-5 mr-2" />
-              Carta de Bebidas
+              {t.carta.buttons.bebidas}
             </Button>
           </div>
 
@@ -105,7 +107,7 @@ const CartaSection = () => {
               }`}
             >
               <Receipt className="w-5 h-5 mr-2" />
-              Mi Pedido
+              {t.carta.buttons.pedido}
             </Button>
             {pedidoCount > 0 && (
               <Badge 
@@ -164,7 +166,7 @@ const CartaSection = () => {
                     className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                   >
                     <UtensilsCrossed className="w-5 h-5 mr-2" />
-                    Añadir Platos
+                    {t.carta.pedido.addPlatos}
                   </Button>
                   <Button
                     size="lg"
@@ -172,7 +174,7 @@ const CartaSection = () => {
                     className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                   >
                     <Wine className="w-5 h-5 mr-2" />
-                    Añadir Vinos
+                    {t.carta.pedido.addVinos}
                   </Button>
                   <Button
                     size="lg"
@@ -180,11 +182,11 @@ const CartaSection = () => {
                     className="px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                   >
                     <Beer className="w-5 h-5 mr-2" />
-                    Añadir Bebidas
+                    {t.carta.pedido.addBebidas}
                   </Button>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-center mb-6">Tu Pedido</h3>
+                  <h3 className="text-2xl font-bold text-center mb-6">{t.carta.pedido.yourOrder}</h3>
                   <PreviewPedido showFloatingButton={true} />
                 </div>
               </div>
@@ -195,23 +197,23 @@ const CartaSection = () => {
                   onClick={() => setPedidoSubSection(null)}
                   className="mb-4"
                 >
-                  ← Volver a Mi Pedido
+                  ← {t.carta.pedido.backToOrder}
                 </Button>
                 {pedidoSubSection === "platos" && (
                   <div>
-                    <h3 className="text-2xl font-bold text-center mb-6">Añadir Platos</h3>
+                    <h3 className="text-2xl font-bold text-center mb-6">{t.carta.pedido.addPlatos}</h3>
                     <CartaPlatos showAddButton={true} />
                   </div>
                 )}
                 {pedidoSubSection === "vinos" && (
                   <div>
-                    <h3 className="text-2xl font-bold text-center mb-6">Añadir Vinos</h3>
+                    <h3 className="text-2xl font-bold text-center mb-6">{t.carta.pedido.addVinos}</h3>
                     <CartaVinos showAddButton={true} />
                   </div>
                 )}
                 {pedidoSubSection === "bebidas" && (
                   <div>
-                    <h3 className="text-2xl font-bold text-center mb-6">Añadir Bebidas</h3>
+                    <h3 className="text-2xl font-bold text-center mb-6">{t.carta.pedido.addBebidas}</h3>
                     <CartaBebidas showAddButton={true} />
                   </div>
                 )}

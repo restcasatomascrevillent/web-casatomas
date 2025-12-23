@@ -1,35 +1,19 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Wine, UtensilsCrossed } from "lucide-react";
+import { Wine, UtensilsCrossed } from "lucide-react";
 import pulpoImage from "@/assets/pulpo-plato.jpg";
 import carneImage from "@/assets/carne-plato.png";
 import champanImage from "@/assets/champan.png";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const NovedadesSection = () => {
-  const novedades = [
-    {
-      title: "Pulpo a la Gallega Premium",
-      description: "Pulpo fresco cocido a la perfección con patata, pimentón dulce y aceite de oliva virgen extra",
-      icon: UtensilsCrossed,
-      badge: "Especialidad",
-      image: pulpoImage
-    },
-    {
-      title: "Carnes Premium a la Brasa",
-      description: "Selección de las mejores carnes maduradas, cocinadas en nuestro horno de leña",
-      icon: UtensilsCrossed,
-      badge: "Destacado",
-      image: carneImage
-    },
-    {
-      title: "Champán y Cavas Selectos",
-      description: "Nueva selección de champán Laurent-Perrier y cavas premium para tus celebraciones",
-      icon: Wine,
-      badge: "Novedad",
-      image: champanImage
-    }
-  ];
+  const { t } = useTranslations();
+  const novedades = t.novedades.items.map((item, index) => ({
+    ...item,
+    icon: index === 2 ? Wine : UtensilsCrossed,
+    image: index === 0 ? pulpoImage : index === 1 ? carneImage : champanImage,
+  }));
 
   return (
     <section id="novedades" className="py-20 px-4 md:px-8 lg:px-16 bg-background">
@@ -48,7 +32,7 @@ const NovedadesSection = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-primary mb-4"
           >
-            Novedades
+            {t.novedades.title}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -57,7 +41,7 @@ const NovedadesSection = () => {
             viewport={{ once: true }}
             className="text-lg text-muted-foreground max-w-2xl mx-auto"
           >
-            Descubre nuestras últimas incorporaciones y experiencias únicas
+            {t.novedades.subtitle}
           </motion.p>
         </div>
 

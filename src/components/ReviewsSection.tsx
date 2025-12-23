@@ -3,52 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Star, ExternalLink, MessageSquare } from "lucide-react";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 const ReviewsSection = () => {
-  const reviews = [
-    {
-      name: "María García",
-      date: "Hace 2 semanas",
-      rating: 5,
-      comment: "Experiencia excepcional. La calidad de los platos es extraordinaria y el servicio impecable. El pulpo a la gallega estaba delicioso. Totalmente recomendable.",
-      avatar: "MG"
-    },
-    {
-      name: "Carlos Rodríguez",
-      date: "Hace 1 mes",
-      rating: 5,
-      comment: "Un restaurante de 10. Ambiente acogedor, comida exquisita y atención personalizada. El menú del mediodía tiene una relación calidad-precio excelente.",
-      avatar: "CR"
-    },
-    {
-      name: "Ana Martínez",
-      date: "Hace 3 semanas",
-      rating: 5,
-      comment: "Celebramos nuestro aniversario aquí y fue perfecto. La terraza es preciosa y los platos son verdaderas obras de arte. Volveremos sin duda.",
-      avatar: "AM"
-    },
-    {
-      name: "Javier López",
-      date: "Hace 2 meses",
-      rating: 4,
-      comment: "Muy buena experiencia gastronómica. Destacar la carta de vinos y el trato del personal. El solomillo al vino tinto estaba en su punto perfecto.",
-      avatar: "JL"
-    },
-    {
-      name: "Isabel Fernández",
-      date: "Hace 1 semana",
-      rating: 5,
-      comment: "Espectacular. Tanto la comida como el ambiente son de primera categoría. Las tapas de los jueves son una experiencia que no te puedes perder.",
-      avatar: "IF"
-    },
-    {
-      name: "Miguel Sánchez",
-      date: "Hace 3 semanas",
-      rating: 5,
-      comment: "De los mejores restaurantes de la zona. Productos frescos, elaboración cuidada y un servicio atento. El comedor privado es ideal para eventos.",
-      avatar: "MS"
-    }
-  ];
+  const { t } = useTranslations();
+  const reviews = t.reviews.items;
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -83,7 +42,7 @@ const ReviewsSection = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-5xl font-bold text-primary mb-4"
           >
-            Opiniones de Nuestros Clientes
+            {t.reviews.title}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -92,7 +51,7 @@ const ReviewsSection = () => {
             viewport={{ once: true }}
             className="text-lg text-muted-foreground max-w-2xl mx-auto"
           >
-            Lo que dicen quienes nos visitan
+            {t.reviews.subtitle}
           </motion.p>
         </div>
 
@@ -158,7 +117,7 @@ const ReviewsSection = () => {
             className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           >
             <MessageSquare className="w-5 h-5 mr-2" />
-            Dejar una Reseña en Google
+            {t.reviews.cta}
             <ExternalLink className="w-4 h-4 ml-2" />
           </Button>
         </motion.div>

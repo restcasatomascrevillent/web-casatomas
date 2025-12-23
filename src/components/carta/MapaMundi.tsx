@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface Vino {
   name: string;
@@ -24,6 +25,7 @@ interface MapaMundiProps {
 }
 
 const MapaMundi = ({ vinos }: MapaMundiProps) => {
+  const { t } = useTranslations();
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   const regionesCount = useMemo(() => {
@@ -48,8 +50,8 @@ const MapaMundi = ({ vinos }: MapaMundiProps) => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold text-primary mb-2">Origen de nuestros vinos</h3>
-        <p className="text-muted-foreground">Selecciona una región para ver los vinos disponibles</p>
+        <h3 className="text-2xl font-bold text-primary mb-2">{t.map.title}</h3>
+        <p className="text-muted-foreground">{t.map.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -69,7 +71,9 @@ const MapaMundi = ({ vinos }: MapaMundiProps) => {
               </CardHeader>
               <CardContent>
                 <Badge className="bg-accent hover:bg-accent/90">
-                  {data.count} {data.count === 1 ? 'vino' : 'vinos'}
+                  {data.count === 1
+                    ? t.map.countSingle.replace("{count}", data.count.toString())
+                    : t.map.countPlural.replace("{count}", data.count.toString())}
                 </Badge>
               </CardContent>
             </Card>
@@ -92,7 +96,7 @@ const MapaMundi = ({ vinos }: MapaMundiProps) => {
                   <CardContent className="space-y-1">
                     {vino.denominacion_origen && (
                       <p className="text-sm text-muted-foreground">
-                        <span className="font-medium">DO:</span> {vino.denominacion_origen}
+                        <span className="font-medium">{t.vinos.doLabel}:</span> {vino.denominacion_origen}
                       </p>
                     )}
                     <p className="text-xl font-bold text-accent">{vino.price_eur}€</p>

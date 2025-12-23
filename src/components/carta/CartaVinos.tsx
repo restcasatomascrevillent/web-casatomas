@@ -22,13 +22,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import vinosImg from "@/assets/vinos-marqués.jpeg";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
 }
 
 const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
+  const { t } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
@@ -74,8 +75,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     } catch (error) {
       console.error('Error fetching vinos:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los vinos",
+        title: t.vinos.toasts.errorTitle,
+        description: t.vinos.toasts.errorDescription,
         variant: "destructive",
       });
     } finally {
@@ -88,8 +89,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     pedido.push(item);
     setUserPedido(pedido);
     toast({
-      title: "Añadido al pedido",
-      description: `${item.nombre} añadido a tu preview de pedido`,
+      title: t.vinos.toasts.addedTitle,
+      description: t.vinos.toasts.addedDescription.replace("{name}", item.nombre),
     });
   };
 
@@ -132,6 +133,9 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     setShowAgeDialog(false);
   };
 
+  const translateCategory = (category: string) =>
+    category === "Todos" ? t.vinos.categoriesAll : category;
+
   if (showAgeDialog || isAdult === null) {
     return (
       <Dialog open={showAgeDialog} onOpenChange={setShowAgeDialog}>
@@ -139,10 +143,10 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertCircle className="w-6 h-6 text-accent" />
-              Verificación de edad
+              {t.vinos.ageCheckTitle}
             </DialogTitle>
             <DialogDescription>
-              Para acceder a nuestra carta de vinos, confirma que eres mayor de 18 años
+              {t.vinos.ageCheckDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-4 justify-center pt-4">
@@ -150,13 +154,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               onClick={() => handleAgeConfirm(true)}
               className="bg-accent hover:bg-accent/90"
             >
-              Soy mayor de 18
+              {t.vinos.ageCheckConfirm}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleAgeConfirm(false)}
             >
-              Soy menor de 18
+              {t.vinos.ageCheckDecline}
             </Button>
           </div>
         </DialogContent>
@@ -169,7 +173,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       <div className="text-center py-16">
         <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
         <p className="text-xl text-muted-foreground">
-          Lo sentimos, debes ser mayor de 18 años para ver esta sección
+          {t.vinos.ageCheckBlocked}
         </p>
       </div>
     );
@@ -185,7 +189,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
         <div className="relative max-w-md mx-auto w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
-            placeholder="Buscar vinos..."
+            placeholder={t.vinos.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 py-6 text-lg"
@@ -202,7 +206,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               >
                 <span className="flex items-center gap-2">
                   <Wine className="w-5 h-5 text-accent" />
-                  {selectedCategory}
+                  {translateCategory(selectedCategory)}
                 </span>
                 <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </Button>
@@ -224,7 +228,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                         ? "bg-accent-foreground" 
                         : "bg-accent/40"
                     }`} />
-                    {category}
+                    {translateCategory(category)}
                   </span>
                 </DropdownMenuItem>
               ))}
@@ -236,7 +240,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       {/* Items Grid */}
       {loading ? (
         <div className="text-center py-16">
-          <p className="text-xl text-muted-foreground">Cargando vinos...</p>
+          <p className="text-xl text-muted-foreground">{t.vinos.loading}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -255,19 +259,19 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       <span>{item.nombre}</span>
                     </CardTitle>
                     <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md flex-shrink-0">
-                      {item.categoria}
+                      {translateCategory(item.categoria)}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
                   {item.denominacion_origen && (
                     <p className="text-sm text-muted-foreground line-clamp-1">
-                      <span className="font-semibold">DO:</span> {item.denominacion_origen}
+                      <span className="font-semibold">{t.vinos.doLabel}:</span> {item.denominacion_origen}
                     </p>
                   )}
                   {item.ubicacion_region && (
                     <p className="text-sm text-muted-foreground line-clamp-1">
-                      <span className="font-semibold">Origen:</span> {item.ubicacion_region}{item.ubicacion_pais && `, ${item.ubicacion_pais}`}
+                      <span className="font-semibold">{t.vinos.originLabel}:</span> {item.ubicacion_region}{item.ubicacion_pais && `, ${item.ubicacion_pais}`}
                     </p>
                   )}
                   {item.descripcion && (
@@ -304,7 +308,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                     >
                       <Plus className="w-4 h-4 mr-1" />
-                      Añadir
+                      {t.vinos.add}
                     </Button>
                   )}
                 </div>
@@ -316,7 +320,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
 
       {!loading && filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-xl">No se encontraron vinos con los filtros seleccionados</p>
+          <p className="text-xl">{t.vinos.empty}</p>
         </div>
       )}
     </div>

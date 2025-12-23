@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Button } from "@/components/ui/button";
 import ReservationForm from "@/components/ReservationForm";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 type ReservasSectionProps = {
   forceShowForm?: boolean;
@@ -10,6 +11,7 @@ type ReservasSectionProps = {
 };
 
 const ReservasSection = ({ forceShowForm = false, showBackButton = false }: ReservasSectionProps) => {
+  const { t } = useTranslations();
   const { elementRef, isVisible } = useScrollReveal();
   const [showForm, setShowForm] = useState(forceShowForm);
 
@@ -32,10 +34,10 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
       >
       <div className="container mx-auto max-w-5xl">
         <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-center mb-4 text-foreground">
-          Reserva tu Mesa
+          {t.reservas.title}
         </h2>
         <p className="text-center text-muted-foreground/80 text-lg mb-12 max-w-2xl mx-auto">
-          Vive una experiencia gastronómica única en Casa Tomás
+          {t.reservas.subtitle}
         </p>
 
         <div className="text-center mb-10">
@@ -46,10 +48,10 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
                 className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
                 onClick={() => setShowForm(true)}
               >
-                Reservar Ahora
+                {t.reservas.cta}
               </Button>
               <p className="text-muted-foreground mt-3 text-sm">
-                Consulta disponibilidad y confirma en 3 pasos.
+                {t.reservas.hint}
               </p>
             </>
           )}
@@ -64,7 +66,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
                 onClick={() => (window.location.href = "/")}
                 className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-6 py-3 shadow-md hover:shadow-lg transition-colors"
               >
-                Volver a la web
+                {t.reservas.backToSite}
               </Button>
             </div>
           )}
