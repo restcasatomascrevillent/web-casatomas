@@ -36,6 +36,11 @@ interface PreviewPedidoProps {
 
 const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
   const { t, language } = useTranslations();
+  const localeByLanguage: Record<typeof language, string> = {
+    es: "es-ES",
+    en: "en-US",
+    fr: "fr-FR",
+  };
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [showBanner, setShowBanner] = useState(() => {
@@ -153,7 +158,7 @@ const PreviewPedido = ({ showFloatingButton = false }: PreviewPedidoProps) => {
           </div>
           <p className="text-[10px] mt-2">================================</p>
           <p className="text-[10px] mt-1">
-            {new Date().toLocaleDateString(language === "fr" ? "fr-FR" : "en-US", {
+            {new Date().toLocaleDateString(localeByLanguage[language], {
               year: "numeric",
               month: "2-digit",
               day: "2-digit",

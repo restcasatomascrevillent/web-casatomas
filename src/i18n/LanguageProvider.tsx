@@ -14,11 +14,11 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 
 const getInitialLanguage = (): Language => {
   if (typeof window === "undefined") {
-    return "en";
+    return "es";
   }
 
   const stored = window.localStorage.getItem("language");
-  if (stored === "en" || stored === "fr") {
+  if (stored === "es" || stored === "en" || stored === "fr") {
     return stored;
   }
 
@@ -26,8 +26,11 @@ const getInitialLanguage = (): Language => {
   if (browserLanguage.startsWith("fr")) {
     return "fr";
   }
+  if (browserLanguage.startsWith("es")) {
+    return "es";
+  }
 
-  return "en";
+  return "es";
 };
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
