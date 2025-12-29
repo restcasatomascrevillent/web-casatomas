@@ -29,7 +29,7 @@ export const translations = {
       cta: "Reservar mesa",
     },
     hero: {
-      motto: "El camino a casa nunca es largo para un amigo.",
+      motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
       ctaPrimary: "Reservar mesa",
       ctaSecondary: "Ver carta",
       logoAlt: "Restaurante Casa Tomás",
@@ -205,6 +205,16 @@ export const translations = {
       cta: "Reservar ahora",
       hint: "Consulta disponibilidad y confirma en tres pasos.",
       backToSite: "Volver al sitio web",
+      disclaimer: {
+        title: "Importante:",
+        note: "La reserva no queda confirmada hasta que recibas el email de confirmación. Casa Tomás queda exento de responsabilidad hasta ese momento.",
+        steps: [
+          "Consultar disponibilidad (cliente)",
+          "Solicitar reserva (recibirás un primer correo)",
+          "Verificación de reserva (Casa Tomás)",
+          "Confirmar reserva (recibirás el segundo correo)",
+        ],
+      },
     },
     reservationForm: {
       successTitle: "¡Reserva confirmada!",
@@ -481,7 +491,7 @@ export const translations = {
       cta: "Book a Table",
     },
     hero: {
-      motto: "The road home is never long for a friend.",
+      motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
       ctaPrimary: "Book a Table",
       ctaSecondary: "View Menu",
       logoAlt: "Casa Tomás Restaurant",
@@ -657,6 +667,16 @@ export const translations = {
       cta: "Book Now",
       hint: "Check availability and confirm in three steps.",
       backToSite: "Back to the website",
+      disclaimer: {
+        title: "Important:",
+        note: "Your booking is not confirmed until you receive the confirmation email. Casa Tomás is not responsible until that moment.",
+        steps: [
+          "Check availability (guest)",
+          "Request reservation (you'll receive the first email)",
+          "Reservation verification (Casa Tomás)",
+          "Confirm reservation (you'll receive the second email)",
+        ],
+      },
     },
     reservationForm: {
       successTitle: "Reservation confirmed!",
@@ -927,7 +947,7 @@ export const translations = {
       cta: "Réserver une table",
     },
     hero: {
-      motto: "Pour un ami, le chemin du retour n'est jamais long.",
+      motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
       ctaPrimary: "Réserver une table",
       ctaSecondary: "Voir la carte",
       logoAlt: "Restaurant Casa Tomás",
@@ -1103,6 +1123,16 @@ export const translations = {
       cta: "Réserver maintenant",
       hint: "Vérifiez la disponibilité et confirmez en trois étapes.",
       backToSite: "Retour au site",
+      disclaimer: {
+        title: "Important :",
+        note: "La réservation n'est pas confirmée tant que vous ne recevez pas l'email de confirmation. Casa Tomás décline toute responsabilité jusque-là.",
+        steps: [
+          "Vérifier la disponibilité (client)",
+          "Demander la réservation (vous recevrez le premier email)",
+          "Vérification de la réservation (Casa Tomás)",
+          "Confirmer la réservation (vous recevrez le deuxième email)",
+        ],
+      },
     },
     reservationForm: {
       successTitle: "Réservation confirmée !",

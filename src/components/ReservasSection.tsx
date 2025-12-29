@@ -61,13 +61,13 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="rounded-2xl border border-destructive/60 bg-destructive/10 backdrop-blur-sm p-6 shadow-sm text-left">
             <p className="text-sm text-primary">
-              <strong className="text-primary font-semibold">Importante:</strong> la reserva no queda confirmada hasta que recibas el email de confirmación. Casa Tomás queda exento de responsabilidad hasta ese momento.
+              <strong className="text-primary font-semibold">{t.reservas.disclaimer.title}</strong>{" "}
+              {t.reservas.disclaimer.note}
             </p>
             <div className="mt-4 grid gap-2 text-sm text-primary">
-              <div>1) Consultar disponibilidad (cliente)</div>
-              <div>2) Solicitar reserva (recibirás un primer correo)</div>
-              <div>3) Verificación de reserva (Casa Tomás)</div>
-              <div>4) Confirmar reserva (recibirás el segundo correo)</div>
+              {t.reservas.disclaimer.steps.map((step, index) => (
+                <div key={index}>{`${index + 1}) ${step}`}</div>
+              ))}
             </div>
           </div>
           <ReservationForm onSuccessClose={handleSuccessClose} />
