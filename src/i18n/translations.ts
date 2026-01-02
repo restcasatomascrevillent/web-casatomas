@@ -4,9 +4,9 @@ import { enUS, fr, es } from "date-fns/locale";
 export type Language = "es" | "en" | "fr";
 
 export const languageOptions = [
-  { value: "es", label: "Español" },
-  { value: "en", label: "English" },
-  { value: "fr", label: "Français" },
+  { value: "es", label: "ES" },
+  { value: "en", label: "EN" },
+  { value: "fr", label: "FR" },
 ] as const;
 
 export const dateLocales: Record<Language, Locale> = {
@@ -27,9 +27,6 @@ export const translations = {
         contacto: "Contacto",
       },
       cta: "Reservar mesa",
-      languageMenu: "Cambiar idioma",
-      openMenu: "Abrir menú",
-      closeMenu: "Cerrar menú",
     },
     hero: {
       motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
@@ -58,7 +55,6 @@ export const translations = {
       searchPlaceholder: "Buscar platos...",
       loading: "Cargando carta...",
       add: "Añadir",
-      viewPhoto: "Ver foto",
       empty: "No hay platos que coincidan con los filtros seleccionados",
       toasts: {
         errorTitle: "Error",
@@ -493,9 +489,6 @@ export const translations = {
         contacto: "Contact",
       },
       cta: "Book a Table",
-      languageMenu: "Change language",
-      openMenu: "Open menu",
-      closeMenu: "Close menu",
     },
     hero: {
       motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
@@ -524,7 +517,6 @@ export const translations = {
       searchPlaceholder: "Search dishes...",
       loading: "Loading menu...",
       add: "Add",
-      viewPhoto: "View photo",
       empty: "No dishes match the selected filters",
       toasts: {
         errorTitle: "Error",
@@ -953,9 +945,6 @@ export const translations = {
         contacto: "Contact",
       },
       cta: "Réserver une table",
-      languageMenu: "Changer de langue",
-      openMenu: "Ouvrir le menu",
-      closeMenu: "Fermer le menu",
     },
     hero: {
       motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
@@ -984,7 +973,6 @@ export const translations = {
       searchPlaceholder: "Rechercher un plat...",
       loading: "Chargement de la carte...",
       add: "Ajouter",
-      viewPhoto: "Voir la photo",
       empty: "Aucun plat ne correspond aux filtres sélectionnés",
       toasts: {
         errorTitle: "Erreur",
@@ -1404,5 +1392,4 @@ export const translations = {
   },
 } as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Translations = (typeof translations)[Language];
+export type Translations = (typeof translations)["en"];

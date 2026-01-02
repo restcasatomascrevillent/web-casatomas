@@ -34,7 +34,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const fetchBebidas = async () => {
     try {
       const { data, error } = await supabase
-        .from('bebidas')
+        .from('Bebidas')
         .select('*')
         .eq('activado', true)
         .order('categoria', { ascending: true })

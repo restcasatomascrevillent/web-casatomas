@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, ChevronDown, UtensilsCrossed, Eye } from "lucide-react";
+import { Search, Plus, ChevronDown, UtensilsCrossed } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   const normalizeAlergenos = (value: unknown) => {
@@ -55,7 +54,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const fetchPlatos = async () => {
     try {
       const { data, error } = await supabase
-        .from('platos')
+        .from('Platos')
         .select('*')
         .eq('activado', true)
         .order('categoria', { ascending: true })
@@ -67,7 +66,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           ...item,
           alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
           alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
-          expanded: Boolean((item as any).expanded),
         }))
       );
     } catch (error) {
@@ -139,16 +137,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
   const translateCategory = (category: string) =>
     t.categories.platos[category as keyof typeof t.categories.platos] ?? category;
-
-  const isCardExpanded = (item: any) => {
-    const forcedExpanded = expandedCards[item.id];
-    if (forcedExpanded !== undefined) return forcedExpanded;
-    return Boolean(item.expanded);
-  };
-
-  const handleExpandCard = (itemId: string) => {
-    setExpandedCards((prev) => ({ ...prev, [itemId]: true }));
-  };
 
   if (loading) {
     return (
@@ -224,25 +212,11 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           >
             <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
               <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
-                {isCardExpanded(item) ? (
-                  <img 
-                    src={getCategoryImage(item.categoria)} 
-                    alt={item.nombre}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleExpandCard(item.id)}
-                    aria-label={t.platos.viewPhoto}
-                    className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/70 text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent"
-                  >
-                    <div className="flex items-center gap-2 bg-background/90 px-4 py-2 rounded-full shadow-md">
-                      <Eye className="w-4 h-4" />
-                      <span className="text-sm font-semibold">{t.platos.viewPhoto}</span>
-                    </div>
-                  </button>
-                )}
+                <img 
+                  src={getCategoryImage(item.categoria)} 
+                  alt={item.nombre}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
                 <div className="absolute top-2 right-2">
                   <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
                     {translateCategory(item.categoria)}

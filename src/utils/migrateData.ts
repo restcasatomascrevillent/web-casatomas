@@ -27,7 +27,7 @@ export const migrateDataToSupabase = async () => {
 
     console.log(`Insertando ${platosToInsert.length} platos...`);
     const { error: platosError } = await supabase
-      .from('platos')
+      .from('Platos')
       .insert(platosToInsert);
 
     if (platosError) {
@@ -59,7 +59,7 @@ export const migrateDataToSupabase = async () => {
 
     console.log(`Insertando ${vinosToInsert.length} vinos...`);
     const { error: vinosError } = await supabase
-      .from('vinos')
+      .from('Vinos')
       .insert(vinosToInsert);
 
     if (vinosError) {
