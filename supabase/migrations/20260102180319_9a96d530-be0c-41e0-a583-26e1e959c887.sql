@@ -1,0 +1,1 @@
+ALTER TABLE platos ADD COLUMN expanded boolean NOT NULL DEFAULT true;
