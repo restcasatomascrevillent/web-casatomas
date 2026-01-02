@@ -1404,4 +1404,5 @@ export const translations = {
   },
 } as const;
 
-export type Translations = (typeof translations)["en"];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Translations = (typeof translations)[Language];
