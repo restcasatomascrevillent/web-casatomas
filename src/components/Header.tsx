@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const { t, language, setLanguage, languages } = useTranslations();
@@ -103,19 +109,57 @@ const Header = () => {
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </Button>
+          {/* Mobile Controls */}
+          <div className="lg:hidden flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t.header.languageMenu}
+                  className="rounded-full"
+                >
+                  <Globe2 className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="min-w-[8rem] w-auto bg-background text-accent border border-border shadow-xl px-1 py-1"
+              >
+                {languages.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => setLanguage(option.value)}
+                    className="cursor-pointer text-accent hover:bg-muted focus:bg-muted px-2 py-1.5"
+                  >
+                    <span
+                      className={
+                        language === option.value
+                          ? "font-semibold text-accent"
+                          : "text-accent"
+                      }
+                    >
+                      {option.label}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? t.header.closeMenu : t.header.openMenu}
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
