@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, ChevronDown, UtensilsCrossed } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platos, setPlatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   const normalizeAlergenos = (value: unknown) => {
@@ -66,6 +67,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           ...item,
           alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
           alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
+          expanded: Boolean((item as any).expanded),
         }))
       );
     } catch (error) {
@@ -138,6 +140,16 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const translateCategory = (category: string) =>
     t.categories.platos[category as keyof typeof t.categories.platos] ?? category;
 
+  const isCardExpanded = (item: any) => {
+    const forcedExpanded = expandedCards[item.id];
+    if (forcedExpanded !== undefined) return forcedExpanded;
+    return Boolean(item.expanded);
+  };
+
+  const handleToggleCard = (itemId: string, currentExpanded: boolean) => {
+    setExpandedCards((prev) => ({ ...prev, [itemId]: !currentExpanded }));
+  };
+
   if (loading) {
     return (
       <div className="text-center py-16">
@@ -203,72 +215,138 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
       {/* Items Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredItems.map((item, index) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.03 }}
-          >
-            <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-              <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
-                <img 
-                  src={getCategoryImage(item.categoria)} 
-                  alt={item.nombre}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-                <div className="absolute top-2 right-2">
-                  <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                    {translateCategory(item.categoria)}
-                  </Badge>
-                </div>
-              </div>
-              <CardHeader className="pb-3 flex-shrink-0">
-                <CardTitle className="text-lg leading-tight line-clamp-2 min-h-[3.5rem]">{item.nombre}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                {item.descripcion && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
-                )}
-                {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
-                  <div className="flex flex-wrap gap-1">
-                    {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
-                      <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
-                        {alergeno}
-                      </Badge>
-                    ))}
-                    {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
-                      <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
-                        {alergeno}
-                      </Badge>
-                    ))}
+        {filteredItems.map((item, index) => {
+          const expanded = isCardExpanded(item);
+          return (
+            <motion.div
+              layout
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.03 }}
+            >
+              <Card
+                className={`h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                  expanded ? "card--expanded" : "card--collapsed"
+                }`}
+              >
+                <AnimatePresence initial={false}>
+                  {expanded && (
+                    <motion.div
+                      key={`image-${item.id}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                      className="overflow-hidden bg-muted flex-shrink-0"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={getCategoryImage(item.categoria)}
+                          alt={item.nombre}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                        <div className="absolute top-2 right-2">
+                          <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                            {translateCategory(item.categoria)}
+                          </Badge>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <CardHeader
+                  className={`flex-shrink-0 transition-all duration-200 ${
+                    expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle
+                        className={`leading-tight line-clamp-2 ${
+                          expanded ? "text-lg min-h-[3.5rem]" : "text-base"
+                        }`}
+                      >
+                        {item.nombre}
+                      </CardTitle>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleCard(item.id, expanded)}
+                      aria-label={expanded ? t.platos.hidePhoto : t.platos.viewPhoto}
+                      className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent self-center transition-all duration-200 hover:scale-[1.03]"
+                    >
+                      {expanded ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                   </div>
-                )}
-                {item.alergenos_notas && (
-                  <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
-                    {item.alergenos_notas}
-                  </p>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-between items-center pt-3 border-t bg-muted/30 flex-shrink-0 mt-auto">
-                <span className="text-2xl font-bold text-accent">
-                  {item.precio_eur}€
-                  {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
-                </span>
-                {showAddButton && (
-                  <Button
-                    size="sm"
-                    onClick={() => addToPedido(item)}
-                    className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {t.platos.add}
-                  </Button>
-                )}
-              </CardFooter>
-            </Card>
-          </motion.div>
-        ))}
+                  {!expanded && (
+                    <div className="flex items-center gap-2 pt-2">
+                      <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
+                        {translateCategory(item.categoria)}
+                      </Badge>
+                    </div>
+                  )}
+                </CardHeader>
+                <AnimatePresence initial={false}>
+                  {expanded && (
+                    <motion.div
+                      key={`content-${item.id}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                    >
+                      <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
+                        {item.descripcion && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
+                        )}
+                        {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
+                              <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
+                                {alergeno}
+                              </Badge>
+                            ))}
+                            {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
+                              <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
+                                {alergeno}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        {item.alergenos_notas && (
+                          <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
+                            {item.alergenos_notas}
+                          </p>
+                        )}
+                      </CardContent>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <CardFooter
+                  className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
+                    expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
+                  }`}
+                >
+                  <span className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}>
+                    {item.precio_eur}€
+                    {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
+                  </span>
+                  {showAddButton && (
+                    <Button
+                      size="sm"
+                      onClick={() => addToPedido(item)}
+                      className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      {t.platos.add}
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
       {filteredItems.length === 0 && (

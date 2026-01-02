@@ -55,6 +55,8 @@ export const translations = {
       searchPlaceholder: "Buscar platos...",
       loading: "Cargando carta...",
       add: "Añadir",
+      viewPhoto: "Ver foto",
+      hidePhoto: "Ocultar foto",
       empty: "No hay platos que coincidan con los filtros seleccionados",
       toasts: {
         errorTitle: "Error",
@@ -517,6 +519,8 @@ export const translations = {
       searchPlaceholder: "Search dishes...",
       loading: "Loading menu...",
       add: "Add",
+      viewPhoto: "View photo",
+      hidePhoto: "Hide photo",
       empty: "No dishes match the selected filters",
       toasts: {
         errorTitle: "Error",
@@ -973,6 +977,8 @@ export const translations = {
       searchPlaceholder: "Rechercher un plat...",
       loading: "Chargement de la carte...",
       add: "Ajouter",
+      viewPhoto: "Voir la photo",
+      hidePhoto: "Masquer la photo",
       empty: "Aucun plat ne correspond aux filtres sélectionnés",
       toasts: {
         errorTitle: "Erreur",
