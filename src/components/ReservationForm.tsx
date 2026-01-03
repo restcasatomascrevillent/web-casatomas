@@ -107,7 +107,12 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       umbral_apertura_secundario: Number(slot.umbral_apertura_secundario ?? 0),
     }));
 
-  const normalizeHora = (hora: string) => (hora.length === 5 ? `${hora}:00` : hora);
+  const normalizeHora = (hora: string) => {
+    const match = hora.match(/(\d{2}):(\d{2})(?::(\d{2}))?/);
+    if (!match) return hora;
+    const [, hours, minutes, seconds] = match;
+    return `${hours}:${minutes}:${seconds ?? "00"}`;
+  };
 
   const toMinutes = (hora: string) => {
     const [hours, minutes] = normalizeHora(hora).split(":").map(Number);
