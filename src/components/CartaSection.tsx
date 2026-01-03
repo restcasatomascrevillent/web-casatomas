@@ -217,6 +217,8 @@ const CartaSection = () => {
                     <CartaBebidas showAddButton={true} />
                   </div>
                 )}
+                {/* Mantener el botón flotante del ticket visible mientras se añaden artículos */}
+                <PreviewPedido showFloatingButton hideInline />
               </div>
             )}
           </motion.div>
