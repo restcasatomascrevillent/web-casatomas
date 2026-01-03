@@ -126,8 +126,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   };
 
   const formatMinutes = (minutes: number) => {
-    const hoursValue = Math.floor(minutes / 60);
-    const minutesValue = minutes % 60;
+    const normalizedMinutes = ((minutes % 1440) + 1440) % 1440;
+    const hoursValue = Math.floor(normalizedMinutes / 60);
+    const minutesValue = normalizedMinutes % 60;
     return `${hoursValue.toString().padStart(2, "0")}:${minutesValue.toString().padStart(2, "0")}:00`;
   };
 
@@ -136,11 +137,24 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   const buildSlotsBetween = (horaInicio: string, horaFin: string, intervalo: number) => {
     const slots: string[] = [];
     const start = toMinutes(horaInicio);
-    const end = toMinutes(horaFin);
+    const endRaw = toMinutes(horaFin);
+    const end = endRaw <= start ? endRaw + 1440 : endRaw;
     for (let minutes = start; minutes < end; minutes += intervalo) {
       slots.push(formatMinutes(minutes));
     }
     return slots;
+  };
+
+  const isWithinPeriodo = (hora: string, periodo: DisponibilidadSlot) => {
+    if (!periodo.hora_inicio || !periodo.hora_fin) return false;
+    const start = toMinutes(periodo.hora_inicio);
+    const endRaw = toMinutes(periodo.hora_fin);
+    const end = endRaw <= start ? endRaw + 1440 : endRaw;
+    let value = toMinutes(hora);
+    if (value < start) {
+      value += 1440;
+    }
+    return value >= start && value < end;
   };
 
   const checkAvailability = async () => {
@@ -180,42 +194,20 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         return;
       }
 
-      const horariosComida = ["13:00:00", "13:30:00", "14:00:00", "14:30:00", "15:00:00", "15:30:00"];
-      const horariosCena = ["20:00:00", "20:30:00", "21:00:00", "21:30:00", "22:00:00", "22:30:00"];
-      const todosHorarios = [...horariosComida, ...horariosCena].map(normalizeHora);
-
       if (!text || text.trim() === '') {
-        const slotsDisponibles: DisponibilidadSlot[] = todosHorarios.map(hora => ({
-          fecha: format(fecha, "yyyy-MM-dd"),
-          hora,
-          espacio_id: salaId,
-          espacio: salaSeleccionada.nombre,
-          total_mesas_reservadas: 0,
-          total_comensales: 0,
-          total_reservas: 0,
-          total_mesas_espacio: salaSeleccionada.capacidad_maxima,
-          capacidad_maxima: salaSeleccionada.capacidad_maxima,
-          capacidad_disponible: salaSeleccionada.capacidad_maxima,
-          porcentaje_ocupacion: 0
-        }));
-        
-        setDisponibilidad(normalizeSlots(slotsDisponibles));
-        setHasCheckedAvailability(true);
-        setSelectedHour(null);
-        toast.success(t.reservationForm.toasts.availabilityFull);
-        return;
+        throw new Error("Empty availability response");
       }
       
-      const data: DisponibilidadSlot[] = JSON.parse(text);
-      const slotsConOcupacion = data.filter(
+      const rawData: DisponibilidadSlot[] = JSON.parse(text);
+      const normalizedData = normalizeSlots(rawData);
+      const slotsConOcupacion = normalizedData.filter(
         (slot) => isAvailabilitySlot(slot) && slot.espacio_id === salaId
       );
-      const periodos = data.filter((slot) =>
+      const periodos = normalizedData.filter((slot) =>
         isPeriodoConfig(slot) && (slot.espacio_id === null || slot.espacio_id === salaId)
       );
       const diaSolicitado = fecha.getDay();
 
-      const slotConfigFallback = slotsConOcupacion.find((slot) => isPeriodoConfig(slot));
       const periodosActivos = periodos.filter((periodo) => periodo.activo !== false);
       const periodosAplicables =
         periodosActivos.length > 0
@@ -225,16 +217,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             })
           : [];
 
-      const diasSemanaFallback = slotConfigFallback?.dias_semana ?? [];
-      if (diasSemanaFallback.length > 0 && !diasSemanaFallback.includes(diaSolicitado)) {
-        setDisponibilidad([]);
-        setHasCheckedAvailability(true);
-        setSelectedHour(null);
-        toast.message(t.reservationForm.toasts.closedDay);
-        return;
-      }
-
-      if (periodosActivos.length > 0 && periodosAplicables.length === 0 && !slotConfigFallback) {
+      if (periodosActivos.length > 0 && periodosAplicables.length === 0) {
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
         setSelectedHour(null);
@@ -263,23 +246,21 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                 return normalizedHora;
               });
             })
-          : slotConfigFallback?.hora_inicio &&
-              slotConfigFallback?.hora_fin &&
-              slotConfigFallback?.intervalo_base_minutos
-            ? buildSlotsBetween(
-                slotConfigFallback.hora_inicio,
-                slotConfigFallback.hora_fin,
-                Number(slotConfigFallback.intervalo_base_minutos)
-              ).map((hora) => {
-                const normalizedHora = normalizeHora(hora);
-                if (!configByHora.has(normalizedHora)) {
-                  configByHora.set(normalizedHora, slotConfigFallback);
-                }
-                return normalizedHora;
-              })
-            : [];
+          : [];
 
-      const baseHorarios = horariosConfigurados.length > 0 ? horariosConfigurados : todosHorarios;
+      if (horariosConfigurados.length === 0) {
+        setDisponibilidad([]);
+        setHasCheckedAvailability(true);
+        setSelectedHour(null);
+        toast.error(t.reservationForm.toasts.availabilityErrorTitle, {
+          description: t.reservationForm.toasts.availabilityErrorDescription,
+        });
+        return;
+      }
+
+      const baseHorarios = horariosConfigurados;
+      const horariosConOcupacion = slotsConOcupacion.map((slot) => normalizeHora(slot.hora));
+      const baseHorariosSet = new Set<string>([...baseHorarios, ...horariosConOcupacion]);
 
       const createEmptySlot = (hora: string): DisponibilidadSlot => ({
         fecha: format(fecha, "yyyy-MM-dd"),
@@ -296,7 +277,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       });
 
       const allSlotsMap = new Map<string, DisponibilidadSlot>();
-      baseHorarios.forEach((hora) => {
+      baseHorariosSet.forEach((hora) => {
         const normalizedHora = normalizeHora(hora);
         const existingSlot = occupationMap.get(normalizedHora);
         allSlotsMap.set(normalizedHora, existingSlot ?? createEmptySlot(normalizedHora));
@@ -306,6 +287,16 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
       const secondaryOffsets = [15, 45];
 
+      slotsConOcupacion.forEach((slot) => {
+        const horaNormalizada = normalizeHora(slot.hora);
+        if (!configByHora.has(horaNormalizada)) {
+          const periodo = periodosAplicables.find((config) => isWithinPeriodo(horaNormalizada, config));
+          if (periodo) {
+            configByHora.set(horaNormalizada, periodo);
+          }
+        }
+      });
+
       allSlotsMap.forEach((slot) => {
         const slotConfig = configByHora.get(normalizeHora(slot.hora));
         const umbralSecundario = Number(slotConfig?.umbral_apertura_secundario ?? 0);
@@ -313,6 +304,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         if (umbralSecundario > 0 && Number(slot.porcentaje_ocupacion) > umbralSecundario) {
           secondaryOffsets.forEach((offsetMinutes) => {
             const secondaryHora = normalizeHora(addMinutes(slot.hora, offsetMinutes));
+            if (slotConfig && !isWithinPeriodo(secondaryHora, slotConfig)) {
+              return;
+            }
             const existingSecondary = occupationMap.get(secondaryHora);
             if (slotConfig && !configByHora.has(secondaryHora)) {
               configByHora.set(secondaryHora, slotConfig);
