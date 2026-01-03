@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +7,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 interface Vino {
   nombre: string;
   precio_eur: number;
+  categoria?: string;
   denominacion_origen?: string;
   ubicacion_pais?: string;
   ubicacion_region?: string;
@@ -126,9 +127,76 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const { t } = useTranslations();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<{ region: string; vinos: Vino[]; category?: string } | null>(null);
   const { toast } = useToast();
 
   const MAPBOX_TOKEN = "pk.eyJ1Ijoib2ZpY2lvc29zIiwiYSI6ImNtaHZubTFhcDAyOGIybHNneWtrNjY0NjcifQ.yVfJCOCYXbs6VrOkDWOQtg";
+
+  const getCategoryKey = (categoria?: string) => {
+    const cat = (categoria || "").toUpperCase();
+    if (cat.includes("TINTO")) return "tinto";
+    if (cat.includes("BLANCO")) return "blanco";
+    if (cat.includes("ROSADO") || cat.includes("ROSE")) return "rosado";
+    if (cat.includes("CHAMP") || cat.includes("CAVA") || cat.includes("ESPUMOS")) return "espumoso";
+    return "otro";
+  };
+
+  const colorByCategory: Record<string, string> = {
+    tinto: "#8b1f3d",
+    blanco: "#d1a536",
+    rosado: "#d76d8a",
+    espumoso: "#d7c07f",
+    otro: "#5b6f82",
+  };
+
+  const hexToRgba = (hex: string, alpha: number) => {
+    const clean = hex.replace("#", "");
+    const num = parseInt(clean, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const markerBackground = (categories: string[]) => {
+    const unique = categories.length ? Array.from(new Set(categories)) : ["otro"];
+    if (unique.length === 1) return colorByCategory[unique[0]] || colorByCategory.otro;
+    const step = 360 / unique.length;
+    const slices = unique
+      .map((cat, idx) => {
+        const color = colorByCategory[cat] || colorByCategory.otro;
+        const start = idx * step;
+        const end = (idx + 1) * step;
+        return `${color} ${start}deg ${end}deg`;
+      })
+      .join(", ");
+    return `conic-gradient(${slices})`;
+  };
+
+  const getRegionInsight = (region: string, category: string, vinosRegion: Vino[]) => {
+    const text = (region + " " + (vinosRegion[0]?.denominacion_origen || "")).toLowerCase();
+    if (text.includes("rioja")) return "Rioja suele ofrecer tintos de tempranillo con paso por barrica, buena acidez y equilibrio fruta-madera.";
+    if (text.includes("ribera")) return "Ribera del Duero: tintos potentes de tempranillo, tanino marcado y crianza, ideales para carnes.";
+    if (text.includes("rueda") || text.includes("verdejo")) return "Verdejo de Rueda: blancos aromáticos, cítricos y con un punto herbal refrescante.";
+    if (text.includes("albariñ")) return "Rías Baixas: albariños salinos, frescos y muy gastronómicos, con buena acidez.";
+    if (text.includes("priorat")) return "Priorat: tintos de garnacha y cariñena, concentrados, minerales y con estructura.";
+    if (text.includes("penedès") || text.includes("cava")) return "Penedès/Cava: espumosos de método tradicional con burbuja fina y perfil fresco.";
+    if (text.includes("champagne")) return "Champagne: chardonnay y pinot noir con crianza sobre lías, burbuja fina y notas de brioche.";
+    if (text.includes("burdeos") || text.includes("bordeaux")) return "Burdeos: ensamblajes de cabernet/merlot con cuerpo medio-alto y potencial de guarda.";
+    if (text.includes("borgoña") || text.includes("bourgogne") || text.includes("burgundy")) return "Borgoña: chardonnay o pinot noir elegantes, con fineza y acidez viva.";
+    if (text.includes("toscana")) return "Toscana: sangiovese (Chianti/Brunello) con notas de cereza, especias y tanino amable.";
+    if (text.includes("napa")) return "Napa Valley: cabernet sauvignon con fruta madura, crianza en roble y volumen en boca.";
+    if (text.includes("sonoma")) return "Sonoma: estilos más frescos que Napa, chardonnay y pinot noir con buena acidez.";
+    if (text.includes("valle del rhône") || text.includes("ródano") || text.includes("rhone")) return "Ródano: syrah o garnacha con notas de especias y hierbas mediterráneas.";
+    if (text.includes("mendoza")) return "Mendoza: malbec jugoso, con fruta negra y tanino redondo; ideal para carnes.";
+    if (text.includes("portugal") || text.includes("douro") || text.includes("alentejo")) return "Portugal: mezclas locales con fruta madura y acidez equilibrada; gran relación calidad-precio.";
+    if (text.includes("alemania") || text.includes("mosela") || text.includes("rheingau")) return "Alemania: rieslings tensos, minerales y aromáticos, desde secos a sutilmente off-dry.";
+    if (category === "espumoso") return "Espumosos: burbuja fina, frescos y versátiles; van de la fruta blanca a notas de brioche según crianza.";
+    if (category === "blanco") return "Blancos: perfil fresco, buena acidez y notas cítricas o florales según la uva.";
+    if (category === "rosado") return "Rosados: fruta roja fresca, ligeros y perfectos para aperitivo o platos ligeros.";
+    if (category === "tinto") return "Tintos: desde perfiles afrutados y jóvenes hasta crianzas con cuerpo y especias de barrica.";
+    return "Selección diversa de la D.O.: estilos y uvas que expresan su origen con buena gastronomía de acompañamiento.";
+  };
 
   const initializeMap = () => {
     if (!mapContainer.current || map.current) return;
@@ -180,17 +248,22 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const addWineMarkers = () => {
     if (!map.current) return;
 
-    const regionCount: { [key: string]: { count: number; vinos: Vino[] } } = {};
+    const regionCount: { [key: string]: { count: number; vinos: Vino[]; category: string } } = {};
     const isMobile = window.innerWidth < 768;
 
     vinos.forEach(vino => {
       const region = vino.ubicacion_region;
       if (region) {
         if (!regionCount[region]) {
-          regionCount[region] = { count: 0, vinos: [] };
+          regionCount[region] = { count: 0, vinos: [], category: getCategoryKey(vino.categoria) };
         }
         regionCount[region].count++;
         regionCount[region].vinos.push(vino);
+        const currentCategory = regionCount[region].category;
+        const vinoCategory = getCategoryKey(vino.categoria);
+        if (currentCategory === "otro" && vinoCategory !== "otro") {
+          regionCount[region].category = vinoCategory;
+        }
       }
     });
 
@@ -199,11 +272,13 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       if (coords && map.current) {
         const markerSize = isMobile ? 35 : 40;
         const fontSize = isMobile ? 12 : 14;
+        const catList = data.vinos.map((v) => getCategoryKey(v.categoria));
+        const bgColor = markerBackground(catList);
         
         const el = document.createElement('div');
         el.className = 'wine-marker';
         el.style.cssText = `
-          background-color: hsl(var(--accent));
+          background: ${bgColor};
           width: ${markerSize}px;
           height: ${markerSize}px;
           border-radius: 50%;
@@ -214,82 +289,34 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           font-weight: bold;
           cursor: pointer;
           border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 10px rgba(0,0,0,0.25);
           font-size: ${fontSize}px;
+          transition: transform 150ms ease, box-shadow 150ms ease;
         `;
-        el.textContent = data.count.toString();
+        el.innerHTML = `<span style="display: inline-block; width: 100%; text-align: center;">${data.count}</span>`;
+        el.title = region;
 
-        const createPopupContent = (showAll: boolean = false) => {
-          const displayVinos = showAll ? data.vinos : data.vinos.slice(0, 5);
-          const hasMore = data.vinos.length > 5;
-          
-          return `
-            <div style="padding: ${isMobile ? '10px' : '12px'}; max-height: ${isMobile ? '300px' : '400px'}; overflow-y: auto; min-width: ${isMobile ? '200px' : '250px'};">
-              <h3 style="font-weight: bold; margin-bottom: 8px; color: #b6842f; font-size: ${isMobile ? '14px' : '16px'};">${region}</h3>
-              <p style="margin-bottom: 12px; color: #686461; font-size: ${isMobile ? '12px' : '13px'}; font-weight: 600;">${
-                data.count === 1
-                  ? t.map.countSingle.replace("{count}", data.count.toString())
-                  : t.map.countPlural.replace("{count}", data.count.toString())
-              }</p>
-              <div style="display: flex; flex-direction: column; gap: ${isMobile ? '6px' : '8px'};">
-                ${displayVinos.map(vino => `
-                  <div style="padding: ${isMobile ? '6px' : '8px'}; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #b6842f;">
-                    <p style="font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; color: #363e45; margin-bottom: 4px;">${vino.nombre}</p>
-                    ${vino.denominacion_origen ? `<p style="font-size: ${isMobile ? '10px' : '11px'}; color: #988b81; margin-bottom: 4px;">${vino.denominacion_origen}</p>` : ''}
-                    <p style="font-size: ${isMobile ? '13px' : '14px'}; color: #b6842f; font-weight: bold;">${vino.precio_eur}€</p>
-                  </div>
-                `).join('')}
-              </div>
-              ${hasMore && !showAll ? `
-                <button 
-                  id="show-all-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}" 
-                  style="margin-top: 12px; width: 100%; padding: ${isMobile ? '10px' : '8px'}; background: #b6842f; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; -webkit-tap-highlight-color: transparent;"
-                >
-                  ${t.map.showAll.replace("{count}", data.vinos.length.toString())}
-                </button>
-              ` : ''}
-              ${showAll && hasMore ? `
-                <button 
-                  id="show-less-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}" 
-                  style="margin-top: 12px; width: 100%; padding: ${isMobile ? '10px' : '8px'}; background: #686461; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: ${isMobile ? '12px' : '13px'}; -webkit-tap-highlight-color: transparent;"
-                >
-                  ${t.map.showLess}
-                </button>
-              ` : ''}
-            </div>
-          `;
-        };
+        el.addEventListener('mouseenter', () => {
+          el.style.boxShadow = "0 6px 14px rgba(0,0,0,0.3)";
+          el.style.transform = "translateY(-2px)";
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
+          el.style.transform = "translateY(0)";
+        });
 
-        const popup = new mapboxgl.Popup({ 
-          offset: isMobile ? 20 : 25,
-          maxWidth: isMobile ? '280px' : '350px',
-          className: 'wine-popup',
-          closeButton: true,
-          closeOnClick: false,
-          focusAfterOpen: false,
-        }).setHTML(createPopupContent(false));
-
-        // Handle button clicks in popup
-        popup.on('open', () => {
-          const showAllBtn = document.getElementById(`show-all-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}`);
-          const showLessBtn = document.getElementById(`show-less-wines-${region.replace(/[^a-zA-Z0-9]/g, '')}`);
-          
-          if (showAllBtn) {
-            showAllBtn.addEventListener('click', () => {
-              popup.setHTML(createPopupContent(true));
-            });
+        el.addEventListener('click', () => {
+          setSelectedRegion({ region, vinos: data.vinos, category: data.category });
+          if (map.current) {
+            map.current.flyTo({ center: coords, zoom: isMobile ? 2 : 3, speed: 0.7, essential: true });
           }
-          
-          if (showLessBtn) {
-            showLessBtn.addEventListener('click', () => {
-              popup.setHTML(createPopupContent(false));
-            });
+          if (!isMobile) {
+            window.scrollTo({ top: mapContainer.current?.getBoundingClientRect().bottom! + window.scrollY - 80, behavior: "smooth" });
           }
         });
 
         new mapboxgl.Marker(el)
           .setLngLat(coords)
-          .setPopup(popup)
           .addTo(map.current);
       }
     });
@@ -301,13 +328,24 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       map.current = null;
     }
 
+    setSelectedRegion(null);
     initializeMap();
 
     return () => {
       map.current?.remove();
       map.current = null;
     };
-  }, [t]);
+  }, [t, vinos]);
+
+  const selectedUniqueDO = selectedRegion
+    ? Array.from(
+        new Set(
+          selectedRegion.vinos
+            .map((v) => v.denominacion_origen)
+            .filter((v): v is string => Boolean(v && v.trim()))
+        )
+      )
+    : [];
 
   return (
     <div className="mb-8 w-full overflow-hidden">
@@ -320,6 +358,53 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
         style={{ maxWidth: '100%', overflow: 'hidden' }}
       />
+      {selectedRegion && (
+        <div className="mt-4 md:mt-6 w-full px-2 md:px-0">
+          <div
+            className="rounded-xl border shadow-md p-4 md:p-6 space-y-4"
+            style={{ backgroundColor: hexToRgba(colorByCategory[selectedRegion.category || "otro"] || colorByCategory.otro, 0.08) }}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">{t.vinos.originLabel}</p>
+                <h4 className="text-lg md:text-xl font-bold">{selectedRegion.region}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {selectedRegion.vinos.length === 1
+                    ? t.map.countSingle.replace("{count}", selectedRegion.vinos.length.toString())
+                    : t.map.countPlural.replace("{count}", selectedRegion.vinos.length.toString())}
+                </p>
+              </div>
+              <div className="text-sm text-muted-foreground max-w-xl">
+                <p className="font-semibold text-foreground mb-1">{t.map.aboutDO ?? "Sobre esta D.O."}</p>
+                <p className="leading-snug">{getRegionInsight(selectedRegion.region, selectedRegion.category || "otro", selectedRegion.vinos)}</p>
+              </div>
+              {selectedUniqueDO.length > 0 && (
+                <div className="text-sm text-muted-foreground max-w-sm">
+                  <p className="font-semibold text-foreground mb-1">{t.vinos.doLabel}:</p>
+                  <p className="leading-snug">{selectedUniqueDO.join(" · ")}</p>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {selectedRegion.vinos
+                .slice()
+                .sort((a, b) => a.nombre.localeCompare(b.nombre))
+                .map((vino) => (
+                  <div
+                    key={vino.nombre + vino.denominacion_origen}
+                    className="rounded-lg border bg-muted/30 p-3 flex flex-col gap-1 shadow-sm"
+                  >
+                    <p className="font-semibold text-foreground leading-tight">{vino.nombre}</p>
+                    {vino.denominacion_origen && (
+                      <p className="text-xs text-muted-foreground">{vino.denominacion_origen}</p>
+                    )}
+                    <p className="text-sm font-bold text-accent">{vino.precio_eur}€</p>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
