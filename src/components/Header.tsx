@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const { t, language, setLanguage, languages } = useTranslations();
@@ -103,19 +109,35 @@ const Header = () => {
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </Button>
+          {/* Mobile Language + Menu */}
+          <div className="flex items-center gap-1 lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Cambiar idioma">
+                  <Globe2 className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {languages.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => setLanguage(option.value)}
+                    className={language === option.value ? "font-semibold text-primary" : ""}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -162,19 +184,6 @@ const Header = () => {
                   {t.header.cta}
                 </Button>
               </motion.div>
-              <div className="flex justify-center gap-2 pt-3">
-                {languages.map((option) => (
-                  <Button
-                    key={option.value}
-                    size="sm"
-                    variant={language === option.value ? "default" : "outline"}
-                    className="rounded-full px-4"
-                    onClick={() => setLanguage(option.value)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
             </nav>
           </motion.div>
         )}

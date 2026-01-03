@@ -4,9 +4,9 @@ import { enUS, fr, es } from "date-fns/locale";
 export type Language = "es" | "en" | "fr";
 
 export const languageOptions = [
-  { value: "es", label: "ES" },
-  { value: "en", label: "EN" },
-  { value: "fr", label: "FR" },
+  { value: "es", label: "Español" },
+  { value: "en", label: "English" },
+  { value: "fr", label: "Français" },
 ] as const;
 
 export const dateLocales: Record<Language, Locale> = {
@@ -411,6 +411,7 @@ export const translations = {
       aboutDO: "Sobre esta D.O.",
       showAll: "Ver los {count} vinos",
       showLess: "Ver menos",
+      showMore: "Mostrar más",
       errorTitle: "Error",
       errorDescription: "No pudimos cargar el mapa",
     },
@@ -870,6 +871,7 @@ export const translations = {
       aboutDO: "About this appellation",
       showAll: "See all {count} wines",
       showLess: "Show fewer",
+      showMore: "Show more",
       errorTitle: "Error",
       errorDescription: "We couldn't load the map",
     },
@@ -1329,6 +1331,7 @@ export const translations = {
       aboutDO: "À propos de l'appellation",
       showAll: "Voir les {count} vins",
       showLess: "Voir moins",
+      showMore: "Voir plus",
       errorTitle: "Erreur",
       errorDescription: "Impossible de charger la carte",
     },

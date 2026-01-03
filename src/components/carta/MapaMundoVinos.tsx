@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
@@ -123,129 +124,85 @@ const regionCoordinates: { [key: string]: [number, number] } = {
   "Western Cape (Elgin)": [19.0, -34.2],
 };
 
+const MAPBOX_TOKEN = "pk.eyJ1Ijoib2ZpY2lvc29zIiwiYSI6ImNtaHZubTFhcDAyOGIybHNneWtrNjY0NjcifQ.yVfJCOCYXbs6VrOkDWOQtg";
+
+const getCategoryKey = (categoria?: string) => {
+  const cat = (categoria || "").toUpperCase();
+  if (cat.includes("TINTO")) return "tinto";
+  if (cat.includes("BLANCO")) return "blanco";
+  if (cat.includes("ROSADO") || cat.includes("ROSE")) return "rosado";
+  if (cat.includes("CHAMP") || cat.includes("CAVA") || cat.includes("ESPUMOS")) return "espumoso";
+  return "otro";
+};
+
+const colorByCategory: Record<string, string> = {
+  tinto: "#8b1f3d",
+  blanco: "#d1a536",
+  rosado: "#d76d8a",
+  espumoso: "#d7c07f",
+  otro: "#5b6f82",
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const markerBackground = (categories: string[]) => {
+  const unique = categories.length ? Array.from(new Set(categories)) : ["otro"];
+  if (unique.length === 1) return colorByCategory[unique[0]] || colorByCategory.otro;
+  const step = 360 / unique.length;
+  const slices = unique
+    .map((cat, idx) => {
+      const color = colorByCategory[cat] || colorByCategory.otro;
+      const start = idx * step;
+      const end = (idx + 1) * step;
+      return `${color} ${start}deg ${end}deg`;
+    })
+    .join(", ");
+  return `conic-gradient(${slices})`;
+};
+
+const getRegionInsight = (region: string, category: string, vinosRegion: Vino[]) => {
+  const text = (region + " " + (vinosRegion[0]?.denominacion_origen || "")).toLowerCase();
+  if (text.includes("rioja")) return "Rioja suele ofrecer tintos de tempranillo con paso por barrica, buena acidez y equilibrio fruta-madera.";
+  if (text.includes("ribera")) return "Ribera del Duero: tintos potentes de tempranillo, tanino marcado y crianza, ideales para carnes.";
+  if (text.includes("rueda") || text.includes("verdejo")) return "Verdejo de Rueda: blancos aromáticos, cítricos y con un punto herbal refrescante.";
+  if (text.includes("albariñ")) return "Rías Baixas: albariños salinos, frescos y muy gastronómicos, con buena acidez.";
+  if (text.includes("priorat")) return "Priorat: tintos de garnacha y cariñena, concentrados, minerales y con estructura.";
+  if (text.includes("penedès") || text.includes("cava")) return "Penedès/Cava: espumosos de método tradicional con burbuja fina y perfil fresco.";
+  if (text.includes("champagne")) return "Champagne: chardonnay y pinot noir con crianza sobre lías, burbuja fina y notas de brioche.";
+  if (text.includes("burdeos") || text.includes("bordeaux")) return "Burdeos: ensamblajes de cabernet/merlot con cuerpo medio-alto y potencial de guarda.";
+  if (text.includes("borgoña") || text.includes("bourgogne") || text.includes("burgundy")) return "Borgoña: chardonnay o pinot noir elegantes, con fineza y acidez viva.";
+  if (text.includes("toscana")) return "Toscana: sangiovese (Chianti/Brunello) con notas de cereza, especias y tanino amable.";
+  if (text.includes("napa")) return "Napa Valley: cabernet sauvignon con fruta madura, crianza en roble y volumen en boca.";
+  if (text.includes("sonoma")) return "Sonoma: estilos más frescos que Napa, chardonnay y pinot noir con buena acidez.";
+  if (text.includes("valle del rhône") || text.includes("ródano") || text.includes("rhone")) return "Ródano: syrah o garnacha con notas de especias y hierbas mediterráneas.";
+  if (text.includes("mendoza")) return "Mendoza: malbec jugoso, con fruta negra y tanino redondo; ideal para carnes.";
+  if (text.includes("portugal") || text.includes("douro") || text.includes("alentejo")) return "Portugal: mezclas locales con fruta madura y acidez equilibrada; gran relación calidad-precio.";
+  if (text.includes("alemania") || text.includes("mosela") || text.includes("rheingau")) return "Alemania: rieslings tensos, minerales y aromáticos, desde secos a sutilmente off-dry.";
+  if (category === "espumoso") return "Espumosos: burbuja fina, frescos y versátiles; van de la fruta blanca a notas de brioche según crianza.";
+  if (category === "blanco") return "Blancos: perfil fresco, buena acidez y notas cítricas o florales según la uva.";
+  if (category === "rosado") return "Rosados: fruta roja fresca, ligeros y perfectos para aperitivo o platos ligeros.";
+  if (category === "tinto") return "Tintos: desde perfiles afrutados y jóvenes hasta crianzas con cuerpo y especias de barrica.";
+  return "Selección diversa de la D.O.: estilos y uvas que expresan su origen con buena gastronomía de acompañamiento.";
+};
+
+const PAGE_SIZE = 5;
+
 const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const { t } = useTranslations();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<{ region: string; vinos: Vino[]; category?: string } | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { toast } = useToast();
 
-  const MAPBOX_TOKEN = "pk.eyJ1Ijoib2ZpY2lvc29zIiwiYSI6ImNtaHZubTFhcDAyOGIybHNneWtrNjY0NjcifQ.yVfJCOCYXbs6VrOkDWOQtg";
-
-  const getCategoryKey = (categoria?: string) => {
-    const cat = (categoria || "").toUpperCase();
-    if (cat.includes("TINTO")) return "tinto";
-    if (cat.includes("BLANCO")) return "blanco";
-    if (cat.includes("ROSADO") || cat.includes("ROSE")) return "rosado";
-    if (cat.includes("CHAMP") || cat.includes("CAVA") || cat.includes("ESPUMOS")) return "espumoso";
-    return "otro";
-  };
-
-  const colorByCategory: Record<string, string> = {
-    tinto: "#8b1f3d",
-    blanco: "#d1a536",
-    rosado: "#d76d8a",
-    espumoso: "#d7c07f",
-    otro: "#5b6f82",
-  };
-
-  const hexToRgba = (hex: string, alpha: number) => {
-    const clean = hex.replace("#", "");
-    const num = parseInt(clean, 16);
-    const r = (num >> 16) & 255;
-    const g = (num >> 8) & 255;
-    const b = num & 255;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-
-  const markerBackground = (categories: string[]) => {
-    const unique = categories.length ? Array.from(new Set(categories)) : ["otro"];
-    if (unique.length === 1) return colorByCategory[unique[0]] || colorByCategory.otro;
-    const step = 360 / unique.length;
-    const slices = unique
-      .map((cat, idx) => {
-        const color = colorByCategory[cat] || colorByCategory.otro;
-        const start = idx * step;
-        const end = (idx + 1) * step;
-        return `${color} ${start}deg ${end}deg`;
-      })
-      .join(", ");
-    return `conic-gradient(${slices})`;
-  };
-
-  const getRegionInsight = (region: string, category: string, vinosRegion: Vino[]) => {
-    const text = (region + " " + (vinosRegion[0]?.denominacion_origen || "")).toLowerCase();
-    if (text.includes("rioja")) return "Rioja suele ofrecer tintos de tempranillo con paso por barrica, buena acidez y equilibrio fruta-madera.";
-    if (text.includes("ribera")) return "Ribera del Duero: tintos potentes de tempranillo, tanino marcado y crianza, ideales para carnes.";
-    if (text.includes("rueda") || text.includes("verdejo")) return "Verdejo de Rueda: blancos aromáticos, cítricos y con un punto herbal refrescante.";
-    if (text.includes("albariñ")) return "Rías Baixas: albariños salinos, frescos y muy gastronómicos, con buena acidez.";
-    if (text.includes("priorat")) return "Priorat: tintos de garnacha y cariñena, concentrados, minerales y con estructura.";
-    if (text.includes("penedès") || text.includes("cava")) return "Penedès/Cava: espumosos de método tradicional con burbuja fina y perfil fresco.";
-    if (text.includes("champagne")) return "Champagne: chardonnay y pinot noir con crianza sobre lías, burbuja fina y notas de brioche.";
-    if (text.includes("burdeos") || text.includes("bordeaux")) return "Burdeos: ensamblajes de cabernet/merlot con cuerpo medio-alto y potencial de guarda.";
-    if (text.includes("borgoña") || text.includes("bourgogne") || text.includes("burgundy")) return "Borgoña: chardonnay o pinot noir elegantes, con fineza y acidez viva.";
-    if (text.includes("toscana")) return "Toscana: sangiovese (Chianti/Brunello) con notas de cereza, especias y tanino amable.";
-    if (text.includes("napa")) return "Napa Valley: cabernet sauvignon con fruta madura, crianza en roble y volumen en boca.";
-    if (text.includes("sonoma")) return "Sonoma: estilos más frescos que Napa, chardonnay y pinot noir con buena acidez.";
-    if (text.includes("valle del rhône") || text.includes("ródano") || text.includes("rhone")) return "Ródano: syrah o garnacha con notas de especias y hierbas mediterráneas.";
-    if (text.includes("mendoza")) return "Mendoza: malbec jugoso, con fruta negra y tanino redondo; ideal para carnes.";
-    if (text.includes("portugal") || text.includes("douro") || text.includes("alentejo")) return "Portugal: mezclas locales con fruta madura y acidez equilibrada; gran relación calidad-precio.";
-    if (text.includes("alemania") || text.includes("mosela") || text.includes("rheingau")) return "Alemania: rieslings tensos, minerales y aromáticos, desde secos a sutilmente off-dry.";
-    if (category === "espumoso") return "Espumosos: burbuja fina, frescos y versátiles; van de la fruta blanca a notas de brioche según crianza.";
-    if (category === "blanco") return "Blancos: perfil fresco, buena acidez y notas cítricas o florales según la uva.";
-    if (category === "rosado") return "Rosados: fruta roja fresca, ligeros y perfectos para aperitivo o platos ligeros.";
-    if (category === "tinto") return "Tintos: desde perfiles afrutados y jóvenes hasta crianzas con cuerpo y especias de barrica.";
-    return "Selección diversa de la D.O.: estilos y uvas que expresan su origen con buena gastronomía de acompañamiento.";
-  };
-
-  const initializeMap = () => {
-    if (!mapContainer.current || map.current) return;
-
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-    
-    try {
-      // Detectar si es móvil
-      const isMobile = window.innerWidth < 768;
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: isMobile ? [0, 20] : [0, 30],
-        zoom: isMobile ? 1 : 1.5,
-        projection: 'mercator' as any,
-        // Mejorar la experiencia táctil en móvil
-        touchZoomRotate: true,
-        touchPitch: false,
-        dragRotate: false,
-      });
-
-      // Controles de navegación adaptados a móvil
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          visualizePitch: false,
-          showCompass: !isMobile,
-        }),
-        'top-right'
-      );
-
-      // Deshabilitar scroll zoom en móvil para no interferir con el scroll de la página
-      if (isMobile) {
-        map.current.scrollZoom.disable();
-      }
-
-      map.current.on('load', () => {
-        addWineMarkers();
-      });
-    } catch (error) {
-      toast({
-        title: t.map.errorTitle,
-        description: t.map.errorDescription,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const addWineMarkers = () => {
+  const addWineMarkers = useCallback(() => {
     if (!map.current) return;
 
     const regionCount: { [key: string]: { count: number; vinos: Vino[]; category: string } } = {};
@@ -311,7 +268,10 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
             map.current.flyTo({ center: coords, zoom: isMobile ? 2 : 3, speed: 0.7, essential: true });
           }
           if (!isMobile) {
-            window.scrollTo({ top: mapContainer.current?.getBoundingClientRect().bottom! + window.scrollY - 80, behavior: "smooth" });
+            const containerBottom = mapContainer.current?.getBoundingClientRect().bottom;
+            if (typeof containerBottom === "number") {
+              window.scrollTo({ top: containerBottom + window.scrollY - 80, behavior: "smooth" });
+            }
           }
         });
 
@@ -320,7 +280,52 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           .addTo(map.current);
       }
     });
-  };
+  }, [vinos]);
+
+  const initializeMap = useCallback(() => {
+    if (!mapContainer.current || map.current) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    
+    try {
+      // Detectar si es móvil
+      const isMobile = window.innerWidth < 768;
+      
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: isMobile ? [0, 20] : [0, 30],
+        zoom: isMobile ? 1 : 1.5,
+        projection: { name: "mercator" },
+        // Mejorar la experiencia táctil en móvil
+        touchZoomRotate: true,
+        touchPitch: false,
+        dragRotate: false,
+      });
+
+      // Controles de navegación adaptados a móvil
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          visualizePitch: false,
+          showCompass: !isMobile,
+        }),
+        'top-right'
+      );
+
+      // Deshabilitar scroll zoom en móvil para no interferir con el scroll de la página
+      if (isMobile) {
+        map.current.scrollZoom.disable();
+      }
+
+      map.current.on('load', addWineMarkers);
+    } catch (error) {
+      toast({
+        title: t.map.errorTitle,
+        description: t.map.errorDescription,
+        variant: "destructive",
+      });
+    }
+  }, [addWineMarkers, toast, t]);
 
   useEffect(() => {
     if (map.current) {
@@ -335,7 +340,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       map.current?.remove();
       map.current = null;
     };
-  }, [t, vinos]);
+  }, [initializeMap]);
 
   const selectedUniqueDO = selectedRegion
     ? Array.from(
@@ -346,6 +351,17 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         )
       )
     : [];
+
+  const sortedSelectedVinos = selectedRegion
+    ? selectedRegion.vinos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
+    : [];
+
+  const visibleVinos = sortedSelectedVinos.slice(0, visibleCount);
+  const hasMoreVinos = sortedSelectedVinos.length > visibleCount;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedRegion]);
 
   return (
     <div className="mb-8 w-full overflow-hidden">
@@ -385,23 +401,40 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {selectedRegion.vinos
-                .slice()
-                .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                .map((vino) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {visibleVinos.map((vino) => {
+                const categoryKey = getCategoryKey(vino.categoria);
+                const cardColor = colorByCategory[categoryKey] || colorByCategory.otro;
+                const cardBg = hexToRgba(cardColor, 0.1);
+                const borderColor = hexToRgba(cardColor, 0.5);
+
+                return (
                   <div
                     key={vino.nombre + vino.denominacion_origen}
-                    className="rounded-lg border bg-muted/30 p-3 flex flex-col gap-1 shadow-sm"
+                    className="rounded-lg border p-3 flex flex-col gap-1 shadow-sm transition-transform duration-150 hover:-translate-y-0.5"
+                    style={{ backgroundColor: cardBg, borderColor }}
                   >
                     <p className="font-semibold text-foreground leading-tight">{vino.nombre}</p>
                     {vino.denominacion_origen && (
                       <p className="text-xs text-muted-foreground">{vino.denominacion_origen}</p>
                     )}
-                    <p className="text-sm font-bold text-accent">{vino.precio_eur}€</p>
+                    <p className="text-xs font-semibold uppercase" style={{ color: cardColor }}>
+                      {vino.categoria || categoryKey}
+                    </p>
+                    <p className="text-sm font-bold" style={{ color: cardColor }}>
+                      {vino.precio_eur}€
+                    </p>
                   </div>
-                ))}
+                );
+              })}
             </div>
+            {hasMoreVinos && (
+              <div className="flex justify-center pt-2">
+                <Button variant="outline" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
+                  {t.map.showMore ?? "Mostrar más"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
