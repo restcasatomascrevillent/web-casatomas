@@ -230,7 +230,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
         setSelectedHour(null);
-        toast.success(t.reservationForm.toasts.availabilityChecked);
+        toast.message(t.reservationForm.toasts.closedDay);
         return;
       }
 
@@ -238,7 +238,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
         setSelectedHour(null);
-        toast.success(t.reservationForm.toasts.availabilityChecked);
+        toast.message(t.reservationForm.toasts.closedDay);
         return;
       }
       
