@@ -27,7 +27,7 @@ interface CartaPlatosProps {
 }
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platos, setPlatos] = useState<any[]>([]);
@@ -100,8 +100,46 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   // Mostrar siempre el orden exacto solicitado, independientemente de si hay platos en esa categoría
   const categories = CATEGORY_ORDER;
 
+  const parseTraducciones = (value: unknown) => {
+    if (!value) return null;
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return null;
+      }
+    }
+    if (typeof value === "object") return value;
+    return null;
+  };
+
+  const translatedPlatos = useMemo(() => {
+    return platos.map((item) => {
+      if (language === "es") {
+        return {
+          ...item,
+          displayNombre: item.nombre,
+          displayCategoria: item.categoria,
+          displayDescripcion: item.descripcion,
+          translatedCategoria: null,
+        };
+      }
+
+      const traducciones = parseTraducciones((item as any).traducciones);
+      const translation = traducciones?.[language] ?? {};
+
+      return {
+        ...item,
+        displayNombre: translation?.nombre || item.nombre,
+        displayCategoria: translation?.categoria || item.categoria,
+        displayDescripcion: translation?.descripcion ?? item.descripcion,
+        translatedCategoria: translation?.categoria || null,
+      };
+    });
+  }, [platos, language]);
+
   const filteredItems = useMemo(() => {
-    let items = platos;
+    let items = translatedPlatos;
 
     if (selectedCategory !== "TODOS") {
       items = items.filter(item => item.categoria.toUpperCase() === selectedCategory);
@@ -109,12 +147,12 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
     if (searchTerm) {
       items = items.filter(item =>
-        item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+        item.displayNombre.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [searchTerm, selectedCategory, platos]);
+  }, [searchTerm, selectedCategory, translatedPlatos]);
 
   const getCategoryImage = (categoria: string) => {
     const cat = categoria.toUpperCase();
@@ -128,12 +166,16 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   };
 
   const addToPedido = (item: any) => {
+    const pedidoItem = {
+      ...item,
+      nombre: item.displayNombre || item.nombre,
+    };
     const pedido = getUserPedido();
-    pedido.push(item);
+    pedido.push(pedidoItem);
     setUserPedido(pedido);
     toast({
       title: t.platos.toasts.addedTitle,
-      description: t.platos.toasts.addedDescription.replace("{name}", item.nombre),
+      description: t.platos.toasts.addedDescription.replace("{name}", pedidoItem.nombre),
     });
   };
 
@@ -217,6 +259,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => {
           const expanded = isCardExpanded(item);
+          const categoryLabel = item.translatedCategoria ?? translateCategory(item.categoria);
           return (
             <motion.div
               layout
@@ -243,12 +286,12 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                       <div className="relative h-48 overflow-hidden">
                         <img
                           src={getCategoryImage(item.categoria)}
-                          alt={item.nombre}
+                          alt={item.displayNombre}
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         />
                         <div className="absolute top-2 right-2">
                           <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                            {translateCategory(item.categoria)}
+                            {categoryLabel}
                           </Badge>
                         </div>
                       </div>
@@ -267,7 +310,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                           expanded ? "text-lg min-h-[3.5rem]" : "text-base"
                         }`}
                       >
-                        {item.nombre}
+                        {item.displayNombre}
                       </CardTitle>
                     </div>
                     <button
@@ -282,7 +325,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                   {!expanded && (
                     <div className="flex items-center gap-2 pt-2">
                       <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
-                        {translateCategory(item.categoria)}
+                        {categoryLabel}
                       </Badge>
                     </div>
                   )}
@@ -297,8 +340,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                       transition={{ duration: 0.22, ease: "easeInOut" }}
                     >
                       <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                        {item.descripcion && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
+                        {item.displayDescripcion && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">{item.displayDescripcion}</p>
                         )}
                         {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
                           <div className="flex flex-wrap gap-1">
