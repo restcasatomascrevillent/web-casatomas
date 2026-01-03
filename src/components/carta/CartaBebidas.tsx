@@ -122,13 +122,13 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-72 h-12 justify-between bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold"
+                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold text-left"
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-start gap-2 text-left whitespace-normal break-words leading-tight flex-1">
                   <Wine className="w-5 h-5 text-accent" />
                   {translateCategory(selectedCategory)}
                 </span>
-                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 flex-shrink-0 mt-1" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72 max-h-[28rem] overflow-y-auto bg-background border-2 border-border shadow-2xl rounded-xl p-2 z-50">
@@ -142,7 +142,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                       : "hover:bg-muted/70 hover:translate-x-1"
                   }`}
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-start gap-3 text-left whitespace-normal break-words leading-tight">
                     <span className={`w-2 h-2 rounded-full ${
                       selectedCategory === category 
                         ? "bg-accent-foreground" 
@@ -166,10 +166,15 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.03 }}
           >
-            <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 text-sm">
               <CardHeader className="pb-3 flex-shrink-0">
-                <div className="flex justify-between items-start gap-2">
-                  <CardTitle className="text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex-grow">{item.nombre}</CardTitle>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <span className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
+                      <Wine className="w-4 h-4" />
+                    </span>
+                    <CardTitle className="text-lg leading-tight line-clamp-2">{item.nombre}</CardTitle>
+                  </div>
                   <span className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0">
                     {translateCategory(item.categoria)}
                   </span>
@@ -180,13 +185,11 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                   <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
                 )}
                 {item.tamano && (
-                  <p className="text-sm font-medium text-accent">{item.tamano}</p>
+                  <p className="text-sm font-semibold text-accent">{item.tamano}</p>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between items-center pt-3 border-t bg-muted/30 flex-shrink-0 mt-auto">
-                <span className="text-2xl font-bold text-accent">
-                  {item.precio_eur}€
-                </span>
+              <CardFooter className="flex justify-between items-center border-t bg-muted/40 flex-shrink-0 mt-auto px-6 py-3">
+                <span className="text-2xl font-bold text-accent leading-none">{item.precio_eur}€</span>
                 {showAddButton && (
                   <Button
                     size="sm"

@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Wine, AlertCircle, ChevronDown, Plus } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -65,13 +65,21 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
         .order('orden', { ascending: true });
 
       if (error) throw error;
-      setVinos(
-        (data || []).map((item) => ({
-          ...item,
-          alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
-          alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
-        }))
-      );
+      const normalized = (data || []).map((item) => ({
+        ...item,
+        alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
+        alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
+      }));
+
+      const deduped = normalized.reduce((acc: any[], item) => {
+        const key = `${(item.nombre || "").trim().toLowerCase()}||${(item.categoria || "").trim().toLowerCase()}`;
+        if (!acc.some((existing) => `${(existing.nombre || "").trim().toLowerCase()}||${(existing.categoria || "").trim().toLowerCase()}` === key)) {
+          acc.push(item);
+        }
+        return acc;
+      }, []);
+
+      setVinos(deduped);
     } catch (error) {
       console.error('Error fetching vinos:', error);
       toast({
@@ -202,13 +210,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-72 h-12 justify-between bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold"
+                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold text-left"
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-start gap-2 text-left whitespace-normal break-words leading-tight flex-1">
                   <Wine className="w-5 h-5 text-accent" />
                   {translateCategory(selectedCategory)}
                 </span>
-                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 flex-shrink-0 mt-1" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72 max-h-[28rem] overflow-y-auto bg-background/95 backdrop-blur-lg border-2 border-border shadow-2xl rounded-xl p-2">
@@ -222,7 +230,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       : "hover:bg-muted/70 hover:translate-x-1"
                   }`}
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-start gap-3 text-left whitespace-normal break-words leading-tight">
                     <span className={`w-2 h-2 rounded-full ${
                       selectedCategory === category 
                         ? "bg-accent-foreground" 
@@ -251,31 +259,31 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.03 }}
             >
-              <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-                <CardHeader className="pb-3 flex-shrink-0">
-                  <div className="flex justify-between items-start gap-2">
-                    <CardTitle className="text-lg flex items-start gap-2 leading-tight line-clamp-2 min-h-[3.5rem] flex-grow">
-                      <Wine className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
-                      <span>{item.nombre}</span>
-                    </CardTitle>
-                    <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md flex-shrink-0">
-                      {translateCategory(item.categoria)}
-                    </Badge>
+              <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 text-sm">
+                <CardHeader className="flex-shrink-0 pb-3">
+                  <div className="flex items-start gap-3">
+                    <span className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
+                      <Wine className="w-4 h-4" />
+                    </span>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <CardTitle className="text-lg leading-tight whitespace-normal break-words">{item.nombre}</CardTitle>
+                      <Badge className="bg-accent/90 text-accent-foreground shadow-sm w-fit">
+                        {translateCategory(item.categoria)}
+                      </Badge>
+                      {(item.denominacion_origen || item.ubicacion_region || item.ubicacion_pais) && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
+                          <MapPin className="w-4 h-4 text-accent" />
+                          <span className="line-clamp-1">
+                            {[item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais].filter(Boolean).join(" · ")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                  {item.denominacion_origen && (
-                    <p className="text-sm text-muted-foreground line-clamp-1">
-                      <span className="font-semibold">{t.vinos.doLabel}:</span> {item.denominacion_origen}
-                    </p>
-                  )}
-                  {item.ubicacion_region && (
-                    <p className="text-sm text-muted-foreground line-clamp-1">
-                      <span className="font-semibold">{t.vinos.originLabel}:</span> {item.ubicacion_region}{item.ubicacion_pais && `, ${item.ubicacion_pais}`}
-                    </p>
-                  )}
                   {item.descripcion && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-3">{item.descripcion}</p>
                   )}
                   {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
                     <div className="flex flex-wrap gap-1">
@@ -297,10 +305,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                     </p>
                   )}
                 </CardContent>
-                <div className="flex justify-between items-center px-6 py-3 border-t bg-muted/30 flex-shrink-0 mt-auto">
-                  <span className="text-2xl font-bold text-accent">
-                    {item.precio_eur}€
-                  </span>
+                <CardFooter className="flex justify-between items-center border-t bg-muted/40 flex-shrink-0 mt-auto px-6 py-3">
+                  <span className="text-2xl font-bold text-accent leading-none">{item.precio_eur}€</span>
                   {showAddButton && (
                     <Button
                       size="sm"
@@ -311,7 +317,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       {t.vinos.add}
                     </Button>
                   )}
-                </div>
+                </CardFooter>
               </Card>
             </motion.div>
           ))}
