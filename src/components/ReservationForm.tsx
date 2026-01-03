@@ -215,6 +215,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       );
       const diaSolicitado = fecha.getDay();
 
+      const slotConfigFallback = slotsConOcupacion.find((slot) => isPeriodoConfig(slot));
       const periodosActivos = periodos.filter((periodo) => periodo.activo !== false);
       const periodosAplicables =
         periodosActivos.length > 0
@@ -224,7 +225,16 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             })
           : [];
 
-      if (periodosActivos.length > 0 && periodosAplicables.length === 0) {
+      const diasSemanaFallback = slotConfigFallback?.dias_semana ?? [];
+      if (diasSemanaFallback.length > 0 && !diasSemanaFallback.includes(diaSolicitado)) {
+        setDisponibilidad([]);
+        setHasCheckedAvailability(true);
+        setSelectedHour(null);
+        toast.success(t.reservationForm.toasts.availabilityChecked);
+        return;
+      }
+
+      if (periodosActivos.length > 0 && periodosAplicables.length === 0 && !slotConfigFallback) {
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
         setSelectedHour(null);
@@ -253,7 +263,21 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                 return normalizedHora;
               });
             })
-          : [];
+          : slotConfigFallback?.hora_inicio &&
+              slotConfigFallback?.hora_fin &&
+              slotConfigFallback?.intervalo_base_minutos
+            ? buildSlotsBetween(
+                slotConfigFallback.hora_inicio,
+                slotConfigFallback.hora_fin,
+                Number(slotConfigFallback.intervalo_base_minutos)
+              ).map((hora) => {
+                const normalizedHora = normalizeHora(hora);
+                if (!configByHora.has(normalizedHora)) {
+                  configByHora.set(normalizedHora, slotConfigFallback);
+                }
+                return normalizedHora;
+              })
+            : [];
 
       const baseHorarios = horariosConfigurados.length > 0 ? horariosConfigurados : todosHorarios;
 
