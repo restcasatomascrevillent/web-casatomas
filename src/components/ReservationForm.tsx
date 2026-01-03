@@ -31,6 +31,14 @@ interface DisponibilidadSlot {
   capacidad_maxima: number;
   capacidad_disponible: number;
   porcentaje_ocupacion: number;
+  nombre_periodo?: string;
+  hora_inicio?: string;
+  hora_fin?: string;
+  intervalo_base_minutos?: number;
+  umbral_apertura_secundario?: number;
+  dias_semana?: number[];
+  activo?: boolean;
+  ocultar_primario_si_secundario?: boolean;
 }
 
 type ReservationFormProps = {
@@ -95,7 +103,34 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       total_mesas_reservadas: Number(slot.total_mesas_reservadas ?? 0),
       total_reservas: Number(slot.total_reservas ?? 0),
       total_mesas_espacio: Number(slot.total_mesas_espacio ?? 0),
+      intervalo_base_minutos: Number(slot.intervalo_base_minutos ?? 0),
+      umbral_apertura_secundario: Number(slot.umbral_apertura_secundario ?? 0),
     }));
+
+  const normalizeHora = (hora: string) => (hora.length === 5 ? `${hora}:00` : hora);
+
+  const toMinutes = (hora: string) => {
+    const [hours, minutes] = normalizeHora(hora).split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const formatMinutes = (minutes: number) => {
+    const hoursValue = Math.floor(minutes / 60);
+    const minutesValue = minutes % 60;
+    return `${hoursValue.toString().padStart(2, "0")}:${minutesValue.toString().padStart(2, "0")}:00`;
+  };
+
+  const addMinutes = (hora: string, minutesToAdd: number) => formatMinutes(toMinutes(hora) + minutesToAdd);
+
+  const buildSlotsBetween = (horaInicio: string, horaFin: string, intervalo: number) => {
+    const slots: string[] = [];
+    const start = toMinutes(horaInicio);
+    const end = toMinutes(horaFin);
+    for (let minutes = start; minutes < end; minutes += intervalo) {
+      slots.push(formatMinutes(minutes));
+    }
+    return slots;
+  };
 
   const checkAvailability = async () => {
     const fecha = form.getValues("fecha");
@@ -136,12 +171,12 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
       const horariosComida = ["13:00:00", "13:30:00", "14:00:00", "14:30:00", "15:00:00", "15:30:00"];
       const horariosCena = ["20:00:00", "20:30:00", "21:00:00", "21:30:00", "22:00:00", "22:30:00"];
-      const todosHorarios = [...horariosComida, ...horariosCena];
+      const todosHorarios = [...horariosComida, ...horariosCena].map(normalizeHora);
 
       if (!text || text.trim() === '') {
         const slotsDisponibles: DisponibilidadSlot[] = todosHorarios.map(hora => ({
           fecha: format(fecha, "yyyy-MM-dd"),
-          hora: hora,
+          hora,
           espacio_id: salaId,
           espacio: salaSeleccionada.nombre,
           total_mesas_reservadas: 0,
@@ -162,31 +197,73 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       
       const data: DisponibilidadSlot[] = JSON.parse(text);
       const slotsConOcupacion = data.filter(slot => slot.espacio_id === salaId);
+      const configSlot = slotsConOcupacion[0];
+      const diasSemana = configSlot?.dias_semana ?? [];
+      const diaSolicitado = fecha.getDay();
+      
+      if (diasSemana.length > 0 && !diasSemana.includes(diaSolicitado)) {
+        setDisponibilidad([]);
+        setHasCheckedAvailability(true);
+        setSelectedHour(null);
+        toast.success(t.reservationForm.toasts.availabilityChecked);
+        return;
+      }
       
       const occupationMap = new Map<string, DisponibilidadSlot>();
       slotsConOcupacion.forEach(slot => {
-        occupationMap.set(slot.hora, slot);
+        occupationMap.set(normalizeHora(slot.hora), slot);
       });
       
-      const allSlots: DisponibilidadSlot[] = todosHorarios.map(hora => {
-        const existingSlot = occupationMap.get(hora);
-        if (existingSlot) {
-          return existingSlot;
-        }
-        return {
-          fecha: format(fecha, "yyyy-MM-dd"),
-          hora: hora,
-          espacio_id: salaId,
-          espacio: salaSeleccionada.nombre,
-          total_mesas_reservadas: 0,
-          total_comensales: 0,
-          total_reservas: 0,
-          total_mesas_espacio: salaSeleccionada.capacidad_maxima,
-          capacidad_maxima: salaSeleccionada.capacidad_maxima,
-          capacidad_disponible: salaSeleccionada.capacidad_maxima,
-          porcentaje_ocupacion: 0
-        };
+      const baseHorarios =
+        configSlot?.hora_inicio && configSlot?.hora_fin && configSlot?.intervalo_base_minutos
+          ? buildSlotsBetween(configSlot.hora_inicio, configSlot.hora_fin, Number(configSlot.intervalo_base_minutos))
+          : todosHorarios;
+
+      const createEmptySlot = (hora: string): DisponibilidadSlot => ({
+        fecha: format(fecha, "yyyy-MM-dd"),
+        hora,
+        espacio_id: salaId,
+        espacio: salaSeleccionada.nombre,
+        total_mesas_reservadas: 0,
+        total_comensales: 0,
+        total_reservas: 0,
+        total_mesas_espacio: salaSeleccionada.capacidad_maxima,
+        capacidad_maxima: salaSeleccionada.capacidad_maxima,
+        capacidad_disponible: salaSeleccionada.capacidad_maxima,
+        porcentaje_ocupacion: 0
       });
+
+      const allSlotsMap = new Map<string, DisponibilidadSlot>();
+      baseHorarios.forEach((hora) => {
+        const normalizedHora = normalizeHora(hora);
+        const existingSlot = occupationMap.get(normalizedHora);
+        allSlotsMap.set(normalizedHora, existingSlot ?? createEmptySlot(normalizedHora));
+      });
+
+      const umbralSecundario = Number(configSlot?.umbral_apertura_secundario ?? 0);
+      const ocultarPrimario = Boolean(configSlot?.ocultar_primario_si_secundario);
+      const hiddenTimes = new Set<string>();
+
+      const secondaryOffsets = [15, 45];
+
+      allSlotsMap.forEach((slot) => {
+        if (umbralSecundario > 0 && Number(slot.porcentaje_ocupacion) > umbralSecundario) {
+          secondaryOffsets.forEach((offsetMinutes) => {
+            const secondaryHora = normalizeHora(addMinutes(slot.hora, offsetMinutes));
+            const existingSecondary = occupationMap.get(secondaryHora);
+            if (!allSlotsMap.has(secondaryHora)) {
+              allSlotsMap.set(secondaryHora, existingSecondary ?? createEmptySlot(secondaryHora));
+            }
+          });
+          if (ocultarPrimario && slot.hora.endsWith(":00:00")) {
+            hiddenTimes.add(normalizeHora(slot.hora));
+          }
+        }
+      });
+
+      const allSlots = Array.from(allSlotsMap.values())
+        .filter((slot) => !hiddenTimes.has(normalizeHora(slot.hora)))
+        .sort((a, b) => toMinutes(a.hora) - toMinutes(b.hora));
       
       setDisponibilidad(normalizeSlots(allSlots));
       setHasCheckedAvailability(true);
