@@ -106,6 +106,8 @@ export const translations = {
       confirm: "Confirma con tu camarero",
       clear: "Vaciar pedido",
       thanks: "Gracias por tu visita",
+      floatingTicketTitle: "Ticket",
+      floatingTicketSubtitle: "Ver pedido",
       share: {
         cta: "Compartir ticket",
         subtitle: "Elige dónde compartir tu ticket actual",
@@ -583,6 +585,8 @@ export const translations = {
       confirm: "Please confirm with your server",
       clear: "Clear Order",
       thanks: "Thanks for visiting",
+      floatingTicketTitle: "Ticket",
+      floatingTicketSubtitle: "View order",
       share: {
         cta: "Share ticket",
         subtitle: "Choose where to share your current ticket",
@@ -1054,6 +1058,8 @@ export const translations = {
       confirm: "Merci de confirmer avec votre serveur",
       clear: "Vider la commande",
       thanks: "Merci pour votre visite",
+      floatingTicketTitle: "Ticket",
+      floatingTicketSubtitle: "Voir la commande",
       share: {
         cta: "Partager le ticket",
         subtitle: "Choisissez où partager votre ticket actuel",

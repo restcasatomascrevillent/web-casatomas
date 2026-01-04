@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -115,6 +117,10 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
   const translatedPlatos = useMemo(() => {
     return platos.map((item) => {
+      const columnName = (item as any)[`nombre_${language}`];
+      const columnCategoria = (item as any)[`categoria_${language}`];
+      const columnDescripcion = (item as any)[`descripcion_${language}`];
+
       if (language === "es") {
         return {
           ...item,
@@ -130,10 +136,10 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
       return {
         ...item,
-        displayNombre: translation?.nombre || item.nombre,
-        displayCategoria: translation?.categoria || item.categoria,
-        displayDescripcion: translation?.descripcion ?? item.descripcion,
-        translatedCategoria: translation?.categoria || null,
+        displayNombre: columnName || translation?.nombre || item.nombre,
+        displayCategoria: columnCategoria || translation?.categoria || item.categoria,
+        displayDescripcion: columnDescripcion ?? translation?.descripcion ?? item.descripcion,
+        translatedCategoria: columnCategoria || translation?.categoria || null,
       };
     });
   }, [platos, language]);

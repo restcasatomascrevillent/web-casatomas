@@ -401,29 +401,32 @@ type FloatingButtonProps = {
   count?: number;
 };
 
-const FloatingTicketButton = ({ onOpen, isDisabled = false, count = 0 }: FloatingButtonProps) => (
-  <div className="fixed bottom-5 right-4 md:right-6 z-50">
-    <Button
-      onClick={onOpen}
-      disabled={isDisabled}
-      aria-label="Abrir ticket del pedido"
-      className="shadow-lg bg-background/90 backdrop-blur border border-border/70 text-foreground hover:shadow-xl rounded-full px-4 py-3.5 min-h-[3.25rem] flex items-center gap-3"
-    >
-      <div className="flex items-center justify-center h-10 w-10 rounded-full bg-accent/15 text-accent">
-        <Receipt className="h-5 w-5" />
-      </div>
-      <div className="flex flex-col items-start leading-tight">
-        <span className="text-xs font-semibold">Ticket</span>
-        <span className="text-[11px] text-muted-foreground">Ver pedido</span>
-      </div>
-      {count > 0 && (
-        <span className="ml-1 inline-flex h-6 px-2 items-center justify-center rounded-full bg-accent text-accent-foreground text-xs font-bold">
-          {count}
-        </span>
-      )}
-    </Button>
-  </div>
-);
+const FloatingTicketButton = ({ onOpen, isDisabled = false, count = 0 }: FloatingButtonProps) => {
+  const { t } = useTranslations();
+  return (
+    <div className="fixed bottom-5 right-4 md:right-6 z-50">
+      <Button
+        onClick={onOpen}
+        disabled={isDisabled}
+        aria-label="Abrir ticket del pedido"
+        className="shadow-lg bg-background/90 backdrop-blur border border-border/70 text-foreground hover:shadow-xl rounded-full px-4 py-3.5 min-h-[3.25rem] flex items-center gap-3"
+      >
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-accent/15 text-accent">
+          <Receipt className="h-5 w-5" />
+        </div>
+        <div className="flex flex-col items-start leading-tight">
+          <span className="text-xs font-semibold">{t.preview.floatingTicketTitle}</span>
+          <span className="text-[11px] text-muted-foreground">{t.preview.floatingTicketSubtitle}</span>
+        </div>
+        {count > 0 && (
+          <span className="ml-1 inline-flex h-6 px-2 items-center justify-center rounded-full bg-accent text-accent-foreground text-xs font-bold">
+            {count}
+          </span>
+        )}
+      </Button>
+    </div>
+  );
+};
 
 type TicketDialogProps = {
   open: boolean;

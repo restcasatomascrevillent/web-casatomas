@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,11 +21,26 @@ interface CartaBebidasProps {
   showAddButton: boolean;
 }
 
+interface Bebida {
+  id?: number;
+  nombre: string;
+  precio_eur: number;
+  categoria: string;
+  descripcion?: string;
+  tamano?: string;
+  orden?: number;
+  activado?: boolean;
+  nombre_en?: string;
+  nombre_fr?: string;
+  descripcion_en?: string;
+  descripcion_fr?: string;
+}
+
 const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Aguas");
-  const [bebidas, setBebidas] = useState<any[]>([]);
+  const [bebidas, setBebidas] = useState<Bebida[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -66,7 +83,17 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const categories = CATEGORY_ORDER;
 
   const filteredItems = useMemo(() => {
-    let items = bebidas;
+    const translated = bebidas.map((bebida) => {
+      const columnName = (bebida as any)[`nombre_${language}`];
+      const columnDesc = (bebida as any)[`descripcion_${language}`];
+      return {
+        ...bebida,
+        displayNombre: language === "es" ? bebida.nombre : (columnName || bebida.nombre),
+        displayDescripcion: language === "es" ? bebida.descripcion : (columnDesc ?? bebida.descripcion),
+      };
+    });
+
+    let items = translated;
 
     if (selectedCategory !== "TODAS") {
       items = items.filter(item => item.categoria === selectedCategory);
@@ -74,20 +101,24 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
 
     if (searchTerm) {
       items = items.filter(item =>
-        item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.displayNombre || item.nombre).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [searchTerm, selectedCategory, bebidas]);
+  }, [language, searchTerm, selectedCategory, bebidas]);
 
-  const addToPedido = (item: any) => {
+  const addToPedido = (item: Bebida & { displayNombre?: string }) => {
     const pedido = getUserPedido();
-    pedido.push(item);
+    const pedidoItem = {
+      ...item,
+      nombre: item.displayNombre || item.nombre,
+    };
+    pedido.push(pedidoItem);
     setUserPedido(pedido);
     toast({
       title: t.bebidas.toasts.addedTitle,
-      description: t.bebidas.toasts.addedDescription.replace("{name}", item.nombre),
+      description: t.bebidas.toasts.addedDescription.replace("{name}", pedidoItem.nombre),
     });
   };
 
@@ -173,7 +204,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                     <span className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
                       <Wine className="w-4 h-4" />
                     </span>
-                    <CardTitle className="text-lg leading-tight line-clamp-2">{item.nombre}</CardTitle>
+                    <CardTitle className="text-lg leading-tight line-clamp-2">{item.displayNombre || item.nombre}</CardTitle>
                   </div>
                   <span className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0">
                     {translateCategory(item.categoria)}
@@ -181,8 +212,8 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                {item.descripcion && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">{item.descripcion}</p>
+                {(item.displayDescripcion || item.descripcion) && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">{item.displayDescripcion || item.descripcion}</p>
                 )}
                 {item.tamano && (
                   <p className="text-sm font-semibold text-accent">{item.tamano}</p>

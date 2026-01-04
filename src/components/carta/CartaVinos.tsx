@@ -42,10 +42,12 @@ interface Vino {
   alergenos_inferidos?: string[] | null;
   unidad?: string;
   cantidad?: number;
+  nombre_en?: string;
+  nombre_fr?: string;
 }
 
 const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
@@ -108,13 +110,17 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     fetchVinos();
   }, [fetchVinos]);
 
-  const addToPedido = (item: Vino) => {
+  const addToPedido = (item: Vino & { displayNombre?: string }) => {
     const pedido = getUserPedido();
-    pedido.push(item);
+    const pedidoItem = {
+      ...item,
+      nombre: item.displayNombre || item.nombre,
+    };
+    pedido.push(pedidoItem);
     setUserPedido(pedido);
     toast({
       title: t.vinos.toasts.addedTitle,
-      description: t.vinos.toasts.addedDescription.replace("{name}", item.nombre),
+      description: t.vinos.toasts.addedDescription.replace("{name}", pedidoItem.nombre),
     });
   };
 
@@ -136,8 +142,21 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     return orderedCategories;
   }, [vinos]);
 
+  const getLocalizedField = (vino: Vino, key: string) => {
+    const value = (vino as Record<string, unknown>)[key];
+    return typeof value === "string" ? value : undefined;
+  };
+
   const filteredItems = useMemo(() => {
-    let items = vinos;
+    const translated = vinos.map((vino) => {
+      const columnName = getLocalizedField(vino, `nombre_${language}`);
+      return {
+        ...vino,
+        displayNombre: language === "es" ? vino.nombre : (columnName || vino.nombre),
+      };
+    });
+
+    let items = translated;
 
     if (selectedCategory !== "Todos") {
       items = items.filter(item => item.categoria === selectedCategory);
@@ -145,12 +164,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
 
     if (searchTerm) {
       items = items.filter(item =>
-        item.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.displayNombre || item.nombre).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [searchTerm, selectedCategory, vinos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, searchTerm, selectedCategory, vinos.length]);
 
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
@@ -206,7 +226,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   return (
     <div className="space-y-8">
       {/* Mapa Mundial de vinos */}
-      {!loading && <MapaMundoVinos vinos={vinos} />}
+      {!loading && <MapaMundoVinos vinos={filteredItems} />}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
@@ -282,7 +302,9 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       <Wine className="w-4 h-4" />
                     </span>
                     <div className="flex-1 min-w-0 space-y-1">
-                      <CardTitle className="text-lg leading-tight whitespace-normal break-words">{item.nombre}</CardTitle>
+                      <CardTitle className="text-lg leading-tight whitespace-normal break-words">
+                        {item.displayNombre || item.nombre}
+                      </CardTitle>
                       <Badge className="bg-accent/90 text-accent-foreground shadow-sm w-fit">
                         {translateCategory(item.categoria)}
                       </Badge>
