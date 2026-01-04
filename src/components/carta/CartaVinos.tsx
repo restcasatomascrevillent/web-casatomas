@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,13 +28,29 @@ interface CartaVinosProps {
   showAddButton?: boolean;
 }
 
+interface Vino {
+  id?: number;
+  nombre: string;
+  precio_eur: number;
+  categoria?: string;
+  denominacion_origen?: string;
+  ubicacion_region?: string;
+  ubicacion_pais?: string;
+  orden?: number;
+  activado?: boolean;
+  alergenos_oficiales?: string[] | null;
+  alergenos_inferidos?: string[] | null;
+  unidad?: string;
+  cantidad?: number;
+}
+
 const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const { t } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
   const [showAgeDialog, setShowAgeDialog] = useState(true);
-  const [vinos, setVinos] = useState<any[]>([]);
+  const [vinos, setVinos] = useState<Vino[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -51,11 +67,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     return [];
   };
 
-  useEffect(() => {
-    fetchVinos();
-  }, []);
-
-  const fetchVinos = async () => {
+  const fetchVinos = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('Vinos')
@@ -65,13 +77,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
         .order('orden', { ascending: true });
 
       if (error) throw error;
-      const normalized = (data || []).map((item) => ({
+      const normalized: Vino[] = (data || []).map((item) => ({
         ...item,
         alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
         alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
       }));
 
-      const deduped = normalized.reduce((acc: any[], item) => {
+      const deduped = normalized.reduce<Vino[]>((acc, item) => {
         const key = `${(item.nombre || "").trim().toLowerCase()}||${(item.categoria || "").trim().toLowerCase()}`;
         if (!acc.some((existing) => `${(existing.nombre || "").trim().toLowerCase()}||${(existing.categoria || "").trim().toLowerCase()}` === key)) {
           acc.push(item);
@@ -90,9 +102,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, t]);
 
-  const addToPedido = (item: any) => {
+  useEffect(() => {
+    fetchVinos();
+  }, [fetchVinos]);
+
+  const addToPedido = (item: Vino) => {
     const pedido = getUserPedido();
     pedido.push(item);
     setUserPedido(pedido);
@@ -189,8 +205,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
 
   return (
     <div className="space-y-8">
-      {/* Mapa Mundial - solo cuando NO estamos en modo "añadir" */}
-      {!loading && !showAddButton && <MapaMundoVinos vinos={vinos} />}
+      {/* Mapa Mundial de vinos */}
+      {!loading && <MapaMundoVinos vinos={vinos} />}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">

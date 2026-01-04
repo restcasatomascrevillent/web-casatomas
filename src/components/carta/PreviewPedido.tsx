@@ -273,7 +273,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
     <>
       {!hideInline && <div className="max-w-md mx-auto">{ticketCard}</div>}
 
-      {showFloatingButton && (
+      {showFloatingButton && pedido.length > 0 && (
         <FloatingTicketButton
           onOpen={() => setIsTicketOpen(true)}
           isDisabled={false}
