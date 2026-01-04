@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Trash2, Receipt, Plus, Minus, X } from "lucide-react";
+import { Trash2, Receipt, Plus, Minus, X, Share2, MessageCircle, Instagram, Facebook } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import seafoodImg from "@/assets/platos/seafood.jpg";
@@ -18,6 +18,8 @@ import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
 import logoImg from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { toPng } from "html-to-image";
+import { useToast } from "@/hooks/use-toast";
 
 interface PedidoItem {
   nombre: string;
@@ -34,6 +36,8 @@ interface PreviewPedidoProps {
 
 const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: PreviewPedidoProps) => {
   const { t, language } = useTranslations();
+  const { toast } = useToast();
+  const ticketRef = useRef<HTMLDivElement | null>(null);
   const localeByLanguage: Record<typeof language, string> = {
     es: "es-ES",
     en: "en-US",
@@ -41,6 +45,8 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   };
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPedido = () => {
@@ -64,6 +70,66 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       setIsTicketOpen(false);
     }
   }, [pedido.length, isTicketOpen]);
+
+  const captureTicketAsImage = async () => {
+    if (!ticketRef.current) throw new Error("Ticket no disponible para captura");
+    const node = ticketRef.current;
+    const timestamp = new Date().toISOString().replace(/[:.-]/g, "");
+    const filename = `ticket_${timestamp}.png`;
+
+    const dataUrl = await toPng(node, {
+      cacheBust: true,
+      pixelRatio: 2,
+      style: { padding: "16px", background: "#f8f8f8" },
+    });
+
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], filename, { type: "image/png" });
+    return { dataUrl, file, filename };
+  };
+
+  const shareTicket = async (channel: "whatsapp" | "instagram" | "facebook") => {
+    try {
+      setShareError(null);
+      setShareLoading(true);
+      const { file } = await captureTicketAsImage();
+      const shareText = t.preview.share.shareMessage;
+      const canShareFile = typeof navigator !== "undefined" && "canShare" in navigator && navigator.canShare({ files: [file] });
+
+      if (canShareFile) {
+        await navigator.share({
+          files: [file],
+          text: shareText,
+          title: t.carta.buttons.pedido,
+        });
+        return;
+      }
+
+      const blobUrl = URL.createObjectURL(file);
+      if (channel === "whatsapp") {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+      } else if (channel === "instagram") {
+        window.open(blobUrl, "_blank");
+      } else {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, "_blank");
+      }
+      toast({
+        title: t.preview.share.downloadTitle,
+        description: t.preview.share.downloadDescription,
+      });
+    } catch (error) {
+      console.error(error);
+      setShareError(t.preview.share.error);
+      toast({
+        title: t.preview.share.errorTitle,
+        description: t.preview.share.error,
+        variant: "destructive",
+      });
+    } finally {
+      setShareLoading(false);
+    }
+  };
 
   const removeItem = (index: number) => {
     const newPedido = pedido.filter((_, i) => i !== index);
@@ -139,9 +205,12 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   );
 
   const ticketCard = pedido.length === 0 ? (
-    <div className="max-w-md mx-auto">{empty}</div>
+    <div className="max-w-md mx-auto" ref={ticketRef}>{empty}</div>
   ) : (
-    <div className="bg-white text-black p-6 rounded-lg shadow-lg font-mono text-xs border-2 border-dashed border-gray-300">
+    <div
+      ref={ticketRef}
+      className="bg-white text-black p-6 rounded-lg shadow-lg font-mono text-xs border-2 border-dashed border-gray-300"
+    >
       {/* Header */}
       <div className="text-center border-b-2 border-black pb-3 mb-3">
         <div className="flex justify-center mb-2">
@@ -261,10 +330,41 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
         {t.preview.clear}
       </Button>
 
-      <div className="text-center mt-3">
+      <div className="text-center mt-4 space-y-2">
         <p className="text-[10px]">********************************</p>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => shareTicket("whatsapp")}
+            disabled={shareLoading}
+            className="text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-50"
+            aria-label="Compartir por WhatsApp"
+          >
+            <MessageCircle className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => shareTicket("instagram")}
+            disabled={shareLoading}
+            className="text-pink-600 hover:text-pink-700 transition-colors disabled:opacity-50"
+            aria-label="Compartir por Instagram"
+          >
+            <Instagram className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => shareTicket("facebook")}
+            disabled={shareLoading}
+            className="text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50"
+            aria-label="Compartir por Facebook"
+          >
+            <Facebook className="h-5 w-5" />
+          </button>
+        </div>
+        {shareLoading && <p className="text-xs text-muted-foreground">{t.preview.share.generating}</p>}
+        {shareError && <p className="text-xs text-destructive">{shareError}</p>}
+        <p className="text-[10px]">********************************</p>
+      </div>
+
+      <div className="text-center mt-3 space-y-1">
         <p className="text-[9px] mt-1">{t.preview.thanks}</p>
-        <p className="text-[10px] mt-1">********************************</p>
       </div>
     </div>
   );
@@ -333,39 +433,47 @@ type TicketDialogProps = {
   children: React.ReactNode;
 };
 
-const TicketDialog = ({ open, onOpenChange, title, description, children }: TicketDialogProps) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-transparent border-none shadow-none [&>button.absolute]:hidden data-[state=open]:bg-transparent">
-      <motion.div
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ duration: 0.22, ease: "easeInOut" }}
-        className="rounded-2xl bg-background shadow-2xl border border-border/60"
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-full bg-accent/15 text-accent">
-              <Receipt className="h-4 w-4" />
+const TicketDialog = ({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+}: TicketDialogProps) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-transparent border-none shadow-none [&>button.absolute]:hidden data-[state=open]:bg-transparent">
+        <motion.div
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          transition={{ duration: 0.22, ease: "easeInOut" }}
+          className="rounded-2xl bg-background shadow-2xl border border-border/60"
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-accent/15 text-accent">
+                <Receipt className="h-4 w-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-sm font-semibold leading-tight">{title}</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground leading-tight">
+                  {description}
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="text-sm font-semibold leading-tight">{title}</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground leading-tight">
-                {description}
-              </DialogDescription>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-9 w-9 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onOpenChange(false)}
-            className="h-9 w-9 rounded-full"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        <div className="p-4 sm:p-6 max-h-[70vh] overflow-auto">{children}</div>
-      </motion.div>
-    </DialogContent>
-  </Dialog>
-);
+          <div className="p-4 sm:p-6 max-h-[70vh] overflow-auto space-y-4">{children}</div>
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
+};
