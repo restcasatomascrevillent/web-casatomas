@@ -29,6 +29,17 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!location.hash) {
+      return;
+    }
+    const sectionId = location.hash.replace("#", "");
+    const timer = window.setTimeout(() => {
+      scrollToSection(sectionId);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -38,6 +49,10 @@ const Header = () => {
   };
 
   const handleNavClick = (sectionId: string) => {
+    if (document.getElementById(sectionId)) {
+      scrollToSection(sectionId);
+      return;
+    }
     if (location.pathname !== "/") {
       navigate(`/#${sectionId}`);
       setIsMobileMenuOpen(false);
