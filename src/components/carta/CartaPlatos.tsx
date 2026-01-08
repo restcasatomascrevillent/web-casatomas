@@ -120,6 +120,9 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       const columnName = (item as any)[`nombre_${language}`];
       const columnCategoria = (item as any)[`categoria_${language}`];
       const columnDescripcion = (item as any)[`descripcion_${language}`];
+      const columnAlergenosOficiales = (item as any)[`alergenos_oficiales_${language}`];
+      const columnAlergenosInferidos = (item as any)[`alergenos_inferidos_${language}`];
+      const columnAlergenosNotas = (item as any)[`alergenos_notas_${language}`];
 
       if (language === "es") {
         return {
@@ -127,18 +130,35 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           displayNombre: item.nombre,
           displayCategoria: item.categoria,
           displayDescripcion: item.descripcion,
+          displayAlergenosOficiales: item.alergenos_oficiales,
+          displayAlergenosInferidos: item.alergenos_inferidos,
+          displayAlergenosNotas: item.alergenos_notas,
           translatedCategoria: null,
         };
       }
 
       const traducciones = parseTraducciones((item as any).traducciones);
       const translation = traducciones?.[language] ?? {};
+      const translationAlergenosOficiales =
+        translation?.alergenos_oficiales ?? translation?.alergenos?.oficiales;
+      const translationAlergenosInferidos =
+        translation?.alergenos_inferidos ?? translation?.alergenos?.inferidos;
+      const translationAlergenosNotas =
+        translation?.alergenos_notas ?? translation?.alergenos?.notas;
 
       return {
         ...item,
         displayNombre: columnName || translation?.nombre || item.nombre,
         displayCategoria: columnCategoria || translation?.categoria || item.categoria,
         displayDescripcion: columnDescripcion ?? translation?.descripcion ?? item.descripcion,
+        displayAlergenosOficiales: normalizeAlergenos(
+          columnAlergenosOficiales ?? translationAlergenosOficiales ?? item.alergenos_oficiales
+        ),
+        displayAlergenosInferidos: normalizeAlergenos(
+          columnAlergenosInferidos ?? translationAlergenosInferidos ?? item.alergenos_inferidos
+        ),
+        displayAlergenosNotas:
+          columnAlergenosNotas ?? translationAlergenosNotas ?? item.alergenos_notas,
         translatedCategoria: columnCategoria || translation?.categoria || null,
       };
     });
@@ -349,23 +369,24 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                         {item.displayDescripcion && (
                           <p className="text-sm text-muted-foreground line-clamp-2">{item.displayDescripcion}</p>
                         )}
-                        {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
+                        {(item.displayAlergenosOficiales?.length > 0 ||
+                          item.displayAlergenosInferidos?.length > 0) && (
                           <div className="flex flex-wrap gap-1">
-                            {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
+                            {item.displayAlergenosOficiales?.map((alergeno: string, idx: number) => (
                               <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
                                 {alergeno}
                               </Badge>
                             ))}
-                            {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
+                            {item.displayAlergenosInferidos?.map((alergeno: string, idx: number) => (
                               <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
                                 {alergeno}
                               </Badge>
                             ))}
                           </div>
                         )}
-                        {item.alergenos_notas && (
+                        {item.displayAlergenosNotas && (
                           <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
-                            {item.alergenos_notas}
+                            {item.displayAlergenosNotas}
                           </p>
                         )}
                       </CardContent>

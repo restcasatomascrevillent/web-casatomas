@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,8 @@ import {
 
 const Header = () => {
   const { t, language, setLanguage, languages } = useTranslations();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -32,6 +35,15 @@ const Header = () => {
       element.scrollIntoView({ behavior: "smooth" });
       setIsMobileMenuOpen(false);
     }
+  };
+
+  const handleNavClick = (sectionId: string) => {
+    if (location.pathname !== "/") {
+      navigate(`/#${sectionId}`);
+      setIsMobileMenuOpen(false);
+      return;
+    }
+    scrollToSection(sectionId);
   };
 
   const navItems = [
@@ -58,7 +70,13 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <motion.button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => {
+              if (location.pathname !== "/") {
+                navigate("/");
+                return;
+              }
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             className="flex items-center gap-2 cursor-pointer"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -74,7 +92,7 @@ const Header = () => {
                 to={`#${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  scrollToSection(item.id);
+                  handleNavClick(item.id);
                 }}
                 className="text-foreground/80 hover:text-foreground font-medium transition-colors px-3 py-2"
               >
@@ -102,7 +120,7 @@ const Header = () => {
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
               onClick={() => {
-                window.location.href = "/reservas";
+                navigate("/reservas");
               }}
             >
               {t.header.cta}
@@ -160,7 +178,7 @@ const Header = () => {
                   transition={{ delay: index * 0.1 }}
                 >
                   <button
-                    onClick={() => scrollToSection(item.id)}
+                    onClick={() => handleNavClick(item.id)}
                     className="w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
                   >
                     {item.label}
@@ -177,7 +195,7 @@ const Header = () => {
                   size="lg"
                   className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
                   onClick={() => {
-                    window.location.href = "/reservas";
+                    navigate("/reservas");
                     setIsMobileMenuOpen(false);
                   }}
                 >
