@@ -248,19 +248,20 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           border: 3px solid white;
           box-shadow: 0 4px 10px rgba(0,0,0,0.25);
           font-size: ${fontSize}px;
-          transition: transform 150ms ease, box-shadow 150ms ease;
+          transition: box-shadow 150ms ease;
+          will-change: transform;
         `;
         el.innerHTML = `<span style="display: inline-block; width: 100%; text-align: center;">${data.count}</span>`;
         el.title = region;
 
-        el.addEventListener('mouseenter', () => {
-          el.style.boxShadow = "0 6px 14px rgba(0,0,0,0.3)";
-          el.style.transform = "translateY(-2px)";
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
-          el.style.transform = "translateY(0)";
-        });
+        if (!isMobile) {
+          el.addEventListener('mouseenter', () => {
+            el.style.boxShadow = "0 6px 14px rgba(0,0,0,0.3)";
+          });
+          el.addEventListener('mouseleave', () => {
+            el.style.boxShadow = "0 4px 10px rgba(0,0,0,0.25)";
+          });
+        }
 
         el.addEventListener('click', () => {
           setSelectedRegion({ region, vinos: data.vinos, category: data.category });
@@ -275,9 +276,12 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           }
         });
 
-        new mapboxgl.Marker(el)
+        const marker = new mapboxgl.Marker(el)
           .setLngLat(coords)
           .addTo(map.current);
+        // Los marcadores se redimensionan con el zoom sin alterar su posición
+        marker.setRotationAlignment("map");
+        marker.setPitchAlignment("map");
       }
     });
   }, [vinos]);
