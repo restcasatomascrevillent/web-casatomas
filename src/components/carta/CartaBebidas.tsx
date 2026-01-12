@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,25 +39,37 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Aguas");
-  const [bebidas, setBebidas] = useState<Bebida[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>({});
+  const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
+  const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const PAGE_SIZE = 24;
+  const currentLoading = loadingByCategory[selectedCategory];
 
-  useEffect(() => {
-    fetchBebidas();
-  }, []);
-
-  const fetchBebidas = async () => {
+  const fetchBebidas = useCallback(async (category: string, append = false) => {
+    setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
+    const offset = append ? (bebidasByCategory[category]?.length || 0) : 0;
+    const to = offset + PAGE_SIZE - 1;
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('Bebidas')
         .select('*')
         .eq('activado', true)
-        .order('categoria', { ascending: true })
-        .order('orden', { ascending: true });
+        .order('orden', { ascending: true })
+        .range(offset, to);
 
+      if (category !== "TODAS") {
+        query = query.eq('categoria', category);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      setBebidas(data || []);
+      const mapped = data || [];
+      setBebidasByCategory((prev) => {
+        const existing = append ? prev[category] || [] : [];
+        return { ...prev, [category]: [...existing, ...mapped] };
+      });
+      setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === PAGE_SIZE }));
     } catch (error) {
       console.error('Error fetching bebidas:', error);
       toast({
@@ -67,7 +78,25 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
+    }
+  }, [PAGE_SIZE, bebidasByCategory, toast, t.bebidas.toasts.errorDescription, t.bebidas.toasts.errorTitle]);
+
+  useEffect(() => {
+    fetchBebidas(selectedCategory, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    if (!bebidasByCategory[category]) {
+      fetchBebidas(category, false);
+    }
+  };
+
+  const loadMore = () => {
+    if (hasMoreByCategory[selectedCategory] && !currentLoading) {
+      fetchBebidas(selectedCategory, true);
     }
   };
 
@@ -83,7 +112,8 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const categories = CATEGORY_ORDER;
 
   const filteredItems = useMemo(() => {
-    const translated = bebidas.map((bebida) => {
+    const categoryItems = bebidasByCategory[selectedCategory] || [];
+    const translated = categoryItems.map((bebida) => {
       const columnName = (bebida as any)[`nombre_${language}`];
       const columnDesc = (bebida as any)[`descripcion_${language}`];
       return {
@@ -95,10 +125,6 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
 
     let items = translated;
 
-    if (selectedCategory !== "TODAS") {
-      items = items.filter(item => item.categoria === selectedCategory);
-    }
-
     if (searchTerm) {
       items = items.filter(item =>
         (item.displayNombre || item.nombre).toLowerCase().includes(searchTerm.toLowerCase())
@@ -106,7 +132,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     }
 
     return items;
-  }, [language, searchTerm, selectedCategory, bebidas]);
+  }, [bebidasByCategory, language, searchTerm, selectedCategory]);
 
   const addToPedido = (item: Bebida & { displayNombre?: string }) => {
     const pedido = getUserPedido();
@@ -124,14 +150,6 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
 
   const translateCategory = (category: string) =>
     t.categories.bebidas[category as keyof typeof t.categories.bebidas] ?? category;
-
-  if (loading) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-xl text-muted-foreground">{t.bebidas.loading}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
@@ -166,7 +184,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
               {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => handleCategoryChange(category)}
                   className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 ${
                     selectedCategory === category 
                       ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
@@ -189,6 +207,11 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
       </div>
 
       {/* Items Grid */}
+      {!bebidasByCategory[selectedCategory] && currentLoading ? (
+        <div className="text-center py-16">
+          <p className="text-xl text-muted-foreground">{t.bebidas.loading}</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => (
           <motion.div
@@ -236,10 +259,24 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
           </motion.div>
         ))}
       </div>
+      )}
 
       {filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-xl">{t.bebidas.empty}</p>
+        </div>
+      )}
+
+      {hasMoreByCategory[selectedCategory] && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={loadMore}
+            disabled={currentLoading}
+            className="rounded-full px-6"
+          >
+            {currentLoading ? t.bebidas.loading : t.map.showMore}
+          </Button>
         </div>
       )}
     </div>

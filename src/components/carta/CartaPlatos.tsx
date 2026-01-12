@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,14 +27,38 @@ interface CartaPlatosProps {
   showAddButton: boolean;
 }
 
+interface Plato {
+  id?: number;
+  nombre: string;
+  categoria: string;
+  descripcion?: string;
+  precio_eur: number;
+  unidad?: string;
+  orden?: number;
+  activado?: boolean;
+  nombre_en?: string;
+  nombre_fr?: string;
+  categoria_en?: string;
+  categoria_fr?: string;
+  descripcion_en?: string;
+  descripcion_fr?: string;
+  alergenos_oficiales?: unknown;
+  alergenos_inferidos?: unknown;
+  alergenos_notas?: string | null;
+  traducciones?: unknown;
+  expanded?: boolean;
+}
+
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
-  const [platos, setPlatos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [platosByCategory, setPlatosByCategory] = useState<Record<string, Plato[]>>({});
+  const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
+  const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const PAGE_SIZE = 24;
 
   const normalizeAlergenos = (value: unknown) => {
     if (Array.isArray(value)) return value;
@@ -50,39 +73,57 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     return [];
   };
 
-  useEffect(() => {
-    fetchPlatos();
-  }, []);
+  const fetchPlatosByCategory = useCallback(
+    async (category: string, append = false) => {
+      setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
+      const offset = append ? (platosByCategory[category]?.length || 0) : 0;
+      const to = offset + PAGE_SIZE - 1;
 
-  const fetchPlatos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('Platos')
-        .select('*')
-        .eq('activado', true)
-        .order('categoria', { ascending: true })
-        .order('orden', { ascending: true });
+      try {
+        let query = supabase
+          .from('Platos')
+          .select('*')
+          .eq('activado', true)
+          .order('categoria', { ascending: true })
+          .order('orden', { ascending: true })
+          .range(offset, to);
 
-      if (error) throw error;
-      setPlatos(
-        (data || []).map((item) => ({
+        if (category !== "TODOS") {
+          query = query.eq('categoria', category);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        const mapped = (data || []).map((item) => ({
           ...item,
           alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
           alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
           expanded: Boolean((item as any).expanded),
-        }))
-      );
-    } catch (error) {
-      console.error('Error fetching platos:', error);
-      toast({
-        title: t.platos.toasts.errorTitle,
-        description: t.platos.toasts.errorDescription,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+        }));
+
+        setPlatosByCategory((prev) => {
+          const existing = append ? prev[category] || [] : [];
+          return { ...prev, [category]: [...existing, ...mapped] };
+        });
+        setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === PAGE_SIZE }));
+      } catch (error) {
+        console.error('Error fetching platos:', error);
+        toast({
+          title: t.platos.toasts.errorTitle,
+          description: t.platos.toasts.errorDescription,
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
+      }
+    },
+    [PAGE_SIZE, platosByCategory, toast, t.platos.toasts.errorDescription, t.platos.toasts.errorTitle]
+  );
+
+  useEffect(() => {
+    fetchPlatosByCategory(selectedCategory, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const CATEGORY_ORDER = [
     "NOVEDADES DEL DÍA",
@@ -101,6 +142,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
   // Mostrar siempre el orden exacto solicitado, independientemente de si hay platos en esa categoría
   const categories = CATEGORY_ORDER;
+  const currentLoading = loadingByCategory[selectedCategory];
 
   const parseTraducciones = (value: unknown) => {
     if (!value) return null;
@@ -116,7 +158,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   };
 
   const translatedPlatos = useMemo(() => {
-    return platos.map((item) => {
+    const categoryItems = platosByCategory[selectedCategory] || [];
+    return categoryItems.map((item) => {
       const columnName = (item as any)[`nombre_${language}`];
       const columnCategoria = (item as any)[`categoria_${language}`];
       const columnDescripcion = (item as any)[`descripcion_${language}`];
@@ -162,14 +205,10 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
         translatedCategoria: columnCategoria || translation?.categoria || null,
       };
     });
-  }, [platos, language]);
+  }, [language, platosByCategory, selectedCategory]);
 
   const filteredItems = useMemo(() => {
     let items = translatedPlatos;
-
-    if (selectedCategory !== "TODOS") {
-      items = items.filter(item => item.categoria.toUpperCase() === selectedCategory);
-    }
 
     if (searchTerm) {
       items = items.filter(item =>
@@ -178,7 +217,20 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
 
     return items;
-  }, [searchTerm, selectedCategory, translatedPlatos]);
+  }, [searchTerm, translatedPlatos]);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    if (!platosByCategory[category]) {
+      fetchPlatosByCategory(category, false);
+    }
+  };
+
+  const loadMore = () => {
+    if (hasMoreByCategory[selectedCategory] && !currentLoading) {
+      fetchPlatosByCategory(selectedCategory, true);
+    }
+  };
 
   const getCategoryImage = (categoria: string) => {
     const cat = categoria.toUpperCase();
@@ -218,14 +270,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     setExpandedCards((prev) => ({ ...prev, [itemId]: !currentExpanded }));
   };
 
-  if (loading) {
-    return (
-      <div className="text-center py-16">
-        <p className="text-xl text-muted-foreground">{t.platos.loading}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
       {/* Search and Filters */}
@@ -259,7 +303,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
               {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => handleCategoryChange(category)}
                   className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 ${
                     selectedCategory === category 
                       ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
@@ -282,6 +326,11 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       </div>
 
       {/* Items Grid */}
+      {!platosByCategory[selectedCategory] && currentLoading ? (
+        <div className="text-center py-16">
+          <p className="text-xl text-muted-foreground">{t.platos.loading}</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => {
           const expanded = isCardExpanded(item);
@@ -418,10 +467,24 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           );
         })}
       </div>
+      )}
 
       {filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-xl">{t.platos.empty}</p>
+        </div>
+      )}
+
+      {hasMoreByCategory[selectedCategory] && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={loadMore}
+            disabled={currentLoading}
+            className="rounded-full px-6"
+          >
+            {currentLoading ? t.platos.loading : t.map.showMore}
+          </Button>
         </div>
       )}
     </div>

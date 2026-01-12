@@ -342,6 +342,23 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     };
   }, [initializeMap]);
 
+  // Asegurar que el mapa recalcula el tamaño cuando cambia el layout (p.ej. tras aceptar el modal 18+)
+  useEffect(() => {
+    const resize = () => {
+      map.current?.resize();
+    };
+    const timer = setTimeout(resize, 300);
+    window.addEventListener("resize", resize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  useEffect(() => {
+    map.current?.resize();
+  }, [selectedRegion]);
+
   const selectedUniqueDO = selectedRegion
     ? Array.from(
         new Set(

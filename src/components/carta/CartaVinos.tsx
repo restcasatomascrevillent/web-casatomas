@@ -52,8 +52,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
   const [showAgeDialog, setShowAgeDialog] = useState(true);
-  const [vinos, setVinos] = useState<Vino[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>({});
+  const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
+  const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
+  const [mapVinos, setMapVinos] = useState<Vino[]>([]);
+  const [mapLoading, setMapLoading] = useState(true);
+  const [mapPrefetched, setMapPrefetched] = useState(false);
+  const PAGE_SIZE = 24;
   const { toast } = useToast();
 
   const normalizeAlergenos = (value: unknown) => {
@@ -69,46 +74,77 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     return [];
   };
 
-  const fetchVinos = useCallback(async () => {
+  const fetchVinosByCategory = useCallback(
+    async (category: string, append = false) => {
+      setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
+      const offset = append ? (vinosByCategory[category]?.length || 0) : 0;
+      const to = offset + PAGE_SIZE - 1;
+
+      try {
+        let query = supabase
+          .from('Vinos')
+          .select('*')
+          .eq('activado', true)
+          .order('categoria', { ascending: true })
+          .order('orden', { ascending: true })
+          .range(offset, to);
+
+        if (category !== "Todos") {
+          query = query.eq('categoria', category);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        const normalized: Vino[] = (data || []).map((item) => ({
+          ...item,
+          alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
+          alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
+        }));
+
+        setVinosByCategory((prev) => {
+          const existing = append ? prev[category] || [] : [];
+          return { ...prev, [category]: [...existing, ...normalized] };
+        });
+        setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === PAGE_SIZE }));
+      } catch (error) {
+        console.error('Error fetching vinos:', error);
+        toast({
+          title: t.vinos.toasts.errorTitle,
+          description: t.vinos.toasts.errorDescription,
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
+      }
+    },
+    [PAGE_SIZE, toast, t.vinos.toasts.errorDescription, t.vinos.toasts.errorTitle, vinosByCategory]
+  );
+
+  useEffect(() => {
+    fetchVinosByCategory(selectedCategory, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchMap = useCallback(async () => {
+    if (mapPrefetched) return;
     try {
       const { data, error } = await supabase
         .from('Vinos')
-        .select('*')
-        .eq('activado', true)
-        .order('categoria', { ascending: true })
-        .order('orden', { ascending: true });
-
+        .select('categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre')
+        .eq('activado', true);
       if (error) throw error;
-      const normalized: Vino[] = (data || []).map((item) => ({
-        ...item,
-        alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
-        alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
-      }));
-
-      const deduped = normalized.reduce<Vino[]>((acc, item) => {
-        const key = `${(item.nombre || "").trim().toLowerCase()}||${(item.categoria || "").trim().toLowerCase()}`;
-        if (!acc.some((existing) => `${(existing.nombre || "").trim().toLowerCase()}||${(existing.categoria || "").trim().toLowerCase()}` === key)) {
-          acc.push(item);
-        }
-        return acc;
-      }, []);
-
-      setVinos(deduped);
+      setMapVinos(data || []);
     } catch (error) {
-      console.error('Error fetching vinos:', error);
-      toast({
-        title: t.vinos.toasts.errorTitle,
-        description: t.vinos.toasts.errorDescription,
-        variant: "destructive",
-      });
+      console.error('Error fetching map vinos:', error);
     } finally {
-      setLoading(false);
+      setMapPrefetched(true);
+      setMapLoading(false);
     }
-  }, [toast, t]);
+  }, [mapPrefetched]);
 
   useEffect(() => {
-    fetchVinos();
-  }, [fetchVinos]);
+    fetchMap();
+  }, [fetchMap]);
 
   const addToPedido = (item: Vino & { displayNombre?: string }) => {
     const pedido = getUserPedido();
@@ -125,22 +161,16 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   };
 
   const categories = useMemo(() => {
-    // Mantener el orden de las categorías tal como vienen de la BD
     const seen = new Set<string>();
-    const orderedCategories: string[] = [];
-    
-    vinos.forEach(vino => {
-      if (!seen.has(vino.categoria)) {
+    mapVinos.forEach((vino) => {
+      if (vino.categoria) {
         seen.add(vino.categoria);
-        orderedCategories.push(vino.categoria);
       }
     });
-    
-    // Añadir "Todos" al final
-    orderedCategories.push("Todos");
-    
-    return orderedCategories;
-  }, [vinos]);
+    const list = Array.from(seen);
+    list.push("Todos");
+    return list;
+  }, [mapVinos]);
 
   const getLocalizedField = (vino: Vino, key: string) => {
     const value = (vino as Record<string, unknown>)[key];
@@ -148,7 +178,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   };
 
   const filteredItems = useMemo(() => {
-    const translated = vinos.map((vino) => {
+    const categoryItems = vinosByCategory[selectedCategory] || [];
+    const translated = categoryItems.map((vino) => {
       const columnName = getLocalizedField(vino, `nombre_${language}`);
       return {
         ...vino,
@@ -169,8 +200,22 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     }
 
     return items;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, searchTerm, selectedCategory, vinos.length]);
+  }, [language, searchTerm, selectedCategory, vinosByCategory]);
+
+  const currentLoading = loadingByCategory[selectedCategory];
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    if (!vinosByCategory[category]) {
+      fetchVinosByCategory(category, false);
+    }
+  };
+
+  const loadMore = () => {
+    if (hasMoreByCategory[selectedCategory] && !currentLoading) {
+      fetchVinosByCategory(selectedCategory, true);
+    }
+  };
 
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
@@ -226,7 +271,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   return (
     <div className="space-y-8">
       {/* Mapa Mundial de vinos */}
-      {!loading && <MapaMundoVinos vinos={filteredItems} />}
+      {!mapLoading && <MapaMundoVinos vinos={mapVinos} />}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
@@ -259,7 +304,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => handleCategoryChange(category)}
                   className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 ${
                     selectedCategory === category 
                       ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
@@ -282,7 +327,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       </div>
 
       {/* Items Grid */}
-      {loading ? (
+      {!vinosByCategory[selectedCategory] && currentLoading ? (
         <div className="text-center py-16">
           <p className="text-xl text-muted-foreground">{t.vinos.loading}</p>
         </div>
@@ -348,7 +393,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                   {showAddButton && (
                     <Button
                       size="sm"
-                      onClick={() => addToPedido(item)}
+                     onClick={() => addToPedido(item)}
                       className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                     >
                       <Plus className="w-4 h-4 mr-1" />
@@ -362,9 +407,22 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
         </div>
       )}
 
-      {!loading && filteredItems.length === 0 && (
+      {!currentLoading && filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-xl">{t.vinos.empty}</p>
+        </div>
+      )}
+
+      {hasMoreByCategory[selectedCategory] && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={loadMore}
+            disabled={currentLoading}
+            className="rounded-full px-6"
+          >
+            {currentLoading ? t.vinos.loading : t.map.showMore}
+          </Button>
         </div>
       )}
     </div>
