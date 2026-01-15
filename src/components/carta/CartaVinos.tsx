@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,13 +23,14 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import BackToTopButton from "./BackToTopButton";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
 }
 
 interface Vino {
-  id?: number;
+  id?: string;
   nombre: string;
   precio_eur: number;
   categoria?: string;
@@ -40,6 +41,8 @@ interface Vino {
   activado?: boolean;
   alergenos_oficiales?: string[] | null;
   alergenos_inferidos?: string[] | null;
+  alergenos_notas?: string | null;
+  descripcion?: string;
   unidad?: string;
   cantidad?: number;
   nombre_en?: string;
@@ -48,6 +51,8 @@ interface Vino {
 
 const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const { t, language } = useTranslations();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
@@ -130,7 +135,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     try {
       const { data, error } = await supabase
         .from('Vinos')
-        .select('categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre')
+        .select('categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, precio_eur')
         .eq('activado', true);
       if (error) throw error;
       setMapVinos(data || []);
@@ -151,6 +156,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     const pedidoItem = {
       ...item,
       nombre: item.displayNombre || item.nombre,
+      cantidad: item.cantidad ?? 1,
     };
     pedido.push(pedidoItem);
     setUserPedido(pedido);
@@ -269,7 +275,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" ref={sectionRef}>
       {/* Mapa Mundial de vinos */}
       {!mapLoading && <MapaMundoVinos vinos={mapVinos} />}
 
@@ -332,7 +338,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
           <p className="text-xl text-muted-foreground">{t.vinos.loading}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredItems.map((item, index) => (
             <motion.div
               key={item.id}
@@ -425,6 +431,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
           </Button>
         </div>
       )}
+      <BackToTopButton targetRef={sectionRef} containerRef={gridRef} />
     </div>
   );
 };

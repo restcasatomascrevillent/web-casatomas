@@ -21,7 +21,7 @@ interface CartaBebidasProps {
 }
 
 interface Bebida {
-  id?: number;
+  id?: string;
   nombre: string;
   precio_eur: number;
   categoria: string;
@@ -139,6 +139,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     const pedidoItem = {
       ...item,
       nombre: item.displayNombre || item.nombre,
+      cantidad: item.cantidad ?? 1,
     };
     pedido.push(pedidoItem);
     setUserPedido(pedido);

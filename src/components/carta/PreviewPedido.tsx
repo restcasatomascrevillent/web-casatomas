@@ -47,6 +47,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [inputValues, setInputValues] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const loadPedido = () => {
@@ -142,11 +143,6 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
     setUserPedido([]);
   };
 
-  const dismissBanner = () => {
-    setShowBanner(false);
-    localStorage.setItem("hidePedidoBanner", "true");
-  };
-
   const updateCantidad = (index: number, newCantidad: number) => {
     if (newCantidad < 0.01) return;
     const newPedido = [...pedido];
@@ -155,19 +151,77 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
     setUserPedido(newPedido);
   };
 
+  const getUnitConfig = (unidad?: string) => {
+    if (unidad === "kg") {
+      return {
+        defaultAmount: 1,
+        step: 0.1,
+        minValue: 0.1,
+        isWeight: true,
+        format: (val: number) => `${val.toFixed(1).replace(/\.0$/, "")} kg`,
+        priceLabel: "/kg",
+        decimals: 1,
+      };
+    }
+    if (unidad === "100 g" || unidad === "100g") {
+      return {
+        defaultAmount: 100,
+        step: 10,
+        minValue: 10,
+        isWeight: true,
+        format: (val: number) => `${val} g`,
+        priceLabel: "/100g",
+        decimals: 0,
+      };
+    }
+    if (unidad === "unidad" || unidad === "ud" || unidad === "ud.") {
+      return {
+        defaultAmount: 1,
+        step: 1,
+        minValue: 1,
+        isWeight: false,
+        format: (val: number) => `${Math.max(1, Math.round(val))} ud.`,
+        priceLabel: "/ud",
+        decimals: 0,
+      };
+    }
+    return {
+      defaultAmount: 1,
+      step: 1,
+      minValue: 1,
+      isWeight: false,
+      format: (val: number) => `${Math.max(1, Math.round(val))}`,
+      priceLabel: "",
+      decimals: 0,
+    };
+  };
+
+  const calculateSubtotal = (item: PedidoItem) => {
+    const config = getUnitConfig(item.unidad);
+    const cantidad = item.cantidad ?? config.defaultAmount;
+    if (item.unidad === "kg") {
+      return cantidad * (item.precio_eur || 0);
+    }
+    if (item.unidad === "100 g" || item.unidad === "100g") {
+      return (cantidad / 100) * (item.precio_eur || 0);
+    }
+    return cantidad * (item.precio_eur || 0);
+  };
+
   const incrementCantidad = (index: number) => {
     const item = pedido[index];
-    const currentCantidad = item.cantidad || 1;
-    const increment = item.unidad === "kg" || item.unidad === "g" ? 0.1 : 1;
-    updateCantidad(index, currentCantidad + increment);
+    const config = getUnitConfig(item.unidad);
+    const currentCantidad = item.cantidad ?? config.defaultAmount;
+    const newValue = parseFloat((currentCantidad + config.step).toFixed(config.decimals));
+    updateCantidad(index, newValue);
   };
 
   const decrementCantidad = (index: number) => {
     const item = pedido[index];
-    const currentCantidad = item.cantidad || 1;
-    const decrement = item.unidad === "kg" || item.unidad === "g" ? 0.1 : 1;
-    const newCantidad = Math.max(0.1, currentCantidad - decrement);
-    updateCantidad(index, newCantidad);
+    const config = getUnitConfig(item.unidad);
+    const currentCantidad = item.cantidad ?? config.defaultAmount;
+    const newValue = Math.max(config.minValue, parseFloat((currentCantidad - config.step).toFixed(config.decimals)));
+    updateCantidad(index, newValue);
   };
 
   const getCategoryImage = (categoria?: string) => {
@@ -183,8 +237,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   };
 
   const total = pedido.reduce((sum, item) => {
-    const cantidad = item.cantidad || 1;
-    return sum + (item.precio_eur || 0) * cantidad;
+    return sum + calculateSubtotal(item);
   }, 0);
 
   const translateCategory = (category?: string) => {
@@ -232,9 +285,11 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       {/* Items */}
       <div className="space-y-3 mb-3">
         {pedido.map((item, index) => {
-          const cantidad = item.cantidad || 1;
-          const subtotal = (item.precio_eur || 0) * cantidad;
-          const isWeight = item.unidad === "kg" || item.unidad === "g";
+            const config = getUnitConfig(item.unidad);
+            const cantidad = item.cantidad ?? config.defaultAmount;
+            const subtotal = calculateSubtotal(item);
+            const priceLabel =
+              item.unidad === "kg" ? "/kg" : item.unidad === "100 g" || item.unidad === "100g" ? "/100g" : item.unidad === "unidad" ? "/ud" : "";
 
           return (
             <div key={index} className="border-b border-dashed border-gray-400 pb-2">
@@ -258,46 +313,67 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
 
               {/* Cantidad y controles */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => decrementCantidad(index)}
-                    disabled={cantidad <= 1 || isWeight}
-                    className="h-5 w-5 p-0 border-black"
-                  >
-                    <Minus className="h-2 w-2" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => decrementCantidad(index)}
+                      disabled={cantidad <= config.minValue}
+                      className="h-5 w-5 p-0 border-black"
+                    >
+                      <Minus className="h-2 w-2" />
+                    </Button>
 
-                  <Input
-                    type="number"
-                    value={cantidad}
-                    onChange={(e) => updateCantidad(index, parseFloat(e.target.value))}
-                    className="w-12 h-5 text-center text-[10px] border-black"
-                    min="0.01"
-                    step={isWeight ? "0.1" : "1"}
-                  />
+                    <Input
+                      type="number"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        // Permitir vacío y solo dígitos/punto
+                        if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                          setInputValues((prev) => ({ ...prev, [index]: val }));
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = e.target.value;
+                        const parsed = parseFloat(val);
+                        if (val === "" || !Number.isFinite(parsed) || parsed < config.minValue) {
+                          updateCantidad(index, config.defaultAmount);
+                        } else {
+                          const factor = Math.pow(10, config.decimals);
+                          const rounded = Math.round(parsed * factor) / factor;
+                          updateCantidad(index, rounded);
+                        }
+                        setInputValues((prev) => {
+                          const next = { ...prev };
+                          delete next[index];
+                          return next;
+                        });
+                      }}
+                      value={inputValues[index] ?? cantidad}
+                      className="w-16 h-5 text-center text-[10px] border-black"
+                      min={config.minValue}
+                      step={config.step}
+                    />
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => incrementCantidad(index)}
-                    disabled={isWeight}
-                    className="h-5 w-5 p-0 border-black"
-                  >
-                    <Plus className="h-2 w-2" />
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => incrementCantidad(index)}
+                      className="h-5 w-5 p-0 border-black"
+                    >
+                      <Plus className="h-2 w-2" />
+                    </Button>
 
-                  {item.unidad && <span className="text-[9px] ml-1">{item.unidad}</span>}
+                    {item.unidad && <span className="text-[9px] ml-1">{item.unidad}</span>}
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-[9px] text-gray-600">
+                      {config.format(cantidad)} x {item.precio_eur?.toFixed(2)}€{priceLabel}
+                    </p>
+                    <p className="font-bold text-[11px]">{subtotal.toFixed(2)}€</p>
+                  </div>
                 </div>
-
-                <div className="text-right">
-                  <p className="text-[9px] text-gray-600">
-                    {cantidad.toFixed(isWeight ? 2 : 0)} x {item.precio_eur?.toFixed(2)}€
-                  </p>
-                  <p className="font-bold text-[11px]">{subtotal.toFixed(2)}€</p>
-                </div>
-              </div>
             </div>
           );
         })}

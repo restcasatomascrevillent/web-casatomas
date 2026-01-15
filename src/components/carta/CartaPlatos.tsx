@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import riceImg from "@/assets/platos/rice.jpg";
 import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import BackToTopButton from "./BackToTopButton";
 
 interface CartaPlatosProps {
   showAddButton: boolean;
@@ -51,6 +52,8 @@ interface Plato {
 
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const { t, language } = useTranslations();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platosByCategory, setPlatosByCategory] = useState<Record<string, Plato[]>>({});
@@ -243,10 +246,17 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     return appetizerImg;
   };
 
+  const getInitialCantidad = (unidad?: string) => {
+    if (unidad === "kg") return 1;
+    if (unidad === "100 g" || unidad === "100g") return 100;
+    return 1;
+  };
+
   const addToPedido = (item: any) => {
     const pedidoItem = {
       ...item,
       nombre: item.displayNombre || item.nombre,
+      cantidad: item.cantidad ?? getInitialCantidad(item.unidad),
     };
     const pedido = getUserPedido();
     pedido.push(pedidoItem);
@@ -271,7 +281,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" ref={sectionRef}>
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">
@@ -331,7 +341,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           <p className="text-xl text-muted-foreground">{t.platos.loading}</p>
         </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => {
           const expanded = isCardExpanded(item);
           const categoryLabel = item.translatedCategoria ?? translateCategory(item.categoria);
@@ -487,6 +497,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           </Button>
         </div>
       )}
+      <BackToTopButton targetRef={sectionRef} containerRef={gridRef} />
     </div>
   );
 };
