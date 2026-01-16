@@ -353,10 +353,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     setIsSubmitting(true);
     try {
       const salaSeleccionada = salas?.find(s => s.id === data.sala_id);
-      const telefonoNormalizado = data.telefono.replace(/\s+/g, "");
-      const telefonoWebhook = telefonoNormalizado.startsWith("+34")
-        ? `+34${telefonoNormalizado.replace(/^\+34/, "")}`
-        : telefonoNormalizado;
+      const telefonoWebhook = data.telefono.trim();
       
       const response = await fetch("https://n8npersonal.miguelbenito.space/webhook/2c6ec220-85c7-4460-b876-a92515c7b135", {
         method: "POST",
