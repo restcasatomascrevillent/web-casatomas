@@ -458,7 +458,7 @@ export const translations = {
     validation: {
       nameMin: "El nombre debe tener al menos 2 caracteres",
       nameMax: "El nombre no puede superar los 100 caracteres",
-      phoneInvalid: "Introduce un teléfono válido (p. ej. 612345678)",
+      phoneInvalid: "Introduce un teléfono válido con prefijo +34 (p. ej. +34 612345678)",
       emailInvalid: "Introduce un email válido",
       emailMax: "El email no puede superar los 255 caracteres",
       dateRequired: "Selecciona una fecha",
@@ -934,7 +934,7 @@ export const translations = {
     validation: {
       nameMin: "Name must be at least 2 characters",
       nameMax: "Name cannot exceed 100 characters",
-      phoneInvalid: "Enter a valid phone number (e.g. 612345678)",
+      phoneInvalid: "Enter a valid phone number with +34 prefix (e.g. +34 612345678)",
       emailInvalid: "Enter a valid email",
       emailMax: "Email cannot exceed 255 characters",
       dateRequired: "Please select a date",
@@ -1410,7 +1410,7 @@ export const translations = {
     validation: {
       nameMin: "Le nom doit comporter au moins 2 caractères",
       nameMax: "Le nom ne peut pas dépasser 100 caractères",
-      phoneInvalid: "Veuillez saisir un numéro valide (ex : 612345678)",
+      phoneInvalid: "Veuillez saisir un numéro valide avec le préfixe +34 (ex : +34 612345678)",
       emailInvalid: "Veuillez saisir un email valide",
       emailMax: "L'email ne peut pas dépasser 255 caractères",
       dateRequired: "Veuillez sélectionner une date",

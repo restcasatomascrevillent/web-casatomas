@@ -83,7 +83,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     resolver: zodResolver(reservationSchema),
     defaultValues: {
       nombre: "",
-      telefono: "",
+      telefono: "+34 ",
       email: "",
       numero_comensales: 2,
       notas_cliente: "",
@@ -643,13 +643,19 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                     name="telefono"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">{t.reservationForm.phoneLabel}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="612345678" {...field} className="rounded-xl border-border/50 bg-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                      <FormLabel className="text-foreground font-medium">{t.reservationForm.phoneLabel}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          inputMode="tel"
+                          placeholder="+34 612345678"
+                          {...field}
+                          className="rounded-xl border-border/50 bg-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                   />
 
                   <FormField
