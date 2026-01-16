@@ -83,7 +83,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     resolver: zodResolver(reservationSchema),
     defaultValues: {
       nombre: "",
-      telefono: "",
+      telefono: "+34 ",
       email: "",
       numero_comensales: 2,
       notas_cliente: "",
@@ -353,13 +353,18 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     setIsSubmitting(true);
     try {
       const salaSeleccionada = salas?.find(s => s.id === data.sala_id);
+      const telefonoNormalizado = data.telefono.replace(/\s+/g, "");
+      const telefonoMatch = telefonoNormalizado.match(/^\+(\d{1,3})(\d{6,14})$/);
+      const telefonoWebhook = telefonoMatch
+        ? `+${telefonoMatch[1]} ${telefonoMatch[2]}`
+        : data.telefono.trim();
       
       const response = await fetch("https://n8npersonal.miguelbenito.space/webhook/2c6ec220-85c7-4460-b876-a92515c7b135", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: data.nombre,
-          telefono: data.telefono,
+          telefono: telefonoWebhook,
           email: data.email,
           fecha: format(data.fecha, "yyyy-MM-dd"),
           hora: selectedHour.slice(0, 5),
@@ -643,13 +648,19 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                     name="telefono"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">{t.reservationForm.phoneLabel}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="612345678" {...field} className="rounded-xl border-border/50 bg-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                      <FormLabel className="text-foreground font-medium">{t.reservationForm.phoneLabel}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          inputMode="tel"
+                          placeholder="+34 612345678"
+                          {...field}
+                          className="rounded-xl border-border/50 bg-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                   />
 
                   <FormField

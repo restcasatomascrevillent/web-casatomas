@@ -23,7 +23,7 @@ export const createReservationSchema = (messages: ReservationValidationMessages)
     telefono: z
       .string()
       .trim()
-      .regex(/^(\+34|0034|34)?[6789]\d{8}$/, {
+      .regex(/^\+\d{1,3}\s?\d{6,14}$/, {
         message: messages.phoneInvalid,
       }),
     email: z
