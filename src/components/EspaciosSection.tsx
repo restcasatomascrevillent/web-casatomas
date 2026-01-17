@@ -1,30 +1,64 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Home, Utensils, TreePine, Wine, Camera, ExternalLink, ChefHat, Clock, Sparkles, Star } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { compareDesc, format, isSameDay } from "date-fns";
+import { motion } from "framer-motion";
+import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, Sparkles, Star, TreePine, Utensils, Wine } from "lucide-react";
+
 import carnePlato from "@/assets/carne-plato.png";
 import pulpoPlato from "@/assets/pulpo-plato.jpg";
 import vinosMarques from "@/assets/vinos-marqués.jpeg";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const EspaciosSection = () => {
   const { t, dateLocale } = useTranslations();
   const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
-  const [showMenus, setShowMenus] = useState(false);
-  const [showTapas, setShowTapas] = useState(false);
+  const [showTodayMenu, setShowTodayMenu] = useState(false);
+  const [showTodayTapas, setShowTodayTapas] = useState(false);
+  const [showPastMenus, setShowPastMenus] = useState(false);
+  const [showPastTapas, setShowPastTapas] = useState(false);
 
   const menusDelDia = t.espacios.menus;
   const tapasSemanales = t.espacios.tapas;
+
+  const sortedMenus = [...menusDelDia].sort((a, b) => compareDesc(a.date, b.date));
+  const sortedTapas = [...tapasSemanales].sort((a, b) => compareDesc(a.date, b.date));
+  const recentMenus = sortedMenus.slice(0, 3);
+  const recentTapas = sortedTapas.slice(0, 3);
+
+  const today = new Date();
+  const todayDay = today.getDay();
+  const isMenuDayToday = todayDay >= 2 && todayDay <= 4;
+  const isTapasDayToday = todayDay === 4;
+
+  const todayMenuMatch = isMenuDayToday ? sortedMenus.find((menu) => isSameDay(menu.date, today)) : undefined;
+  const todayTapasMatch = isTapasDayToday ? sortedTapas.find((tapas) => isSameDay(tapas.date, today)) : undefined;
+
+  const todayMenu = isMenuDayToday && sortedMenus.length ? todayMenuMatch ?? sortedMenus[0] : null;
+  const todayTapas = isTapasDayToday && sortedTapas.length ? todayTapasMatch ?? sortedTapas[0] : null;
+
+  const menuFallbackActive = Boolean(todayMenu) && isMenuDayToday && !todayMenuMatch;
+  const tapasFallbackActive = Boolean(todayTapas) && isTapasDayToday && !todayTapasMatch;
+
+  const menuDaysLabel = `${format(new Date(2025, 0, 21), "EEE", { locale: dateLocale })} - ${format(new Date(2025, 0, 23), "EEE", { locale: dateLocale })}`;
+  const tapasDayLabel = format(new Date(2025, 0, 23), "EEE", { locale: dateLocale });
+
   const espacios = t.espacios.cards.map((card, index) => ({
     ...card,
     icon: index === 0 ? Home : index === 1 ? Utensils : index === 2 ? TreePine : Wine,
     hasGallery: index !== 3,
-    images: index === 0 ? [carnePlato, pulpoPlato, vinosMarques] : index === 1 ? [pulpoPlato, vinosMarques, carnePlato] : index === 2 ? [vinosMarques, carnePlato, pulpoPlato] : undefined,
+    images:
+      index === 0
+        ? [carnePlato, pulpoPlato, vinosMarques]
+        : index === 1
+          ? [pulpoPlato, vinosMarques, carnePlato]
+          : index === 2
+            ? [vinosMarques, carnePlato, pulpoPlato]
+            : undefined,
     link: index === 3 ? "/touza-cocktail" : undefined,
   }));
 
@@ -43,7 +77,7 @@ const EspaciosSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-bold text-primary mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-4"
           >
             {t.espacios.title}
           </motion.h2>
@@ -52,7 +86,7 @@ const EspaciosSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+            className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto"
           >
             {t.espacios.subtitle}
           </motion.p>
@@ -81,8 +115,8 @@ const EspaciosSection = () => {
                   <CardContent>
                     <p className="text-muted-foreground mb-4">{espacio.description}</p>
                     {espacio.hasGallery ? (
-                      <Button 
-                        variant="default" 
+                      <Button
+                        variant="default"
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         onClick={() => setSelectedEspacio(index)}
                       >
@@ -90,8 +124,8 @@ const EspaciosSection = () => {
                         {t.espacios.galleryButton}
                       </Button>
                     ) : (
-                      <Button 
-                        variant="default" 
+                      <Button
+                        variant="default"
                         className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         asChild
                       >
@@ -108,7 +142,6 @@ const EspaciosSection = () => {
           })}
         </div>
 
-        {/* Información adicional */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -116,72 +149,105 @@ const EspaciosSection = () => {
           viewport={{ once: true }}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <Card className="bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border border-border/60 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <ChefHat className="w-5 h-5 text-primary" />
-                {t.espacios.middayMenuTitle}
-              </CardTitle>
+          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-primary/5 via-background to-accent/10">
+            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.12),transparent_40%)]" />
+            <CardHeader className="relative pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner">
+                    <ChefHat className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base sm:text-lg">{t.espacios.middayMenuTitle}</CardTitle>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{t.espacios.middayMenuDescription}</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-background/70 text-primary border-primary/30 text-[11px] sm:text-xs whitespace-normal text-center self-start sm:self-auto">
+                  {menuDaysLabel}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">{t.espacios.middayMenuDescription}</p>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant="default" 
-                  className="flex-1 min-w-[140px] bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
-                  onClick={() => setShowMenus(true)}
+            <CardContent className="relative space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <Button
+                  className="flex-1 h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-accent to-primary/80 text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
+                  onClick={() => setShowTodayMenu(true)}
+                  disabled={!isMenuDayToday || !sortedMenus.length}
                 >
-                  <ChefHat className="w-5 h-5 mr-2" />
-                  {t.espacios.middayMenuButton}
+                  <Sparkles className="w-4 h-4" />
+                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.menuAvailableDays}
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 min-w-[120px] border-primary/50 text-primary hover:bg-primary/10"
-                  onClick={() => setShowMenus(true)}
+                  className="sm:w-auto h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal border-primary/40 text-primary hover:bg-primary/10"
+                  onClick={() => setShowPastMenus(true)}
                 >
-                  <Star className="w-4 h-4 mr-2" />
-                  {t.espacios.middayMenuToday ?? "Hoy"}
+                  <Clock className="w-4 h-4" />
+                  {t.espacios.viewPastMenus}
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
+              {menuFallbackActive && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Star className="w-4 h-4 text-primary" />
+                  {t.espacios.latestHighlight}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border border-border/60 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
-                {t.espacios.tapasTitle}
-              </CardTitle>
+          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-primary/5 via-background to-accent/10">
+            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_40%)]" />
+            <CardHeader className="relative pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base sm:text-lg">{t.espacios.tapasTitle}</CardTitle>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{t.espacios.tapasDescription}</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="bg-background/70 text-primary border-primary/30 text-[11px] sm:text-xs whitespace-normal text-center capitalize self-start sm:self-auto">
+                  {tapasDayLabel}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">{t.espacios.tapasDescription}</p>
-              <div className="flex flex-wrap gap-3">
-                <Button 
-                  variant="default"
-                  className="flex-1 min-w-[140px] bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all duration-300"
-                  onClick={() => setShowTapas(true)}
+            <CardContent className="relative space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <Button
+                  className="flex-1 h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-primary/80 to-accent text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
+                  onClick={() => setShowTodayTapas(true)}
+                  disabled={!isTapasDayToday || !sortedTapas.length}
                 >
-                  <Clock className="w-5 h-5 mr-2" />
-                  {t.espacios.tapasButton}
+                  <Sparkles className="w-4 h-4" />
+                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.tapasAvailableDay}
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 min-w-[120px] border-primary/50 text-primary hover:bg-primary/10"
-                  onClick={() => setShowTapas(true)}
+                  className="sm:w-auto h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal border-primary/40 text-primary hover:bg-primary/10"
+                  onClick={() => setShowPastTapas(true)}
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {t.espacios.tapasToday ?? "Hoy"}
+                  <Clock className="w-4 h-4" />
+                  {t.espacios.viewPastTapas}
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
+              {tapasFallbackActive && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Star className="w-4 h-4 text-primary" />
+                  {t.espacios.latestHighlight}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Diálogo del carrusel de fotos */}
         <Dialog open={selectedEspacio !== null} onOpenChange={() => setSelectedEspacio(null)}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle>{selectedEspacio !== null ? espacios[selectedEspacio].title : ''}</DialogTitle>
+              <DialogTitle>{selectedEspacio !== null ? espacios[selectedEspacio].title : ""}</DialogTitle>
             </DialogHeader>
             {selectedEspacio !== null && espacios[selectedEspacio].images && (
               <Carousel className="w-full">
@@ -189,8 +255,8 @@ const EspaciosSection = () => {
                   {espacios[selectedEspacio].images.map((image, idx) => (
                     <CarouselItem key={idx}>
                       <div className="p-1">
-                        <img 
-                          src={image} 
+                        <img
+                          src={image}
                           alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
                           className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
                         />
@@ -205,103 +271,244 @@ const EspaciosSection = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Diálogo de Menús del Día */}
-        <Dialog open={showMenus} onOpenChange={setShowMenus}>
-            <DialogContent className="w-[92vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
-            <DialogHeader>
+        <Dialog open={showTodayMenu} onOpenChange={setShowTodayMenu}>
+          <DialogContent className="w-[90vw] sm:max-w-2xl md:max-w-3xl rounded-2xl border border-border/70 bg-gradient-to-b from-background via-muted/40 to-background p-4 sm:p-6">
+            <DialogHeader className="space-y-2 items-center text-center">
+              <DialogTitle className="flex items-center gap-2 text-xl leading-tight text-center">
+                <ChefHat className="w-5 h-5 text-primary" />
+                {t.espacios.todayMenuTitle}
+              </DialogTitle>
+              {todayMenu && (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
+                  <CalendarDays className="w-4 h-4 text-primary" />
+                  {format(todayMenu.date, "EEEE d MMMM", { locale: dateLocale })}
+                </p>
+              )}
+            </DialogHeader>
+            {todayMenu ? (
+              <div className="space-y-4">
+                {menuFallbackActive && (
+                  <Badge variant="outline" className="w-fit gap-2 text-xs">
+                    <Star className="w-4 h-4 text-primary" />
+                    {t.espacios.latestHighlight}
+                  </Badge>
+                )}
+                <Card className="border border-border/70 bg-background/80 shadow-inner">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div className="rounded-xl bg-muted/40 p-4 border border-border/60">
+                        <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.starters}</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          {todayMenu.primeros.map((plato, i) => (
+                            <li key={i} className="flex gap-2">
+                              <span className="text-primary">•</span>
+                              <span>{plato}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 p-4 border border-border/60">
+                        <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.mains}</h4>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          {todayMenu.segundos.map((plato, i) => (
+                            <li key={i} className="flex gap-2">
+                              <span className="text-primary">•</span>
+                              <span>{plato}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 p-4 border border-border/60 flex flex-col justify-between">
+                        <div>
+                          <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.dessert}</h4>
+                          <p className="text-sm text-muted-foreground">• {todayMenu.postre}</p>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                          <Sparkles className="w-4 h-4 text-primary" />
+                          {isMenuDayToday ? t.espacios.middayMenuTitle : t.espacios.menuAvailableDays}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border/70 bg-muted/30 p-6 text-center text-muted-foreground">
+                {t.espacios.noMenuToday}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showTodayTapas} onOpenChange={setShowTodayTapas}>
+          <DialogContent className="w-[90vw] sm:max-w-2xl md:max-w-3xl rounded-2xl border border-border/70 bg-gradient-to-b from-background via-muted/40 to-background p-4 sm:p-6">
+            <DialogHeader className="space-y-2 items-center text-center">
+              <DialogTitle className="flex items-center gap-2 text-xl leading-tight text-center">
+                <Clock className="w-5 h-5 text-primary" />
+                {t.espacios.todayTapasTitle}
+              </DialogTitle>
+              {todayTapas && (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
+                  <CalendarDays className="w-4 h-4 text-primary" />
+                  {format(todayTapas.date, "EEEE d MMMM", { locale: dateLocale })}
+                </p>
+              )}
+            </DialogHeader>
+            {todayTapas ? (
+              <div className="space-y-4">
+                {tapasFallbackActive && (
+                  <Badge variant="outline" className="w-fit gap-2 text-xs">
+                    <Star className="w-4 h-4 text-primary" />
+                    {t.espacios.latestHighlight}
+                  </Badge>
+                )}
+                <Card className="border border-border/70 bg-background/80 shadow-inner">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="font-semibold text-primary flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        {t.espacios.menuLabels.tapasOfDay}
+                      </h4>
+                      <Badge variant="secondary" className="bg-muted/60 text-foreground border border-border/60">
+                        {format(todayTapas.date, "d MMM", { locale: dateLocale })}
+                      </Badge>
+                    </div>
+                    <ul className="grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground">
+                      {todayTapas.tapas.map((tapa, i) => (
+                        <li key={i} className="flex gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
+                          <span className="text-primary">•</span>
+                          <span>{tapa}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border/70 bg-muted/30 p-6 text-center text-muted-foreground">
+                {t.espacios.noTapasToday}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showPastMenus} onOpenChange={setShowPastMenus}>
+          <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
+            <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
             </DialogHeader>
-            <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">{t.espacios.swipeHint}</p>
-              <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
-                <CarouselContent className="-ml-3 sm:-ml-4">
-                  {menusDelDia.map((menu, idx) => (
-                    <CarouselItem
-                      key={idx}
-                      className="pl-3 sm:pl-4 basis-[88%] sm:basis-1/2 lg:basis-1/3"
-                    >
-                      <Card className="h-full bg-gradient-to-br from-background via-muted/40 to-background border border-border/70 shadow-lg">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base md:text-lg flex items-center gap-2 capitalize">
-                            <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
-                              <ChefHat className="w-4 h-4 md:w-5 md:h-5" />
+            <p className="md:hidden text-xs text-muted-foreground mb-2 px-2 text-center break-words">{t.espacios.swipeHint}</p>
+            <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
+              <CarouselContent className="-ml-4 sm:-ml-6 py-2">
+                {recentMenus.map((menu, idx) => (
+                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-full sm:basis-2/3 lg:basis-1/3">
+                    <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10">
+                      <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(217,70,239,0.12),transparent_35%)]" />
+                      <div className="relative h-full p-4 sm:p-5 flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/15 text-primary">
+                              <ChefHat className="w-5 h-5" />
                             </span>
-                            <span className="leading-tight">{format(menu.date, "EEEE d MMMM", { locale: dateLocale })}</span>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="rounded-lg bg-background/80 border border-border/60 p-3">
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-primary">{t.espacios.middayMenuTitle}</p>
+                              <p className="font-semibold capitalize leading-tight">
+                                {format(menu.date, "EEEE d MMMM", { locale: dateLocale })}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="bg-background/70 text-foreground border border-border/70">
+                            {format(menu.date, "dd MMM", { locale: dateLocale })}
+                          </Badge>
+                        </div>
+                        <div className="grid gap-3">
+                          <div className="rounded-lg bg-background/70 border border-border/50 p-3">
                             <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.starters}</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
+                            <ul className="text-sm text-muted-foreground space-y-1.5">
                               {menu.primeros.map((plato, i) => (
-                                <li key={i}>• {plato}</li>
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-primary">•</span>
+                                  <span>{plato}</span>
+                                </li>
                               ))}
                             </ul>
                           </div>
-                          <div className="rounded-lg bg-background/80 border border-border/60 p-3">
+                          <div className="rounded-lg bg-background/70 border border-border/50 p-3">
                             <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.mains}</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
+                            <ul className="text-sm text-muted-foreground space-y-1.5">
                               {menu.segundos.map((plato, i) => (
-                                <li key={i}>• {plato}</li>
+                                <li key={i} className="flex gap-2">
+                                  <span className="text-primary">•</span>
+                                  <span>{plato}</span>
+                                </li>
                               ))}
                             </ul>
                           </div>
-                          <div className="rounded-lg bg-background/80 border border-border/60 p-3">
+                          <div className="rounded-lg bg-background/70 border border-border/50 p-3">
                             <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.dessert}</h4>
                             <p className="text-sm text-muted-foreground">• {menu.postre}</p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden sm:flex" aria-label="Anterior" />
-                <CarouselNext className="hidden sm:flex" aria-label="Siguiente" />
-              </Carousel>
-            </DialogContent>
+                        </div>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Anterior" />
+              <CarouselNext className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Siguiente" />
+            </Carousel>
+          </DialogContent>
         </Dialog>
 
-        {/* Diálogo de Tapas Semanales */}
-        <Dialog open={showTapas} onOpenChange={setShowTapas}>
-            <DialogContent className="w-[92vw] sm:max-w-5xl max-h-[90vh] overflow-y-auto p-2 sm:p-6">
-              <DialogHeader>
-                <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
-              </DialogHeader>
-              <p className="md:hidden text-xs text-muted-foreground mb-2 px-1">{t.espacios.swipeHint}</p>
-              <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
-                <CarouselContent className="-ml-3 sm:-ml-4">
-                  {tapasSemanales.map((semana, idx) => (
-                    <CarouselItem
-                      key={idx}
-                      className="pl-3 sm:pl-4 basis-[88%] sm:basis-1/2 lg:basis-1/3"
-                    >
-                      <Card className="h-full bg-gradient-to-br from-background via-muted/40 to-background border border-border/70 shadow-lg">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base md:text-lg flex items-center gap-2 capitalize">
-                            <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary">
-                              <Clock className="w-4 h-4 md:w-5 md:h-5" />
+        <Dialog open={showPastTapas} onOpenChange={setShowPastTapas}>
+          <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
+            <DialogHeader className="items-center text-center">
+              <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
+            </DialogHeader>
+            <p className="md:hidden text-xs text-muted-foreground mb-2 px-2 text-center break-words">{t.espacios.swipeHint}</p>
+            <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }}>
+              <CarouselContent className="-ml-4 sm:-ml-6 py-2">
+                {recentTapas.map((semana, idx) => (
+                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-full sm:basis-2/3 lg:basis-1/3">
+                    <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10">
+                      <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_35%)]" />
+                      <div className="relative h-full p-4 sm:p-5 flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/15 text-primary">
+                              <Clock className="w-5 h-5" />
                             </span>
-                            <span className="leading-tight">{format(semana.date, "EEEE d MMM", { locale: dateLocale })}</span>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-primary">{t.espacios.tapasTitle}</p>
+                              <p className="font-semibold capitalize leading-tight">
+                                {format(semana.date, "EEEE d MMMM", { locale: dateLocale })}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="bg-background/70 text-foreground border border-border/70">
+                            {format(semana.date, "dd MMM", { locale: dateLocale })}
+                          </Badge>
+                        </div>
+                        <div className="rounded-lg bg-background/70 border border-border/50 p-3">
                           <h4 className="font-semibold text-primary mb-1">{t.espacios.menuLabels.tapasOfDay}</h4>
-                          <ul className="text-sm text-muted-foreground space-y-2">
+                          <ul className="text-sm text-muted-foreground space-y-1.5">
                             {semana.tapas.map((tapa, i) => (
-                              <li key={i} className="flex items-start">
-                                <span className="text-primary mr-2">•</span>
+                              <li key={i} className="flex gap-2">
+                                <span className="text-primary">•</span>
                                 <span>{tapa}</span>
                               </li>
                             ))}
                           </ul>
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden sm:flex" aria-label="Anterior" />
-                <CarouselNext className="hidden sm:flex" aria-label="Siguiente" />
-              </Carousel>
-            </DialogContent>
+                        </div>
+                      </div>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Anterior" />
+              <CarouselNext className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Siguiente" />
+            </Carousel>
+          </DialogContent>
         </Dialog>
       </motion.div>
     </section>
