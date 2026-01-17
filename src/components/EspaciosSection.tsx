@@ -431,8 +431,8 @@ const EspaciosSection = () => {
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setMenusCarouselApi}>
               <CarouselContent className="-ml-4 sm:-ml-6 py-2">
                 {recentMenus.map((menu, idx) => (
-                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-[86%] sm:basis-1/2 lg:basis-1/3">
-                    <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10">
+                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
+                    <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(217,70,239,0.12),transparent_35%)]" />
                       <div className="relative h-full p-3 sm:p-4 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -441,8 +441,8 @@ const EspaciosSection = () => {
                               <ChefHat className="w-5 h-5" />
                             </span>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-primary">{t.espacios.middayMenuTitle}</p>
-                              <p className="font-semibold capitalize leading-tight">
+                              <p className="text-xs uppercase tracking-wide text-primary text-center sm:text-left">{t.espacios.middayMenuTitle}</p>
+                              <p className="font-semibold capitalize leading-tight text-center sm:text-left">
                                 <span className="hidden sm:inline">
                                   {format(menu.date, "EEEE d MMMM", { locale: dateLocale })}
                                 </span>
@@ -516,8 +516,8 @@ const EspaciosSection = () => {
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setTapasCarouselApi}>
               <CarouselContent className="-ml-4 sm:-ml-6 py-2">
                 {recentTapas.map((semana, idx) => (
-                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-[86%] sm:basis-1/2 lg:basis-1/3">
-                    <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10">
+                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-full sm:basis-1/2 lg:basis-1/3">
+                    <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_35%)]" />
                       <div className="relative h-full p-3 sm:p-4 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -526,8 +526,8 @@ const EspaciosSection = () => {
                               <Clock className="w-5 h-5" />
                             </span>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-primary">{t.espacios.tapasTitle}</p>
-                              <p className="font-semibold capitalize leading-tight">
+                              <p className="text-xs uppercase tracking-wide text-primary text-center sm:text-left">{t.espacios.tapasTitle}</p>
+                              <p className="font-semibold capitalize leading-tight text-center sm:text-left">
                                 <span className="hidden sm:inline">
                                   {format(semana.date, "EEEE d MMMM", { locale: dateLocale })}
                                 </span>
