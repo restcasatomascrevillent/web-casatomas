@@ -421,7 +421,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastMenus} onOpenChange={setShowPastMenus}>
-          <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
+          <DialogContent className="w-[90vw] sm:max-w-4xl p-3 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background overflow-hidden">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
             </DialogHeader>
@@ -431,11 +431,11 @@ const EspaciosSection = () => {
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setMenusCarouselApi}>
               <CarouselContent className="-ml-4 sm:-ml-6 py-2">
                 {recentMenus.map((menu, idx) => (
-                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-[88%] sm:basis-2/3 lg:basis-1/3">
+                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-[86%] sm:basis-1/2 lg:basis-1/3">
                     <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(217,70,239,0.12),transparent_35%)]" />
-                      <div className="relative h-full p-3 sm:p-5 flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                      <div className="relative h-full p-3 sm:p-4 flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div className="flex items-center gap-3">
                             <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/15 text-primary">
                               <ChefHat className="w-5 h-5" />
@@ -456,10 +456,10 @@ const EspaciosSection = () => {
                             {format(menu.date, "dd MMM", { locale: dateLocale })}
                           </Badge>
                         </div>
-                        <div className="grid gap-3">
-                          <div className="rounded-lg bg-background/70 border border-border/50 p-3 sm:p-4">
-                            <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base">{t.espacios.menuLabels.starters}</h4>
-                            <ul className="text-xs sm:text-sm text-muted-foreground space-y-1.5">
+                        <div className="grid gap-2.5">
+                          <div className="rounded-lg bg-background/70 border border-border/50 p-3">
+                            <h4 className="font-semibold text-primary mb-1 text-sm">{t.espacios.menuLabels.starters}</h4>
+                            <ul className="text-xs sm:text-sm text-muted-foreground space-y-1">
                               {menu.primeros.map((plato, i) => (
                                 <li key={i} className="flex gap-2">
                                   <span className="text-primary">•</span>
@@ -468,9 +468,9 @@ const EspaciosSection = () => {
                               ))}
                             </ul>
                           </div>
-                          <div className="rounded-lg bg-background/70 border border-border/50 p-3 sm:p-4">
-                            <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base">{t.espacios.menuLabels.mains}</h4>
-                            <ul className="text-xs sm:text-sm text-muted-foreground space-y-1.5">
+                          <div className="rounded-lg bg-background/70 border border-border/50 p-3">
+                            <h4 className="font-semibold text-primary mb-1 text-sm">{t.espacios.menuLabels.mains}</h4>
+                            <ul className="text-xs sm:text-sm text-muted-foreground space-y-1">
                               {menu.segundos.map((plato, i) => (
                                 <li key={i} className="flex gap-2">
                                   <span className="text-primary">•</span>
@@ -479,8 +479,8 @@ const EspaciosSection = () => {
                               ))}
                             </ul>
                           </div>
-                          <div className="rounded-lg bg-background/70 border border-border/50 p-3 sm:p-4">
-                            <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base">{t.espacios.menuLabels.dessert}</h4>
+                          <div className="rounded-lg bg-background/70 border border-border/50 p-3">
+                            <h4 className="font-semibold text-primary mb-1 text-sm">{t.espacios.menuLabels.dessert}</h4>
                             <p className="text-xs sm:text-sm text-muted-foreground">• {menu.postre}</p>
                           </div>
                         </div>
@@ -506,7 +506,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastTapas} onOpenChange={setShowPastTapas}>
-          <DialogContent className="w-[90vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
+          <DialogContent className="w-[90vw] sm:max-w-4xl p-3 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background overflow-hidden">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
             </DialogHeader>
@@ -516,11 +516,11 @@ const EspaciosSection = () => {
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setTapasCarouselApi}>
               <CarouselContent className="-ml-4 sm:-ml-6 py-2">
                 {recentTapas.map((semana, idx) => (
-                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-[88%] sm:basis-2/3 lg:basis-1/3">
+                  <CarouselItem key={idx} className="pl-4 sm:pl-6 basis-[86%] sm:basis-1/2 lg:basis-1/3">
                     <Card className="relative h-full overflow-hidden border border-border/70 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_35%)]" />
-                      <div className="relative h-full p-3 sm:p-5 flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                      <div className="relative h-full p-3 sm:p-4 flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div className="flex items-center gap-3">
                             <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/15 text-primary">
                               <Clock className="w-5 h-5" />
@@ -541,9 +541,9 @@ const EspaciosSection = () => {
                             {format(semana.date, "dd MMM", { locale: dateLocale })}
                           </Badge>
                         </div>
-                        <div className="rounded-lg bg-background/70 border border-border/50 p-3 sm:p-4">
-                          <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base">{t.espacios.menuLabels.tapasOfDay}</h4>
-                          <ul className="text-xs sm:text-sm text-muted-foreground space-y-1.5">
+                        <div className="rounded-lg bg-background/70 border border-border/50 p-3">
+                          <h4 className="font-semibold text-primary mb-1 text-sm">{t.espacios.menuLabels.tapasOfDay}</h4>
+                          <ul className="text-xs sm:text-sm text-muted-foreground space-y-1">
                             {semana.tapas.map((tapa, i) => (
                               <li key={i} className="flex gap-2">
                                 <span className="text-primary">•</span>
