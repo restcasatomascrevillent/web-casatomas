@@ -425,7 +425,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastMenus} onOpenChange={setShowPastMenus}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
+          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background text-center">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
             </DialogHeader>
@@ -433,10 +433,10 @@ const EspaciosSection = () => {
               ← {t.espacios.swipeHint} →
             </p>
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setMenusCarouselApi}>
-              <CarouselContent className="-ml-3 sm:-ml-6 py-2">
+              <CarouselContent className="-ml-2 sm:-ml-5 py-2">
                 {recentMenus.map((menu, idx) => (
-                  <CarouselItem key={idx} className="pl-3 sm:pl-6 basis-[92%] sm:basis-1/2 lg:basis-1/3">
-                    <Card className="relative h-full overflow-hidden border border-border/60 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full">
+                  <CarouselItem key={idx} className="pl-2 sm:pl-5 basis-[85%] sm:basis-[48%] lg:basis-[32%]">
+                    <Card className="relative h-full overflow-hidden border border-border/60 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(217,70,239,0.12),transparent_35%)]" />
                       <div className="relative h-full p-2.5 sm:p-4 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center sm:text-left">
@@ -465,7 +465,7 @@ const EspaciosSection = () => {
                             <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base text-center sm:text-left">{t.espacios.menuLabels.starters}</h4>
                             <ul className="text-xs sm:text-sm text-muted-foreground space-y-0.5 text-center sm:text-left">
                               {menu.primeros.map((plato, i) => (
-                                <li key={i} className="flex gap-2">
+                                <li key={i} className="flex gap-2 items-start">
                                   <span className="text-primary">•</span>
                                   <span>{plato}</span>
                                 </li>
@@ -476,7 +476,7 @@ const EspaciosSection = () => {
                             <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base text-center sm:text-left">{t.espacios.menuLabels.mains}</h4>
                             <ul className="text-xs sm:text-sm text-muted-foreground space-y-0.5 text-center sm:text-left">
                               {menu.segundos.map((plato, i) => (
-                                <li key={i} className="flex gap-2">
+                                <li key={i} className="flex gap-2 items-start">
                                   <span className="text-primary">•</span>
                                   <span>{plato}</span>
                                 </li>
@@ -510,7 +510,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastTapas} onOpenChange={setShowPastTapas}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
+          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background text-center">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
             </DialogHeader>
@@ -518,10 +518,10 @@ const EspaciosSection = () => {
               ← {t.espacios.swipeHint} →
             </p>
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setTapasCarouselApi}>
-              <CarouselContent className="-ml-3 sm:-ml-6 py-2">
+              <CarouselContent className="-ml-2 sm:-ml-5 py-2">
                 {recentTapas.map((semana, idx) => (
-                  <CarouselItem key={idx} className="pl-3 sm:pl-6 basis-[92%] sm:basis-1/2 lg:basis-1/3">
-                    <Card className="relative h-full overflow-hidden border border-border/60 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full">
+                  <CarouselItem key={idx} className="pl-2 sm:pl-5 basis-[85%] sm:basis-[48%] lg:basis-[32%]">
+                    <Card className="relative h-full overflow-hidden border border-border/60 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_35%)]" />
                       <div className="relative h-full p-2.5 sm:p-4 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center sm:text-left">
@@ -549,7 +549,7 @@ const EspaciosSection = () => {
                           <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base text-center sm:text-left">{t.espacios.menuLabels.tapasOfDay}</h4>
                           <ul className="text-xs sm:text-sm text-muted-foreground space-y-0.5 text-center sm:text-left">
                             {semana.tapas.map((tapa, i) => (
-                              <li key={i} className="flex gap-2">
+                              <li key={i} className="flex gap-2 items-start">
                                 <span className="text-primary">•</span>
                                 <span>{tapa}</span>
                               </li>
