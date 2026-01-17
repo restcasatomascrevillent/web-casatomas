@@ -29,7 +29,7 @@ interface CartaPlatosProps {
 }
 
 interface Plato {
-  id?: number;
+  id?: string;
   nombre: string;
   categoria: string;
   descripcion?: string;
@@ -43,8 +43,8 @@ interface Plato {
   categoria_fr?: string;
   descripcion_en?: string;
   descripcion_fr?: string;
-  alergenos_oficiales?: unknown;
-  alergenos_inferidos?: unknown;
+  alergenos_oficiales?: string[];
+  alergenos_inferidos?: string[];
   alergenos_notas?: string | null;
   traducciones?: unknown;
   expanded?: boolean;
@@ -63,7 +63,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const { toast } = useToast();
   const PAGE_SIZE = 24;
 
-  const normalizeAlergenos = (value: unknown) => {
+  const normalizeAlergenos = (value: unknown): string[] => {
     if (Array.isArray(value)) return value;
     if (typeof value === "string") {
       try {

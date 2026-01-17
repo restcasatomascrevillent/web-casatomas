@@ -179,7 +179,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   }, [mapVinos]);
 
   const getLocalizedField = (vino: Vino, key: string) => {
-    const value = (vino as Record<string, unknown>)[key];
+    const value = (vino as { [key: string]: unknown })[key];
     return typeof value === "string" ? value : undefined;
   };
 

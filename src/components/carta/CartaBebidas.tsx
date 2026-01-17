@@ -33,6 +33,7 @@ interface Bebida {
   nombre_fr?: string;
   descripcion_en?: string;
   descripcion_fr?: string;
+  cantidad?: number;
 }
 
 const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
