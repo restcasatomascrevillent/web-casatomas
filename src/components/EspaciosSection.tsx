@@ -177,9 +177,14 @@ const EspaciosSection = () => {
           viewport={{ once: true }}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-primary/5 via-background to-accent/10">
-            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.12),transparent_40%)]" />
+          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-slate-900/20 via-slate-800/15 to-amber-100/25">
+            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.16),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.14),transparent_40%)]" />
             <CardHeader className="relative pb-3">
+              <div className="absolute right-3 top-3">
+                <Badge variant="secondary" className="text-[11px] sm:text-xs bg-white text-primary border border-border/60 shadow-sm">
+                  {menuDaysLabel}
+                </Badge>
+              </div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-start sm:items-center gap-3">
                   <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner">
@@ -190,9 +195,6 @@ const EspaciosSection = () => {
                     <p className="text-sm text-muted-foreground leading-relaxed">{t.espacios.middayMenuDescription}</p>
                   </div>
                 </div>
-                <Badge variant="outline" className="bg-background/70 text-primary border-primary/30 text-[11px] sm:text-xs whitespace-normal text-center self-start sm:self-auto">
-                  {menuDaysLabel}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent className="relative space-y-4">
@@ -224,9 +226,14 @@ const EspaciosSection = () => {
             </CardContent>
           </Card>
 
-          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-primary/5 via-background to-accent/10">
-            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_40%)]" />
+          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-slate-900/20 via-slate-800/15 to-amber-100/25">
+            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.16),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.14),transparent_40%)]" />
             <CardHeader className="relative pb-3">
+              <div className="absolute right-3 top-3">
+                <Badge variant="secondary" className="text-[11px] sm:text-xs bg-white text-primary border border-border/60 shadow-sm capitalize">
+                  {tapasDayLabel}
+                </Badge>
+              </div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-start sm:items-center gap-3">
                   <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner">
@@ -237,9 +244,6 @@ const EspaciosSection = () => {
                     <p className="text-sm text-muted-foreground leading-relaxed">{t.espacios.tapasDescription}</p>
                   </div>
                 </div>
-                <Badge variant="outline" className="bg-background/70 text-primary border-primary/30 text-[11px] sm:text-xs whitespace-normal text-center capitalize self-start sm:self-auto">
-                  {tapasDayLabel}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent className="relative space-y-4">
