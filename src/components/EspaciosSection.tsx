@@ -425,7 +425,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastMenus} onOpenChange={setShowPastMenus}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background max-h-[85vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
             </DialogHeader>
@@ -510,7 +510,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastTapas} onOpenChange={setShowPastTapas}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background max-h-[85vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
             </DialogHeader>
