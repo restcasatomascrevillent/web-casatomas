@@ -436,7 +436,7 @@ const EspaciosSection = () => {
               <CarouselContent className="-ml-2 sm:-ml-5 py-2">
                 {recentMenus.map((menu, idx) => (
                   <CarouselItem key={idx} className="pl-2 sm:pl-5 basis-[85%] sm:basis-[48%] lg:basis-[32%]">
-                    <Card className="relative h-full overflow-hidden border border-border/60 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
+                    <Card className="relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(217,70,239,0.12),transparent_35%)]" />
                       <div className="relative h-full p-2.5 sm:p-4 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center sm:text-left">
@@ -521,7 +521,7 @@ const EspaciosSection = () => {
               <CarouselContent className="-ml-2 sm:-ml-5 py-2">
                 {recentTapas.map((semana, idx) => (
                   <CarouselItem key={idx} className="pl-2 sm:pl-5 basis-[85%] sm:basis-[48%] lg:basis-[32%]">
-                    <Card className="relative h-full overflow-hidden border border-border/60 shadow-xl bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
+                    <Card className="relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
                       <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_35%)]" />
                       <div className="relative h-full p-2.5 sm:p-4 flex flex-col gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center sm:text-left">
