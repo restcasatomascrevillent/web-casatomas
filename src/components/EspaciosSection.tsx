@@ -63,14 +63,14 @@ const EspaciosSection = () => {
   const isMenuDayToday = todayDay >= 2 && todayDay <= 4;
   const isTapasDayToday = todayDay === 4;
 
-  const todayMenuMatch = isMenuDayToday ? sortedMenus.find((menu) => isSameDay(menu.date, today)) : undefined;
-  const todayTapasMatch = isTapasDayToday ? sortedTapas.find((tapas) => isSameDay(tapas.date, today)) : undefined;
+  const todayMenuMatch = sortedMenus.find((menu) => isSameDay(menu.date, today));
+  const todayTapasMatch = sortedTapas.find((tapas) => isSameDay(tapas.date, today));
 
-  const todayMenu = isMenuDayToday && sortedMenus.length ? todayMenuMatch ?? sortedMenus[0] : null;
-  const todayTapas = isTapasDayToday && sortedTapas.length ? todayTapasMatch ?? sortedTapas[0] : null;
+  const todayMenu = sortedMenus.length ? todayMenuMatch ?? sortedMenus[0] : null;
+  const todayTapas = sortedTapas.length ? todayTapasMatch ?? sortedTapas[0] : null;
 
-  const menuFallbackActive = Boolean(todayMenu) && isMenuDayToday && !todayMenuMatch;
-  const tapasFallbackActive = Boolean(todayTapas) && isTapasDayToday && !todayTapasMatch;
+  const menuFallbackActive = Boolean(todayMenu) && !todayMenuMatch;
+  const tapasFallbackActive = Boolean(todayTapas) && !todayTapasMatch;
 
   const menuDaysLabel = `${format(new Date(2025, 0, 21), "EEE", { locale: dateLocale })} - ${format(new Date(2025, 0, 23), "EEE", { locale: dateLocale })}`;
   const tapasDayLabel = format(new Date(2025, 0, 23), "EEE", { locale: dateLocale });
@@ -198,31 +198,15 @@ const EspaciosSection = () => {
               </div>
             </CardHeader>
             <CardContent className="relative space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="flex flex-col gap-3 sm:items-start">
                 <Button
-                  className="flex-1 h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-accent to-primary/80 text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
+                  className="w-full h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-accent to-primary/80 text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
                   onClick={() => setShowTodayMenu(true)}
-                  disabled={!isMenuDayToday || !sortedMenus.length}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.menuAvailableDays}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="sm:w-auto h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal border-primary/40 text-primary hover:bg-primary/10"
-                  onClick={() => setShowPastMenus(true)}
-                >
-                  <Clock className="w-4 h-4" />
-                  {t.espacios.viewPastMenus}
-                  <ArrowRight className="w-4 h-4" />
+                  {t.espacios.todayMenuCta}
                 </Button>
               </div>
-              {menuFallbackActive && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Star className="w-4 h-4 text-primary" />
-                  {t.espacios.latestHighlight}
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -247,31 +231,15 @@ const EspaciosSection = () => {
               </div>
             </CardHeader>
             <CardContent className="relative space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="flex flex-col gap-3 sm:items-start">
                 <Button
-                  className="flex-1 h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-primary/80 to-accent text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
+                  className="w-full h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-primary/80 to-accent text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
                   onClick={() => setShowTodayTapas(true)}
-                  disabled={!isTapasDayToday || !sortedTapas.length}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.tapasAvailableDay}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="sm:w-auto h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal border-primary/40 text-primary hover:bg-primary/10"
-                  onClick={() => setShowPastTapas(true)}
-                >
-                  <Clock className="w-4 h-4" />
-                  {t.espacios.viewPastTapas}
-                  <ArrowRight className="w-4 h-4" />
+                  {t.espacios.todayTapasCta}
                 </Button>
               </div>
-              {tapasFallbackActive && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Star className="w-4 h-4 text-primary" />
-                  {t.espacios.latestHighlight}
-                </div>
-              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -319,12 +287,6 @@ const EspaciosSection = () => {
             </DialogHeader>
             {todayMenu ? (
               <div className="space-y-4">
-                {menuFallbackActive && (
-                  <Badge variant="outline" className="w-fit gap-2 text-xs">
-                    <Star className="w-4 h-4 text-primary" />
-                    {t.espacios.latestHighlight}
-                  </Badge>
-                )}
                 <Card className="border border-border/70 bg-background/80 shadow-inner">
                   <CardContent className="pt-6 space-y-4">
                     <div className="grid gap-4 md:grid-cols-3">
@@ -355,10 +317,6 @@ const EspaciosSection = () => {
                           <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.dessert}</h4>
                           <p className="text-sm text-muted-foreground">• {todayMenu.postre}</p>
                         </div>
-                        <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-                          <Sparkles className="w-4 h-4 text-primary" />
-                          {isMenuDayToday ? t.espacios.middayMenuTitle : t.espacios.menuAvailableDays}
-                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -388,22 +346,13 @@ const EspaciosSection = () => {
             </DialogHeader>
             {todayTapas ? (
               <div className="space-y-4">
-                {tapasFallbackActive && (
-                  <Badge variant="outline" className="w-fit gap-2 text-xs">
-                    <Star className="w-4 h-4 text-primary" />
-                    {t.espacios.latestHighlight}
-                  </Badge>
-                )}
                 <Card className="border border-border/70 bg-background/80 shadow-inner">
                   <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
                       <h4 className="font-semibold text-primary flex items-center gap-2">
                         <Sparkles className="w-4 h-4" />
                         {t.espacios.menuLabels.tapasOfDay}
                       </h4>
-                      <Badge variant="secondary" className="bg-muted/60 text-foreground border border-border/60">
-                        {format(todayTapas.date, "d MMM", { locale: dateLocale })}
-                      </Badge>
                     </div>
                     <ul className="grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground">
                       {todayTapas.tapas.map((tapa, i) => (

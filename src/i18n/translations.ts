@@ -194,6 +194,12 @@ export const translations = {
       },
       menus: [
         {
+          date: new Date(2025, 0, 28),
+          primeros: ["Ensalada templada de setas y parmesano", "Crema de zanahoria asada con jengibre"],
+          segundos: ["Lubina al horno con hinojo", "Carrillera de cerdo al vino blanco"],
+          postre: "Flan cremoso de vainilla",
+        },
+        {
           date: new Date(2025, 0, 30),
           primeros: ["Ensalada de quinoa, granada y queso feta", "Crema de marisco con toques de brandy"],
           segundos: ["Corvina a la brasa con emulsión de lima", "Cochinillo confitado con puré de manzana y romero"],
@@ -219,6 +225,10 @@ export const translations = {
         },
       ],
       tapas: [
+        {
+          date: new Date(2025, 1, 20),
+          tapas: ["Bruschetta de tomate y albahaca", "Mini hamburguesa de ternera", "Croqueta de pollo y maíz", "Taco de pescado crujiente"],
+        },
         {
           date: new Date(2025, 1, 6),
           tapas: ["Bao de panceta lacada con pepino encurtido", "Pincho de tortilla con trufa", "Gambón al ajillo y lima", "Queso payoyo con miel de romero"],
@@ -693,6 +703,12 @@ export const translations = {
       },
       menus: [
         {
+          date: new Date(2025, 0, 28),
+          primeros: ["Warm mushroom & parmesan salad", "Roasted carrot cream with ginger"],
+          segundos: ["Baked sea bass with fennel", "Pork cheek in white wine"],
+          postre: "Creamy vanilla flan",
+        },
+        {
           date: new Date(2025, 0, 30),
           primeros: ["Quinoa, pomegranate & feta salad", "Seafood bisque with brandy"],
           segundos: ["Grilled corvina with lime emulsion", "Confit suckling pig with apple and rosemary purée"],
@@ -718,6 +734,10 @@ export const translations = {
         },
       ],
       tapas: [
+        {
+          date: new Date(2025, 1, 20),
+          tapas: ["Tomato & basil bruschetta", "Mini beef slider", "Chicken & corn croquette", "Crispy fish taco"],
+        },
         {
           date: new Date(2025, 1, 6),
           tapas: ["Glazed pork belly bao with pickled cucumber", "Spanish tortilla skewer with truffle", "Garlic-lime prawn", "Payoyo cheese with rosemary honey"],
@@ -1186,6 +1206,12 @@ export const translations = {
       },
       menus: [
         {
+          date: new Date(2025, 0, 28),
+          primeros: ["Salade tiède de champignons et parmesan", "Velouté de carotte rôtie au gingembre"],
+          segundos: ["Bar rôti au fenouil", "Joue de porc au vin blanc"],
+          postre: "Flan à la vanille crémeux",
+        },
+        {
           date: new Date(2025, 0, 30),
           primeros: ["Salade de quinoa, grenade et feta", "Crème de fruits de mer au brandy"],
           segundos: ["Corvina grillée avec émulsion de citron vert", "Cochon de lait confit avec purée de pomme et romarin"],
@@ -1211,6 +1237,10 @@ export const translations = {
         },
       ],
       tapas: [
+        {
+          date: new Date(2025, 1, 20),
+          tapas: ["Bruschetta tomate basilic", "Mini burger de bœuf", "Croquette de poulet et maïs", "Taco de poisson croustillant"],
+        },
         {
           date: new Date(2025, 1, 6),
           tapas: ["Bao de poitrine de porc laquée et concombre mariné", "Brochette de tortilla à la truffe", "Gambon à l'ail et au citron vert", "Fromage payoyo au miel de romarin"],
