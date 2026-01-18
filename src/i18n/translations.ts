@@ -123,23 +123,9 @@ export const translations = {
     novedades: {
       title: "Novedades",
       subtitle: "Nuevas incorporaciones y experiencias que queremos compartir",
-      items: [
-        {
-          title: "Pulpo premium a la gallega",
-          description: "Pulpo tierno con patatas, pimentón dulce y aceite de oliva virgen extra",
-          badge: "Especialidad",
-        },
-        {
-          title: "Cortes premium a la brasa",
-          description: "Selección de carnes maduradas terminadas en nuestro horno de leña",
-          badge: "Destacado",
-        },
-        {
-          title: "Selección de champán y cava",
-          description: "Champán Laurent-Perrier y cavas premium para cada celebración",
-          badge: "Nuevo",
-        },
-      ],
+      empty: "No hay novedades en este momento",
+      error: "No se pudieron cargar las novedades",
+      loading: "Cargando novedades...",
     },
     espacios: {
       title: "Nuestros espacios",
@@ -632,23 +618,9 @@ export const translations = {
     novedades: {
       title: "What's New",
       subtitle: "Fresh additions and experiences we're excited to share",
-      items: [
-        {
-          title: "Premium Galician-Style Octopus",
-          description: "Tender octopus with potatoes, sweet paprika, and extra-virgin olive oil",
-          badge: "Signature",
-        },
-        {
-          title: "Charcoal-Grilled Prime Cuts",
-          description: "A selection of aged meats finished in our wood-fired oven",
-          badge: "Featured",
-        },
-        {
-          title: "Champagne & Cava Selection",
-          description: "Laurent-Perrier champagne and premium cavas for every celebration",
-          badge: "New",
-        },
-      ],
+      empty: "No highlights at the moment",
+      error: "We couldn't load the highlights",
+      loading: "Loading highlights...",
     },
     espacios: {
       title: "Our Spaces",
@@ -1135,23 +1107,9 @@ export const translations = {
     novedades: {
       title: "Nouveautés",
       subtitle: "Nos dernières créations et expériences à découvrir",
-      items: [
-        {
-          title: "Poulpe façon galicienne premium",
-          description: "Poulpe tendre, pommes de terre, paprika doux et huile d'olive extra-vierge",
-          badge: "Signature",
-        },
-        {
-          title: "Viandes grillées haut de gamme",
-          description: "Sélection de viandes maturées, finies au four à bois",
-          badge: "À la une",
-        },
-        {
-          title: "Sélection de champagnes et cavas",
-          description: "Laurent-Perrier et cavas premium pour célébrer chaque moment",
-          badge: "Nouveau",
-        },
-      ],
+      empty: "Aucune nouveauté pour le moment",
+      error: "Impossible de charger les nouveautés",
+      loading: "Chargement des nouveautés...",
     },
     espacios: {
       title: "Nos espaces",
