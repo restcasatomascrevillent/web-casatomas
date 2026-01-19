@@ -202,9 +202,10 @@ const EspaciosSection = () => {
                 <Button
                   className="w-full h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-accent to-primary/80 text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
                   onClick={() => setShowTodayMenu(true)}
+                  disabled={!isMenuDayToday}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {t.espacios.todayMenuCta}
+                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.menuAvailableDays}
                 </Button>
               </div>
             </CardContent>
@@ -235,9 +236,10 @@ const EspaciosSection = () => {
                 <Button
                   className="w-full h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-primary/80 to-accent text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
                   onClick={() => setShowTodayTapas(true)}
+                  disabled={!isTapasDayToday}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {t.espacios.todayTapasCta}
+                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.tapasAvailableDay}
                 </Button>
               </div>
             </CardContent>
