@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Trash2, Receipt, Plus, Minus, X, Share2, MessageCircle, Instagram, Facebook } from "lucide-react";
+import { Trash2, Receipt, Plus, Minus, X, Share2, MessageCircle, Instagram, Facebook, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import seafoodImg from "@/assets/platos/seafood.jpg";
@@ -20,6 +20,7 @@ import logoImg from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
+import AIChatbot from "../AIChatbot";
 
 interface PedidoItem {
   nombre: string;
@@ -45,6 +46,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   };
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
@@ -285,11 +287,11 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       {/* Items */}
       <div className="space-y-3 mb-3">
         {pedido.map((item, index) => {
-            const config = getUnitConfig(item.unidad);
-            const cantidad = item.cantidad ?? config.defaultAmount;
-            const subtotal = calculateSubtotal(item);
-            const priceLabel =
-              item.unidad === "kg" ? "/kg" : item.unidad === "100 g" || item.unidad === "100g" ? "/100g" : item.unidad === "unidad" ? "/ud" : "";
+          const config = getUnitConfig(item.unidad);
+          const cantidad = item.cantidad ?? config.defaultAmount;
+          const subtotal = calculateSubtotal(item);
+          const priceLabel =
+            item.unidad === "kg" ? "/kg" : item.unidad === "100 g" || item.unidad === "100g" ? "/100g" : item.unidad === "unidad" ? "/ud" : "";
 
           return (
             <div key={index} className="border-b border-dashed border-gray-400 pb-2">
@@ -313,70 +315,84 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
 
               {/* Cantidad y controles */}
               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => decrementCantidad(index)}
-                      disabled={cantidad <= config.minValue}
-                      className="h-5 w-5 p-0 border-black"
-                    >
-                      <Minus className="h-2 w-2" />
-                    </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => decrementCantidad(index)}
+                    disabled={cantidad <= config.minValue}
+                    className="h-5 w-5 p-0 border-black"
+                  >
+                    <Minus className="h-2 w-2" />
+                  </Button>
 
-                    <Input
-                      type="number"
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        // Permitir vacío y solo dígitos/punto
-                        if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                          setInputValues((prev) => ({ ...prev, [index]: val }));
-                        }
-                      }}
-                      onBlur={(e) => {
-                        const val = e.target.value;
-                        const parsed = parseFloat(val);
-                        if (val === "" || !Number.isFinite(parsed) || parsed < config.minValue) {
-                          updateCantidad(index, config.defaultAmount);
-                        } else {
-                          const factor = Math.pow(10, config.decimals);
-                          const rounded = Math.round(parsed * factor) / factor;
-                          updateCantidad(index, rounded);
-                        }
-                        setInputValues((prev) => {
-                          const next = { ...prev };
-                          delete next[index];
-                          return next;
-                        });
-                      }}
-                      value={inputValues[index] ?? cantidad}
-                      className="w-16 h-5 text-center text-[10px] border-black"
-                      min={config.minValue}
-                      step={config.step}
-                    />
+                  <Input
+                    type="number"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Permitir vacío y solo dígitos/punto
+                      if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                        setInputValues((prev) => ({ ...prev, [index]: val }));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = e.target.value;
+                      const parsed = parseFloat(val);
+                      if (val === "" || !Number.isFinite(parsed) || parsed < config.minValue) {
+                        updateCantidad(index, config.defaultAmount);
+                      } else {
+                        const factor = Math.pow(10, config.decimals);
+                        const rounded = Math.round(parsed * factor) / factor;
+                        updateCantidad(index, rounded);
+                      }
+                      setInputValues((prev) => {
+                        const next = { ...prev };
+                        delete next[index];
+                        return next;
+                      });
+                    }}
+                    value={inputValues[index] ?? cantidad}
+                    className="w-16 h-5 text-center text-[10px] border-black"
+                    min={config.minValue}
+                    step={config.step}
+                  />
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => incrementCantidad(index)}
-                      className="h-5 w-5 p-0 border-black"
-                    >
-                      <Plus className="h-2 w-2" />
-                    </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => incrementCantidad(index)}
+                    className="h-5 w-5 p-0 border-black"
+                  >
+                    <Plus className="h-2 w-2" />
+                  </Button>
 
-                    {item.unidad && <span className="text-[9px] ml-1">{item.unidad}</span>}
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-[9px] text-gray-600">
-                      {config.format(cantidad)} x {item.precio_eur?.toFixed(2)}€{priceLabel}
-                    </p>
-                    <p className="font-bold text-[11px]">{subtotal.toFixed(2)}€</p>
-                  </div>
+                  {item.unidad && <span className="text-[9px] ml-1">{item.unidad}</span>}
                 </div>
+
+                <div className="text-right">
+                  <p className="text-[9px] text-gray-600">
+                    {config.format(cantidad)} x {item.precio_eur?.toFixed(2)}€{priceLabel}
+                  </p>
+                  <p className="font-bold text-[11px]">{subtotal.toFixed(2)}€</p>
+                </div>
+              </div>
             </div>
           );
         })}
+      </div>
+
+      {/* CT AI Button with Prompt */}
+      <div className="flex items-center justify-center gap-4 mb-5 px-1">
+        <p className="text-[10px] text-gray-500 italic text-center leading-tight max-w-[180px]">
+          "{t.preview.aiPrompt}"
+        </p>
+        <Button
+          onClick={() => setIsChatOpen(true)}
+          className="w-auto px-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
+        >
+          <Bot className="w-4 h-4 mr-2" />
+          {t.hero.ctaAi}
+        </Button>
       </div>
 
       {/* Total */}
@@ -465,6 +481,8 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       >
         {ticketCard}
       </TicketDialog>
+
+      <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </>
   );
 };

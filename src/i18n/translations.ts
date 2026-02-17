@@ -32,6 +32,7 @@ export const translations = {
       motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
       ctaPrimary: "Reservar mesa",
       ctaSecondary: "Ver carta",
+      ctaAi: "CT AI",
       logoAlt: "Restaurante Casa Tomás",
     },
     carta: {
@@ -109,6 +110,7 @@ export const translations = {
       thanks: "Gracias por tu visita",
       floatingTicketTitle: "Ticket",
       floatingTicketSubtitle: "Ver pedido",
+      aiPrompt: "Pregúntame por recomendaciones o por cantidades según comensales!",
       share: {
         cta: "Compartir ticket",
         subtitle: "Elige dónde compartir tu ticket actual",
@@ -527,6 +529,7 @@ export const translations = {
       motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
       ctaPrimary: "Book a Table",
       ctaSecondary: "View Menu",
+      ctaAi: "CT AI",
       logoAlt: "Casa Tomás Restaurant",
     },
     carta: {
@@ -604,6 +607,7 @@ export const translations = {
       thanks: "Thanks for visiting",
       floatingTicketTitle: "Ticket",
       floatingTicketSubtitle: "View order",
+      aiPrompt: "Ask me for recommendations or for portion sizes according to the number of diners!",
       share: {
         cta: "Share ticket",
         subtitle: "Choose where to share your current ticket",
@@ -1016,6 +1020,7 @@ export const translations = {
       motto: "Nunca é longo o camiño que conduce á casa dun amigo.",
       ctaPrimary: "Réserver une table",
       ctaSecondary: "Voir la carte",
+      ctaAi: "CT AI",
       logoAlt: "Restaurant Casa Tomás",
     },
     carta: {
@@ -1093,6 +1098,7 @@ export const translations = {
       thanks: "Merci pour votre visite",
       floatingTicketTitle: "Ticket",
       floatingTicketSubtitle: "Voir la commande",
+      aiPrompt: "Demandez-moi des recommandations ou des portions selon le nombre de convives !",
       share: {
         cta: "Partager le ticket",
         subtitle: "Choisissez où partager votre ticket actuel",

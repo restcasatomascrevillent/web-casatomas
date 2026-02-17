@@ -1,12 +1,14 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useRef } from "react";
-import { Calendar, UtensilsCrossed } from "lucide-react";
+import { useRef, useState } from "react";
+import { Calendar, UtensilsCrossed, Bot } from "lucide-react";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import AIChatbot from "./AIChatbot";
 
 const Hero = () => {
   const { t } = useTranslations();
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -85,7 +87,17 @@ const Hero = () => {
             <UtensilsCrossed className="w-5 h-5 mr-2" />
             {t.hero.ctaSecondary}
           </Button>
+          <Button
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            onClick={() => setIsChatOpen(true)}
+          >
+            <Bot className="w-5 h-5 mr-2" />
+            {t.hero.ctaAi}
+          </Button>
         </motion.div>
+
+        <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
         <motion.div
           initial={{ opacity: 0 }}
