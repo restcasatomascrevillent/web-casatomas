@@ -9,7 +9,6 @@ export type ReservationValidationMessages = {
   dateRequired: string;
   guestsMin: string;
   guestsMax: string;
-  roomRequired: string;
   notesMax: string;
 };
 
@@ -39,7 +38,6 @@ export const createReservationSchema = (messages: ReservationValidationMessages)
       .number()
       .min(1, { message: messages.guestsMin })
       .max(20, { message: messages.guestsMax }),
-    sala_id: z.string().min(1, { message: messages.roomRequired }),
     notas_cliente: z
       .string()
       .max(500, { message: messages.notesMax })
