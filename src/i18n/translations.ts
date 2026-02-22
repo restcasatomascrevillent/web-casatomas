@@ -240,6 +240,7 @@ export const translations = {
       disclaimer: {
         title: "Importante:",
         note: "La reserva no queda confirmada hasta que recibas el email de confirmación. Casa Tomás queda exento de responsabilidad hasta ese momento.",
+        callUs: "Si no hay disponibilidad online, llámanos al 966 10 78 87.",
         steps: [
           "Consultar disponibilidad (cliente)",
           "Solicitar reserva (recibirás un primer correo)",
@@ -737,6 +738,7 @@ export const translations = {
       disclaimer: {
         title: "Important:",
         note: "Your booking is not confirmed until you receive the confirmation email. Casa Tomás is not responsible until that moment.",
+        callUs: "If no availability is shown online, please call us at 966 10 78 87.",
         steps: [
           "Check availability (guest)",
           "Request reservation (you'll receive the first email)",
@@ -1228,6 +1230,7 @@ export const translations = {
       disclaimer: {
         title: "Important :",
         note: "La réservation n'est pas confirmée tant que vous ne recevez pas l'email de confirmation. Casa Tomás décline toute responsabilité jusque-là.",
+        callUs: "Si aucune disponibilité n'est affichée en ligne, appelez-nous au 966 10 78 87.",
         steps: [
           "Vérifier la disponibilité (client)",
           "Demander la réservation (vous recevrez le premier email)",
