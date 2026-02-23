@@ -264,7 +264,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   ) : (
     <div
       ref={ticketRef}
-      className="bg-white text-black p-6 rounded-lg shadow-lg font-mono text-xs border-2 border-dashed border-gray-300"
+      className="bg-white text-black p-6 rounded-lg shadow-lg text-xs border-2 border-dashed border-gray-300"
     >
       {/* Header */}
       <div className="text-center border-b-2 border-black pb-3 mb-3">

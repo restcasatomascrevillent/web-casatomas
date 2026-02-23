@@ -394,7 +394,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
-            <DialogTitle className="text-2xl font-serif">{t.reservationForm.successTitle}</DialogTitle>
+            <DialogTitle className="text-2xl">{t.reservationForm.successTitle}</DialogTitle>
             <DialogDescription asChild>
               <div className="text-base space-y-2">
                 {reservationDetails && (

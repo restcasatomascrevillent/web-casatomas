@@ -23,7 +23,7 @@ export const translations = {
         novedades: "Novedades",
         reservas: "Reservas",
         espacios: "Espacios",
-        nosotros: "Nuestra historia",
+        nosotros: "Historia",
         contacto: "Contacto",
       },
       cta: "Reservar mesa",
@@ -342,7 +342,7 @@ export const translations = {
       ],
     },
     nosotros: {
-      title: "Nuestra historia",
+      title: "Historia",
       intro: [
         "En 1998, Tomás Vázquez González dejó su pueblo natal de A Touza (Ourense) rumbo a Crevillente con una idea clara: abrir un bar familiar donde se comiera bien y se sintiera aún mejor.",
         "Ese sueño comenzó en el antiguo Bar Manuel, regentado por sus tíos Rosa y Manuel, que confiaron en Tomás para mantenerlo vivo. Pronto pasó a llamarse Bar Tomás y su toque gallego convirtió aquel rincón en un favorito del barrio.",

@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff } from "lucide-react";
+import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +33,7 @@ interface Plato {
   nombre: string;
   categoria: string;
   descripcion?: string;
+  ingredientes?: string[] | string | null;
   precio_eur: number;
   unidad?: string;
   orden?: number;
@@ -43,6 +44,8 @@ interface Plato {
   categoria_fr?: string;
   descripcion_en?: string;
   descripcion_fr?: string;
+  ingredientes_en?: string[] | string | null;
+  ingredientes_fr?: string[] | string | null;
   alergenos_oficiales?: string[];
   alergenos_inferidos?: string[];
   alergenos_notas?: string | null;
@@ -60,6 +63,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const PAGE_SIZE = 24;
 
@@ -74,6 +78,44 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       }
     }
     return [];
+  };
+
+  const normalizeIngredientes = (value: unknown): string[] => {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => String(item).trim())
+        .filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+      const cleaned = trimmed.replace(/^ingredients?\s*:\s*/i, "").replace(/^ingr[eé]dients?\s*:\s*/i, "").replace(/^ingredientes?\s*:\s*/i, "");
+
+      try {
+        const parsed = JSON.parse(cleaned);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item) => String(item).trim())
+            .filter(Boolean);
+        }
+      } catch {
+        // Si no es JSON, se interpreta como lista separada por comas.
+      }
+
+      return cleaned
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  };
+
+  const capitalizeFirst = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
   };
 
   const fetchPlatosByCategory = useCallback(
@@ -166,6 +208,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       const columnName = (item as any)[`nombre_${language}`];
       const columnCategoria = (item as any)[`categoria_${language}`];
       const columnDescripcion = (item as any)[`descripcion_${language}`];
+      const columnIngredientes = (item as any)[`ingredientes_${language}`];
       const columnAlergenosOficiales = (item as any)[`alergenos_oficiales_${language}`];
       const columnAlergenosInferidos = (item as any)[`alergenos_inferidos_${language}`];
       const columnAlergenosNotas = (item as any)[`alergenos_notas_${language}`];
@@ -176,6 +219,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           displayNombre: item.nombre,
           displayCategoria: item.categoria,
           displayDescripcion: item.descripcion,
+          displayIngredientes: normalizeIngredientes((item as any).ingredientes),
           displayAlergenosOficiales: item.alergenos_oficiales,
           displayAlergenosInferidos: item.alergenos_inferidos,
           displayAlergenosNotas: item.alergenos_notas,
@@ -191,12 +235,16 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
         translation?.alergenos_inferidos ?? translation?.alergenos?.inferidos;
       const translationAlergenosNotas =
         translation?.alergenos_notas ?? translation?.alergenos?.notas;
+      const translationIngredientes = translation?.ingredientes;
 
       return {
         ...item,
         displayNombre: columnName || translation?.nombre || item.nombre,
         displayCategoria: columnCategoria || translation?.categoria || item.categoria,
         displayDescripcion: columnDescripcion ?? translation?.descripcion ?? item.descripcion,
+        displayIngredientes: normalizeIngredientes(
+          columnIngredientes ?? translationIngredientes ?? (item as any).ingredientes
+        ),
         displayAlergenosOficiales: normalizeAlergenos(
           columnAlergenosOficiales ?? translationAlergenosOficiales ?? item.alergenos_oficiales
         ),
@@ -280,6 +328,36 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     setExpandedCards((prev) => ({ ...prev, [itemId]: !currentExpanded }));
   };
 
+  const isInfoCardOpen = (item: any) => Boolean(infoCards[item.id]);
+
+  const handleToggleInfoCard = (itemId: string, currentOpen: boolean) => {
+    setInfoCards((prev) => ({ ...prev, [itemId]: !currentOpen }));
+  };
+
+  const getInfoLabels = () => {
+    if (language === "en") {
+      return {
+        allergens: "Allergens",
+        ingredients: "Ingredients",
+        noData: "Not available",
+      };
+    }
+    if (language === "fr") {
+      return {
+        allergens: "Allergènes",
+        ingredients: "Ingrédients",
+        noData: "Non disponible",
+      };
+    }
+    return {
+      allergens: "Alérgenos",
+      ingredients: "Ingredientes",
+      noData: "No disponible",
+    };
+  };
+
+  const infoLabels = getInfoLabels();
+
   return (
     <div className="space-y-8" ref={sectionRef}>
       {/* Search and Filters */}
@@ -344,7 +422,16 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => {
           const expanded = isCardExpanded(item);
+          const infoOpen = isInfoCardOpen(item);
           const categoryLabel = item.translatedCategoria ?? translateCategory(item.categoria);
+          const infoAlergenos = Array.from(
+            new Set(
+              [...(item.displayAlergenosOficiales || []), ...(item.displayAlergenosInferidos || [])]
+                .map((alergeno: string) => capitalizeFirst(alergeno))
+                .filter(Boolean)
+            )
+          );
+          const infoIngredientes = item.displayIngredientes || [];
           return (
             <motion.div
               layout
@@ -352,127 +439,212 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.03 }}
+              className="h-full [perspective:1200px]"
             >
-              <Card
-                className={`h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
-                  expanded ? "card--expanded" : "card--collapsed"
+              <div
+                className={`relative transition-transform duration-500 [transform-style:preserve-3d] ${
+                  expanded || infoOpen ? "h-full" : "h-auto"
+                } ${
+                  infoOpen ? "[transform:rotateY(180deg)]" : ""
                 }`}
               >
-                <AnimatePresence initial={false}>
-                  {expanded && (
-                    <motion.div
-                      key={`image-${item.id}`}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden bg-muted flex-shrink-0"
+                <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
+                  <Card
+                    className={`font-libre-baskerville flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                      expanded || infoOpen ? "h-full" : "h-auto"
+                    } ${
+                      expanded ? "card--expanded" : "card--collapsed"
+                    }`}
+                  >
+                    <AnimatePresence initial={false}>
+                      {expanded && (
+                        <motion.div
+                          key={`image-${item.id}`}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden bg-muted flex-shrink-0"
+                        >
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src={getCategoryImage(item.categoria)}
+                              alt={item.displayNombre}
+                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                                {categoryLabel}
+                              </Badge>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <CardHeader
+                      className={`flex-shrink-0 transition-all duration-200 ${
+                        expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
+                      }`}
                     >
-                      <div className="relative h-48 overflow-hidden">
-                        <img
-                          src={getCategoryImage(item.categoria)}
-                          alt={item.displayNombre}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        />
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle
+                            className={`leading-tight line-clamp-2 ${
+                              expanded ? "text-lg min-h-[3.5rem]" : "text-base"
+                            }`}
+                          >
+                            {item.displayNombre}
+                          </CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2 self-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCard(item.id, expanded)}
+                            aria-label={expanded ? t.platos.hidePhoto : t.platos.viewPhoto}
+                            className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                          >
+                            {expanded ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleInfoCard(item.id, infoOpen)}
+                            aria-label={infoOpen ? "Ocultar información del plato" : "Mostrar información del plato"}
+                            className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                          >
+                            <Info className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                      {!expanded && (
+                        <div className="flex items-center gap-2 pt-2">
+                          <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
                             {categoryLabel}
                           </Badge>
                         </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <CardHeader
-                  className={`flex-shrink-0 transition-all duration-200 ${
-                    expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
-                  }`}
+                      )}
+                    </CardHeader>
+                    <AnimatePresence initial={false}>
+                      {expanded && (
+                        <motion.div
+                          key={`content-${item.id}`}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.22, ease: "easeInOut" }}
+                        >
+                          <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
+                            {item.displayDescripcion && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">{item.displayDescripcion}</p>
+                            )}
+                          </CardContent>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <CardFooter
+                      className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
+                        expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
+                      }`}
+                    >
+                      <span className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}>
+                        {item.precio_eur}€
+                        {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
+                      </span>
+                      {showAddButton && (
+                        <Button
+                          size="sm"
+                          onClick={() => addToPedido(item)}
+                          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          {t.platos.add}
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                </div>
+
+                <div
+                  className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle
-                        className={`leading-tight line-clamp-2 ${
-                          expanded ? "text-lg min-h-[3.5rem]" : "text-base"
-                        }`}
-                      >
-                        {item.displayNombre}
-                      </CardTitle>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleCard(item.id, expanded)}
-                      aria-label={expanded ? t.platos.hidePhoto : t.platos.viewPhoto}
-                      className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent self-center transition-all duration-200 hover:scale-[1.03]"
-                    >
-                      {expanded ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {!expanded && (
-                    <div className="flex items-center gap-2 pt-2">
-                      <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
-                        {categoryLabel}
-                      </Badge>
-                    </div>
-                  )}
-                </CardHeader>
-                <AnimatePresence initial={false}>
-                  {expanded && (
-                    <motion.div
-                      key={`content-${item.id}`}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: "easeInOut" }}
-                    >
-                      <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                        {item.displayDescripcion && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{item.displayDescripcion}</p>
-                        )}
-                        {(item.displayAlergenosOficiales?.length > 0 ||
-                          item.displayAlergenosInferidos?.length > 0) && (
+                  <Card
+                    className={`font-libre-baskerville flex flex-col overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
+                      infoOpen ? "h-auto" : "h-full"
+                    }`}
+                  >
+                    <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg leading-tight line-clamp-2">{item.displayNombre}</CardTitle>
+                          <div className="pt-2">
+                            <Badge className="bg-accent/90 text-accent-foreground shadow-sm">{categoryLabel}</Badge>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleInfoCard(item.id, infoOpen)}
+                          aria-label={infoOpen ? "Ocultar información del plato" : "Mostrar información del plato"}
+                          className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                        >
+                          <Info className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-foreground">
+                          {infoLabels.allergens}:
+                        </p>
+                        {infoAlergenos.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
-                            {item.displayAlergenosOficiales?.map((alergeno: string, idx: number) => (
-                              <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
-                                {alergeno}
-                              </Badge>
-                            ))}
-                            {item.displayAlergenosInferidos?.map((alergeno: string, idx: number) => (
-                              <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
+                            {infoAlergenos.map((alergeno: string, idx: number) => (
+                              <Badge key={`info-alergeno-${idx}`} variant="secondary" className="text-xs">
                                 {alergeno}
                               </Badge>
                             ))}
                           </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">{infoLabels.noData}</p>
                         )}
-                        {item.displayAlergenosNotas && (
-                          <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
-                            {item.displayAlergenosNotas}
-                          </p>
-                        )}
-                      </CardContent>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <CardFooter
-                  className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
-                    expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
-                  }`}
-                >
-                  <span className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}>
-                    {item.precio_eur}€
-                    {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
-                  </span>
-                  {showAddButton && (
-                    <Button
-                      size="sm"
-                      onClick={() => addToPedido(item)}
-                      className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      {t.platos.add}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-foreground">
+                          {infoLabels.ingredients}:
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {infoIngredientes.length > 0
+                            ? infoIngredientes.map((ingrediente: string) => capitalizeFirst(ingrediente)).join(", ")
+                            : infoLabels.noData}
+                        </p>
+                      </div>
+
+                      {item.displayAlergenosNotas && (
+                        <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
+                          {item.displayAlergenosNotas}
+                        </p>
+                      )}
+                    </CardContent>
+
+                    <CardFooter className="flex justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-6 py-3">
+                      <span className="font-bold text-accent text-2xl">
+                        {item.precio_eur}€
+                        {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
+                      </span>
+                      {showAddButton && (
+                        <Button
+                          size="sm"
+                          onClick={() => addToPedido(item)}
+                          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          {t.platos.add}
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                </div>
+              </div>
             </motion.div>
           );
         })}

@@ -33,7 +33,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
         )}
       >
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-center mb-4 text-foreground">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center mb-4 text-foreground">
             {t.reservas.title}
           </h2>
           <p className="text-center text-muted-foreground/80 text-lg mb-12 max-w-2xl mx-auto">
