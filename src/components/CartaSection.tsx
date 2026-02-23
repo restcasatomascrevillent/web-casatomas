@@ -1,16 +1,15 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { UtensilsCrossed, Wine, Beer } from "lucide-react";
-import CartaPlatos from "./carta/CartaPlatos";
-import CartaVinos from "./carta/CartaVinos";
-import CartaBebidas from "./carta/CartaBebidas";
-import PreviewPedido from "./carta/PreviewPedido";
 import { getUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 type Section = "platos" | "vinos" | "bebidas" | null;
+const CartaPlatos = lazy(() => import("./carta/CartaPlatos"));
+const CartaVinos = lazy(() => import("./carta/CartaVinos"));
+const CartaBebidas = lazy(() => import("./carta/CartaBebidas"));
+const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
 
 const CartaSection = () => {
   const { t } = useTranslations();
@@ -35,6 +34,8 @@ const CartaSection = () => {
       window.removeEventListener('pedidoUpdated', updatePedidoCount);
     };
   }, []);
+
+  const shouldRenderPreview = activeSection !== null || pedidoCount > 0;
 
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
@@ -101,7 +102,9 @@ const CartaSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <CartaPlatos showAddButton />
+            <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t.platos.loading}</div>}>
+              <CartaPlatos showAddButton />
+            </Suspense>
           </motion.div>
         )}
 
@@ -111,7 +114,9 @@ const CartaSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <CartaVinos showAddButton />
+            <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t.vinos.loading}</div>}>
+              <CartaVinos showAddButton />
+            </Suspense>
           </motion.div>
         )}
 
@@ -121,11 +126,17 @@ const CartaSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <CartaBebidas showAddButton />
+            <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t.bebidas.loading}</div>}>
+              <CartaBebidas showAddButton />
+            </Suspense>
           </motion.div>
         )}
         {/* Botón flotante del ticket disponible en toda la carta */}
-        <PreviewPedido showFloatingButton hideInline />
+        {shouldRenderPreview && (
+          <Suspense fallback={null}>
+            <PreviewPedido showFloatingButton hideInline />
+          </Suspense>
+        )}
       </motion.div>
     </section>
   );

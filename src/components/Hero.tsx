@@ -1,10 +1,11 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
+import { Suspense, lazy, useRef, useState } from "react";
 import { Calendar, UtensilsCrossed, Bot } from "lucide-react";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import AIChatbot from "./AIChatbot";
+
+const AIChatbot = lazy(() => import("./AIChatbot"));
 
 const Hero = () => {
   const { t } = useTranslations();
@@ -44,7 +45,7 @@ const Hero = () => {
       </div>
       <motion.div
         style={{ y, opacity }}
-        className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 z-10"
+        className="absolute inset-0 flex flex-col items-center justify-center pb-20 sm:pb-16 md:pb-0 text-center px-4 z-10"
       >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -97,13 +98,17 @@ const Hero = () => {
           </Button>
         </motion.div>
 
-        <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+        {isChatOpen && (
+          <Suspense fallback={null}>
+            <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+          </Suspense>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.2 }}
-          className="absolute bottom-8"
+          className="absolute bottom-4 sm:bottom-6 md:bottom-8"
         >
           <div className="animate-float">
             <svg

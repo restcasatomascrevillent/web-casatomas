@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { Suspense, lazy, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,9 +18,9 @@ import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
 import logoImg from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
-import AIChatbot from "../AIChatbot";
+
+const AIChatbot = lazy(() => import("../AIChatbot"));
 
 interface PedidoItem {
   nombre: string;
@@ -39,6 +39,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   const { t, language } = useTranslations();
   const { toast } = useToast();
   const ticketRef = useRef<HTMLDivElement | null>(null);
+  const ticketItemsRef = useRef<HTMLDivElement | null>(null);
   const localeByLanguage: Record<typeof language, string> = {
     es: "es-ES",
     en: "en-US",
@@ -47,6 +48,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatTicketImage, setChatTicketImage] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
@@ -79,6 +81,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
     const node = ticketRef.current;
     const timestamp = new Date().toISOString().replace(/[:.-]/g, "");
     const filename = `ticket_${timestamp}.png`;
+    const { toPng } = await import("html-to-image");
 
     const dataUrl = await toPng(node, {
       cacheBust: true,
@@ -131,6 +134,29 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       });
     } finally {
       setShareLoading(false);
+    }
+  };
+
+  const captureTicketItemsAsImage = async (): Promise<string | null> => {
+    if (!ticketItemsRef.current || pedido.length === 0) return null;
+    const { toPng } = await import("html-to-image");
+    return toPng(ticketItemsRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      style: { background: "#ffffff", padding: "8px" },
+    });
+  };
+
+  const handleOpenChatbot = async () => {
+    try {
+      setChatTicketImage(null);
+      const itemsImage = await captureTicketItemsAsImage();
+      setChatTicketImage(itemsImage);
+    } catch (error) {
+      console.error("No se pudo generar la imagen de alimentos del ticket:", error);
+      setChatTicketImage(null);
+    } finally {
+      setIsChatOpen(true);
     }
   };
 
@@ -285,7 +311,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       </div>
 
       {/* Items */}
-      <div className="space-y-3 mb-3">
+      <div ref={ticketItemsRef} className="space-y-3 mb-3">
         {pedido.map((item, index) => {
           const config = getUnitConfig(item.unidad);
           const cantidad = item.cantidad ?? config.defaultAmount;
@@ -387,7 +413,7 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
           "{t.preview.aiPrompt}"
         </p>
         <Button
-          onClick={() => setIsChatOpen(true)}
+          onClick={handleOpenChatbot}
           className="w-auto px-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
         >
           <Bot className="w-4 h-4 mr-2" />
@@ -478,11 +504,21 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
         onOpenChange={setIsTicketOpen}
         title={t.carta.buttons.pedido}
         description={t.preview.previewLabel}
+        lockOutsideInteractions={isChatOpen}
       >
         {ticketCard}
       </TicketDialog>
 
-      <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      {isChatOpen && (
+        <Suspense fallback={null}>
+          <AIChatbot
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+            initialTicketImage={chatTicketImage}
+            initialGreeting="Hola! Soy Casa Tomas AI, ¿Con qué te puedo ayudar?"
+          />
+        </Suspense>
+      )}
     </>
   );
 };
@@ -527,6 +563,7 @@ type TicketDialogProps = {
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
+  lockOutsideInteractions?: boolean;
   children: React.ReactNode;
 };
 
@@ -535,11 +572,20 @@ const TicketDialog = ({
   onOpenChange,
   title,
   description,
+  lockOutsideInteractions = false,
   children,
 }: TicketDialogProps) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-transparent border-none shadow-none [&>button.absolute]:hidden data-[state=open]:bg-transparent">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogContent
+        onPointerDownOutside={(event) => {
+          if (lockOutsideInteractions) event.preventDefault();
+        }}
+        onInteractOutside={(event) => {
+          if (lockOutsideInteractions) event.preventDefault();
+        }}
+        className="sm:max-w-xl p-0 overflow-hidden bg-transparent border-none shadow-none [&>button.absolute]:hidden data-[state=open]:bg-transparent"
+      >
         <motion.div
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

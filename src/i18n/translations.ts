@@ -60,6 +60,13 @@ export const translations = {
       viewPhoto: "Ver foto",
       hidePhoto: "Ocultar foto",
       empty: "No hay platos que coincidan con los filtros seleccionados",
+      dietaryTitle: "Filtrar por necesidades",
+      dietaryFilters: {
+        celiaquia: "Celiaquía",
+        lactosa: "Lactosa",
+        vegano: "Vegano",
+        vegetariano: "Vegetariano",
+      },
       toasts: {
         errorTitle: "Error",
         errorDescription: "No pudimos cargar los platos",
@@ -558,6 +565,13 @@ export const translations = {
       viewPhoto: "View photo",
       hidePhoto: "Hide photo",
       empty: "No dishes match the selected filters",
+      dietaryTitle: "Filter by dietary needs",
+      dietaryFilters: {
+        celiaquia: "Celiac friendly",
+        lactosa: "Lactose free",
+        vegano: "Vegan",
+        vegetariano: "Vegetarian",
+      },
       toasts: {
         errorTitle: "Error",
         errorDescription: "We couldn't load the dishes",
@@ -1050,6 +1064,13 @@ export const translations = {
       viewPhoto: "Voir la photo",
       hidePhoto: "Masquer la photo",
       empty: "Aucun plat ne correspond aux filtres sélectionnés",
+      dietaryTitle: "Filtrer par besoins alimentaires",
+      dietaryFilters: {
+        celiaquia: "Sans gluten",
+        lactosa: "Sans lactose",
+        vegano: "Vegan",
+        vegetariano: "Végétarien",
+      },
       toasts: {
         errorTitle: "Erreur",
         errorDescription: "Impossible de charger les plats",

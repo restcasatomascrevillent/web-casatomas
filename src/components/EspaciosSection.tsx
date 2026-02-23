@@ -261,6 +261,8 @@ const EspaciosSection = () => {
                           src={image}
                           alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
                           className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     </CarouselItem>

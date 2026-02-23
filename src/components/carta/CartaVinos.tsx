@@ -151,15 +151,36 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     fetchMap();
   }, [fetchMap]);
 
+  const getPedidoItemKey = (item: Vino & { nombre?: string }) =>
+    item.id
+      ? `id:${item.id}`
+      : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
+
   const addToPedido = (item: Vino & { displayNombre?: string }) => {
-    const pedido = getUserPedido();
+    const cantidadInicial = item.cantidad ?? 1;
     const pedidoItem = {
       ...item,
       nombre: item.displayNombre || item.nombre,
-      cantidad: item.cantidad ?? 1,
+      cantidad: cantidadInicial,
     };
-    pedido.push(pedidoItem);
-    setUserPedido(pedido);
+    const pedido = getUserPedido();
+    const nextPedido = [...pedido];
+    const key = getPedidoItemKey(pedidoItem);
+    const existingIndex = nextPedido.findIndex((existingItem: any) => getPedidoItemKey(existingItem) === key);
+
+    if (existingIndex >= 0) {
+      const existingItem = nextPedido[existingIndex];
+      const existingCantidad = typeof existingItem.cantidad === "number" ? existingItem.cantidad : 1;
+      nextPedido[existingIndex] = {
+        ...existingItem,
+        ...pedidoItem,
+        cantidad: existingCantidad + cantidadInicial,
+      };
+    } else {
+      nextPedido.push(pedidoItem);
+    }
+
+    setUserPedido(nextPedido);
     toast({
       title: t.vinos.toasts.addedTitle,
       description: t.vinos.toasts.addedDescription.replace("{name}", pedidoItem.nombre),
@@ -346,7 +367,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.03 }}
             >
-              <Card className="font-libre-baskerville h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 text-sm">
+              <Card className="font-libre-baskerville flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 text-sm">
                 <CardHeader className="flex-shrink-0 pb-3">
                   <div className="flex items-start gap-3">
                     <span className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">

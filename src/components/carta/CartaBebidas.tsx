@@ -135,15 +135,36 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     return items;
   }, [bebidasByCategory, language, searchTerm, selectedCategory]);
 
+  const getPedidoItemKey = (item: Bebida & { nombre?: string }) =>
+    item.id
+      ? `id:${item.id}`
+      : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
+
   const addToPedido = (item: Bebida & { displayNombre?: string }) => {
-    const pedido = getUserPedido();
+    const cantidadInicial = item.cantidad ?? 1;
     const pedidoItem = {
       ...item,
       nombre: item.displayNombre || item.nombre,
-      cantidad: item.cantidad ?? 1,
+      cantidad: cantidadInicial,
     };
-    pedido.push(pedidoItem);
-    setUserPedido(pedido);
+    const pedido = getUserPedido();
+    const nextPedido = [...pedido];
+    const key = getPedidoItemKey(pedidoItem);
+    const existingIndex = nextPedido.findIndex((existingItem: any) => getPedidoItemKey(existingItem) === key);
+
+    if (existingIndex >= 0) {
+      const existingItem = nextPedido[existingIndex];
+      const existingCantidad = typeof existingItem.cantidad === "number" ? existingItem.cantidad : 1;
+      nextPedido[existingIndex] = {
+        ...existingItem,
+        ...pedidoItem,
+        cantidad: existingCantidad + cantidadInicial,
+      };
+    } else {
+      nextPedido.push(pedidoItem);
+    }
+
+    setUserPedido(nextPedido);
     toast({
       title: t.bebidas.toasts.addedTitle,
       description: t.bebidas.toasts.addedDescription.replace("{name}", pedidoItem.nombre),

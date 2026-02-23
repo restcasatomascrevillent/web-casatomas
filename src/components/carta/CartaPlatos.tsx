@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,8 @@ import BackToTopButton from "./BackToTopButton";
 interface CartaPlatosProps {
   showAddButton: boolean;
 }
+
+type DietaryFilterKey = "celiaquia" | "lactosa" | "vegano" | "vegetariano";
 
 interface Plato {
   id?: string;
@@ -64,6 +67,12 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
+  const [dietaryFilters, setDietaryFilters] = useState<Record<DietaryFilterKey, boolean>>({
+    celiaquia: false,
+    lactosa: false,
+    vegano: false,
+    vegetariano: false,
+  });
   const { toast } = useToast();
   const PAGE_SIZE = 24;
 
@@ -116,6 +125,33 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     const trimmed = value.trim();
     if (!trimmed) return "";
     return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+  };
+
+  const normalizeForMatch = (value: string) =>
+    value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const includesAnyMatcher = (values: string[], matchers: string[]) =>
+    values.some((value) => matchers.some((matcher) => value.includes(matcher)));
+
+  const DIETARY_MATCHERS: Record<DietaryFilterKey, string[]> = {
+    celiaquia: ["gluten"],
+    lactosa: ["lactosa", "lacteo", "lacteos", "leche", "milk", "dairy", "lait"],
+    vegano: ["vegano", "vegana", "vegan", "apto vegano", "apta vegana"],
+    vegetariano: [
+      "vegetariano",
+      "vegetariana",
+      "vegetarian",
+      "apto vegetariano",
+      "apta vegetariana",
+      "vegano",
+      "vegana",
+      "vegan",
+    ],
   };
 
   const fetchPlatosByCategory = useCallback(
@@ -261,6 +297,28 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const filteredItems = useMemo(() => {
     let items = translatedPlatos;
 
+    const activeDietaryFilters = (Object.keys(dietaryFilters) as DietaryFilterKey[]).filter(
+      (key) => dietaryFilters[key]
+    );
+
+    if (activeDietaryFilters.length > 0) {
+      items = items.filter((item: any) => {
+        const officialAllergens = (Array.isArray(item.displayAlergenosOficiales)
+          ? item.displayAlergenosOficiales
+          : []
+        )
+          .map((allergen: string) => normalizeForMatch(allergen))
+          .filter(Boolean);
+
+        return activeDietaryFilters.every((filterKey) => {
+          if (filterKey === "celiaquia" || filterKey === "lactosa") {
+            return !includesAnyMatcher(officialAllergens, DIETARY_MATCHERS[filterKey]);
+          }
+          return includesAnyMatcher(officialAllergens, DIETARY_MATCHERS[filterKey]);
+        });
+      });
+    }
+
     if (searchTerm) {
       items = items.filter(item =>
         item.displayNombre.toLowerCase().includes(searchTerm.toLowerCase())
@@ -268,7 +326,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
 
     return items;
-  }, [searchTerm, translatedPlatos]);
+  }, [dietaryFilters, searchTerm, translatedPlatos]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -300,15 +358,39 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     return 1;
   };
 
+  const getPedidoItemKey = (item: any) =>
+    item.id
+      ? `id:${item.id}`
+      : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
+
   const addToPedido = (item: any) => {
+    const cantidadInicial = item.cantidad ?? getInitialCantidad(item.unidad);
     const pedidoItem = {
       ...item,
       nombre: item.displayNombre || item.nombre,
-      cantidad: item.cantidad ?? getInitialCantidad(item.unidad),
+      cantidad: cantidadInicial,
     };
     const pedido = getUserPedido();
-    pedido.push(pedidoItem);
-    setUserPedido(pedido);
+    const nextPedido = [...pedido];
+    const key = getPedidoItemKey(pedidoItem);
+    const existingIndex = nextPedido.findIndex((existingItem: any) => getPedidoItemKey(existingItem) === key);
+
+    if (existingIndex >= 0) {
+      const existingItem = nextPedido[existingIndex];
+      const existingCantidad =
+        typeof existingItem.cantidad === "number"
+          ? existingItem.cantidad
+          : getInitialCantidad(existingItem.unidad);
+      nextPedido[existingIndex] = {
+        ...existingItem,
+        ...pedidoItem,
+        cantidad: existingCantidad + cantidadInicial,
+      };
+    } else {
+      nextPedido.push(pedidoItem);
+    }
+
+    setUserPedido(nextPedido);
     toast({
       title: t.platos.toasts.addedTitle,
       description: t.platos.toasts.addedDescription.replace("{name}", pedidoItem.nombre),
@@ -357,6 +439,16 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   };
 
   const infoLabels = getInfoLabels();
+  const dietaryFilterOptions: { key: DietaryFilterKey; label: string }[] = [
+    { key: "celiaquia", label: t.platos.dietaryFilters.celiaquia },
+    { key: "lactosa", label: t.platos.dietaryFilters.lactosa },
+    { key: "vegano", label: t.platos.dietaryFilters.vegano },
+    { key: "vegetariano", label: t.platos.dietaryFilters.vegetariano },
+  ];
+
+  const handleDietaryFilterChange = (filter: DietaryFilterKey, checked: boolean) => {
+    setDietaryFilters((prev) => ({ ...prev, [filter]: checked }));
+  };
 
   return (
     <div className="space-y-8" ref={sectionRef}>
@@ -410,6 +502,34 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+            {dietaryFilterOptions.map((filter) => {
+              const checked = dietaryFilters[filter.key];
+              const checkboxId = `dietary-filter-${filter.key}`;
+              return (
+                <label
+                  key={filter.key}
+                  htmlFor={checkboxId}
+                  className={`inline-flex cursor-pointer select-none items-center gap-2 rounded-full border px-3 py-2 text-sm transition-all duration-200 ${
+                    checked
+                      ? "border-accent bg-accent/10 text-foreground shadow-sm"
+                      : "border-border/70 bg-background/70 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                  }`}
+                >
+                  <Checkbox
+                    id={checkboxId}
+                    checked={checked}
+                    onCheckedChange={(value) => handleDietaryFilterChange(filter.key, value === true)}
+                    className={checked ? "border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" : ""}
+                  />
+                  <span className="font-medium">{filter.label}</span>
+                </label>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -489,8 +609,8 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <CardTitle
-                            className={`leading-tight line-clamp-2 ${
-                              expanded ? "text-lg min-h-[3.5rem]" : "text-base"
+                            className={`leading-tight whitespace-normal break-words ${
+                              expanded ? "text-lg" : "text-base"
                             }`}
                           >
                             {item.displayNombre}
@@ -574,7 +694,9 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                     <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg leading-tight line-clamp-2">{item.displayNombre}</CardTitle>
+                          <CardTitle className="text-lg leading-tight whitespace-normal break-words">
+                            {item.displayNombre}
+                          </CardTitle>
                           <div className="pt-2">
                             <Badge className="bg-accent/90 text-accent-foreground shadow-sm">{categoryLabel}</Badge>
                           </div>

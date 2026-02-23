@@ -110,6 +110,9 @@ const NovedadesSection = () => {
                 alt={localized.titulo}
                 className="w-full h-full object-cover"
                 style={imageStyle}
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
               />
             </div>
           ) : (
