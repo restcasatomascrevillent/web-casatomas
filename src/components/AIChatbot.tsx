@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot } from "lucide-react";
+import { X, Send, Bot, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface AIChatbotProps {
     isOpen: boolean;
@@ -17,25 +18,311 @@ type ChatMessage = {
     imageUrl?: string | null;
 };
 
+const CHATBOT_WEBHOOK_URL = "https://n8npersonal.miguelbenito.space/webhook/chatbotweb";
+const SUPABASE_CONFIG_BOT_WEB_URL = "https://jeamoczmbfsnwkfjxcyo.supabase.co/rest/v1/configBotWeb";
+const SUPABASE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_CONFIG_BOT_KEY = import.meta.env.VITE_SUPABASE_CONFIG_BOT_KEY || SUPABASE_PUBLISHABLE_KEY;
+const CHATBOT_SESSION_COOKIE = "chatbot_session_id";
+const DEFAULT_ASSISTANT_REPLY = "Recibido. Estoy procesando tu mensaje.";
+const ERROR_ASSISTANT_REPLY = "Ahora mismo no puedo responder. Intentalo de nuevo en unos segundos.";
+const LOADING_LABEL_BY_LANGUAGE = {
+    es: "Escribiendo...",
+    en: "Typing...",
+    fr: "En train d'ecrire...",
+} as const;
+
+let pageChatSessionId: string | null = null;
+
+const generateChatSessionId = (): string => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+    }
+
+    return `chat_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+};
+
+const getCookie = (name: string): string | null => {
+    if (typeof document === "undefined") {
+        return null;
+    }
+
+    const target = `${encodeURIComponent(name)}=`;
+    const match = document.cookie
+        .split("; ")
+        .find((cookie) => cookie.startsWith(target));
+
+    if (!match) {
+        return null;
+    }
+
+    return decodeURIComponent(match.slice(target.length));
+};
+
+const setCookie = (name: string, value: string) => {
+    if (typeof document === "undefined") {
+        return;
+    }
+
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=/; SameSite=Lax`;
+};
+
+const getChatSessionId = (): string => {
+    if (!pageChatSessionId) {
+        pageChatSessionId = generateChatSessionId();
+    }
+
+    const cookieId = getCookie(CHATBOT_SESSION_COOKIE);
+    if (cookieId !== pageChatSessionId) {
+        setCookie(CHATBOT_SESSION_COOKIE, pageChatSessionId);
+    }
+
+    return pageChatSessionId;
+};
+
+const extractAssistantText = (value: unknown): string | null => {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        try {
+            const parsed = JSON.parse(trimmed);
+            return extractAssistantText(parsed);
+        } catch {
+            return trimmed;
+        }
+    }
+
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const text = extractAssistantText(item);
+            if (text) {
+                return text;
+            }
+        }
+        return null;
+    }
+
+    if (value && typeof value === "object") {
+        const record = value as Record<string, unknown>;
+        const candidates = [
+            record.mensaje,
+            record.message,
+            record.respuesta,
+            record.reply,
+            record.output,
+            record.text,
+            record.response,
+            record.body,
+            record.data,
+            record.result,
+        ];
+
+        for (const candidate of candidates) {
+            const text = extractAssistantText(candidate);
+            if (text) {
+                return text;
+            }
+        }
+    }
+
+    return null;
+};
+
+const extractWelcomeMessage = (config: Record<string, unknown> | undefined): string | null => {
+    if (!config) {
+        return null;
+    }
+
+    const candidates = [
+        config.mensake_bienvenida,
+        config.mensaje_bienvenida,
+        config.bienvenida,
+        config.welcome_message,
+    ];
+
+    for (const candidate of candidates) {
+        const text = extractAssistantText(candidate);
+        if (text) {
+            return text;
+        }
+    }
+
+    for (const [key, value] of Object.entries(config)) {
+        if (!/bienvenida|welcome/i.test(key)) {
+            continue;
+        }
+
+        const text = extractAssistantText(value);
+        if (text) {
+            return text;
+        }
+    }
+
+    return null;
+};
+
+const renderMessageContent = (content: string): ReactNode => {
+    const boldPattern = /\*\*(.+?)\*\*/g;
+    const nodes: ReactNode[] = [];
+    let lastIndex = 0;
+    let key = 0;
+    let match = boldPattern.exec(content);
+
+    while (match) {
+        if (match.index > lastIndex) {
+            nodes.push(content.slice(lastIndex, match.index));
+        }
+
+        nodes.push(
+            <strong key={`msg-bold-${key}`} className="font-semibold">
+                {match[1]}
+            </strong>
+        );
+
+        key += 1;
+        lastIndex = match.index + match[0].length;
+        match = boldPattern.exec(content);
+    }
+
+    if (lastIndex < content.length) {
+        nodes.push(content.slice(lastIndex));
+    }
+
+    return nodes.length > 0 ? nodes : content;
+};
+
 const AIChatbot = ({
     isOpen,
     onClose,
     initialTicketImage = null,
     initialGreeting = "¡Hola! Soy el asistente de Casa Tomás. ¿En qué puedo ayudarte hoy?",
 }: AIChatbotProps) => {
+    const { language } = useTranslations();
     const [input, setInput] = useState("");
     const [mounted, setMounted] = useState(false);
-    const [messages, setMessages] = useState<ChatMessage[]>(() => [
-        {
-            role: "assistant",
-            content: initialGreeting,
-            imageUrl: initialTicketImage,
-        },
-    ]);
+    const [isSending, setIsSending] = useState(false);
+    const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
+    const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     useEffect(() => {
         setMounted(true);
+        getChatSessionId();
     }, []);
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        setMessages([]);
+        setIsLoadingGreeting(true);
+
+        const controller = new AbortController();
+
+        const loadWelcomeMessage = async () => {
+            try {
+                const headers: HeadersInit = {};
+                if (SUPABASE_CONFIG_BOT_KEY) {
+                    headers.apikey = SUPABASE_CONFIG_BOT_KEY;
+                    headers.Authorization = `Bearer ${SUPABASE_CONFIG_BOT_KEY}`;
+                }
+
+                const fetchConfigRow = async (filterByLanguage: boolean): Promise<Record<string, unknown> | undefined> => {
+                    const endpoint = new URL(SUPABASE_CONFIG_BOT_WEB_URL);
+                    endpoint.searchParams.set("select", "mensaje_bienvenida");
+                    endpoint.searchParams.set("limit", "1");
+
+                    if (SUPABASE_CONFIG_BOT_KEY) {
+                        endpoint.searchParams.set("apikey", SUPABASE_CONFIG_BOT_KEY);
+                    }
+
+                    if (filterByLanguage) {
+                        endpoint.searchParams.set("idioma", `eq.${language}`);
+                    }
+
+                    const response = await fetch(endpoint.toString(), {
+                        method: "GET",
+                        headers,
+                        signal: controller.signal,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Config chatbot request failed: ${response.status}`);
+                    }
+
+                    const data = (await response.json()) as Array<Record<string, unknown>>;
+                    if (!Array.isArray(data) || data.length === 0) {
+                        return undefined;
+                    }
+
+                    return data[0];
+                };
+
+                const byLanguage = await fetchConfigRow(true);
+                const fallback = byLanguage ? undefined : await fetchConfigRow(false);
+                const welcomeMessage = extractWelcomeMessage(byLanguage ?? fallback);
+                if (!welcomeMessage) {
+                    setMessages((prev) => {
+                        if (prev.some((message) => message.role === "user")) {
+                            return prev;
+                        }
+                        return [
+                            {
+                                role: "assistant",
+                                content: initialGreeting,
+                                imageUrl: initialTicketImage,
+                            },
+                        ];
+                    });
+                    return;
+                }
+
+                setMessages((prev) => {
+                    const hasUserMessages = prev.some((message) => message.role === "user");
+                    if (hasUserMessages) {
+                        return prev;
+                    }
+
+                    return [
+                        {
+                            role: "assistant",
+                            content: welcomeMessage,
+                            imageUrl: initialTicketImage,
+                        },
+                    ];
+                });
+            } catch (error) {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    return;
+                }
+                console.error("Failed to load chatbot welcome message:", error);
+                setMessages((prev) => {
+                    if (prev.some((message) => message.role === "user")) {
+                        return prev;
+                    }
+                    return [
+                        {
+                            role: "assistant",
+                            content: initialGreeting,
+                            imageUrl: initialTicketImage,
+                        },
+                    ];
+                });
+            } finally {
+                setIsLoadingGreeting(false);
+            }
+        };
+
+        void loadWelcomeMessage();
+
+        return () => {
+            controller.abort();
+        };
+    }, [isOpen, language, initialGreeting, initialTicketImage]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -46,20 +333,70 @@ const AIChatbot = ({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, onClose]);
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+    useEffect(() => {
+        if (!isOpen) return;
+        requestAnimationFrame(() => {
+            endOfMessagesRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+            });
+        });
+    }, [messages, isSending, isLoadingGreeting, isOpen]);
 
-        const userMessage = { role: "user" as const, content: input };
+    const handleSend = async () => {
+        const messageToSend = input.trim();
+        if (!messageToSend || isSending) return;
+
+        const userMessage = { role: "user" as const, content: messageToSend };
         setMessages(prev => [...prev, userMessage]);
         setInput("");
+        setIsSending(true);
 
-        // Simulate AI response
-        setTimeout(() => {
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: "Lo siento, mi conexión con el servidor de IA se está configurando. ¡Pronto podré ayudarte con tus reservas y preguntas sobre nuestra carta!"
-            }]);
-        }, 1000);
+        try {
+            const sessionId = getChatSessionId();
+            const chatbotPayload = {
+                mensaje: messageToSend,
+                idiom: language,
+                id: sessionId,
+            };
+
+            const response = await fetch(CHATBOT_WEBHOOK_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                },
+                body: new URLSearchParams({
+                    body: JSON.stringify(chatbotPayload, null, 2),
+                    ...chatbotPayload,
+                }).toString(),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Chatbot webhook error: ${response.status}`);
+            }
+
+            const rawText = await response.text();
+            const assistantReply = extractAssistantText(rawText) ?? DEFAULT_ASSISTANT_REPLY;
+
+            setMessages(prev => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content: assistantReply,
+                },
+            ]);
+        } catch (error) {
+            console.error("Chatbot webhook request failed:", error);
+            setMessages(prev => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content: ERROR_ASSISTANT_REPLY,
+                },
+            ]);
+        } finally {
+            setIsSending(false);
+        }
     };
 
     if (!mounted) return null;
@@ -134,10 +471,41 @@ const AIChatbot = ({
                                                 loading="lazy"
                                             />
                                         )}
-                                        <p className="text-sm">{msg.content}</p>
+                                        <p className="text-sm whitespace-pre-wrap">{renderMessageContent(msg.content)}</p>
                                     </div>
                                 </div>
                             ))}
+                            {(isLoadingGreeting || isSending) && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 6 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex justify-start"
+                                >
+                                    <div className="max-w-[80%] p-3 rounded-2xl bg-background border-2 border-primary/10 rounded-tl-none shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1">
+                                                {[0, 1, 2].map((dot) => (
+                                                    <motion.span
+                                                        key={dot}
+                                                        className="h-1.5 w-1.5 rounded-full bg-primary/60"
+                                                        animate={{ y: [0, -3, 0], opacity: [0.4, 1, 0.4] }}
+                                                        transition={{
+                                                            duration: 0.8,
+                                                            repeat: Infinity,
+                                                            delay: dot * 0.14,
+                                                            ease: "easeInOut",
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground">
+                                                {LOADING_LABEL_BY_LANGUAGE[language]}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                            <div ref={endOfMessagesRef} />
                         </div>
 
                         {/* Input */}
@@ -146,16 +514,18 @@ const AIChatbot = ({
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                                onKeyDown={(e) => e.key === "Enter" && void handleSend()}
                                 placeholder="Escribe un mensaje..."
+                                disabled={isSending}
                                 className="flex-1 bg-muted/50 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                             />
                             <Button
                                 size="icon"
                                 className="rounded-full h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground"
-                                onClick={handleSend}
+                                onClick={() => void handleSend()}
+                                disabled={isSending || !input.trim()}
                             >
-                                <Send className="w-4 h-4" />
+                                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                             </Button>
                         </div>
                     </motion.div>
