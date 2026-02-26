@@ -22,7 +22,7 @@ const CHATBOT_WEBHOOK_URL = "https://n8npersonal.miguelbenito.space/webhook/chat
 const SUPABASE_CONFIG_BOT_WEB_URL = "https://jeamoczmbfsnwkfjxcyo.supabase.co/rest/v1/configBotWeb";
 const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-const SUPABASE_CONFIG_BOT_KEY = import.meta.env.VITE_SUPABASE_CONFIG_BOT_KEY || SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_CONFIG_BOT_KEY = import.meta.env.VITE_SUPABASE_CONFIG_BOT_KEY;
 const CHATBOT_SESSION_COOKIE = "chatbot_session_id";
 const DEFAULT_ASSISTANT_REPLY = "Recibido. Estoy procesando tu mensaje.";
 const ERROR_ASSISTANT_REPLY = "Ahora mismo no puedo responder. Intentalo de nuevo en unos segundos.";
@@ -32,7 +32,14 @@ const LOADING_LABEL_BY_LANGUAGE = {
     fr: "En train d'ecrire...",
 } as const;
 
+const isSecretApiKey = (key: string | undefined): boolean =>
+    typeof key === "string" && key.startsWith("sb_secret_");
+
+const SUPABASE_CLIENT_CONFIG_BOT_KEY =
+    isSecretApiKey(SUPABASE_CONFIG_BOT_KEY) ? SUPABASE_PUBLISHABLE_KEY : SUPABASE_CONFIG_BOT_KEY || SUPABASE_PUBLISHABLE_KEY;
+
 let pageChatSessionId: string | null = null;
+let hasWarnedAboutSecretConfigBotKey = false;
 
 const generateChatSessionId = (): string => {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -226,19 +233,22 @@ const AIChatbot = ({
         const loadWelcomeMessage = async () => {
             try {
                 const headers: HeadersInit = {};
-                if (SUPABASE_CONFIG_BOT_KEY) {
-                    headers.apikey = SUPABASE_CONFIG_BOT_KEY;
-                    headers.Authorization = `Bearer ${SUPABASE_CONFIG_BOT_KEY}`;
+                if (isSecretApiKey(SUPABASE_CONFIG_BOT_KEY) && !hasWarnedAboutSecretConfigBotKey) {
+                    console.warn(
+                        "VITE_SUPABASE_CONFIG_BOT_KEY usa un sb_secret_ y no se puede usar en navegador. Se usara VITE_SUPABASE_PUBLISHABLE_KEY."
+                    );
+                    hasWarnedAboutSecretConfigBotKey = true;
+                }
+
+                if (SUPABASE_CLIENT_CONFIG_BOT_KEY) {
+                    headers.apikey = SUPABASE_CLIENT_CONFIG_BOT_KEY;
+                    headers.Authorization = `Bearer ${SUPABASE_CLIENT_CONFIG_BOT_KEY}`;
                 }
 
                 const fetchConfigRow = async (filterByLanguage: boolean): Promise<Record<string, unknown> | undefined> => {
                     const endpoint = new URL(SUPABASE_CONFIG_BOT_WEB_URL);
                     endpoint.searchParams.set("select", "mensaje_bienvenida");
                     endpoint.searchParams.set("limit", "1");
-
-                    if (SUPABASE_CONFIG_BOT_KEY) {
-                        endpoint.searchParams.set("apikey", SUPABASE_CONFIG_BOT_KEY);
-                    }
 
                     if (filterByLanguage) {
                         endpoint.searchParams.set("idioma", `eq.${language}`);
@@ -251,6 +261,11 @@ const AIChatbot = ({
                     });
 
                     if (!response.ok) {
+                        if (response.status === 401 && isSecretApiKey(SUPABASE_CONFIG_BOT_KEY)) {
+                            throw new Error(
+                                "Config chatbot request failed: 401 (sb_secret no permitido en browser)"
+                            );
+                        }
                         throw new Error(`Config chatbot request failed: ${response.status}`);
                     }
 
@@ -517,7 +532,7 @@ const AIChatbot = ({
                                 onKeyDown={(e) => e.key === "Enter" && void handleSend()}
                                 placeholder="Escribe un mensaje..."
                                 disabled={isSending}
-                                className="flex-1 bg-muted/50 border-none rounded-full px-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                className="flex-1 bg-muted/50 border-none rounded-full px-4 text-base md:text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                             />
                             <Button
                                 size="icon"

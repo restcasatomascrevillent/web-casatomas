@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Locale } from "date-fns";
-import { dateLocales, languageOptions, translations, type Language, type Translations } from "@/i18n/translations";
+import { languageOptions, type Language } from "@/i18n/types";
+import type { LanguagePack, Translations } from "@/i18n/languages/es";
 
 type LanguageContextValue = {
   language: Language;
@@ -11,6 +12,12 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+const languagePackCache: Partial<Record<Language, LanguagePack>> = {};
+const languageLoaders: Record<Language, () => Promise<{ default: LanguagePack }>> = {
+  es: () => import("@/i18n/languages/es"),
+  en: () => import("@/i18n/languages/en"),
+  fr: () => import("@/i18n/languages/fr"),
+};
 
 const getInitialLanguage = (): Language => {
   if (typeof window === "undefined") {
@@ -35,21 +42,84 @@ const getInitialLanguage = (): Language => {
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const [languagePack, setLanguagePack] = useState<LanguagePack | null>(() => {
+    return languagePackCache[language] ?? null;
+  });
 
   useEffect(() => {
     document.documentElement.lang = language;
     window.localStorage.setItem("language", language);
   }, [language]);
 
+  useEffect(() => {
+    let isCancelled = false;
+    const cachedPack = languagePackCache[language];
+    if (cachedPack) {
+      setLanguagePack(cachedPack);
+      return;
+    }
+
+    const loadLanguagePack = async () => {
+      try {
+        const module = await languageLoaders[language]();
+        if (isCancelled) return;
+        languagePackCache[language] = module.default;
+        setLanguagePack(module.default);
+      } catch (error) {
+        console.error("Error loading language pack:", error);
+      }
+    };
+
+    void loadLanguagePack();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [language]);
+
+  useEffect(() => {
+    if (!languagePack) return;
+
+    const preloadRemainingLanguages = () => {
+      const targets = (Object.keys(languageLoaders) as Language[]).filter((lang) => lang !== language);
+      targets.forEach((lang) => {
+        if (languagePackCache[lang]) return;
+        void languageLoaders[lang]().then((module) => {
+          languagePackCache[lang] = module.default;
+        });
+      });
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(preloadRemainingLanguages);
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(preloadRemainingLanguages, 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, [language, languagePack]);
+
   const value = useMemo(() => {
+    if (!languagePack) {
+      return null;
+    }
+
     return {
       language,
       setLanguage,
-      t: translations[language],
-      dateLocale: dateLocales[language],
+      t: languagePack.translations,
+      dateLocale: languagePack.dateLocale,
       languages: languageOptions,
     };
-  }, [language]);
+  }, [language, languagePack]);
+
+  if (!value) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
+        Cargando...
+      </div>
+    );
+  }
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };

@@ -1,8 +1,8 @@
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import CartaSection from "@/components/CartaSection";
 
+const CartaSection = lazy(() => import("@/components/CartaSection"));
 const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
 const ReservasSection = lazy(() => import("@/components/ReservasSection"));
 const EspaciosSection = lazy(() => import("@/components/EspaciosSection"));
@@ -77,7 +77,9 @@ const Index = () => {
       <Header />
       <div className="min-h-screen bg-background">
         <Hero />
-        <CartaSection />
+        <LazySection id="carta">
+          <CartaSection />
+        </LazySection>
         <LazySection id="novedades">
           <NovedadesSection />
         </LazySection>
