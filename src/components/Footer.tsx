@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 const Footer = () => {
@@ -48,7 +48,7 @@ const Footer = () => {
           <p className="text-sm text-stone">
             {t.footer.rights}
           </p>
-          
+
           <div className="flex gap-4 items-center">
             <a
               href="https://adminpanelct.lovable.app"
@@ -57,9 +57,12 @@ const Footer = () => {
               {t.footer.admin}
             </a>
             <span className="text-stone">|</span>
-            <Button variant="link" className="text-xs text-stone hover:text-accent p-0 h-auto">
+            <Link
+              to="/politica-privacidad"
+              className="text-xs text-stone hover:text-accent transition-colors"
+            >
               {t.footer.terms}
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
