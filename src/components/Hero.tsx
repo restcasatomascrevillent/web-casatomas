@@ -4,11 +4,13 @@ import { Suspense, lazy, useRef, useState } from "react";
 import { Calendar, UtensilsCrossed, Bot } from "lucide-react";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { useNavigate } from "react-router-dom";
 
 const AIChatbot = lazy(() => import("./AIChatbot"));
 
 const Hero = () => {
   const { t } = useTranslations();
+  const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -72,9 +74,7 @@ const Hero = () => {
           <Button
             size="lg"
             className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-            onClick={() => {
-              window.location.href = "/reservas";
-            }}
+            onClick={() => navigate("/reservas")}
           >
             <Calendar className="w-5 h-5 mr-2" />
             {t.hero.ctaPrimary}

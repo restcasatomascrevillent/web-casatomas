@@ -13,6 +13,7 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 const languagePackCache: Partial<Record<Language, LanguagePack>> = {};
+let hasPreloadedSecondaryLanguagePacks = false;
 const languageLoaders: Record<Language, () => Promise<{ default: LanguagePack }>> = {
   es: () => import("@/i18n/languages/es"),
   en: () => import("@/i18n/languages/en"),
@@ -78,7 +79,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   }, [language]);
 
   useEffect(() => {
-    if (!languagePack) return;
+    if (!languagePack || hasPreloadedSecondaryLanguagePacks) return;
 
     const preloadRemainingLanguages = () => {
       const targets = (Object.keys(languageLoaders) as Language[]).filter((lang) => lang !== language);
@@ -88,15 +89,28 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
           languagePackCache[lang] = module.default;
         });
       });
+      hasPreloadedSecondaryLanguagePacks = true;
     };
 
-    if ("requestIdleCallback" in window) {
-      const idleId = window.requestIdleCallback(preloadRemainingLanguages);
-      return () => window.cancelIdleCallback(idleId);
-    }
+    const delayedPreload = () => {
+      if ("requestIdleCallback" in window) {
+        const idleId = window.requestIdleCallback(preloadRemainingLanguages);
+        return () => window.cancelIdleCallback(idleId);
+      }
 
-    const timeoutId = window.setTimeout(preloadRemainingLanguages, 1200);
-    return () => window.clearTimeout(timeoutId);
+      const timeoutId = window.setTimeout(preloadRemainingLanguages, 0);
+      return () => window.clearTimeout(timeoutId);
+    };
+
+    let cancelDeferredPreload: (() => void) | undefined;
+    const startId = window.setTimeout(() => {
+      cancelDeferredPreload = delayedPreload();
+    }, 3500);
+
+    return () => {
+      window.clearTimeout(startId);
+      cancelDeferredPreload?.();
+    };
   }, [language, languagePack]);
 
   const value = useMemo(() => {

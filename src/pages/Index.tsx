@@ -21,12 +21,20 @@ const SectionPlaceholder = ({ id }: { id: string }) => (
   </section>
 );
 
-const DeferredSection = ({ id, children }: { id: string; children: ReactNode }) => {
+const DeferredSection = ({
+  id,
+  enabled,
+  children,
+}: {
+  id: string;
+  enabled: boolean;
+  children: ReactNode;
+}) => {
   const [isMounted, setIsMounted] = useState(false);
   const placeholderRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (isMounted) return;
+    if (isMounted || !enabled) return;
     const node = placeholderRef.current;
     if (!node) return;
 
@@ -42,13 +50,13 @@ const DeferredSection = ({ id, children }: { id: string; children: ReactNode }) 
           observer.disconnect();
         }
       },
-      { rootMargin: "500px 0px" }
+      { rootMargin: "180px 0px" }
     );
 
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [isMounted]);
+  }, [isMounted, enabled]);
 
   if (!isMounted) {
     return (
@@ -65,42 +73,87 @@ const DeferredSection = ({ id, children }: { id: string; children: ReactNode }) 
   return <>{children}</>;
 };
 
-const LazySection = ({ id, children }: { id: string; children: ReactNode }) => (
-  <DeferredSection id={id}>
+const LazySection = ({
+  id,
+  enabled,
+  children,
+}: {
+  id: string;
+  enabled: boolean;
+  children: ReactNode;
+}) => (
+  <DeferredSection id={id} enabled={enabled}>
     <Suspense fallback={<SectionPlaceholder id={id} />}>{children}</Suspense>
   </DeferredSection>
 );
 
 const Index = () => {
+  const [canLoadDeferredSections, setCanLoadDeferredSections] = useState(false);
+
+  useEffect(() => {
+    if (canLoadDeferredSections) return;
+
+    let isCancelled = false;
+    const unlockDeferredSections = () => {
+      if (!isCancelled) {
+        setCanLoadDeferredSections(true);
+      }
+    };
+
+    const timeoutId = window.setTimeout(unlockDeferredSections, 5000);
+    const interactionEvents: Array<keyof WindowEventMap> = [
+      "pointerdown",
+      "touchstart",
+      "keydown",
+      "wheel",
+      "scroll",
+    ];
+
+    interactionEvents.forEach((eventName) => {
+      window.addEventListener(eventName, unlockDeferredSections, {
+        once: true,
+        passive: true,
+      });
+    });
+
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timeoutId);
+      interactionEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, unlockDeferredSections);
+      });
+    };
+  }, [canLoadDeferredSections]);
+
   return (
     <>
       <Header />
       <div className="min-h-screen bg-background">
         <Hero />
-        <LazySection id="carta">
+        <LazySection id="carta" enabled={canLoadDeferredSections}>
           <CartaSection />
         </LazySection>
-        <LazySection id="novedades">
+        <LazySection id="novedades" enabled={canLoadDeferredSections}>
           <NovedadesSection />
         </LazySection>
-        <LazySection id="espacios">
+        <LazySection id="espacios" enabled={canLoadDeferredSections}>
           <EspaciosSection />
         </LazySection>
-        <LazySection id="reservas">
+        <LazySection id="reservas" enabled={canLoadDeferredSections}>
           <ReservasSection />
         </LazySection>
-        <LazySection id="reviews">
+        <LazySection id="reviews" enabled={canLoadDeferredSections}>
           <ReviewsSection />
         </LazySection>
-        <LazySection id="nosotros">
+        <LazySection id="nosotros" enabled={canLoadDeferredSections}>
           <NosotrosSection />
         </LazySection>
-        <LazySection id="contacto">
+        <LazySection id="contacto" enabled={canLoadDeferredSections}>
           <ContactoSection />
         </LazySection>
-        <Suspense fallback={null}>
+        <LazySection id="footer" enabled={canLoadDeferredSections}>
           <Footer />
-        </Suspense>
+        </LazySection>
       </div>
     </>
   );
