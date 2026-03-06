@@ -87,7 +87,7 @@ const EspaciosSection = () => {
           : index === 2
             ? [vinosMarques, carnePlato, pulpoPlato]
             : undefined,
-    link: index === 3 ? "https://touzact.lovable.app" : undefined,
+    link: index === 3 ? "/touza-cocktail" : undefined,
   }));
 
   return (
@@ -157,10 +157,10 @@ const EspaciosSection = () => {
                         className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         asChild
                       >
-                        <a href={espacio.link || "#"} target="_blank" rel="noopener noreferrer">
+                        <Link to={espacio.link || "#"}>
                           <ExternalLink className="w-5 h-5 mr-2" />
                           {t.espacios.visitTouza}
-                        </a>
+                        </Link>
                       </Button>
                     )}
                   </CardContent>
