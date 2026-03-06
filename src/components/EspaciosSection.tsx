@@ -87,7 +87,7 @@ const EspaciosSection = () => {
           : index === 2
             ? [vinosMarques, carnePlato, pulpoPlato]
             : undefined,
-    link: index === 3 ? "/touza-cocktail" : undefined,
+    link: index === 3 ? "https://touzact.lovable.app" : undefined,
   }));
 
   return (
