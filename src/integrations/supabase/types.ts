@@ -14,45 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      Bebidas: {
-        Row: {
-          activado: boolean
-          categoria: string
-          created_at: string
-          descripcion: string | null
-          id: string
-          nombre: string
-          orden: number | null
-          precio_eur: number
-          tamano: string | null
-          updated_at: string
-        }
-        Insert: {
-          activado?: boolean
-          categoria: string
-          created_at?: string
-          descripcion?: string | null
-          id?: string
-          nombre: string
-          orden?: number | null
-          precio_eur: number
-          tamano?: string | null
-          updated_at?: string
-        }
-        Update: {
-          activado?: boolean
-          categoria?: string
-          created_at?: string
-          descripcion?: string | null
-          id?: string
-          nombre?: string
-          orden?: number | null
-          precio_eur?: number
-          tamano?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       bebidas: {
         Row: {
           activado: boolean
@@ -92,87 +53,6 @@ export type Database = {
         }
         Relationships: []
       }
-      Platos: {
-        Row: {
-          activado: boolean
-          alergenos_inferidos: string[] | null
-          alergenos_notas: string | null
-          alergenos_oficiales: string[] | null
-          categoria: string
-          created_at: string
-          descripcion: string | null
-          id: string
-          nombre: string
-          orden: number | null
-          precio_eur: number
-          unidad: string | null
-          updated_at: string
-        }
-        Insert: {
-          activado?: boolean
-          alergenos_inferidos?: string[] | null
-          alergenos_notas?: string | null
-          alergenos_oficiales?: string[] | null
-          categoria: string
-          created_at?: string
-          descripcion?: string | null
-          id?: string
-          nombre: string
-          orden?: number | null
-          precio_eur: number
-          unidad?: string | null
-          updated_at?: string
-        }
-        Update: {
-          activado?: boolean
-          alergenos_inferidos?: string[] | null
-          alergenos_notas?: string | null
-          alergenos_oficiales?: string[] | null
-          categoria?: string
-          created_at?: string
-          descripcion?: string | null
-          id?: string
-          nombre?: string
-          orden?: number | null
-          precio_eur?: number
-          unidad?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      espacios_reserva: {
-        Row: {
-          activa: boolean
-          capacidad_maxima: number
-          caracteristicas: Json | null
-          created_at: string
-          descripcion: string | null
-          id: string
-          nombre: string
-          updated_at: string
-        }
-        Insert: {
-          activa?: boolean
-          capacidad_maxima: number
-          caracteristicas?: Json | null
-          created_at?: string
-          descripcion?: string | null
-          id?: string
-          nombre: string
-          updated_at?: string
-        }
-        Update: {
-          activa?: boolean
-          capacidad_maxima?: number
-          caracteristicas?: Json | null
-          created_at?: string
-          descripcion?: string | null
-          id?: string
-          nombre?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       platos: {
         Row: {
           activado: boolean
@@ -182,6 +62,7 @@ export type Database = {
           categoria: string
           created_at: string
           descripcion: string | null
+          expanded: boolean
           id: string
           nombre: string
           orden: number | null
@@ -197,6 +78,7 @@ export type Database = {
           categoria: string
           created_at?: string
           descripcion?: string | null
+          expanded?: boolean
           id?: string
           nombre: string
           orden?: number | null
@@ -212,65 +94,12 @@ export type Database = {
           categoria?: string
           created_at?: string
           descripcion?: string | null
+          expanded?: boolean
           id?: string
           nombre?: string
           orden?: number | null
           precio_eur?: number
           unidad?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      Vinos: {
-        Row: {
-          activado: boolean
-          alergenos_inferidos: string[] | null
-          alergenos_notas: string | null
-          alergenos_oficiales: string[] | null
-          categoria: string
-          created_at: string
-          denominacion_origen: string | null
-          descripcion: string | null
-          id: string
-          nombre: string
-          orden: number | null
-          precio_eur: number
-          ubicacion_pais: string | null
-          ubicacion_region: string | null
-          updated_at: string
-        }
-        Insert: {
-          activado?: boolean
-          alergenos_inferidos?: string[] | null
-          alergenos_notas?: string | null
-          alergenos_oficiales?: string[] | null
-          categoria: string
-          created_at?: string
-          denominacion_origen?: string | null
-          descripcion?: string | null
-          id?: string
-          nombre: string
-          orden?: number | null
-          precio_eur: number
-          ubicacion_pais?: string | null
-          ubicacion_region?: string | null
-          updated_at?: string
-        }
-        Update: {
-          activado?: boolean
-          alergenos_inferidos?: string[] | null
-          alergenos_notas?: string | null
-          alergenos_oficiales?: string[] | null
-          categoria?: string
-          created_at?: string
-          denominacion_origen?: string | null
-          descripcion?: string | null
-          id?: string
-          nombre?: string
-          orden?: number | null
-          precio_eur?: number
-          ubicacion_pais?: string | null
-          ubicacion_region?: string | null
           updated_at?: string
         }
         Relationships: []
