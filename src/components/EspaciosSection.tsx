@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { compareDesc, format, isSameDay } from "date-fns";
 import { motion } from "framer-motion";
 import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, Sparkles, Star, TreePine, Utensils, Wine } from "lucide-react";
@@ -87,7 +86,7 @@ const EspaciosSection = () => {
           : index === 2
             ? [vinosMarques, carnePlato, pulpoPlato]
             : undefined,
-    link: index === 3 ? "/touza-cocktail" : undefined,
+    link: index === 3 ? "https://touzact.lovable.app" : undefined,
   }));
 
   return (
@@ -157,10 +156,10 @@ const EspaciosSection = () => {
                         className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         asChild
                       >
-                        <Link to={espacio.link || "#"}>
+                        <a href={espacio.link || "#"}>
                           <ExternalLink className="w-5 h-5 mr-2" />
                           {t.espacios.visitTouza}
-                        </Link>
+                        </a>
                       </Button>
                     )}
                   </CardContent>
