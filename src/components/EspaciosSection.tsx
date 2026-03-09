@@ -19,6 +19,7 @@ interface MenuDiarioRow {
   id: string;
   fecha: string;
   menu: unknown;
+  idiom?: string | null;
 }
 
 interface MenuDelDia {
@@ -33,6 +34,7 @@ interface TapasRow {
   id?: string;
   fecha: string;
   tapas: unknown;
+  idiom?: string | null;
 }
 
 interface TapasDelDia {
@@ -135,8 +137,18 @@ const toTapasDelDia = (row: TapasRow, index: number): TapasDelDia | null => {
   };
 };
 
+const getIdiomAliases = (language: string): string[] => {
+  if (language === "en") {
+    return ["en", "ingles", "inglés", "english"];
+  }
+  if (language === "fr") {
+    return ["fr", "frances", "francés", "french"];
+  }
+  return ["es", "espanol", "español", "spanish"];
+};
+
 const EspaciosSection = () => {
-  const { t, dateLocale } = useTranslations();
+  const { t, dateLocale, language } = useTranslations();
   const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
   const [showTodayMenu, setShowTodayMenu] = useState(false);
   const [showTodayTapas, setShowTodayTapas] = useState(false);
@@ -147,12 +159,15 @@ const EspaciosSection = () => {
   const [menuSlide, setMenuSlide] = useState(0);
   const [tapasSlide, setTapasSlide] = useState(0);
 
+  const idiomAliases = useMemo(() => getIdiomAliases(language), [language]);
+
   const { data: rawMenusDelDia = [] } = useQuery({
-    queryKey: ["menus_diarios"],
+    queryKey: ["menus_diarios", language],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("menus_diarios")
-        .select("id, fecha, menu")
+        .select("id, fecha, menu, idiom")
+        .in("idiom", idiomAliases)
         .order("fecha", { ascending: false });
 
       if (error) throw error;
@@ -168,11 +183,12 @@ const EspaciosSection = () => {
     [rawMenusDelDia]
   );
   const { data: rawTapasSemanales = [] } = useQuery({
-    queryKey: ["tapas"],
+    queryKey: ["tapas", language],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tapas")
-        .select("id, fecha, tapas")
+        .select("id, fecha, tapas, idiom")
+        .in("idiom", idiomAliases)
         .order("fecha", { ascending: false });
 
       if (error) throw error;
@@ -218,8 +234,9 @@ const EspaciosSection = () => {
   }, [tapasCarouselApi]);
 
   const today = new Date();
-  const isMenuDayToday = sortedMenus.some((menu) => isSameDay(menu.date, today));
-  const isTapasDayToday = sortedTapas.some((tapas) => isSameDay(tapas.date, today));
+  const todayDay = today.getDay();
+  const isMenuDayToday = todayDay >= 2 && todayDay <= 4;
+  const isTapasDayToday = todayDay === 4;
 
   const todayMenuMatch = sortedMenus.find((menu) => isSameDay(menu.date, today));
   const todayTapasMatch = sortedTapas.find((tapas) => isSameDay(tapas.date, today));
@@ -360,7 +377,7 @@ const EspaciosSection = () => {
                   disabled={!isMenuDayToday}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.noMenuToday}
+                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.menuAvailableDays}
                 </Button>
               </div>
             </CardContent>
@@ -394,7 +411,7 @@ const EspaciosSection = () => {
                   disabled={!isTapasDayToday}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.noTapasToday}
+                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.tapasAvailableDay}
                 </Button>
               </div>
             </CardContent>
