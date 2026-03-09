@@ -67,6 +67,8 @@ export const translations: Translations = {
       ageCheckBlocked: "Sorry, you must be 18+ to view this section.",
       searchPlaceholder: "Search wines...",
       loading: "Loading wines...",
+      viewPhoto: "View photo",
+      hidePhoto: "Hide photo",
       originLabel: "Origin",
       doLabel: "PDO",
       add: "Add",

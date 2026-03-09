@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin, Eye, EyeOff } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +47,10 @@ interface Vino {
   cantidad?: number;
   nombre_en?: string;
   nombre_fr?: string;
+  expanded?: boolean;
 }
+
+type VinoRecord = Vino & Record<string, unknown>;
 
 const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const { t, language } = useTranslations();
@@ -60,11 +63,14 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>({});
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [mapVinos, setMapVinos] = useState<Vino[]>([]);
   const [mapLoading, setMapLoading] = useState(true);
   const [mapPrefetched, setMapPrefetched] = useState(false);
   const PAGE_SIZE = 24;
   const { toast } = useToast();
+  const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
 
   const normalizeAlergenos = (value: unknown) => {
     if (Array.isArray(value)) return value;
@@ -104,6 +110,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
           ...item,
           alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
           alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
+          expanded: Boolean((item as VinoRecord).expanded),
         }));
 
         setVinosByCategory((prev) => {
@@ -230,6 +237,125 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   }, [language, searchTerm, selectedCategory, vinosByCategory]);
 
   const currentLoading = loadingByCategory[selectedCategory];
+
+  const getCardKey = (item: VinoRecord) =>
+    item.id || `${item.nombre}|${item.precio_eur}|${item.categoria ?? ""}`;
+
+  const isCardExpanded = (item: VinoRecord) => {
+    const key = getCardKey(item);
+    if (expandedCards[key] !== undefined) {
+      return expandedCards[key];
+    }
+    return Boolean(item.expanded);
+  };
+
+  const handleToggleCard = (item: VinoRecord, currentExpanded: boolean) => {
+    const key = getCardKey(item);
+    setExpandedCards((prev) => ({ ...prev, [key]: !currentExpanded }));
+  };
+
+  const toPublicImageUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    ) {
+      return trimmed;
+    }
+    if (!supabaseUrl) return trimmed;
+    if (trimmed.startsWith("/storage/v1/object/public/")) {
+      return `${supabaseUrl}${trimmed}`;
+    }
+    if (trimmed.startsWith("/")) {
+      return `${supabaseUrl}${trimmed}`;
+    }
+    if (trimmed.includes("/")) {
+      return `${supabaseUrl}/storage/v1/object/public/${trimmed.replace(/^\/+/, "")}`;
+    }
+    return trimmed;
+  };
+
+  const extractImageCandidate = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null;
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") {
+        return null;
+      }
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
+        try {
+          return extractImageCandidate(JSON.parse(trimmed));
+        } catch {
+          return toPublicImageUrl(trimmed);
+        }
+      }
+      return toPublicImageUrl(trimmed);
+    }
+
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const nested = extractImageCandidate(entry);
+        if (nested) return nested;
+      }
+      return null;
+    }
+
+    if (typeof value === "object") {
+      const record = value as Record<string, unknown>;
+      const nestedKeys = [
+        "url",
+        "publicUrl",
+        "public_url",
+        "signedUrl",
+        "signed_url",
+        "path",
+        "src",
+        "href",
+        "link",
+        "imagen_url",
+        "foto_url",
+        "image_url",
+      ];
+      for (const nestedKey of nestedKeys) {
+        const nested = extractImageCandidate(record[nestedKey]);
+        if (nested) return nested;
+      }
+    }
+
+    return null;
+  };
+
+  const getWineImage = (item: VinoRecord) => {
+    const candidateFields = [
+      "imagen_url",
+      "foto_url",
+      "image_url",
+      "url_imagen",
+      "url_foto",
+      "foto",
+      "imagen",
+      "image",
+      "adjunto",
+      "adjunto_url",
+      "adjuntos",
+      "attachments",
+      "archivos",
+    ];
+
+    for (const field of candidateFields) {
+      const candidate = extractImageCandidate(item[field]);
+      if (candidate) return candidate;
+    }
+
+    return null;
+  };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -360,77 +486,164 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
         </div>
       ) : (
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.03 }}
-            >
-              <Card className="font-libre-baskerville flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 text-sm">
-                <CardHeader className="flex-shrink-0 pb-3">
-                  <div className="flex items-start gap-3">
-                    <span className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
-                      <Wine className="w-4 h-4" />
-                    </span>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <CardTitle className="text-lg leading-tight whitespace-normal break-words">
-                        {item.displayNombre || item.nombre}
-                      </CardTitle>
-                      <Badge className="bg-accent/90 text-accent-foreground shadow-sm w-fit">
-                        {translateCategory(item.categoria)}
-                      </Badge>
-                      {(item.denominacion_origen || item.ubicacion_region || item.ubicacion_pais) && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
-                          <MapPin className="w-4 h-4 text-accent" />
-                          <span className="line-clamp-1">
-                            {[item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais].filter(Boolean).join(" · ")}
-                          </span>
+          {filteredItems.map((item, index) => {
+            const itemRecord = item as VinoRecord;
+            const cardKey = getCardKey(itemRecord);
+            const expanded = isCardExpanded(itemRecord);
+            const imageUrl = getWineImage(itemRecord);
+            const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
+            const originLabel = [item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais]
+              .filter(Boolean)
+              .join(" · ");
+
+            return (
+              <motion.div
+                layout
+                key={cardKey}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.03 }}
+                className="h-full [perspective:1200px]"
+              >
+                <Card
+                  className={`font-libre-baskerville flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                    expanded ? "h-full card--expanded" : "h-auto card--collapsed"
+                  }`}
+                >
+                  <AnimatePresence initial={false}>
+                    {expanded && (
+                      <motion.div
+                        key={`image-${cardKey}`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        className="overflow-hidden bg-muted flex-shrink-0"
+                      >
+                        <div className="relative h-48 overflow-hidden">
+                          {hasVisibleImage ? (
+                            <img
+                              src={imageUrl || undefined}
+                              alt={item.displayNombre || item.nombre}
+                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                              onError={() =>
+                                setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
+                              }
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                              <Wine className="w-9 h-9 text-accent/70" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 right-2">
+                            <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                              {translateCategory(item.categoria)}
+                            </Badge>
+                          </div>
                         </div>
-                      )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <CardHeader
+                    className={`flex-shrink-0 transition-all duration-200 ${
+                      expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle
+                          className={`leading-tight whitespace-normal break-words ${
+                            expanded ? "text-lg" : "text-base"
+                          }`}
+                        >
+                          {item.displayNombre || item.nombre}
+                        </CardTitle>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCard(itemRecord, expanded)}
+                        aria-label={expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto}
+                        className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                      >
+                        {expanded ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                  {item.descripcion && (
-                    <p className="text-sm text-muted-foreground line-clamp-3">{item.descripcion}</p>
-                  )}
-                  {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
-                    <div className="flex flex-wrap gap-1">
-                      {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
-                        <Badge key={`oficial-${idx}`} variant="destructive" className="text-xs">
-                          {alergeno}
+                    {!expanded && (
+                      <div className="flex items-center gap-2 pt-2">
+                        <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
+                          {translateCategory(item.categoria)}
                         </Badge>
-                      ))}
-                      {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
-                        <Badge key={`inferido-${idx}`} variant="secondary" className="text-xs">
-                          {alergeno}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  {item.alergenos_notas && (
-                    <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
-                      {item.alergenos_notas}
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="flex justify-between items-center border-t bg-muted/40 flex-shrink-0 mt-auto px-6 py-3">
-                  <span className="text-2xl font-bold text-accent leading-none">{item.precio_eur}€</span>
-                  {showAddButton && (
-                    <Button
-                      size="sm"
-                     onClick={() => addToPedido(item)}
-                      className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      {t.vinos.add}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
+                      </div>
+                    )}
+                  </CardHeader>
+
+                  <AnimatePresence initial={false}>
+                    {expanded && (
+                      <motion.div
+                        key={`content-${cardKey}`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.22, ease: "easeInOut" }}
+                      >
+                        <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
+                          {originLabel && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
+                              <span className="line-clamp-2">{originLabel}</span>
+                            </div>
+                          )}
+                          {item.descripcion && (
+                            <p className="text-sm text-muted-foreground line-clamp-3">{item.descripcion}</p>
+                          )}
+                          {(item.alergenos_oficiales?.length > 0 || item.alergenos_inferidos?.length > 0) && (
+                            <div className="flex flex-wrap gap-1">
+                              {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
+                                <Badge key={`oficial-${cardKey}-${idx}`} variant="destructive" className="text-xs">
+                                  {alergeno}
+                                </Badge>
+                              ))}
+                              {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
+                                <Badge key={`inferido-${cardKey}-${idx}`} variant="secondary" className="text-xs">
+                                  {alergeno}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          {item.alergenos_notas && (
+                            <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded line-clamp-2">
+                              {item.alergenos_notas}
+                            </p>
+                          )}
+                        </CardContent>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <CardFooter
+                    className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
+                      expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
+                    }`}
+                  >
+                    <span className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}>
+                      {item.precio_eur}€
+                    </span>
+                    {showAddButton && (
+                      <Button
+                        size="sm"
+                        onClick={() => addToPedido(item)}
+                        className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        {t.vinos.add}
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 

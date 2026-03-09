@@ -67,6 +67,8 @@ export const translations = {
       ageCheckBlocked: "Lo sentimos, debes tener 18+ para ver esta sección.",
       searchPlaceholder: "Buscar vinos...",
       loading: "Cargando vinos...",
+      viewPhoto: "Ver foto",
+      hidePhoto: "Ocultar foto",
       originLabel: "Origen",
       doLabel: "D.O.",
       add: "Añadir",

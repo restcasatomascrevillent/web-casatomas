@@ -112,7 +112,6 @@ const NovedadesSection = () => {
                 style={imageStyle}
                 loading="lazy"
                 decoding="async"
-                fetchPriority="low"
               />
             </div>
           ) : (

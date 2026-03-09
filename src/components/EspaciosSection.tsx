@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { compareDesc, format, isSameDay } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { compareDesc, format, isSameDay, isValid, parseISO } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, Sparkles, Star, TreePine, Utensils, Wine } from "lucide-react";
 
@@ -11,7 +12,128 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+
+interface MenuDiarioRow {
+  id: string;
+  fecha: string;
+  menu: unknown;
+}
+
+interface MenuDelDia {
+  id: string;
+  date: Date;
+  primeros: string[];
+  segundos: string[];
+  postre: string;
+}
+
+interface TapasRow {
+  id?: string;
+  fecha: string;
+  tapas: unknown;
+}
+
+interface TapasDelDia {
+  id: string;
+  date: Date;
+  tapas: string[];
+}
+
+const normalizeMenuItems = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => String(entry).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    if (
+      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+      (trimmed.startsWith("{") && trimmed.endsWith("}"))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return normalizeMenuItems(parsed);
+      } catch {
+        return [trimmed];
+      }
+    }
+
+    return [trimmed];
+  }
+
+  return [];
+};
+
+const parseMenuPayload = (value: unknown): Record<string, unknown> => {
+  if (!value) return {};
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return {};
+    try {
+      const parsed = JSON.parse(trimmed);
+      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return {};
+};
+
+const toMenuDelDia = (row: MenuDiarioRow): MenuDelDia | null => {
+  const parsedDate = parseISO(row.fecha);
+  if (!isValid(parsedDate)) return null;
+
+  const payload = parseMenuPayload(row.menu);
+  const primeros = normalizeMenuItems(payload.primero ?? payload.primeros);
+  const segundos = normalizeMenuItems(payload.segundo ?? payload.segundos);
+  const postre = normalizeMenuItems(payload.postre ?? payload.postres).join(", ");
+
+  if (primeros.length === 0 && segundos.length === 0 && !postre) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    date: parsedDate,
+    primeros,
+    segundos,
+    postre,
+  };
+};
+
+const toTapasDelDia = (row: TapasRow, index: number): TapasDelDia | null => {
+  const parsedDate = parseISO(row.fecha);
+  if (!isValid(parsedDate)) return null;
+
+  const directTapas = normalizeMenuItems(row.tapas);
+  const parsedPayload = parseMenuPayload(row.tapas);
+  const payloadTapas = normalizeMenuItems(
+    parsedPayload.tapas ?? parsedPayload.items ?? parsedPayload.lista ?? parsedPayload.listado
+  );
+
+  const tapas = payloadTapas.length > 0 ? payloadTapas : directTapas;
+  if (tapas.length === 0) return null;
+
+  return {
+    id: row.id ?? `${row.fecha}-${index}`,
+    date: parsedDate,
+    tapas,
+  };
+};
 
 const EspaciosSection = () => {
   const { t, dateLocale } = useTranslations();
@@ -25,8 +147,46 @@ const EspaciosSection = () => {
   const [menuSlide, setMenuSlide] = useState(0);
   const [tapasSlide, setTapasSlide] = useState(0);
 
-  const menusDelDia = t.espacios.menus;
-  const tapasSemanales = t.espacios.tapas;
+  const { data: rawMenusDelDia = [] } = useQuery({
+    queryKey: ["menus_diarios"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("menus_diarios")
+        .select("id, fecha, menu")
+        .order("fecha", { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as MenuDiarioRow[];
+    },
+  });
+
+  const menusDelDia = useMemo(
+    () =>
+      rawMenusDelDia
+        .map((row) => toMenuDelDia(row))
+        .filter((menu): menu is MenuDelDia => Boolean(menu)),
+    [rawMenusDelDia]
+  );
+  const { data: rawTapasSemanales = [] } = useQuery({
+    queryKey: ["tapas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tapas")
+        .select("id, fecha, tapas")
+        .order("fecha", { ascending: false });
+
+      if (error) throw error;
+      return (data || []) as TapasRow[];
+    },
+  });
+
+  const tapasSemanales = useMemo(
+    () =>
+      rawTapasSemanales
+        .map((row, index) => toTapasDelDia(row, index))
+        .filter((tapas): tapas is TapasDelDia => Boolean(tapas)),
+    [rawTapasSemanales]
+  );
 
   const sortedMenus = [...menusDelDia].sort((a, b) => compareDesc(a.date, b.date));
   const sortedTapas = [...tapasSemanales].sort((a, b) => compareDesc(a.date, b.date));
@@ -58,18 +218,14 @@ const EspaciosSection = () => {
   }, [tapasCarouselApi]);
 
   const today = new Date();
-  const todayDay = today.getDay();
-  const isMenuDayToday = todayDay >= 2 && todayDay <= 4;
-  const isTapasDayToday = todayDay === 4;
+  const isMenuDayToday = sortedMenus.some((menu) => isSameDay(menu.date, today));
+  const isTapasDayToday = sortedTapas.some((tapas) => isSameDay(tapas.date, today));
 
   const todayMenuMatch = sortedMenus.find((menu) => isSameDay(menu.date, today));
   const todayTapasMatch = sortedTapas.find((tapas) => isSameDay(tapas.date, today));
 
-  const todayMenu = sortedMenus.length ? todayMenuMatch ?? sortedMenus[0] : null;
-  const todayTapas = sortedTapas.length ? todayTapasMatch ?? sortedTapas[0] : null;
-
-  const menuFallbackActive = Boolean(todayMenu) && !todayMenuMatch;
-  const tapasFallbackActive = Boolean(todayTapas) && !todayTapasMatch;
+  const todayMenu = todayMenuMatch ?? null;
+  const todayTapas = todayTapasMatch ?? null;
 
   const menuDaysLabel = `${format(new Date(2025, 0, 21), "EEE", { locale: dateLocale })} - ${format(new Date(2025, 0, 23), "EEE", { locale: dateLocale })}`;
   const tapasDayLabel = format(new Date(2025, 0, 23), "EEE", { locale: dateLocale });
@@ -204,7 +360,7 @@ const EspaciosSection = () => {
                   disabled={!isMenuDayToday}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.menuAvailableDays}
+                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.noMenuToday}
                 </Button>
               </div>
             </CardContent>
@@ -238,7 +394,7 @@ const EspaciosSection = () => {
                   disabled={!isTapasDayToday}
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.tapasAvailableDay}
+                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.noTapasToday}
                 </Button>
               </div>
             </CardContent>
@@ -249,6 +405,9 @@ const EspaciosSection = () => {
           <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>{selectedEspacio !== null ? espacios[selectedEspacio].title : ""}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Galería de imágenes del espacio seleccionado.
+              </DialogDescription>
             </DialogHeader>
             {selectedEspacio !== null && espacios[selectedEspacio].images && (
               <Carousel className="w-full">
@@ -281,6 +440,9 @@ const EspaciosSection = () => {
                 <ChefHat className="w-5 h-5 text-primary" />
                 {t.espacios.todayMenuTitle}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Menú diario cargado desde base de datos.
+              </DialogDescription>
               {todayMenu && (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
                   <CalendarDays className="w-4 h-4 text-primary" />
@@ -318,7 +480,9 @@ const EspaciosSection = () => {
                       <div className="rounded-xl bg-muted/40 p-4 border border-border/60 flex flex-col justify-between">
                         <div>
                           <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.dessert}</h4>
-                          <p className="text-sm text-muted-foreground">• {todayMenu.postre}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {todayMenu.postre ? `• ${todayMenu.postre}` : t.espacios.noMenuToday}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -340,6 +504,9 @@ const EspaciosSection = () => {
                 <Clock className="w-5 h-5 text-primary" />
                 {t.espacios.todayTapasTitle}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Tapas del día cargadas desde base de datos.
+              </DialogDescription>
               {todayTapas && (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
                   <CalendarDays className="w-4 h-4 text-primary" />
@@ -380,6 +547,9 @@ const EspaciosSection = () => {
           <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background text-center">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Historial de menús diarios recientes.
+              </DialogDescription>
             </DialogHeader>
             <p className="md:hidden text-xs text-muted-foreground mb-2 px-2 text-center break-words">
               ← {t.espacios.swipeHint} →
@@ -465,6 +635,9 @@ const EspaciosSection = () => {
           <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background text-center">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Historial de tapas recientes.
+              </DialogDescription>
             </DialogHeader>
             <p className="md:hidden text-xs text-muted-foreground mb-2 px-2 text-center break-words">
               ← {t.espacios.swipeHint} →
