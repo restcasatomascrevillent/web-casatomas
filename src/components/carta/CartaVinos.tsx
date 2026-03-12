@@ -34,6 +34,8 @@ interface Vino {
   nombre: string;
   precio_eur: number;
   categoria?: string;
+  imagen_url?: string | null;
+  imagen_posicion_y?: number | null;
   denominacion_origen?: string;
   ubicacion_region?: string;
   ubicacion_pais?: string;
@@ -333,28 +335,14 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   };
 
   const getWineImage = (item: VinoRecord) => {
-    const candidateFields = [
-      "imagen_url",
-      "foto_url",
-      "image_url",
-      "url_imagen",
-      "url_foto",
-      "foto",
-      "imagen",
-      "image",
-      "adjunto",
-      "adjunto_url",
-      "adjuntos",
-      "attachments",
-      "archivos",
-    ];
+    return extractImageCandidate(item.imagen_url);
+  };
 
-    for (const field of candidateFields) {
-      const candidate = extractImageCandidate(item[field]);
-      if (candidate) return candidate;
-    }
-
-    return null;
+  const getImagePositionY = (value: unknown): number | null => {
+    if (value === null || value === undefined || value === "") return null;
+    const numeric = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    return Math.min(100, Math.max(0, numeric));
   };
 
   const handleCategoryChange = (category: string) => {
@@ -492,6 +480,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
             const expanded = isCardExpanded(itemRecord);
             const imageUrl = getWineImage(itemRecord);
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
+            const imagePositionY = getImagePositionY(itemRecord.imagen_posicion_y);
+            const imageStyle = imagePositionY === null ? undefined : { objectPosition: `center ${imagePositionY}%` };
             const originLabel = [item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais]
               .filter(Boolean)
               .join(" · ");
@@ -526,6 +516,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                               src={imageUrl || undefined}
                               alt={item.displayNombre || item.nombre}
                               className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                              style={imageStyle}
                               onError={() =>
                                 setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
                               }

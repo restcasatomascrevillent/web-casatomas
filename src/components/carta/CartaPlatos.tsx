@@ -16,12 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import seafoodImg from "@/assets/platos/seafood.jpg";
-import meatImg from "@/assets/platos/meat.jpg";
-import saladImg from "@/assets/platos/salad.jpg";
-import riceImg from "@/assets/platos/rice.jpg";
-import dessertImg from "@/assets/platos/dessert.jpg";
-import appetizerImg from "@/assets/platos/appetizer.jpg";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import BackToTopButton from "./BackToTopButton";
 
@@ -36,6 +30,8 @@ interface Plato {
   nombre: string;
   categoria: string;
   descripcion?: string;
+  imagen_url?: string | null;
+  imagen_posicion_y?: number | null;
   ingredientes?: string[] | string | null;
   precio_eur: number;
   unidad?: string;
@@ -56,6 +52,8 @@ interface Plato {
   expanded?: boolean;
 }
 
+type PlatoRecord = Plato & Record<string, unknown>;
+
 const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const { t, language } = useTranslations();
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -67,6 +65,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
+  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [dietaryFilters, setDietaryFilters] = useState<Record<DietaryFilterKey, boolean>>({
     celiaquia: false,
     lactosa: false,
@@ -75,6 +74,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   });
   const { toast } = useToast();
   const PAGE_SIZE = 24;
+  const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
 
   const normalizeAlergenos = (value: unknown): string[] => {
     if (Array.isArray(value)) return value;
@@ -341,15 +341,78 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
   };
 
-  const getCategoryImage = (categoria: string) => {
-    const cat = categoria.toUpperCase();
-    if (cat.includes('MARISCO') || cat.includes('PESCADO')) return seafoodImg;
-    if (cat.includes('CARNE')) return meatImg;
-    if (cat.includes('ENSALADA')) return saladImg;
-    if (cat.includes('ARROZ')) return riceImg;
-    if (cat.includes('POSTRE')) return dessertImg;
-    if (cat.includes('ENTRANTE') || cat.includes('SNACK') || cat.includes('SALAZÓN')) return appetizerImg;
-    return appetizerImg;
+  const toPublicImageUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("blob:")
+    ) {
+      return trimmed;
+    }
+    if (!supabaseUrl) return trimmed;
+    if (trimmed.startsWith("/storage/v1/object/public/")) {
+      return `${supabaseUrl}${trimmed}`;
+    }
+    if (trimmed.startsWith("/")) {
+      return `${supabaseUrl}${trimmed}`;
+    }
+    if (trimmed.includes("/")) {
+      return `${supabaseUrl}/storage/v1/object/public/${trimmed.replace(/^\/+/, "")}`;
+    }
+    return trimmed;
+  };
+
+  const extractImageCandidate = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null;
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") {
+        return null;
+      }
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
+        try {
+          return extractImageCandidate(JSON.parse(trimmed));
+        } catch {
+          return toPublicImageUrl(trimmed);
+        }
+      }
+      return toPublicImageUrl(trimmed);
+    }
+
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const nested = extractImageCandidate(entry);
+        if (nested) return nested;
+      }
+      return null;
+    }
+
+    if (typeof value === "object") {
+      const record = value as Record<string, unknown>;
+      const nestedKeys = ["url", "publicUrl", "public_url", "path", "src", "href", "link", "imagen_url"];
+      for (const nestedKey of nestedKeys) {
+        const nested = extractImageCandidate(record[nestedKey]);
+        if (nested) return nested;
+      }
+    }
+
+    return null;
+  };
+
+  const getDishImage = (item: PlatoRecord) => extractImageCandidate(item.imagen_url);
+
+  const getImagePositionY = (value: unknown): number | null => {
+    if (value === null || value === undefined || value === "") return null;
+    const numeric = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    return Math.min(100, Math.max(0, numeric));
   };
 
   const getInitialCantidad = (unidad?: string) => {
@@ -541,8 +604,14 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
       ) : (
       <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => {
+          const itemRecord = item as PlatoRecord;
+          const cardKey = itemRecord.id || `${itemRecord.nombre}|${itemRecord.precio_eur}|${itemRecord.categoria ?? ""}`;
           const expanded = isCardExpanded(item);
           const infoOpen = isInfoCardOpen(item);
+          const imageUrl = getDishImage(itemRecord);
+          const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
+          const imagePositionY = getImagePositionY(itemRecord.imagen_posicion_y);
+          const imageStyle = imagePositionY === null ? undefined : { objectPosition: `center ${imagePositionY}%` };
           const categoryLabel = item.translatedCategoria ?? translateCategory(item.categoria);
           const infoAlergenos = Array.from(
             new Set(
@@ -555,7 +624,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
           return (
             <motion.div
               layout
-              key={item.id}
+              key={cardKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.03 }}
@@ -587,11 +656,21 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                           className="overflow-hidden bg-muted flex-shrink-0"
                         >
                           <div className="relative h-48 overflow-hidden">
-                            <img
-                              src={getCategoryImage(item.categoria)}
-                              alt={item.displayNombre}
-                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                            />
+                            {hasVisibleImage ? (
+                              <img
+                                src={imageUrl || undefined}
+                                alt={item.displayNombre}
+                                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                style={imageStyle}
+                                onError={() =>
+                                  setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
+                                }
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                                <UtensilsCrossed className="w-9 h-9 text-accent/70" />
+                              </div>
+                            )}
                             <div className="absolute top-2 right-2">
                               <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
                                 {categoryLabel}
