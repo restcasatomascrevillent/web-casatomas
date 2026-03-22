@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Crown, Users, ChefHat } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 const NosotrosSection = () => {
@@ -9,12 +8,6 @@ const NosotrosSection = () => {
   const equipo = t.nosotros.team.map((persona, index) => ({
     ...persona,
     icon: index === 0 ? Crown : index === 1 ? Users : ChefHat,
-    imagen:
-      index === 0
-        ? "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&h=400&fit=crop"
-        : index === 1
-          ? "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop"
-          : "https://images.unsplash.com/photo-1583394293214-28ded15ee548?w=400&h=400&fit=crop",
   }));
 
   return (
@@ -101,12 +94,6 @@ const NosotrosSection = () => {
                   <Card className="h-full hover:shadow-xl transition-all duration-300">
                     <CardContent className="p-6">
                       <div className="flex flex-col items-center text-center mb-4">
-                        <Avatar className="w-32 h-32 mb-4 border-4 border-primary/20">
-                          <AvatarImage src={persona.imagen} alt={persona.nombre} />
-                          <AvatarFallback className="text-2xl bg-accent/10 text-accent">
-                            {persona.nombre.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
                         <div className="mb-3">
                           <div className="inline-flex items-center justify-center w-12 h-12 bg-accent/10 rounded-full mb-2">
                             <IconComponent className="w-6 h-6 text-accent" />
