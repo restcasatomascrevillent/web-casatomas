@@ -7,6 +7,14 @@ import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, S
 import carnePlato from "@/assets/carne-plato.png";
 import pulpoPlato from "@/assets/pulpo-plato.jpg";
 import vinosMarques from "@/assets/vinos-marqués.jpeg";
+import salon1 from "@/assets/espacios/salon-1.jpg";
+import salon2 from "@/assets/espacios/salon-2.jpg";
+import salon3 from "@/assets/espacios/salon-3.jpg";
+import salon4 from "@/assets/espacios/salon-4.jpg";
+import salon5 from "@/assets/espacios/salon-5.jpg";
+import comedor1 from "@/assets/espacios/comedor-1.jpg";
+import comedor2 from "@/assets/espacios/comedor-2.jpg";
+import comedor3 from "@/assets/espacios/comedor-3.jpg";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -253,9 +261,9 @@ const EspaciosSection = () => {
     hasGallery: index !== 3,
     images:
       index === 0
-        ? [carnePlato, pulpoPlato, vinosMarques]
+        ? [salon1, salon2, salon3, salon4, salon5]
         : index === 1
-          ? [pulpoPlato, vinosMarques, carnePlato]
+          ? [comedor1, comedor2, comedor3]
           : index === 2
             ? [vinosMarques, carnePlato, pulpoPlato]
             : undefined,
