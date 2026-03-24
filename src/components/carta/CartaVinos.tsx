@@ -517,8 +517,6 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                               alt={item.displayNombre || item.nombre}
                               className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                               style={imageStyle}
-                              loading="lazy"
-                              decoding="async"
                               onError={() =>
                                 setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
                               }

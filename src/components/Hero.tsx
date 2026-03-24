@@ -59,11 +59,6 @@ const Hero = () => {
             src={logo}
             alt={t.hero.logoAlt}
             className="w-64 md:w-96 lg:w-[28rem] h-auto mx-auto mb-6 drop-shadow-2xl"
-            width={800}
-            height={550}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
           />
           <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
             {t.hero.motto}

@@ -96,14 +96,7 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <img
-              src={logo}
-              alt={t.hero.logoAlt}
-              className="h-10 md:h-12 w-auto"
-              width={800}
-              height={550}
-              decoding="async"
-            />
+            <img src={logo} alt={t.hero.logoAlt} className="h-10 md:h-12 w-auto" />
           </motion.button>
 
           {/* Desktop Navigation */}

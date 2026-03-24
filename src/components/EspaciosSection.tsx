@@ -4,17 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, Sparkles, Star, TreePine, Utensils, Wine } from "lucide-react";
 
-import carnePlato from "@/assets/carne-plato.jpg";
+import carnePlato from "@/assets/carne-plato.png";
 import pulpoPlato from "@/assets/pulpo-plato.jpg";
 import vinosMarques from "@/assets/vinos-marqués.jpeg";
-import salon1 from "@/assets/espacios/salon-1.jpg";
-import salon2 from "@/assets/espacios/salon-2.jpg";
-import salon3 from "@/assets/espacios/salon-3.jpg";
-import salon4 from "@/assets/espacios/salon-4.jpg";
-import salon5 from "@/assets/espacios/salon-5.jpg";
-import comedor1 from "@/assets/espacios/comedor-1.jpg";
-import comedor2 from "@/assets/espacios/comedor-2.jpg";
-import comedor3 from "@/assets/espacios/comedor-3.jpg";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -261,9 +253,9 @@ const EspaciosSection = () => {
     hasGallery: index !== 3,
     images:
       index === 0
-        ? [salon1, salon2, salon3, salon4, salon5]
+        ? [carnePlato, pulpoPlato, vinosMarques]
         : index === 1
-          ? [comedor1, comedor2, comedor3]
+          ? [pulpoPlato, vinosMarques, carnePlato]
           : index === 2
             ? [vinosMarques, carnePlato, pulpoPlato]
             : undefined,
@@ -444,12 +436,8 @@ const EspaciosSection = () => {
                           src={image}
                           alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
                           className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
-                          width={1050}
-                          height={1400}
                           loading="lazy"
-                          fetchPriority="low"
                           decoding="async"
-                          sizes="(max-width: 768px) 100vw, 900px"
                         />
                       </div>
                     </CarouselItem>
