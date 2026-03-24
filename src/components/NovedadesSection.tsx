@@ -10,8 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 import pulpoImage from "@/assets/pulpo-plato.jpg";
-import carneImage from "@/assets/carne-plato.png";
-import champanImage from "@/assets/champan.png";
+import carneImage from "@/assets/carne-plato.jpg";
+import champanImage from "@/assets/champan.jpg";
 
 type IconKey = "utensils" | "wine" | "gift" | "calendar" | "star" | "sparkles" | "coffee" | "cake";
 
@@ -111,6 +111,7 @@ const NovedadesSection = () => {
                 className="w-full h-full object-cover"
                 style={imageStyle}
                 loading="lazy"
+                fetchPriority="low"
                 decoding="async"
               />
             </div>
