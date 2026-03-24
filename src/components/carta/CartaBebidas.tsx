@@ -43,6 +43,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>({});
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const { toast } = useToast();
   const PAGE_SIZE = 24;
   const currentLoading = loadingByCategory[selectedCategory];
@@ -93,6 +94,12 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     if (!bebidasByCategory[category]) {
       fetchBebidas(category, false);
     }
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setCategoryMenuOpen(false);
+    if (category === selectedCategory) return;
+    requestAnimationFrame(() => handleCategoryChange(category));
   };
 
   const loadMore = () => {
@@ -190,11 +197,11 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
 
         {/* Category Filter Dropdown */}
         <div className="flex justify-center">
-          <DropdownMenu>
+          <DropdownMenu open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen} modal={false}>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold text-left"
+                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold text-left touch-manipulation"
               >
                 <span className="flex items-start gap-2 text-left whitespace-normal break-words leading-tight flex-1">
                   <Wine className="w-5 h-5 text-accent" />
@@ -203,12 +210,20 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
                 <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 flex-shrink-0 mt-1" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 max-h-[28rem] overflow-y-auto bg-background border-2 border-border shadow-2xl rounded-xl p-2 z-50">
+            <DropdownMenuContent
+              align="center"
+              sideOffset={8}
+              onCloseAutoFocus={(event) => event.preventDefault()}
+              className="w-72 max-h-[60vh] overflow-y-auto overscroll-contain bg-background border-2 border-border shadow-2xl rounded-xl p-2 z-50"
+            >
               {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 ${
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    handleCategorySelect(category);
+                  }}
+                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 touch-manipulation ${
                     selectedCategory === category 
                       ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
                       : "hover:bg-muted/70 hover:translate-x-1"

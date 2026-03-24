@@ -66,6 +66,7 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [dietaryFilters, setDietaryFilters] = useState<Record<DietaryFilterKey, boolean>>({
     celiaquia: false,
     lactosa: false,
@@ -335,6 +336,12 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     }
   };
 
+  const handleCategorySelect = (category: string) => {
+    setCategoryMenuOpen(false);
+    if (category === selectedCategory) return;
+    requestAnimationFrame(() => handleCategoryChange(category));
+  };
+
   const loadMore = () => {
     if (hasMoreByCategory[selectedCategory] && !currentLoading) {
       fetchPlatosByCategory(selectedCategory, true);
@@ -529,11 +536,11 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
 
         {/* Category Filter Dropdown */}
         <div className="flex justify-center">
-          <DropdownMenu>
+          <DropdownMenu open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen} modal={false}>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-72 h-12 justify-between bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold"
+                className="w-72 h-12 justify-between bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold touch-manipulation"
               >
                 <span className="flex items-center gap-2">
                   <UtensilsCrossed className="w-5 h-5 text-accent" />
@@ -542,12 +549,20 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
                 <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 max-h-[28rem] overflow-y-auto bg-background/95 backdrop-blur-lg border-2 border-border shadow-2xl rounded-xl p-2">
+            <DropdownMenuContent
+              align="center"
+              sideOffset={8}
+              onCloseAutoFocus={(event) => event.preventDefault()}
+              className="w-72 max-h-[60vh] overflow-y-auto overscroll-contain bg-background/95 backdrop-blur-lg border-2 border-border shadow-2xl rounded-xl p-2"
+            >
               {categories.map((category) => (
                 <DropdownMenuItem
                   key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 ${
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    handleCategorySelect(category);
+                  }}
+                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 touch-manipulation ${
                     selectedCategory === category 
                       ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
                       : "hover:bg-muted/70 hover:translate-x-1"
