@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import { Seo } from "@/components/Seo";
 
 const CartaSection = lazy(() => import("@/components/CartaSection"));
 const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
@@ -127,6 +128,53 @@ const Index = () => {
 
   return (
     <>
+      <Seo
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "Restaurant",
+          "name": "Casa Tomás Restaurante",
+          "image": "https://restaurantecasatomascrevillente.es/og-image.jpg",
+          "telephone": "+34966107887",
+          "email": "casatomascrevillent@gmail.com",
+          "url": "https://restaurantecasatomascrevillente.es/",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Carrer Santa Maria de la Cabeza, 2",
+            "addressLocality": "Crevillent",
+            "addressRegion": "Alicante",
+            "postalCode": "03330",
+            "addressCountry": "ES"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 38.2494,
+            "longitude": -0.8138
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+              "opens": "13:00",
+              "closes": "16:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Saturday","Sunday"],
+              "opens": "13:00",
+              "closes": "16:30"
+            }
+          ],
+          "servesCuisine": ["Cocina tradicional española", "Gastronomía alicantina"],
+          "priceRange": "€€",
+          "currenciesAccepted": "EUR",
+          "paymentAccepted": "Cash, Credit Card",
+          "hasMap": "https://maps.google.com/?q=Casa+Tomás+Restaurante+Crevillent",
+          "sameAs": [
+            "https://www.facebook.com/casatomasrestaurante",
+            "https://www.instagram.com/casatomasrestaurante"
+          ]
+        }}
+      />
       <Header />
       <div className="min-h-screen bg-background">
         <Hero />

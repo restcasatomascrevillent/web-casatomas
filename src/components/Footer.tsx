@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Instagram, Facebook } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 const Footer = () => {
@@ -41,6 +42,22 @@ const Footer = () => {
               <li>Carrer Santa Maria de la Cabeza, 2</li>
               <li>03330 Crevillent, Alicante</li>
             </ul>
+            <div className="flex gap-4 mt-4">
+              <a
+                href="#" /* TODO: añadir URL real */
+                aria-label="Instagram"
+                className="text-stone hover:text-accent transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="#" /* TODO: añadir URL real */
+                aria-label="Facebook"
+                className="text-stone hover:text-accent transition-colors"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
 

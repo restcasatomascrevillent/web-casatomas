@@ -45,7 +45,7 @@ const CookieConsent = () => {
                 <h3 className="text-lg font-bold mb-2">{t.cookie.title}</h3>
                 <p className="text-sm text-muted-foreground">
                   {t.cookie.message}{" "}
-                  <a href="#" className="text-primary hover:underline font-medium">
+                  <a href="/politica-privacidad" className="text-primary hover:underline font-medium">
                     {t.cookie.link}
                   </a>
                   .

@@ -9,7 +9,6 @@ import { LanguageProvider } from "@/i18n/LanguageProvider";
 
 const queryClient = new QueryClient();
 const Index = lazy(() => import("./pages/Index"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Reservas = lazy(() => import("./pages/Reservas"));
 const PoliticaPrivacidad = lazy(() => import("./pages/PoliticaPrivacidad"));
@@ -33,7 +32,6 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/reservas" element={<Reservas />} />
               <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/touza-cocktail" element={<NotFound />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
