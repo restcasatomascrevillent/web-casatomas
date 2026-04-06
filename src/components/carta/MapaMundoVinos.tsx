@@ -124,7 +124,7 @@ const regionCoordinates: { [key: string]: [number, number] } = {
   "Western Cape (Elgin)": [19.0, -34.2],
 };
 
-const MAPBOX_TOKEN = "pk.eyJ1Ijoib2ZpY2lvc29zIiwiYSI6ImNtaHZubTFhcDAyOGIybHNneWtrNjY0NjcifQ.yVfJCOCYXbs6VrOkDWOQtg";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 const getCategoryKey = (categoria?: string) => {
   const cat = (categoria || "").toUpperCase();
@@ -251,7 +251,11 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           transition: box-shadow 150ms ease;
           will-change: transform;
         `;
-        el.innerHTML = `<span style="display: inline-block; width: 100%; text-align: center;">${data.count}</span>`;
+        const span = document.createElement('span');
+        span.style.cssText = 'display: inline-block; width: 100%; text-align: center;';
+        span.textContent = String(data.count);
+        el.textContent = '';
+        el.appendChild(span);
         el.title = region;
 
         if (!isMobile) {

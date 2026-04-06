@@ -152,7 +152,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         "https://n8npersonal.miguelbenito.space/webhook/7e7fae99-44b9-48fd-b4d8-52be8cf0a518",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Webhook-Secret": import.meta.env.VITE_N8N_WEBHOOK_SECRET || ''
+          },
           body: JSON.stringify({
             fecha: format(fecha, "yyyy-MM-dd"),
             numero_comensales: numeroComensales
@@ -327,7 +330,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
       const response = await fetch("https://n8npersonal.miguelbenito.space/webhook/2c6ec220-85c7-4460-b876-a92515c7b135", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Secret": import.meta.env.VITE_N8N_WEBHOOK_SECRET || ''
+        },
         body: JSON.stringify({
           nombre: data.nombre,
           telefono: telefonoWebhook,

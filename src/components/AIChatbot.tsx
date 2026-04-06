@@ -379,6 +379,7 @@ const AIChatbot = ({
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-Webhook-Secret": import.meta.env.VITE_N8N_WEBHOOK_SECRET || '',
                 },
                 body: new URLSearchParams({
                     body: JSON.stringify(chatbotPayload, null, 2),
