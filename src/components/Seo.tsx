@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { Head } from "vite-react-ssg";
 
 interface SeoProps {
   title?: string;
@@ -7,6 +7,7 @@ interface SeoProps {
   ogImage?: string;
   keywords?: string[];
   schema?: object;
+  noindex?: boolean;
 }
 
 const DEFAULT_TITLE = "Casa Tomás Restaurante - Tradición y Calidad en Crevillent";
@@ -21,18 +22,22 @@ export function Seo({
   ogImage = DEFAULT_IMAGE,
   keywords = ["restaurante Crevillent", "Casa Tomás", "cocina tradicional", "restaurante Alicante"],
   schema,
+  noindex = false,
 }: SeoProps) {
   return (
-    <Helmet>
+    <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords.join(", ")} />
       <link rel="canonical" href={canonical} />
+      {noindex && <meta name="robots" content="noindex,follow" />}
 
       {/* Open Graph */}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:url" content={canonical} />
       <meta property="og:type" content="website" />
       <meta property="og:locale" content="es_ES" />
@@ -40,6 +45,7 @@ export function Seo({
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@CasaTomas" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
@@ -50,6 +56,6 @@ export function Seo({
           {JSON.stringify(schema)}
         </script>
       )}
-    </Helmet>
+    </Head>
   );
 }

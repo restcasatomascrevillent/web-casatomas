@@ -1,7 +1,43 @@
-import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { Seo } from "@/components/Seo";
+import cartaCompleta from "@/data/carta_completa.json";
+
+// URL real de Google Maps del local (reutilizada de ReviewsSection.tsx)
+const GOOGLE_MAPS_URL =
+  "https://www.google.com/maps/place/Casa+Tom%C3%A1s+Restaurante/@38.2489234,-0.8107264,17z/data=!4m8!3m7!1s0xd6382b8f8f8f8f8f:0x1234567890abcdef!8m2!3d38.2489234!4d-0.8085377!9m1!1b1!16s%2Fg%2F11c0qw0qw0?entry=ttu";
+
+type CartaItem = { name?: string; price_eur?: number | null };
+type CartaCategory = { category?: string; items?: CartaItem[] };
+
+// Menú schema.org generado a partir de carta_completa.json
+const hasMenu = {
+  "@type": "Menu",
+  "name": "Carta Casa Tomás",
+  "inLanguage": "es",
+  "hasMenuSection": (cartaCompleta.menu as CartaCategory[])
+    .filter((section) => section.category && Array.isArray(section.items))
+    .map((section) => ({
+      "@type": "MenuSection",
+      "name": section.category,
+      "hasMenuItem": (section.items ?? [])
+        .filter((item) => item.name)
+        .map((item) => ({
+          "@type": "MenuItem",
+          "name": item.name,
+          ...(typeof item.price_eur === "number"
+            ? {
+                "offers": {
+                  "@type": "Offer",
+                  "price": item.price_eur,
+                  "priceCurrency": "EUR",
+                },
+              }
+            : {}),
+        })),
+    })),
+};
 
 const CartaSection = lazy(() => import("@/components/CartaSection"));
 const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
@@ -22,110 +58,11 @@ const SectionPlaceholder = ({ id }: { id: string }) => (
   </section>
 );
 
-const DeferredSection = ({
-  id,
-  enabled,
-  children,
-}: {
-  id: string;
-  enabled: boolean;
-  children: ReactNode;
-}) => {
-  const [isMounted, setIsMounted] = useState(false);
-  const placeholderRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (isMounted || !enabled) return;
-    const node = placeholderRef.current;
-    if (!node) return;
-
-    if (!("IntersectionObserver" in window)) {
-      setIsMounted(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setIsMounted(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "180px 0px" }
-    );
-
-    observer.observe(node);
-
-    return () => observer.disconnect();
-  }, [isMounted, enabled]);
-
-  if (!isMounted) {
-    return (
-      <section id={id} ref={placeholderRef} className="py-16 px-4 md:px-8 lg:px-16 bg-background">
-        <div className="max-w-7xl mx-auto space-y-3">
-          <div className="h-8 w-44 rounded-full bg-muted/50 animate-pulse" />
-          <div className="h-4 w-full max-w-2xl rounded bg-muted/40 animate-pulse" />
-          <div className="h-4 w-full max-w-xl rounded bg-muted/40 animate-pulse" />
-        </div>
-      </section>
-    );
-  }
-
-  return <>{children}</>;
-};
-
-const LazySection = ({
-  id,
-  enabled,
-  children,
-}: {
-  id: string;
-  enabled: boolean;
-  children: ReactNode;
-}) => (
-  <DeferredSection id={id} enabled={enabled}>
-    <Suspense fallback={<SectionPlaceholder id={id} />}>{children}</Suspense>
-  </DeferredSection>
+const SectionBoundary = ({ id, children }: { id: string; children: ReactNode }) => (
+  <Suspense fallback={<SectionPlaceholder id={id} />}>{children}</Suspense>
 );
 
 const Index = () => {
-  const [canLoadDeferredSections, setCanLoadDeferredSections] = useState(false);
-
-  useEffect(() => {
-    if (canLoadDeferredSections) return;
-
-    let isCancelled = false;
-    const unlockDeferredSections = () => {
-      if (!isCancelled) {
-        setCanLoadDeferredSections(true);
-      }
-    };
-
-    const timeoutId = window.setTimeout(unlockDeferredSections, 5000);
-    const interactionEvents: Array<keyof WindowEventMap> = [
-      "pointerdown",
-      "touchstart",
-      "keydown",
-      "wheel",
-      "scroll",
-    ];
-
-    interactionEvents.forEach((eventName) => {
-      window.addEventListener(eventName, unlockDeferredSections, {
-        once: true,
-        passive: true,
-      });
-    });
-
-    return () => {
-      isCancelled = true;
-      window.clearTimeout(timeoutId);
-      interactionEvents.forEach((eventName) => {
-        window.removeEventListener(eventName, unlockDeferredSections);
-      });
-    };
-  }, [canLoadDeferredSections]);
-
   return (
     <>
       <Seo
@@ -168,40 +105,21 @@ const Index = () => {
           "priceRange": "€€",
           "currenciesAccepted": "EUR",
           "paymentAccepted": "Cash, Credit Card",
-          "hasMap": "https://maps.google.com/?q=Casa+Tomás+Restaurante+Crevillent",
-          "sameAs": [
-            "https://www.facebook.com/casatomasrestaurante",
-            "https://www.instagram.com/casatomasrestaurante"
-          ]
+          "hasMap": GOOGLE_MAPS_URL,
+          "hasMenu": hasMenu
         }}
       />
       <Header />
       <div className="min-h-screen bg-background">
         <Hero />
-        <LazySection id="carta" enabled={canLoadDeferredSections}>
-          <CartaSection />
-        </LazySection>
-        <LazySection id="novedades" enabled={canLoadDeferredSections}>
-          <NovedadesSection />
-        </LazySection>
-        <LazySection id="espacios" enabled={canLoadDeferredSections}>
-          <EspaciosSection />
-        </LazySection>
-        <LazySection id="reservas" enabled={canLoadDeferredSections}>
-          <ReservasSection />
-        </LazySection>
-        <LazySection id="reviews" enabled={canLoadDeferredSections}>
-          <ReviewsSection />
-        </LazySection>
-        <LazySection id="nosotros" enabled={canLoadDeferredSections}>
-          <NosotrosSection />
-        </LazySection>
-        <LazySection id="contacto" enabled={canLoadDeferredSections}>
-          <ContactoSection />
-        </LazySection>
-        <LazySection id="footer" enabled={canLoadDeferredSections}>
-          <Footer />
-        </LazySection>
+        <SectionBoundary id="carta"><CartaSection /></SectionBoundary>
+        <SectionBoundary id="novedades"><NovedadesSection /></SectionBoundary>
+        <SectionBoundary id="espacios"><EspaciosSection /></SectionBoundary>
+        <SectionBoundary id="reservas"><ReservasSection /></SectionBoundary>
+        <SectionBoundary id="reviews"><ReviewsSection /></SectionBoundary>
+        <SectionBoundary id="nosotros"><NosotrosSection /></SectionBoundary>
+        <SectionBoundary id="contacto"><ContactoSection /></SectionBoundary>
+        <SectionBoundary id="footer"><Footer /></SectionBoundary>
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Locale } from "date-fns";
 import { languageOptions, type Language } from "@/i18n/types";
-import type { LanguagePack, Translations } from "@/i18n/languages/es";
+import esLanguagePack, { type LanguagePack, type Translations } from "@/i18n/languages/es";
 
 type LanguageContextValue = {
   language: Language;
@@ -12,7 +12,10 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
-const languagePackCache: Partial<Record<Language, LanguagePack>> = {};
+// El pack 'es' (idioma por defecto) se importa de forma síncrona para que el
+// contenido esté disponible en el primer render — imprescindible para el SSG
+// (vite-react-ssg renderiza en Node sin ejecutar efectos). 'en'/'fr' siguen lazy.
+const languagePackCache: Partial<Record<Language, LanguagePack>> = { es: esLanguagePack };
 let hasPreloadedSecondaryLanguagePacks = false;
 const languageLoaders: Record<Language, () => Promise<{ default: LanguagePack }>> = {
   es: () => import("@/i18n/languages/es"),

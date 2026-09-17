@@ -1,17 +1,14 @@
-import { Suspense, lazy } from "react";
+import { Suspense, type ComponentType } from "react";
+import { Outlet } from "react-router-dom";
+import type { RouteRecord } from "vite-react-ssg";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import CookieConsent from "./components/CookieConsent";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 
 const queryClient = new QueryClient();
-const Index = lazy(() => import("./pages/Index"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Reservas = lazy(() => import("./pages/Reservas"));
-const PoliticaPrivacidad = lazy(() => import("./pages/PoliticaPrivacidad"));
 
 const RouteFallback = () => (
   <div className="min-h-[50vh] flex items-center justify-center text-muted-foreground">
@@ -19,28 +16,45 @@ const RouteFallback = () => (
   </div>
 );
 
-const App = () => (
+// Layout raíz: aporta todos los providers alrededor del <Outlet />.
+// vite-react-ssg construye el router internamente a partir del array `routes`.
+const Layout = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <CookieConsent />
-        <BrowserRouter>
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/reservas" element={<Reservas />} />
-              <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
-              <Route path="/touza-cocktail" element={<NotFound />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+        <Suspense fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );
 
-export default App;
+// Adapta el `export default` de cada página al contrato `lazy` de react-router
+// (que devuelve `{ Component }`). vite-react-ssg espera (await) este `lazy`
+// antes de renderizar, por lo que el HTML del SSG contiene el contenido real
+// (a diferencia de React.lazy + Suspense, que renderizaría el fallback vacío).
+const lazyRoute =
+  (factory: () => Promise<{ default: ComponentType }>) =>
+  async () => ({ Component: (await factory()).default });
+
+export const routes: RouteRecord[] = [
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      { index: true, lazy: lazyRoute(() => import("./pages/Index")) },
+      { path: "reservas", lazy: lazyRoute(() => import("./pages/Reservas")) },
+      {
+        path: "politica-privacidad",
+        lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
+      },
+      { path: "touza-cocktail", lazy: lazyRoute(() => import("./pages/NotFound")) },
+      // ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE
+      { path: "*", lazy: lazyRoute(() => import("./pages/NotFound")) },
+    ],
+  },
+];
