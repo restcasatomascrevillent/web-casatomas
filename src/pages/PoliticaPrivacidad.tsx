@@ -1,9 +1,16 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 const PoliticaPrivacidad = () => {
     return (
         <div className="min-h-screen bg-background">
+            <Seo
+                title="Política de Privacidad | Casa Tomás Restaurante"
+                description="Información sobre el tratamiento de datos personales en Casa Tomás Restaurante (Crevillent, Alicante) conforme al RGPD."
+                canonical="https://restaurantecasatomascrevillente.es/politica-privacidad"
+                noindex
+            />
             {/* Header */}
             <div className="bg-dark-slate text-background py-8 px-4">
                 <div className="max-w-4xl mx-auto">

@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { Seo } from "@/components/Seo";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,6 +13,8 @@ const NotFound = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted">
+      <Seo title="Página no encontrada | Casa Tomás Restaurante" noindex />
+
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">{t.notFound.title}</h1>
         <p className="mb-4 text-xl text-muted-foreground">{t.notFound.message}</p>

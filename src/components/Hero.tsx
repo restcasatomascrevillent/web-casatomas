@@ -65,6 +65,9 @@ const Hero = () => {
             fetchPriority="high"
             decoding="async"
           />
+          <h1 className="sr-only">
+            Casa Tomás — Restaurante de cocina tradicional en Crevillent (Alicante)
+          </h1>
           <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
             {t.hero.motto}
           </p>
