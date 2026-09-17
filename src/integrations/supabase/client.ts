@@ -18,7 +18,9 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    // SSR/SSG-safe: en Node (prerender) no existe localStorage; supabase usa
+    // almacenamiento en memoria cuando storage es undefined.
+    storage: typeof window !== "undefined" ? window.localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
   }
