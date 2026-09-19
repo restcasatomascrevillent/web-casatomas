@@ -6,6 +6,7 @@ import { MapPin, Phone, Mail, Gift } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { TelLink } from "@/components/TelLink";
 
 const ContactoSection = () => {
   const { t } = useTranslations();
@@ -91,7 +92,9 @@ const ContactoSection = () => {
                   <Phone className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
                   <div>
                     <p className="font-medium">{t.contacto.phoneLabel}</p>
-                    <p className="text-sm text-muted-foreground">966 10 78 87</p>
+                    <p className="text-sm">
+                      <TelLink className="text-muted-foreground underline-offset-4 hover:text-accent hover:underline transition-colors" />
+                    </p>
                   </div>
                 </div>
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { TelLink } from "@/components/TelLink";
 
 const Footer = () => {
   const { t } = useTranslations();
@@ -37,8 +38,14 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">{t.footer.contactTitle}</h4>
             <ul className="space-y-2 text-sm text-stone">
-              <li>966 10 78 87</li>
-              <li>casatomascrevillent@gmail.com</li>
+              <li>
+                <TelLink className="hover:text-accent transition-colors" />
+              </li>
+              <li>
+                <a href="mailto:casatomascrevillent@gmail.com" className="hover:text-accent transition-colors">
+                  casatomascrevillent@gmail.com
+                </a>
+              </li>
               <li>Carrer Santa Maria de la Cabeza, 2</li>
               <li>03330 Crevillent, Alicante</li>
             </ul>
@@ -67,13 +74,6 @@ const Footer = () => {
           </p>
 
           <div className="flex gap-4 items-center">
-            <a
-              href="https://adminpanelct.lovable.app"
-              className="text-xs text-stone hover:text-accent transition-colors"
-            >
-              {t.footer.admin}
-            </a>
-            <span className="text-stone">|</span>
             <Link
               to="/politica-privacidad"
               className="text-xs text-stone hover:text-accent transition-colors"

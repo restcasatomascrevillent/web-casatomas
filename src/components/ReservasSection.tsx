@@ -4,6 +4,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Button } from "@/components/ui/button";
 import ReservationForm from "@/components/ReservationForm";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { TelLink } from "@/components/TelLink";
 
 type ReservasSectionProps = {
   forceShowForm?: boolean;
@@ -65,7 +66,8 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
                   {t.reservas.disclaimer.note}
                 </p>
                 <p className="text-sm text-primary mt-2">
-                  <strong>{t.reservas.disclaimer.callUs}</strong>
+                  <strong>{t.reservas.disclaimer.callUs}</strong>{" "}
+                  <TelLink className="font-semibold text-accent underline underline-offset-4" />
                 </p>
                 <div className="mt-4 grid gap-2 text-sm text-primary">
                   {t.reservas.disclaimer.steps.map((step, index) => (

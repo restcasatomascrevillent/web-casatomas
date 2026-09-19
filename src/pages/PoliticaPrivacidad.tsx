@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Seo } from "@/components/Seo";
+import { TelLink } from "@/components/TelLink";
 
 const PoliticaPrivacidad = () => {
     return (
@@ -35,7 +36,7 @@ const PoliticaPrivacidad = () => {
                     <div className="rounded-lg border border-border p-5 space-y-1 text-sm text-muted-foreground">
                         <p><strong className="text-foreground">Razón social:</strong> Restaurante Casa Tomás</p>
                         <p><strong className="text-foreground">Dirección:</strong> Carrer Santa Maria de la Cabeza, 2 — 03330 Crevillent (Alicante)</p>
-                        <p><strong className="text-foreground">Teléfono:</strong> 966 10 78 87</p>
+                        <p><strong className="text-foreground">Teléfono:</strong> <TelLink className="text-accent hover:underline" /></p>
                         <p><strong className="text-foreground">Email:</strong> casatomascrevillent@gmail.com</p>
                     </div>
                 </section>
@@ -162,7 +163,7 @@ const PoliticaPrivacidad = () => {
                     </p>
                     <div className="mt-3 text-sm space-y-1">
                         <p>📧 <a href="mailto:casatomascrevillent@gmail.com" className="text-accent hover:underline">casatomascrevillent@gmail.com</a></p>
-                        <p>📞 966 10 78 87</p>
+                        <p>📞 <TelLink className="text-accent hover:underline" /></p>
                         <p>📍 Carrer Santa Maria de la Cabeza, 2 — 03330 Crevillent (Alicante)</p>
                     </div>
                 </section>

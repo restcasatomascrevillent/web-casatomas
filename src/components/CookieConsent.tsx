@@ -34,16 +34,18 @@ const CookieConsent = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6"
+          /* En móvil se ancla por encima de la barra fija de CTA (MobileReserveCTA)
+             para no tapar "Llamar" / "Reservar mesa". */
+          className="fixed bottom-[4.5rem] lg:bottom-0 left-0 right-0 z-50 p-2 md:p-6"
         >
-          <Card className="max-w-4xl mx-auto p-6 shadow-2xl border-2 border-primary/20 bg-background/95 backdrop-blur-sm">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-              <div className="flex-shrink-0">
+          <Card className="max-w-4xl mx-auto p-3 md:p-6 shadow-2xl border-2 border-primary/20 bg-background/95 backdrop-blur-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
+              <div className="flex-shrink-0 hidden md:block">
                 <Cookie className="w-8 h-8 text-accent" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold mb-2">{t.cookie.title}</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-sm md:text-lg font-bold mb-1 md:mb-2">{t.cookie.title}</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   {t.cookie.message}{" "}
                   <a href="/politica-privacidad" className="text-primary hover:underline font-medium">
                     {t.cookie.link}
@@ -51,19 +53,19 @@ const CookieConsent = () => {
                   .
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              <div className="flex flex-row gap-2 w-full md:w-auto">
                 <Button
                   onClick={handleReject}
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto"
+                  className="flex-1 md:flex-none"
                 >
                   {t.cookie.reject}
                 </Button>
                 <Button
                   onClick={handleAccept}
                   size="sm"
-                  className="w-full sm:w-auto"
+                  className="flex-1 md:flex-none"
                 >
                   {t.cookie.accept}
                 </Button>
