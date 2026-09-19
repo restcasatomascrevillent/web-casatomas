@@ -66,6 +66,7 @@ const Index = () => {
   return (
     <>
       <Seo
+        canonical="https://restaurantecasatomascrevillente.es/"
         schema={{
           "@context": "https://schema.org",
           "@type": "Restaurant",

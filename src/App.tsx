@@ -6,6 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CookieConsent from "./components/CookieConsent";
+import MobileReserveCTA from "./components/MobileReserveCTA";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const Layout = () => (
         <Suspense fallback={<RouteFallback />}>
           <Outlet />
         </Suspense>
+        <MobileReserveCTA />
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
@@ -53,6 +55,10 @@ export const routes: RouteRecord[] = [
         lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
       },
       { path: "touza-cocktail", lazy: lazyRoute(() => import("./pages/NotFound")) },
+      // Ruta literal para que el SSG prerenderice `404.html` (vite-react-ssg
+      // descarta la ruta "*" al recolectar paths). Vercel sirve ese fichero con
+      // status 404 para cualquier URL que no resuelva en el filesystem.
+      { path: "404", lazy: lazyRoute(() => import("./pages/NotFound")) },
       // ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE
       { path: "*", lazy: lazyRoute(() => import("./pages/NotFound")) },
     ],

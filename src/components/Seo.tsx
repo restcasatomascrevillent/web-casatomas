@@ -12,13 +12,15 @@ interface SeoProps {
 
 const DEFAULT_TITLE = "Casa Tomás Restaurante - Tradición y Calidad en Crevillent";
 const DEFAULT_DESC = "Casa Tomás Restaurante en Crevillent, Alicante. Más de 30 años de tradición culinaria. Cocina de calidad con productos frescos y ambiente familiar. Reserva tu mesa.";
-const DEFAULT_CANONICAL = "https://restaurantecasatomascrevillente.es/";
 const DEFAULT_IMAGE = "https://restaurantecasatomascrevillente.es/og-image.jpg";
 
+// `canonical` NO tiene valor por defecto a propósito: si lo tuviera (la portada),
+// cualquier página que no lo pase — 404 incluido — se declararía canónica a la
+// home. Cada página declara el suyo; las que no deben indexarse no declaran ninguno.
 export function Seo({
   title = DEFAULT_TITLE,
   description = DEFAULT_DESC,
-  canonical = DEFAULT_CANONICAL,
+  canonical,
   ogImage = DEFAULT_IMAGE,
   keywords = ["restaurante Crevillent", "Casa Tomás", "cocina tradicional", "restaurante Alicante"],
   schema,
@@ -29,7 +31,7 @@ export function Seo({
       <title>{title}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords.join(", ")} />
-      <link rel="canonical" href={canonical} />
+      {canonical && <link rel="canonical" href={canonical} />}
       {noindex && <meta name="robots" content="noindex,follow" />}
 
       {/* Open Graph */}
@@ -38,7 +40,7 @@ export function Seo({
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:url" content={canonical} />
+      {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:type" content="website" />
       <meta property="og:locale" content="es_ES" />
       <meta property="og:site_name" content="Casa Tomás Restaurante" />
