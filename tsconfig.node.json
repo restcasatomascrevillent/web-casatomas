@@ -11,6 +11,9 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
+    /* `vite.config.ts` importa los scripts de build (`scripts/*.mjs`), que son
+       JS plano a propósito: los ejecuta Node, no pasan por el bundler. */
+    "allowJs": true,
 
     /* Linting */
     "strict": true,
