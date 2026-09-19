@@ -20,9 +20,11 @@ const Footer = () => {
             <h4 className="font-semibold mb-4">{t.footer.quickLinks}</h4>
             <ul className="space-y-2 text-sm text-stone">
               <li>
-                <a href="#carta" className="hover:text-accent transition-colors">
+                {/* Antes era `#carta`, que fuera de la portada no llevaba a
+                    ninguna parte. Ahora la carta tiene página propia. */}
+                <Link to="/carta" className="hover:text-accent transition-colors">
                   {t.footer.menuLink}
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="/reservas" className="hover:text-accent transition-colors">{t.footer.reserveLink}</a>

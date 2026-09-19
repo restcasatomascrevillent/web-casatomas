@@ -1,15 +1,32 @@
 import { motion } from "framer-motion";
 import { Suspense, lazy, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Wine, Beer } from "lucide-react";
+import { UtensilsCrossed, Wine, Beer, ArrowRight } from "lucide-react";
 import { getUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+// Import estático a propósito: `CartaPlatos` se monta siempre (ver abajo) y el
+// SSG tiene que poder renderizarlo para que sus tarjetas queden en el HTML.
+import CartaPlatos from "./carta/CartaPlatos";
+import { semillaCategoriaInicial } from "@/lib/carta-ssg";
+import {
+  CATEGORIAS_CARTA,
+  etiquetaCategoria,
+  RESUMEN_BEBIDAS,
+  RESUMEN_VINOS,
+  rutaCategoria,
+  TOTAL_CARTA,
+} from "@/lib/carta-rutas";
+import type { CartaPlatosSeed } from "./carta/CartaPlatos";
 
 type Section = "platos" | "vinos" | "bebidas" | null;
-const CartaPlatos = lazy(() => import("./carta/CartaPlatos"));
 const CartaVinos = lazy(() => import("./carta/CartaVinos"));
 const CartaBebidas = lazy(() => import("./carta/CartaBebidas"));
 const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
+
+// La carta que descargó el build. Se calcula una sola vez por módulo: es un
+// valor estático, idéntico en Node y en el navegador.
+const PLATOS_SSG = semillaCategoriaInicial() as CartaPlatosSeed;
 
 const CartaSection = () => {
   const { t } = useTranslations();
@@ -95,18 +112,73 @@ const CartaSection = () => {
           </div>
         </div>
 
+        {/* Puente a las páginas de carta. Los tres botones de arriba despliegan
+            la carta interactiva aquí mismo; estos enlaces llevan a las páginas
+            propias, donde cada sección está entera y con URL propia. Es la vía
+            por la que se llega navegando, no solo desde el sitemap. */}
+        <nav aria-label="Páginas de la carta" className="mb-12">
+          <div className="flex justify-center mb-5">
+            <Link
+              to="/carta"
+              className="inline-flex items-center gap-2 text-accent font-semibold hover:underline underline-offset-4 text-base md:text-lg"
+            >
+              Ver la carta completa · {TOTAL_CARTA} referencias
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <ul className="flex flex-wrap items-center justify-center gap-2">
+            {CATEGORIAS_CARTA.map((categoria) => (
+              <li key={categoria.slug}>
+                <Link
+                  to={rutaCategoria(categoria.slug)}
+                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+                >
+                  {etiquetaCategoria(categoria.clave)}
+                  <span className="text-xs font-semibold text-accent">{categoria.total}</span>
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link
+                to="/carta/vinos"
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+              >
+                Vinos
+                <span className="text-xs font-semibold text-accent">{RESUMEN_VINOS.total}</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/carta/bebidas"
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+              >
+                Bebidas
+                <span className="text-xs font-semibold text-accent">{RESUMEN_BEBIDAS.total}</span>
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
         {/* Contenido de las secciones */}
-        {activeSection === "platos" && (
+
+        {/* Los platos se montan SIEMPRE y se ocultan con `hidden` hasta que se
+            abre la sección. Así el HTML que sirve Vercel trae ya las tarjetas
+            reales y son EXACTAMENTE los mismos nodos que destapa el botón: no
+            hay una copia aparte para el buscador. `initialPlatos` viene del
+            build, por lo que al abrir no hay parpadeo de carga. */}
+        <div hidden={activeSection !== "platos"}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={false}
+            animate={activeSection === "platos" ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.5 }}
           >
-            <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t.platos.loading}</div>}>
-              <CartaPlatos showAddButton />
-            </Suspense>
+            <CartaPlatos
+              showAddButton
+              active={activeSection === "platos"}
+              initialPlatos={PLATOS_SSG}
+            />
           </motion.div>
-        )}
+        </div>
 
         {activeSection === "vinos" && (
           <motion.div
@@ -137,6 +209,7 @@ const CartaSection = () => {
             <PreviewPedido showFloatingButton hideInline />
           </Suspense>
         )}
+
       </motion.div>
     </section>
   );

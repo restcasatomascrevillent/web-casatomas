@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import MapaMundoVinos from "./MapaMundoVinos";
+/**
+ * `mapbox-gl` pesa ~458 KB gzip — 2,7x toda la aplicación — y hasta ahora
+ * entraba en el chunk de la carta de vinos por un import estático. Además el
+ * mapa NO funciona: no hay ningún `VITE_MAPBOX_TOKEN` en el build (ni siquiera
+ * estaba en `.env.example`), así que `mapboxgl.accessToken` quedaba vacío, no
+ * se pedía ni un tile y el visitante veía un recuadro blanco de 600 px.
+ *
+ * Solución: carga diferida Y solo si hay token. Sin token el mapa no se monta
+ * y `mapbox-gl` no se descarga nunca. Para reactivarlo basta con definir
+ * `VITE_MAPBOX_TOKEN` (ver `.env.example`).
+ */
+const MapaMundoVinos = lazy(() => import("./MapaMundoVinos"));
+const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?? "";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -419,7 +431,11 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   return (
     <div className="space-y-8" ref={sectionRef}>
       {/* Mapa Mundial de vinos */}
-      {!mapLoading && <MapaMundoVinos vinos={mapVinos} />}
+      {MAPBOX_TOKEN && !mapLoading && (
+        <Suspense fallback={null}>
+          <MapaMundoVinos vinos={mapVinos} />
+        </Suspense>
+      )}
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">

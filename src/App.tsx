@@ -50,6 +50,29 @@ export const routes: RouteRecord[] = [
     children: [
       { index: true, lazy: lazyRoute(() => import("./pages/Index")) },
       { path: "reservas", lazy: lazyRoute(() => import("./pages/Reservas")) },
+      { path: "carta", lazy: lazyRoute(() => import("./pages/carta/Indice")) },
+      // `vinos` y `bebidas` van como segmentos literales: react-router puntúa
+      // los estáticos por encima de los dinámicos, así que `/carta/vinos` nunca
+      // cae en `:categoria` aunque alguien cree una categoría con ese nombre
+      // (a la que `carta-rutas.ts` le daría el slug `vinos-2`).
+      { path: "carta/vinos", lazy: lazyRoute(() => import("./pages/carta/Vinos")) },
+      { path: "carta/bebidas", lazy: lazyRoute(() => import("./pages/carta/Bebidas")) },
+      {
+        path: "carta/:categoria",
+        lazy: lazyRoute(() => import("./pages/carta/Categoria")),
+        /**
+         * Una ruta con `:` la descarta el recolector de vite-react-ssg
+         * (`DefaultIncludedRoutes`), igual que pasaba con `*`. `getStaticPaths`
+         * enumera las URLs reales — y las saca de los datos que el build acaba
+         * de descargar de Supabase, NO de una lista escrita a mano: si el dueño
+         * añade una categoría desde el panel, el siguiente build la publica.
+         *
+         * El `import()` es dinámico para que el índice de categorías no entre
+         * en el chunk de arranque: esta función solo la ejecuta Node al
+         * prerenderizar, nunca el navegador.
+         */
+        getStaticPaths: async () => (await import("./lib/carta-rutas")).rutasDeCategorias(),
+      },
       {
         path: "politica-privacidad",
         lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),

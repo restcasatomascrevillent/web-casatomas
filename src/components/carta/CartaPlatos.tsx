@@ -18,9 +18,23 @@ import {
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import BackToTopButton from "./BackToTopButton";
+import { normalizeAlergenos, resolveTranslatedItem } from "@/lib/carta-i18n";
+
+/** Estado inicial de `platosByCategory`: categoria -> platos. */
+export type CartaPlatosSeed = Record<string, Plato[]>;
 
 interface CartaPlatosProps {
   showAddButton: boolean;
+  /**
+   * La sección está abierta. Mientras está cerrada el componente se monta (para
+   * que el SSG deje sus tarjetas en el HTML) pero no pide nada a Supabase.
+   */
+  active?: boolean;
+  /**
+   * Platos de la categoría inicial descargados en build (`virtual:carta-ssg`).
+   * Evitan el parpadeo de carga al abrir la carta y son lo que ve el buscador.
+   */
+  initialPlatos?: CartaPlatosSeed;
 }
 
 type DietaryFilterKey = "celiaquia" | "lactosa" | "vegano" | "vegetariano";
@@ -54,13 +68,15 @@ interface Plato {
 
 type PlatoRecord = Plato & Record<string, unknown>;
 
-const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
+const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlatosProps) => {
   const { t, language } = useTranslations();
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
-  const [platosByCategory, setPlatosByCategory] = useState<Record<string, Plato[]>>({});
+  const [platosByCategory, setPlatosByCategory] = useState<Record<string, Plato[]>>(
+    () => initialPlatos ?? {},
+  );
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
@@ -76,51 +92,6 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const { toast } = useToast();
   const PAGE_SIZE = 24;
   const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
-
-  const normalizeAlergenos = (value: unknown): string[] => {
-    if (Array.isArray(value)) return value;
-    if (typeof value === "string") {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return value ? [value] : [];
-      }
-    }
-    return [];
-  };
-
-  const normalizeIngredientes = (value: unknown): string[] => {
-    if (Array.isArray(value)) {
-      return value
-        .map((item) => String(item).trim())
-        .filter(Boolean);
-    }
-
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (!trimmed) return [];
-      const cleaned = trimmed.replace(/^ingredients?\s*:\s*/i, "").replace(/^ingr[eé]dients?\s*:\s*/i, "").replace(/^ingredientes?\s*:\s*/i, "");
-
-      try {
-        const parsed = JSON.parse(cleaned);
-        if (Array.isArray(parsed)) {
-          return parsed
-            .map((item) => String(item).trim())
-            .filter(Boolean);
-        }
-      } catch {
-        // Si no es JSON, se interpreta como lista separada por comas.
-      }
-
-      return cleaned
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
-
-    return [];
-  };
 
   const capitalizeFirst = (value: string) => {
     const trimmed = value.trim();
@@ -202,10 +173,16 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
     [PAGE_SIZE, platosByCategory, toast, t.platos.toasts.errorDescription, t.platos.toasts.errorTitle]
   );
 
+  // Se refresca contra Supabase la primera vez que se abre la sección. Antes
+  // esto ocurría al montar, y montar equivalía a abrir; ahora el componente se
+  // monta con la portada, así que la petición se retrasa hasta que hace falta.
+  const yaRefrescado = useRef(false);
   useEffect(() => {
+    if (!active || yaRefrescado.current) return;
+    yaRefrescado.current = true;
     fetchPlatosByCategory(selectedCategory, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [active]);
 
   const CATEGORY_ORDER = [
     "NOVEDADES DEL DÍA",
@@ -226,73 +203,11 @@ const CartaPlatos = ({ showAddButton }: CartaPlatosProps) => {
   const categories = CATEGORY_ORDER;
   const currentLoading = loadingByCategory[selectedCategory];
 
-  const parseTraducciones = (value: unknown) => {
-    if (!value) return null;
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return null;
-      }
-    }
-    if (typeof value === "object") return value;
-    return null;
-  };
-
+  // La resolución de idioma vive en `@/lib/carta-i18n` para que la comparta
+  // el prerenderizado de build (`carta-ssg.ts`) y no haya dos implementaciones.
   const translatedPlatos = useMemo(() => {
-    const categoryItems = platosByCategory[selectedCategory] || [];
-    return categoryItems.map((item) => {
-      const columnName = (item as any)[`nombre_${language}`];
-      const columnCategoria = (item as any)[`categoria_${language}`];
-      const columnDescripcion = (item as any)[`descripcion_${language}`];
-      const columnIngredientes = (item as any)[`ingredientes_${language}`];
-      const columnAlergenosOficiales = (item as any)[`alergenos_oficiales_${language}`];
-      const columnAlergenosInferidos = (item as any)[`alergenos_inferidos_${language}`];
-      const columnAlergenosNotas = (item as any)[`alergenos_notas_${language}`];
-
-      if (language === "es") {
-        return {
-          ...item,
-          displayNombre: item.nombre,
-          displayCategoria: item.categoria,
-          displayDescripcion: item.descripcion,
-          displayIngredientes: normalizeIngredientes((item as any).ingredientes),
-          displayAlergenosOficiales: item.alergenos_oficiales,
-          displayAlergenosInferidos: item.alergenos_inferidos,
-          displayAlergenosNotas: item.alergenos_notas,
-          translatedCategoria: null,
-        };
-      }
-
-      const traducciones = parseTraducciones((item as any).traducciones);
-      const translation = traducciones?.[language] ?? {};
-      const translationAlergenosOficiales =
-        translation?.alergenos_oficiales ?? translation?.alergenos?.oficiales;
-      const translationAlergenosInferidos =
-        translation?.alergenos_inferidos ?? translation?.alergenos?.inferidos;
-      const translationAlergenosNotas =
-        translation?.alergenos_notas ?? translation?.alergenos?.notas;
-      const translationIngredientes = translation?.ingredientes;
-
-      return {
-        ...item,
-        displayNombre: columnName || translation?.nombre || item.nombre,
-        displayCategoria: columnCategoria || translation?.categoria || item.categoria,
-        displayDescripcion: columnDescripcion ?? translation?.descripcion ?? item.descripcion,
-        displayIngredientes: normalizeIngredientes(
-          columnIngredientes ?? translationIngredientes ?? (item as any).ingredientes
-        ),
-        displayAlergenosOficiales: normalizeAlergenos(
-          columnAlergenosOficiales ?? translationAlergenosOficiales ?? item.alergenos_oficiales
-        ),
-        displayAlergenosInferidos: normalizeAlergenos(
-          columnAlergenosInferidos ?? translationAlergenosInferidos ?? item.alergenos_inferidos
-        ),
-        displayAlergenosNotas:
-          columnAlergenosNotas ?? translationAlergenosNotas ?? item.alergenos_notas,
-        translatedCategoria: columnCategoria || translation?.categoria || null,
-      };
-    });
+    const categoryItems = (platosByCategory[selectedCategory] || []) as PlatoRecord[];
+    return categoryItems.map((item) => resolveTranslatedItem(item, language));
   }, [language, platosByCategory, selectedCategory]);
 
   const filteredItems = useMemo(() => {

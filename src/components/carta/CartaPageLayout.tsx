@@ -1,0 +1,128 @@
+import { Fragment, type ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
+export interface Miga {
+  nombre: string;
+  /** Ausente en la última miga: esa es la página actual. */
+  path?: string;
+}
+
+interface CartaPageLayoutProps {
+  titulo: string;
+  subtitulo?: string;
+  /** Línea corta bajo el subtítulo (p. ej. "17 platos"). */
+  detalle?: string;
+  migas: Miga[];
+  /** Enlace de vuelta al pie. `null` en la propia `/carta`, que ya es el índice. */
+  volverA?: { texto: string; path: string } | null;
+  children: ReactNode;
+}
+
+/**
+ * Marco común de las páginas de carta (`/carta`, `/carta/:categoria`,
+ * `/carta/vinos`, `/carta/bebidas`).
+ *
+ * Reutiliza tal cual el `Header` y el `Footer` de la portada y la banda oscura
+ * (`bg-dark-slate`) que ya usa `PoliticaPrivacidad`, para que estas páginas se
+ * lean como parte de la misma web y no como un anexo.
+ *
+ * Sin `motion` ni `whileInView` en el contenido: framer-motion serializa
+ * `style="opacity:0"` en el HTML del SSG y aquí lo que se prerenderiza son los
+ * productos. Las animaciones de entrada salen de las utilidades CSS del propio
+ * repo (`animate-fade-up`, definida en `tailwind.config.ts`), cuyo estado final
+ * —y el estado sin CSS— es visible.
+ */
+const CartaPageLayout = ({
+  titulo,
+  subtitulo,
+  detalle,
+  migas,
+  volverA = { texto: "Volver a la carta", path: "/carta" },
+  children,
+}: CartaPageLayoutProps) => {
+  const anteriores = migas.slice(0, -1);
+  const actual = migas[migas.length - 1];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+
+      {/* Mismo degradado que la sección de carta de la portada
+          (`CartaSection`). La banda oscura de `PoliticaPrivacidad` no sirve
+          aquí: esa página no monta el `Header`, y los enlaces del menú son
+          `text-foreground/80` — sobre `bg-dark-slate` quedaban invisibles
+          (contraste 1:1, comprobado en el navegador).
+          `pt-24` deja hueco a la cabecera fija (h-16 en móvil, h-20 en md). */}
+      <div className="bg-gradient-to-b from-background to-muted pt-24 md:pt-28 pb-10 px-4 md:px-8 lg:px-16">
+        <div className="max-w-7xl mx-auto animate-fade-up">
+          <Breadcrumb className="mb-5">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild className="hover:text-accent">
+                  <Link to="/">Inicio</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {/* Los separadores van como hermanos, ver nota más abajo. */}
+              {/* `BreadcrumbSeparator` ya es un `<li role="presentation">`, así
+                  que va COMO HERMANO de `BreadcrumbItem`, nunca dentro: un
+                  `<li>` anidado en otro `<li>` es HTML inválido y el navegador
+                  lo reubica al parsear, lo que rompía la hidratación. */}
+              {anteriores.map((miga) => (
+                <Fragment key={miga.path ?? miga.nombre}>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild className="hover:text-accent">
+                      <Link to={miga.path ?? "/"}>{miga.nombre}</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </Fragment>
+              ))}
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{actual.nombre}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          {/* Mismas clases que los `h2` de sección de la portada. */}
+          <h1 className="font-libre-baskerville text-3xl md:text-5xl font-bold text-primary">
+            {titulo}
+          </h1>
+          {subtitulo && (
+            <p className="text-muted-foreground mt-3 max-w-2xl text-base md:text-lg">{subtitulo}</p>
+          )}
+          {detalle && <p className="text-accent mt-2 text-sm font-semibold">{detalle}</p>}
+        </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 py-12 md:py-16">{children}</main>
+
+      {volverA && (
+        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pb-12">
+          <Link
+            to={volverA.path}
+            className="inline-flex items-center gap-2 text-accent hover:underline text-sm font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {volverA.texto}
+          </Link>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+};
+
+export default CartaPageLayout;
