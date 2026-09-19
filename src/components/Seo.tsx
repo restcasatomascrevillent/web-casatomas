@@ -6,7 +6,6 @@ interface SeoProps {
   canonical?: string;
   ogImage?: string;
   keywords?: string[];
-  schema?: object;
   noindex?: boolean;
 }
 
@@ -23,7 +22,6 @@ export function Seo({
   canonical,
   ogImage = DEFAULT_IMAGE,
   keywords = ["restaurante Crevillent", "Casa Tomás", "cocina tradicional", "restaurante Alicante"],
-  schema,
   noindex = false,
 }: SeoProps) {
   return (
@@ -52,12 +50,10 @@ export function Seo({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* JSON-LD */}
-      {schema && (
-        <script type="application/ld+json">
-          {JSON.stringify(schema)}
-        </script>
-      )}
+      {/* Los datos estructurados NO van aquí: helmet los inyecta por delante del
+          <meta charset> y además los pasa por String.replace(), que interpreta
+          `$$`, `$&` y `` $` `` como patrones. Cada página renderiza su JSON-LD
+          con <JsonLd /> (ver src/components/JsonLd.tsx). */}
     </Head>
   );
 }

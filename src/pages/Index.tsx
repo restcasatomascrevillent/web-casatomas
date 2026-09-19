@@ -1,43 +1,11 @@
-import { Suspense, lazy, type ReactNode } from "react";
+import { Suspense, lazy, useMemo, type ReactNode } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { Seo } from "@/components/Seo";
-import cartaCompleta from "@/data/carta_completa.json";
-
-// URL real de Google Maps del local (reutilizada de ReviewsSection.tsx)
-const GOOGLE_MAPS_URL =
-  "https://www.google.com/maps/place/Casa+Tom%C3%A1s+Restaurante/@38.2489234,-0.8107264,17z/data=!4m8!3m7!1s0xd6382b8f8f8f8f8f:0x1234567890abcdef!8m2!3d38.2489234!4d-0.8085377!9m1!1b1!16s%2Fg%2F11c0qw0qw0?entry=ttu";
-
-type CartaItem = { name?: string; price_eur?: number | null };
-type CartaCategory = { category?: string; items?: CartaItem[] };
-
-// Menú schema.org generado a partir de carta_completa.json
-const hasMenu = {
-  "@type": "Menu",
-  "name": "Carta Casa Tomás",
-  "inLanguage": "es",
-  "hasMenuSection": (cartaCompleta.menu as CartaCategory[])
-    .filter((section) => section.category && Array.isArray(section.items))
-    .map((section) => ({
-      "@type": "MenuSection",
-      "name": section.category,
-      "hasMenuItem": (section.items ?? [])
-        .filter((item) => item.name)
-        .map((item) => ({
-          "@type": "MenuItem",
-          "name": item.name,
-          ...(typeof item.price_eur === "number"
-            ? {
-                "offers": {
-                  "@type": "Offer",
-                  "price": item.price_eur,
-                  "priceCurrency": "EUR",
-                },
-              }
-            : {}),
-        })),
-    })),
-};
+import { JsonLd } from "@/components/JsonLd";
+import { useTranslations } from "@/i18n/LanguageProvider";
+import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS } from "@/lib/carta-ssg";
+import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
 
 const CartaSection = lazy(() => import("@/components/CartaSection"));
 const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
@@ -63,53 +31,25 @@ const SectionBoundary = ({ id, children }: { id: string; children: ReactNode }) 
 );
 
 const Index = () => {
+  const { language } = useTranslations();
+
+  // El `Menu` sale ahora de los datos reales que el build descargó de Supabase
+  // (`virtual:carta-ssg`), no del scrape congelado de casatomas.buenacarta.com
+  // de noviembre de 2025 que se estaba publicando a Google con 129 precios.
+  const schema = useMemo(() => {
+    const secciones = agruparPorCategoria(cartaSSG.platos, language, CATEGORIAS_PLATOS);
+    return restaurantSchema({
+      lang: language,
+      menu: secciones.length
+        ? menuSchema(secciones, language, import.meta.env.VITE_SUPABASE_URL as string | undefined)
+        : undefined,
+    });
+  }, [language]);
+
   return (
     <>
-      <Seo
-        canonical="https://restaurantecasatomascrevillente.es/"
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "Restaurant",
-          "name": "Casa Tomás Restaurante",
-          "image": "https://restaurantecasatomascrevillente.es/og-image.jpg",
-          "telephone": "+34966107887",
-          "email": "casatomascrevillent@gmail.com",
-          "url": "https://restaurantecasatomascrevillente.es/",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Carrer Santa Maria de la Cabeza, 2",
-            "addressLocality": "Crevillent",
-            "addressRegion": "Alicante",
-            "postalCode": "03330",
-            "addressCountry": "ES"
-          },
-          "geo": {
-            "@type": "GeoCoordinates",
-            "latitude": 38.2494,
-            "longitude": -0.8138
-          },
-          "openingHoursSpecification": [
-            {
-              "@type": "OpeningHoursSpecification",
-              "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
-              "opens": "13:00",
-              "closes": "16:00"
-            },
-            {
-              "@type": "OpeningHoursSpecification",
-              "dayOfWeek": ["Saturday","Sunday"],
-              "opens": "13:00",
-              "closes": "16:30"
-            }
-          ],
-          "servesCuisine": ["Cocina tradicional española", "Gastronomía alicantina"],
-          "priceRange": "€€",
-          "currenciesAccepted": "EUR",
-          "paymentAccepted": "Cash, Credit Card",
-          "hasMap": GOOGLE_MAPS_URL,
-          "hasMenu": hasMenu
-        }}
-      />
+      <Seo canonical={`${SITE_URL}/`} />
+      <JsonLd data={schema} />
       <Header />
       <div className="min-h-screen bg-background">
         <Hero />

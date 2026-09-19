@@ -4,8 +4,10 @@ import { format, isValid, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { supabase } from "@/integrations/supabase/client";
+import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 
 // Solo se muestran reseñas REALES de la tabla `resenas` (las sincroniza la edge
 // function `sync-google-reviews`). Si no hay ninguna publicada, la sección no se
@@ -46,9 +48,7 @@ const ReviewsSection = () => {
   });
 
   const reviews = (data ?? []).filter((review) => review.comentario?.trim());
-
-  // Sin reseñas reales no hay sección (ni en el HTML del SSG).
-  if (reviews.length === 0) return null;
+  const hayResenas = reviews.length > 0;
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -85,17 +85,20 @@ const ReviewsSection = () => {
           >
             {t.reviews.title}
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="text-lg text-muted-foreground max-w-2xl mx-auto"
-          >
-            {t.reviews.subtitle}
-          </motion.p>
+          {hayResenas && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="text-lg text-muted-foreground max-w-2xl mx-auto"
+            >
+              {t.reviews.subtitle}
+            </motion.p>
+          )}
         </div>
 
+        {hayResenas && (
         <Carousel
           className="w-full"
           opts={{
@@ -144,12 +147,26 @@ const ReviewsSection = () => {
           <CarouselPrevious className="hidden md:flex" />
           <CarouselNext className="hidden md:flex" />
         </Carousel>
+        )}
 
-        {/* TODO: botón "Dejar una reseña en Google" (t.reviews.cta). Requiere el
-            Place ID REAL de la ficha de Google Business del restaurante, para
-            enlazar a https://search.google.com/local/writereview?placeid=<PLACE_ID>.
-            El CID que había aquí era un placeholder inventado y llevaba a un mapa
-            roto, así que el botón se retira hasta tener el identificador real. */}
+        {/* El enlace para dejar reseña se muestra SIEMPRE, haya o no reseñas que
+            enseñar: `resenas` no tiene política de lectura anónima, así que en la
+            web pública el carrusel sale vacío y antes eso se llevaba por delante
+            la sección entera. Apunta al Place ID real (ver `@/lib/negocio`); el
+            CID que hubo aquí era inventado y llevaba a un mapa roto. */}
+        <div className={hayResenas ? "mt-10 flex justify-center" : "flex justify-center"}>
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="border-2 border-primary/30 font-semibold rounded-full"
+          >
+            <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
+              <Star className="w-5 h-5 mr-2" />
+              {t.reviews.cta}
+            </a>
+          </Button>
+        </div>
       </motion.div>
     </section>
   );
