@@ -321,7 +321,6 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
     setIsSubmitting(true);
     try {
-      const salaSeleccionada = salas?.find(s => s.id === data.sala_id);
       const telefonoNormalizado = data.telefono.replace(/\s+/g, "");
       const telefonoMatch = telefonoNormalizado.match(/^\+(\d{1,3})(\d{6,14})$/);
       const telefonoWebhook = telefonoMatch
