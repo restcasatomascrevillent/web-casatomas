@@ -234,7 +234,7 @@ export const translations: Translations = {
       disclaimer: {
         title: "Important:",
         note: "Your booking is not confirmed until you receive the confirmation email. Casa Tomás is not responsible until that moment.",
-        callUs: "If no availability is shown online, please call us at 966 10 78 87.",
+        callUs: "If no availability is shown online, please call us at",
         steps: [
           "Check availability (guest)",
           "Request reservation (you'll receive the first email)",
@@ -286,54 +286,14 @@ export const translations: Translations = {
       },
       roomNotSpecified: "Not specified",
     },
+    mobileCta: {
+      call: "Call",
+      reserve: "Book a table",
+    },
     reviews: {
       title: "Guest Reviews",
       subtitle: "What our visitors are saying",
       cta: "Leave a Google Review",
-      items: [
-        {
-          name: "María García",
-          date: "2 weeks ago",
-          rating: 5,
-          comment: "Outstanding experience. The dishes are exceptional and the service is flawless. The Galician octopus was perfect. Highly recommended.",
-          avatar: "MG",
-        },
-        {
-          name: "Carlos Rodríguez",
-          date: "1 month ago",
-          rating: 5,
-          comment: "Top-notch restaurant. Cozy atmosphere, refined flavors, and attentive service. The midday menu offers great value.",
-          avatar: "CR",
-        },
-        {
-          name: "Ana Martínez",
-          date: "3 weeks ago",
-          rating: 5,
-          comment: "We celebrated our anniversary here and everything was spot on. The terrace is lovely and the dishes are a feast for the eyes. We'll be back.",
-          avatar: "AM",
-        },
-        {
-          name: "Javier López",
-          date: "2 months ago",
-          rating: 4,
-          comment: "A very good dining experience. The wine list stands out and the team is welcoming. The red wine tenderloin was perfectly cooked.",
-          avatar: "JL",
-        },
-        {
-          name: "Isabel Fernández",
-          date: "1 week ago",
-          rating: 5,
-          comment: "Spectacular. Food and ambience are both top tier. Thursday tapas are a must-try.",
-          avatar: "IF",
-        },
-        {
-          name: "Miguel Sánchez",
-          date: "3 weeks ago",
-          rating: 5,
-          comment: "One of the best restaurants around. Fresh ingredients, thoughtful execution, and great service. The private room is perfect for events.",
-          avatar: "MS",
-        },
-      ],
     },
     nosotros: {
       title: "Our Story",

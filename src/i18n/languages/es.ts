@@ -234,7 +234,7 @@ export const translations = {
       disclaimer: {
         title: "Importante:",
         note: "La reserva no queda confirmada hasta que recibas el email de confirmación. Casa Tomás queda exento de responsabilidad hasta ese momento.",
-        callUs: "Si no hay disponibilidad online, llámanos al 966 10 78 87.",
+        callUs: "Si no hay disponibilidad online, llámanos al",
         steps: [
           "Consultar disponibilidad (cliente)",
           "Solicitar reserva (recibirás un primer correo)",
@@ -286,54 +286,14 @@ export const translations = {
       },
       roomNotSpecified: "No especificado",
     },
+    mobileCta: {
+      call: "Llamar",
+      reserve: "Reservar mesa",
+    },
     reviews: {
       title: "Reseñas de clientes",
       subtitle: "Lo que dicen nuestros visitantes",
       cta: "Dejar una reseña en Google",
-      items: [
-        {
-          name: "María García",
-          date: "hace 2 semanas",
-          rating: 5,
-          comment: "Experiencia excelente. Los platos son excepcionales y el servicio impecable. El pulpo a la gallega estaba perfecto. Muy recomendable.",
-          avatar: "MG",
-        },
-        {
-          name: "Carlos Rodríguez",
-          date: "hace 1 mes",
-          rating: 5,
-          comment: "Restaurante de primer nivel. Ambiente acogedor, sabores refinados y un servicio atento. El menú de mediodía ofrece una gran relación calidad-precio.",
-          avatar: "CR",
-        },
-        {
-          name: "Ana Martínez",
-          date: "hace 3 semanas",
-          rating: 5,
-          comment: "Celebramos aquí nuestro aniversario y todo estuvo perfecto. La terraza es preciosa y los platos son un espectáculo. Volveremos.",
-          avatar: "AM",
-        },
-        {
-          name: "Javier López",
-          date: "hace 2 meses",
-          rating: 4,
-          comment: "Una experiencia gastronómica muy buena. La carta de vinos destaca y el equipo es muy cercano. El solomillo al vino tinto estaba en su punto.",
-          avatar: "JL",
-        },
-        {
-          name: "Isabel Fernández",
-          date: "hace 1 semana",
-          rating: 5,
-          comment: "Espectacular. La comida y el ambiente están al máximo nivel. Las tapas de los jueves son imprescindibles.",
-          avatar: "IF",
-        },
-        {
-          name: "Miguel Sánchez",
-          date: "hace 3 semanas",
-          rating: 5,
-          comment: "De los mejores restaurantes de la zona. Producto fresco, ejecución cuidada y gran servicio. El comedor privado es perfecto para eventos.",
-          avatar: "MS",
-        },
-      ],
     },
     nosotros: {
       title: "Historia",

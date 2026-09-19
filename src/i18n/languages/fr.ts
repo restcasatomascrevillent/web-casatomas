@@ -234,7 +234,7 @@ export const translations: Translations = {
       disclaimer: {
         title: "Important :",
         note: "La réservation n'est pas confirmée tant que vous ne recevez pas l'email de confirmation. Casa Tomás décline toute responsabilité jusque-là.",
-        callUs: "Si aucune disponibilité n'est affichée en ligne, appelez-nous au 966 10 78 87.",
+        callUs: "Si aucune disponibilité n'est affichée en ligne, appelez-nous au",
         steps: [
           "Vérifier la disponibilité (client)",
           "Demander la réservation (vous recevrez le premier email)",
@@ -286,54 +286,14 @@ export const translations: Translations = {
       },
       roomNotSpecified: "Non spécifiée",
     },
+    mobileCta: {
+      call: "Appeler",
+      reserve: "Réserver",
+    },
     reviews: {
       title: "Avis des clients",
       subtitle: "Ce que disent nos visiteurs",
       cta: "Laisser un avis Google",
-      items: [
-        {
-          name: "María García",
-          date: "Il y a 2 semaines",
-          rating: 5,
-          comment: "Expérience remarquable. Plats d'une grande qualité et service impeccable. Le poulpe galicien était parfait. À recommander.",
-          avatar: "MG",
-        },
-        {
-          name: "Carlos Rodríguez",
-          date: "Il y a 1 mois",
-          rating: 5,
-          comment: "Un restaurant de haut niveau. Ambiance chaleureuse, cuisine raffinée et service attentif. Le menu du midi est un excellent rapport qualité-prix.",
-          avatar: "CR",
-        },
-        {
-          name: "Ana Martínez",
-          date: "Il y a 3 semaines",
-          rating: 5,
-          comment: "Nous y avons célébré notre anniversaire et tout était parfait. La terrasse est superbe et les assiettes sont magnifiques. Nous reviendrons.",
-          avatar: "AM",
-        },
-        {
-          name: "Javier López",
-          date: "Il y a 2 mois",
-          rating: 4,
-          comment: "Très belle expérience gastronomique. Mention spéciale pour la carte des vins et l'accueil. Le filet au vin rouge était à point.",
-          avatar: "JL",
-        },
-        {
-          name: "Isabel Fernández",
-          date: "Il y a 1 semaine",
-          rating: 5,
-          comment: "Spectaculaire. Cuisine et ambiance au top. Les tapas du jeudi sont incontournables.",
-          avatar: "IF",
-        },
-        {
-          name: "Miguel Sánchez",
-          date: "Il y a 3 semaines",
-          rating: 5,
-          comment: "L'un des meilleurs restaurants de la région. Produits frais, exécution soignée et service attentionné. La salle privée est idéale pour les événements.",
-          avatar: "MS",
-        },
-      ],
     },
     nosotros: {
       title: "Notre histoire",

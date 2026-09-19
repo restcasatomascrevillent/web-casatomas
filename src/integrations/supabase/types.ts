@@ -275,6 +275,57 @@ export type Database = {
         }
         Relationships: []
       }
+      resenas: {
+        Row: {
+          comentario: string | null
+          created_at: string | null
+          email: string | null
+          estado: string | null
+          fecha: string
+          fecha_respuesta: string | null
+          fuente: string | null
+          google_rating: number | null
+          google_review_id: string | null
+          id: string
+          nombre_cliente: string
+          respuesta: string | null
+          updated_at: string | null
+          valoracion: number
+        }
+        Insert: {
+          comentario?: string | null
+          created_at?: string | null
+          email?: string | null
+          estado?: string | null
+          fecha?: string
+          fecha_respuesta?: string | null
+          fuente?: string | null
+          google_rating?: number | null
+          google_review_id?: string | null
+          id?: string
+          nombre_cliente: string
+          respuesta?: string | null
+          updated_at?: string | null
+          valoracion: number
+        }
+        Update: {
+          comentario?: string | null
+          created_at?: string | null
+          email?: string | null
+          estado?: string | null
+          fecha?: string
+          fecha_respuesta?: string | null
+          fuente?: string | null
+          google_rating?: number | null
+          google_review_id?: string | null
+          id?: string
+          nombre_cliente?: string
+          respuesta?: string | null
+          updated_at?: string | null
+          valoracion?: number
+        }
+        Relationships: []
+      }
       vinos: {
         Row: {
           activado: boolean

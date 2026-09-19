@@ -1,13 +1,54 @@
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { format, isValid, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Star, ExternalLink, MessageSquare } from "lucide-react";
+import { Star } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { supabase } from "@/integrations/supabase/client";
+
+// Solo se muestran reseñas REALES de la tabla `resenas` (las sincroniza la edge
+// function `sync-google-reviews`). Si no hay ninguna publicada, la sección no se
+// renderiza: mostrar testimonios inventados como si fueran de clientes es
+// práctica desleal (RDL 24/2021).
+type Resena = {
+  id: string;
+  nombre_cliente: string;
+  comentario: string | null;
+  valoracion: number;
+  google_rating: number | null;
+  fecha: string;
+};
+
+const getInitials = (nombre: string) =>
+  nombre
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
 
 const ReviewsSection = () => {
-  const { t } = useTranslations();
-  const reviews = t.reviews.items;
+  const { t, dateLocale } = useTranslations();
+
+  const { data } = useQuery({
+    queryKey: ["resenas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("resenas")
+        .select("id, nombre_cliente, comentario, valoracion, google_rating, fecha")
+        .eq("estado", "publicada")
+        .order("fecha", { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return data as Resena[];
+    },
+  });
+
+  const reviews = (data ?? []).filter((review) => review.comentario?.trim());
+
+  // Sin reseñas reales no hay sección (ni en el HTML del SSG).
+  if (reviews.length === 0) return null;
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -20,9 +61,9 @@ const ReviewsSection = () => {
     ));
   };
 
-  const handleLeaveReview = () => {
-    // URL de Google Reviews para Casa Tomás Restaurante Crevillente
-    window.open("https://www.google.com/maps/place/Casa+Tom%C3%A1s+Restaurante/@38.2489234,-0.8107264,17z/data=!4m8!3m7!1s0xd6382b8f8f8f8f8f:0x1234567890abcdef!8m2!3d38.2489234!4d-0.8085377!9m1!1b1!16s%2Fg%2F11c0qw0qw0?entry=ttu", "_blank");
+  const formatFecha = (fecha: string) => {
+    const parsed = parseISO(fecha);
+    return isValid(parsed) ? format(parsed, "d MMMM yyyy", { locale: dateLocale }) : "";
   };
 
   return (
@@ -64,7 +105,7 @@ const ReviewsSection = () => {
         >
           <CarouselContent className="-ml-4">
             {reviews.map((review, index) => (
-              <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+              <CarouselItem key={review.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -76,23 +117,23 @@ const ReviewsSection = () => {
                       <div className="flex items-start gap-4 mb-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <span className="text-primary font-semibold">
-                            {review.avatar}
+                            {getInitials(review.nombre_cliente)}
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-foreground truncate">
-                            {review.name}
+                            {review.nombre_cliente}
                           </h3>
                           <p className="text-xs text-muted-foreground">
-                            {review.date}
+                            {formatFecha(review.fecha)}
                           </p>
                         </div>
                       </div>
                       <div className="flex gap-1 mb-3">
-                        {renderStars(review.rating)}
+                        {renderStars(review.google_rating ?? review.valoracion)}
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        {review.comment}
+                        {review.comentario}
                       </p>
                     </CardContent>
                   </Card>
@@ -104,23 +145,11 @@ const ReviewsSection = () => {
           <CarouselNext className="hidden md:flex" />
         </Carousel>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
-          <Button
-            onClick={handleLeaveReview}
-            size="lg"
-            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          >
-            <MessageSquare className="w-5 h-5 mr-2" />
-            {t.reviews.cta}
-            <ExternalLink className="w-4 h-4 ml-2" />
-          </Button>
-        </motion.div>
+        {/* TODO: botón "Dejar una reseña en Google" (t.reviews.cta). Requiere el
+            Place ID REAL de la ficha de Google Business del restaurante, para
+            enlazar a https://search.google.com/local/writereview?placeid=<PLACE_ID>.
+            El CID que había aquí era un placeholder inventado y llevaba a un mapa
+            roto, así que el botón se retira hasta tener el identificador real. */}
       </motion.div>
     </section>
   );
