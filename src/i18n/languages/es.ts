@@ -284,6 +284,22 @@ export const translations = {
         submitErrorTitle: "Error de reserva",
         submitErrorDescription: "Inténtalo de nuevo o contacta con nosotros.",
       },
+      rejection: {
+        title: "No hemos podido completar la reserva",
+        close: "Entendido",
+        invalidMessage: "Hay algún dato del formulario que no hemos podido leer.",
+        errorMessage: "No hemos podido enviar la solicitud.",
+        fallbackMessage: "No hemos podido registrar tu solicitud.",
+        exits: {
+          call: "Llámanos al {phone} y la gestionamos contigo.",
+          otherTime: "Elige otra de las horas disponibles, o prueba con otra fecha.",
+          otherTimeOrCall: "Elige otra hora, o llámanos al {phone}.",
+          otherDate: "Elige otra fecha en el calendario y vuelve a comprobar la disponibilidad.",
+          guests: "Ajusta el número de comensales, o llámanos al {phone} para grupos.",
+          checkForm: "Revisa el nombre, el teléfono, el email y la fecha, y vuelve a enviarlo.",
+          retryOrCall: "Inténtalo de nuevo en unos minutos, o llámanos al {phone}.",
+        },
+      },
       roomNotSpecified: "No especificado",
     },
     mobileCta: {

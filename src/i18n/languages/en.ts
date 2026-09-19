@@ -284,6 +284,22 @@ export const translations: Translations = {
         submitErrorTitle: "Reservation error",
         submitErrorDescription: "Please try again or contact us directly.",
       },
+      rejection: {
+        title: "We couldn't complete your booking",
+        close: "Got it",
+        invalidMessage: "Some of the details in the form couldn't be read.",
+        errorMessage: "We couldn't send your request.",
+        fallbackMessage: "We couldn't register your request.",
+        exits: {
+          call: "Call us on {phone} and we'll sort it out with you.",
+          otherTime: "Pick another available time, or try a different date.",
+          otherTimeOrCall: "Pick another time, or call us on {phone}.",
+          otherDate: "Pick another date on the calendar and check availability again.",
+          guests: "Adjust the number of guests, or call us on {phone} for groups.",
+          checkForm: "Check the name, phone, email and date, then send it again.",
+          retryOrCall: "Try again in a few minutes, or call us on {phone}.",
+        },
+      },
       roomNotSpecified: "Not specified",
     },
     mobileCta: {

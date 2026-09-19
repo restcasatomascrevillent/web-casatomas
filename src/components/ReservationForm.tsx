@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { createReservationSchema, type ReservationFormData } from "@/lib/validations";
+import { formatearTelefonoWebhook } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,9 +13,25 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CalendarIcon, CheckCircle, Loader2, Search } from "lucide-react";
+import { AlertCircle, CalendarIcon, CheckCircle, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { TelLink } from "@/components/TelLink";
+import {
+  RESERVAS_WEB_CREAR_URL,
+  RESERVAS_WEB_DISPONIBILIDAD_URL,
+  functionHeaders,
+  leerCuerpo,
+} from "@/lib/supabase-functions";
+import {
+  clasificarDisponibilidad,
+  interpretarRechazoReserva,
+  type AforoTurno,
+  type DisponibilidadMeta,
+  type DisponibilidadOcupacion,
+  type DisponibilidadPeriodo,
+  type RechazoReserva,
+} from "@/lib/reservas-web";
 
 interface DisponibilidadSlot {
   fecha: string;
@@ -41,6 +58,96 @@ type ReservationFormProps = {
   navigateOnClose?: boolean;
 };
 
+/**
+ * Aforo que se supone a un hueco cuando `meta` no trae `aforo_turno`.
+ *
+ * Es el valor que esta pantalla ya usaba a pelo antes de la migracion. Se
+ * conserva como ultimo recurso para no marcar horas como "Completo" por falta
+ * de datos, que seria peor que pasarse de optimista.
+ */
+const CAPACIDAD_POR_DEFECTO = 80;
+
+/** Quita acentos y baja a minusculas, para comparar `nombre_periodo`. */
+const sinAcentos = (valor: string) =>
+  valor.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/**
+ * Aforo del turno al que pertenece una hora, con los numeros que manda `meta`.
+ *
+ * El turno se resuelve primero por el `nombre_periodo` del propio periodo (dato
+ * del servidor) y, si no encaja con ninguna clave de `aforo_turno`, por el mismo
+ * corte horario que aplica la funcion (`hora < 17:00` -> comida). Devuelve
+ * `null` si `meta` no trae aforo: entonces no se inventa ninguno.
+ */
+const aforoDeTurno = (
+  meta: DisponibilidadMeta,
+  hora: string,
+  nombrePeriodo?: string,
+): AforoTurno | null => {
+  const aforo = meta.aforo_turno;
+  if (!aforo) return null;
+
+  const nombre = sinAcentos(nombrePeriodo ?? "");
+  if (nombre.includes("comida") && aforo.comida) return aforo.comida;
+  if (nombre.includes("cena") && aforo.cena) return aforo.cena;
+
+  return (hora < "17:00:00" ? aforo.comida : aforo.cena) ?? null;
+};
+
+/** Pasa un elemento `kind: "ocupacion"` a la forma interna del formulario. */
+const desdeOcupacion = (item: DisponibilidadOcupacion): DisponibilidadSlot => ({
+  fecha: item.fecha,
+  hora: item.hora,
+  total_mesas_reservadas: 0,
+  total_comensales: Number(item.total_comensales ?? 0),
+  total_reservas: Number(item.total_reservas ?? 0),
+  total_mesas: 0,
+  capacidad_maxima: Number(item.capacidad_maxima ?? 0),
+  capacidad_disponible: Number(item.capacidad_disponible ?? 0),
+  porcentaje_ocupacion: Number(item.porcentaje_ocupacion ?? 0),
+});
+
+/** Pasa un elemento `kind: "periodo"` a la forma interna del formulario. */
+const desdePeriodo = (item: DisponibilidadPeriodo): DisponibilidadSlot => ({
+  fecha: item.fecha,
+  hora: "",
+  total_mesas_reservadas: 0,
+  total_comensales: 0,
+  total_reservas: 0,
+  total_mesas: 0,
+  capacidad_maxima: 0,
+  capacidad_disponible: 0,
+  porcentaje_ocupacion: 0,
+  nombre_periodo: item.nombre_periodo,
+  hora_inicio: item.hora_inicio,
+  hora_fin: item.hora_fin,
+  intervalo_base_minutos: Number(item.intervalo_base_minutos ?? 0),
+  umbral_apertura_secundario: Number(item.umbral_apertura_secundario ?? 0),
+  dias_semana: item.dias_semana,
+  activo: item.activo,
+  ocultar_primario_si_secundario: item.ocultar_primario_si_secundario,
+});
+
+/**
+ * Pinta la salida de un rechazo sustituyendo `{phone}` por el telefono
+ * pulsable que ya usan el footer y la barra de CTA movil.
+ */
+const TextoSalida = ({ texto }: { texto: string }) => {
+  const partes = texto.split("{phone}");
+  return (
+    <>
+      {partes.map((parte, indice) => (
+        <Fragment key={indice}>
+          {parte}
+          {indice < partes.length - 1 && (
+            <TelLink className="font-medium text-primary underline underline-offset-2" />
+          )}
+        </Fragment>
+      ))}
+    </>
+  );
+};
+
 export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
   const { t, dateLocale } = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,6 +158,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   const [honeypot, setHoneypot] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [rechazo, setRechazo] = useState<RechazoReserva | null>(null);
   const [reservationDetails, setReservationDetails] = useState<{
     fecha: Date;
     hora: string;
@@ -146,37 +254,50 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       return;
     }
 
+    const mostrarErrorDisponibilidad = () => {
+      setDisponibilidad([]);
+      setHasCheckedAvailability(true);
+      setSelectedHour(null);
+      toast.error(t.reservationForm.toasts.availabilityErrorTitle, {
+        description: t.reservationForm.toasts.availabilityErrorDescription,
+      });
+    };
+
     setIsCheckingAvailability(true);
     try {
-      const response = await fetch(
-        "https://n8npersonal.miguelbenito.space/webhook/7e7fae99-44b9-48fd-b4d8-52be8cf0a518",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Webhook-Secret": import.meta.env.VITE_N8N_WEBHOOK_SECRET || ''
-          },
-          body: JSON.stringify({
-            fecha: format(fecha, "yyyy-MM-dd"),
-            numero_comensales: numeroComensales
-          })
-        }
-      );
+      const response = await fetch(RESERVAS_WEB_DISPONIBILIDAD_URL, {
+        method: "POST",
+        headers: functionHeaders(),
+        body: JSON.stringify({
+          fecha: format(fecha, "yyyy-MM-dd"),
+          numero_comensales: numeroComensales,
+        }),
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Hay que mirar `response.ok` ANTES de tocar el cuerpo: en 4xx/5xx la
+      // funcion devuelve un OBJETO `{ ok:false, error }`, y recorrerlo como si
+      // fuera el array de exito revienta con `.map is not a function`.
+      const resultado = clasificarDisponibilidad(response.ok, await leerCuerpo(response));
+
+      if (resultado.estado === "error") {
+        console.error("Error checking availability: respuesta no valida", response.status);
+        mostrarErrorDisponibilidad();
+        return;
       }
 
-      const text = await response.text();
-
-      if (!text || text.trim() === '') {
-        throw new Error("Empty availability response");
+      // Dia CERRADO: no es un fallo, es una respuesta valida que dice que ese
+      // dia no se reserva. Hasta ahora los dos casos caian en el mismo toast.
+      if (resultado.estado === "cerrado") {
+        setDisponibilidad([]);
+        setHasCheckedAvailability(true);
+        setSelectedHour(null);
+        toast.message(t.reservationForm.toasts.closedDay);
+        return;
       }
 
-      const rawData: DisponibilidadSlot[] = JSON.parse(text);
-      const normalizedData = normalizeSlots(rawData);
-      const slotsConOcupacion = normalizedData.filter(isAvailabilitySlot);
-      const periodos = normalizedData.filter(isPeriodoConfig);
+      const { meta } = resultado;
+      const slotsConOcupacion = resultado.ocupacion.map(desdeOcupacion).filter(isAvailabilitySlot);
+      const periodos = resultado.periodos.map(desdePeriodo).filter(isPeriodoConfig);
       const diaSolicitado = fecha.getDay();
 
       const periodosActivos = periodos.filter((periodo) => periodo.activo !== false);
@@ -233,17 +354,29 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       const horariosConOcupacion = slotsConOcupacion.map((slot) => normalizeHora(slot.hora));
       const baseHorariosSet = new Set<string>([...baseHorarios, ...horariosConOcupacion]);
 
-      const createEmptySlot = (hora: string): DisponibilidadSlot => ({
-        fecha: format(fecha, "yyyy-MM-dd"),
-        hora,
-        total_mesas_reservadas: 0,
-        total_comensales: 0,
-        total_reservas: 0,
-        total_mesas: 80,
-        capacidad_maxima: 80,
-        capacidad_disponible: 80,
-        porcentaje_ocupacion: 0
-      });
+      // Hueco sin reservas. Antes se le daba 80/80 a pelo, asi que una hora
+      // libre dentro de un turno YA LLENO se anunciaba como disponible. Ahora
+      // se usa el aforo del turno que manda `meta`; si no viene, se mantiene el
+      // comportamiento anterior en vez de marcar "Completo" a ciegas.
+      const createEmptySlot = (hora: string): DisponibilidadSlot => {
+        const horaNormalizada = normalizeHora(hora);
+        const aforo = aforoDeTurno(meta, horaNormalizada, configByHora.get(horaNormalizada)?.nombre_periodo);
+        const capacidadMaxima = Number(aforo?.capacidad_maxima ?? 0);
+        const ocupacionTurno = Number(aforo?.ocupacion ?? 0);
+
+        return {
+          fecha: format(fecha, "yyyy-MM-dd"),
+          hora,
+          total_mesas_reservadas: 0,
+          total_comensales: 0,
+          total_reservas: 0,
+          total_mesas: 0,
+          capacidad_maxima: aforo ? capacidadMaxima : CAPACIDAD_POR_DEFECTO,
+          capacidad_disponible: aforo ? Number(aforo.disponible ?? 0) : CAPACIDAD_POR_DEFECTO,
+          porcentaje_ocupacion:
+            capacidadMaxima > 0 ? Math.round((ocupacionTurno / capacidadMaxima) * 100) : 0,
+        };
+      };
 
       const allSlotsMap = new Map<string, DisponibilidadSlot>();
       baseHorariosSet.forEach((hora) => {
@@ -321,18 +454,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
     setIsSubmitting(true);
     try {
-      const telefonoNormalizado = data.telefono.replace(/\s+/g, "");
-      const telefonoMatch = telefonoNormalizado.match(/^\+(\d{1,3})(\d{6,14})$/);
-      const telefonoWebhook = telefonoMatch
-        ? `+${telefonoMatch[1]} ${telefonoMatch[2]}`
-        : data.telefono.trim();
+      const telefonoWebhook = formatearTelefonoWebhook(data.telefono);
 
-      const response = await fetch("https://n8npersonal.miguelbenito.space/webhook/2c6ec220-85c7-4460-b876-a92515c7b135", {
+      const response = await fetch(RESERVAS_WEB_CREAR_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Webhook-Secret": import.meta.env.VITE_N8N_WEBHOOK_SECRET || ''
-        },
+        headers: functionHeaders(),
         body: JSON.stringify({
           nombre: data.nombre,
           telefono: telefonoWebhook,
@@ -345,8 +471,15 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         })
       });
 
-      if (!response.ok) {
-        throw new Error("Reservation processing error");
+      // El cuerpo se lee SIEMPRE, tambien en 4xx: ahi es donde viene el
+      // `mensaje` que explica al visitante por que no ha entrado la reserva.
+      // `if (!response.ok) throw` lo tiraba a la basura.
+      const cuerpo = await leerCuerpo(response);
+
+      // 201 es el UNICO 2xx de exito. Todo lo demas es un rechazo con motivo.
+      if (response.status !== 201) {
+        setRechazo(interpretarRechazoReserva(response.status, cuerpo, t.reservationForm.rejection));
+        return;
       }
 
       setReservationDetails({
@@ -360,10 +493,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       setDisponibilidad([]);
       setSelectedHour(null);
       setHasCheckedAvailability(false);
-    } catch (error: any) {
-      toast.error(t.reservationForm.toasts.submitErrorTitle, {
-        description: t.reservationForm.toasts.submitErrorDescription,
-      });
+    } catch (error) {
+      // Ni siquiera hubo respuesta (red caida, CORS): se representa con
+      // status 0 para que el mensaje sea el de "reintenta o llamanos".
+      console.error("Error sending reservation:", error);
+      setRechazo(interpretarRechazoReserva(0, null, t.reservationForm.rejection));
     } finally {
       setIsSubmitting(false);
     }
@@ -417,6 +551,35 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-full"
           >
             {t.reservationForm.successButton}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rechazo !== null} onOpenChange={(abierto) => !abierto && setRechazo(null)}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader className="space-y-4">
+            <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-amber-600" />
+            </div>
+            <DialogTitle className="text-2xl">{t.reservationForm.rejection.title}</DialogTitle>
+            <DialogDescription asChild>
+              <div className="text-base space-y-2">
+                {rechazo && (
+                  <>
+                    <p>{rechazo.mensaje}</p>
+                    <p className="text-muted-foreground mt-4">
+                      <TextoSalida texto={rechazo.salida} />
+                    </p>
+                  </>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            onClick={() => setRechazo(null)}
+            className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-full"
+          >
+            {t.reservationForm.rejection.close}
           </Button>
         </DialogContent>
       </Dialog>

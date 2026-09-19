@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { CHAT_WEB_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
 interface AIChatbotProps {
     isOpen: boolean;
@@ -18,7 +19,12 @@ type ChatMessage = {
     imageUrl?: string | null;
 };
 
-const CHATBOT_WEBHOOK_URL = "https://n8npersonal.miguelbenito.space/webhook/chatbotweb";
+/**
+ * Limite de longitud del mensaje que aplica `chat-web` (MAX_MSG_LEN). Se
+ * replica en el `maxLength` del campo para que el visitante lo vea al escribir
+ * en vez de recibir un "resume un poco" despues de enviarlo.
+ */
+const MAX_MENSAJE_LEN = 600;
 const SUPABASE_CONFIG_BOT_WEB_URL = "https://jeamoczmbfsnwkfjxcyo.supabase.co/rest/v1/configBotWeb";
 const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -375,24 +381,38 @@ const AIChatbot = ({
                 id: sessionId,
             };
 
-            const response = await fetch(CHATBOT_WEBHOOK_URL, {
+            // JSON, no `x-www-form-urlencoded`: es lo que prefiere `chat-web`.
+            // Y sin `X-Webhook-Secret`: era el secreto de n8n, viajaba vacio en
+            // el bundle y NO esta en el `Access-Control-Allow-Headers` de la
+            // funcion, asi que el preflight CORS fallaba y la llamada no
+            // llegaba a salir del navegador.
+            const response = await fetch(CHAT_WEB_URL, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-                    "X-Webhook-Secret": import.meta.env.VITE_N8N_WEBHOOK_SECRET || '',
-                },
-                body: new URLSearchParams({
-                    body: JSON.stringify(chatbotPayload, null, 2),
-                    ...chatbotPayload,
-                }).toString(),
+                headers: functionHeaders(),
+                body: JSON.stringify(chatbotPayload),
             });
 
+            // El cuerpo se lee SIEMPRE, tambien en 429/503: ahi viene la
+            // `respuesta` ya traducida que hay que ensenar al visitante.
+            const cuerpo = await leerCuerpo(response);
+            const cuerpoObjeto =
+                cuerpo && typeof cuerpo === "object" && !Array.isArray(cuerpo)
+                    ? (cuerpo as Record<string, unknown>)
+                    : null;
+            const textoServidor = extractAssistantText(cuerpo);
+
             if (!response.ok) {
-                throw new Error(`Chatbot webhook error: ${response.status}`);
+                const codigo = typeof cuerpoObjeto?.codigo === "string" ? cuerpoObjeto.codigo : null;
+                console.warn("[chat-web] respuesta de control:", response.status, codigo);
+                // 429 (`rate_limited`) y 503 (`rate_limit_unavailable`) traen un
+                // texto pensado para el visitante. Un 500 de la pasarela con un
+                // `text/plain` cualquiera NO: ese usa el mensaje propio.
+                if (!cuerpoObjeto || !textoServidor) {
+                    throw new Error(`chat-web respondio ${response.status}`);
+                }
             }
 
-            const rawText = await response.text();
-            const assistantReply = extractAssistantText(rawText) ?? DEFAULT_ASSISTANT_REPLY;
+            const assistantReply = textoServidor ?? DEFAULT_ASSISTANT_REPLY;
 
             setMessages(prev => [
                 ...prev,
@@ -402,7 +422,7 @@ const AIChatbot = ({
                 },
             ]);
         } catch (error) {
-            console.error("Chatbot webhook request failed:", error);
+            console.error("chat-web request failed:", error);
             setMessages(prev => [
                 ...prev,
                 {
@@ -532,6 +552,7 @@ const AIChatbot = ({
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && void handleSend()}
                                 placeholder="Escribe un mensaje..."
+                                maxLength={MAX_MENSAJE_LEN}
                                 disabled={isSending}
                                 className="flex-1 bg-muted/50 border-none rounded-full px-4 text-base md:text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                             />

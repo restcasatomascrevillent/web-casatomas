@@ -155,8 +155,38 @@ vi.mock("mapbox-gl", () => ({
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import AIChatbot from "@/components/AIChatbot";
 
-const WEBHOOK_URL = "https://n8npersonal.miguelbenito.space/webhook/chatbotweb";
-const SUPABASE_CONFIG_URL = "https://jeamoczmbfsnwkfjxcyo.supabase.co/rest/v1/configBotWeb";
+import { CHAT_WEB_URL } from "@/lib/supabase-functions";
+
+// El chatbot ya no habla con n8n: habla con la Edge Function `chat-web`. Las
+// dos llamadas que hace el componente viven bajo el MISMO host de Supabase, asi
+// que no se pueden distinguir por "supabase" en la URL como antes.
+/** Llamada al chatbot (Edge Function). */
+const esLlamadaChat = (url: unknown) => String(url).includes("/functions/v1/chat-web");
+/** Llamada a la configuracion del bot (PostgREST). */
+const esLlamadaConfig = (url: unknown) => String(url).includes("configBotWeb");
+
+/** Respuesta de `chat-web`: `{ success, respuesta }`, opcionalmente con `codigo`. */
+const respuestaChat = (respuesta: string, status = 200, codigo?: string) =>
+  new Response(JSON.stringify({ success: status === 200, respuesta, ...(codigo ? { codigo } : {}) }), {
+    status,
+  });
+
+/**
+ * Enruta el `fetch` por path en vez de por orden de llamada.
+ *
+ * Importa: al abrirse, el componente pide la configuracion DOS veces (primero
+ * filtrando por idioma y, si no hay fila, sin filtro). Encadenar
+ * `mockResolvedValueOnce` hace que la segunda consulta se coma la respuesta
+ * pensada para el chat y el test acabe probando el camino de error sin querer.
+ */
+function mockPorRuta(respuestaDelChat: () => Response | Promise<Response>) {
+  vi.mocked(fetch).mockImplementation((url) => {
+    if (esLlamadaConfig(url)) {
+      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }
+    return Promise.resolve(respuestaDelChat());
+  });
+}
 
 function renderChatbot(props: { isOpen: boolean; onClose?: () => void }) {
   const onClose = props.onClose ?? vi.fn();
@@ -280,15 +310,12 @@ describe("AIChatbot component", () => {
   });
 
   it("displays the assistant reply after a successful webhook call", async () => {
-    // Use a URL-based mock so Supabase config and chatbot webhook get their own responses
+    // Mock por ruta: config y chatbot comparten host, solo cambia el path.
     vi.mocked(fetch).mockImplementation((url) => {
-      const urlStr = String(url);
-      if (urlStr.includes("supabase") || urlStr.includes("configBotWeb")) {
+      if (esLlamadaConfig(url)) {
         return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
       }
-      return Promise.resolve(
-        new Response(JSON.stringify({ message: "El menu cuesta 15 euros" }), { status: 200 })
-      );
+      return Promise.resolve(respuestaChat("El menu cuesta 15 euros"));
     });
 
     renderChatbot({ isOpen: true });
@@ -302,9 +329,9 @@ describe("AIChatbot component", () => {
   });
 
   it("shows the error reply when the webhook returns a non-OK status", async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
-      .mockResolvedValueOnce(new Response("Server error", { status: 500 }));
+    // Un 500 con `text/plain` de la pasarela NO es un mensaje para el visitante:
+    // se descarta y se usa el texto propio del componente.
+    mockPorRuta(() => new Response("Server error", { status: 500 }));
 
     renderChatbot({ isOpen: true });
     await waitFor(() => screen.getByText("Hola test"));
@@ -385,10 +412,8 @@ describe("AIChatbot component", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("includes the session_id in the webhook request body", async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ message: "ok" }), { status: 200 }));
+  it("manda el mensaje a chat-web como JSON, con id e idioma", async () => {
+    mockPorRuta(() => respuestaChat("ok"));
 
     renderChatbot({ isOpen: true });
     await waitFor(() => screen.getByText("Hola test"));
@@ -396,13 +421,77 @@ describe("AIChatbot component", () => {
     await sendChatMessage("Hola bot");
 
     await waitFor(() => {
-      const calls = vi.mocked(fetch).mock.calls;
-      const webhookCall = calls.find(([url]) =>
-        typeof url === "string" && url.includes("chatbotweb")
-      );
-      expect(webhookCall).toBeDefined();
-      const body = webhookCall![1]?.body as string;
-      expect(body).toMatch(/id=/);
+      const llamada = vi.mocked(fetch).mock.calls.find(([url]) => esLlamadaChat(url));
+      expect(llamada).toBeDefined();
+      expect(String(llamada![0])).toBe(CHAT_WEB_URL);
+
+      const cuerpo = JSON.parse(llamada![1]?.body as string);
+      expect(cuerpo.mensaje).toBe("Hola bot");
+      expect(cuerpo.idiom).toBe("es");
+      expect(typeof cuerpo.id).toBe("string");
+      expect(cuerpo.id.length).toBeGreaterThan(0);
     });
+  });
+
+  it("no manda la cabecera X-Webhook-Secret (rompia el preflight CORS de chat-web)", async () => {
+    mockPorRuta(() => respuestaChat("ok"));
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    await sendChatMessage("Hola bot");
+
+    await waitFor(() => {
+      const llamada = vi.mocked(fetch).mock.calls.find(([url]) => esLlamadaChat(url));
+      expect(llamada).toBeDefined();
+
+      const cabeceras = (llamada![1]?.headers ?? {}) as Record<string, string>;
+      const nombres = Object.keys(cabeceras).map((nombre) => nombre.toLowerCase());
+      expect(nombres).not.toContain("x-webhook-secret");
+      expect(cabeceras["Content-Type"]).toBe("application/json");
+    });
+  });
+
+  it("ensena el mensaje del servidor cuando chat-web responde 429 rate_limited", async () => {
+    mockPorRuta(() => respuestaChat("Vas muy rapido, dame un segundo.", 429, "rate_limited"));
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    await sendChatMessage("Hola hola hola");
+
+    await waitFor(() => {
+      expect(screen.getByText("Vas muy rapido, dame un segundo.")).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/ahora mismo no puedo responder/i)).toBeNull();
+  });
+
+  it("ensena el mensaje del servidor cuando chat-web responde 503 rate_limit_unavailable", async () => {
+    mockPorRuta(() =>
+      respuestaChat("Ahora mismo no puedo atenderte, prueba en un momento.", 503, "rate_limit_unavailable")
+    );
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    await sendChatMessage("Otra consulta");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Ahora mismo no puedo atenderte, prueba en un momento.")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("limita el campo de texto a los 600 caracteres que acepta chat-web", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify([]), { status: 200 })
+    );
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    const input = screen.getByPlaceholderText(/escribe un mensaje/i) as HTMLInputElement;
+    expect(input.maxLength).toBe(600);
   });
 });
