@@ -12,6 +12,10 @@
  *    (política de privacidad, la redirección de Touza, el propio 404).
  *  - `vercel.json` usa `cleanUrls: true`, así que la URL pública no lleva `.html`
  *    y `index.html` es la raíz.
+ *  - Cada URL con versión en otro idioma lleva sus `<xhtml:link>` de `hreflang`
+ *    (las tres versiones, autorreferencia incluida, más `x-default` al
+ *    español) — mismo cálculo de prefijo que `src/i18n/routing.ts`, duplicado
+ *    aquí a propósito: este script es Node puro sin acceso a `src/` en build.
  */
 import { readdir, readFile, writeFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
@@ -19,10 +23,37 @@ import { join, relative, sep } from 'node:path';
 // `/carta` y sus hijas son la razón de ser del sitio para un buscador (388
 // productos con precio), así que van por encima del 0.8 por defecto. La
 // frecuencia es semanal porque la carta se edita desde el panel de
-// administración y cada guardado dispara un rebuild.
+// administración y cada guardado dispara un rebuild. Las claves son SIEMPRE
+// la ruta "en español" (sin prefijo de idioma): `/en/carta` y `/fr/carta`
+// comparten la prioridad de `/carta`.
 const PRIORIDADES = { '/': '1.0', '/carta': '0.9' };
 const FRECUENCIAS = { '/': 'weekly' };
-const esCarta = (ruta) => ruta === '/carta' || ruta.startsWith('/carta/');
+const esCarta = (rutaEs) => rutaEs === '/carta' || rutaEs.startsWith('/carta/');
+
+const PREFIJOS_IDIOMA = { en: '/en', fr: '/fr' };
+const IDIOMAS = ['es', 'en', 'fr'];
+
+/** Idioma de una ruta pública, a partir de su primer segmento. */
+function idiomaDeRuta(ruta) {
+  if (ruta === '/en' || ruta.startsWith('/en/')) return 'en';
+  if (ruta === '/fr' || ruta.startsWith('/fr/')) return 'fr';
+  return 'es';
+}
+
+/** Quita el prefijo de idioma. `/en/carta/vinos` -> `/carta/vinos`. */
+function rutaSinPrefijo(ruta) {
+  const lang = idiomaDeRuta(ruta);
+  if (lang === 'es') return ruta;
+  const resto = ruta.slice(PREFIJOS_IDIOMA[lang].length);
+  return resto === '' ? '/' : resto;
+}
+
+/** `/carta/vinos` + "en" -> `/en/carta/vinos`. `/` + "en" -> `/en`. */
+function conPrefijo(rutaEs, lang) {
+  if (lang === 'es') return rutaEs;
+  const limpio = rutaEs === '/' ? '' : rutaEs;
+  return `${PREFIJOS_IDIOMA[lang]}${limpio}` || PREFIJOS_IDIOMA[lang];
+}
 
 async function listarHtml(dir, raiz = dir, salida = []) {
   for (const entrada of await readdir(dir)) {
@@ -60,20 +91,44 @@ export async function generarSitemapYRobots(dir, siteUrl) {
     throw new Error('[sitemap] No se encontró ninguna página indexable en el build.');
   }
 
+  // Qué idiomas tiene realmente cada página (grupo = misma ruta sin prefijo).
+  // Una página sin hermanas en otro idioma (hoy, /reservas) no lleva bloque
+  // `hreflang`: con un solo idioma esa etiqueta no aporta nada.
+  const rutasPorGrupo = new Map();
+  for (const ruta of rutas) {
+    const clave = rutaSinPrefijo(ruta);
+    if (!rutasPorGrupo.has(clave)) rutasPorGrupo.set(clave, new Set());
+    rutasPorGrupo.get(clave).add(idiomaDeRuta(ruta));
+  }
+
   const lastmod = new Date().toISOString().slice(0, 10);
   const sitemap =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
     rutas
-      .map(
-        (ruta) =>
+      .map((ruta) => {
+        const rutaEs = rutaSinPrefijo(ruta);
+        const idiomasHermanos = rutasPorGrupo.get(rutaEs);
+        const alternates =
+          idiomasHermanos.size > 1
+            ? [
+                ...IDIOMAS.filter((lang) => idiomasHermanos.has(lang)).map(
+                  (lang) =>
+                    `    <xhtml:link rel="alternate" hreflang="${lang}" href="${base}${conPrefijo(rutaEs, lang)}"/>\n`,
+                ),
+                `    <xhtml:link rel="alternate" hreflang="x-default" href="${base}${rutaEs}"/>\n`,
+              ].join('')
+            : '';
+        return (
           `  <url>\n` +
           `    <loc>${base}${ruta}</loc>\n` +
           `    <lastmod>${lastmod}</lastmod>\n` +
-          `    <changefreq>${FRECUENCIAS[ruta] ?? (esCarta(ruta) ? 'weekly' : 'monthly')}</changefreq>\n` +
-          `    <priority>${PRIORIDADES[ruta] ?? (esCarta(ruta) ? '0.85' : '0.8')}</priority>\n` +
-          `  </url>\n`,
-      )
+          `    <changefreq>${FRECUENCIAS[rutaEs] ?? (esCarta(rutaEs) ? 'weekly' : 'monthly')}</changefreq>\n` +
+          `    <priority>${PRIORIDADES[rutaEs] ?? (esCarta(rutaEs) ? '0.85' : '0.8')}</priority>\n` +
+          alternates +
+          `  </url>\n`
+        );
+      })
       .join('') +
     `</urlset>\n`;
 

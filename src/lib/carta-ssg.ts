@@ -13,7 +13,8 @@
  */
 import carta from "virtual:carta-ssg";
 import type { PlatoSSG } from "./carta-ssg-types";
-import { normalizeAlergenos, resolveTranslatedItem, type ItemTraducido } from "./carta-i18n";
+import { resolveTranslatedItem, type ItemTraducido } from "./carta-i18n";
+import { normalizeAlergenos } from "./alergenos";
 import type { Language } from "@/i18n/types";
 
 export const cartaSSG = carta;

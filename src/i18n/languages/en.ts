@@ -260,6 +260,8 @@ export const translations: Translations = {
       stepTwo: "Step 2: Pick your preferred time",
       timesLabel: "Available times *",
       fullLabel: "Fully booked",
+      lunchLabel: "Lunch",
+      dinnerLabel: "Dinner",
       stepThree: "Step 3: Tell us about yourself",
       infoTitle: "Tell us about yourself",
       nameLabel: "Full name *",

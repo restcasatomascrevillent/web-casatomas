@@ -8,7 +8,11 @@
  * pueden reproducir con los datos reales.
  */
 import { describe, expect, it } from "vitest";
-import { construirIndiceCategorias, slugificar } from "@/lib/carta-rutas";
+import {
+  construirIndiceCategorias,
+  construirIndiceResumen,
+  slugificar,
+} from "@/lib/carta-rutas";
 
 const platos = (...categorias: (string | undefined)[]) => categorias.map((categoria) => ({ categoria }));
 
@@ -26,6 +30,37 @@ describe("slugificar", () => {
 
   it("devuelve cadena vacía si no queda nada utilizable", () => {
     expect(slugificar("★★★")).toBe("");
+  });
+});
+
+describe("construirIndiceResumen (pestañas de bebidas y vinos)", () => {
+  // Las bebidas no viajan enteras en `virtual:carta-ssg`, solo su recuento por
+  // categoría: de ahí salen ahora las pestañas de la portada. Con la lista fija
+  // de cinco que había escrita a mano, 29 de las 75 bebidas no se podían
+  // alcanzar desde la portada aunque `/carta/bebidas` sí las listara.
+  const resumen = (...categorias: [string, number][]) => ({
+    total: categorias.reduce((suma, [, total]) => suma + total, 0),
+    categorias: categorias.map(([nombre, total]) => ({ nombre, total })),
+  });
+
+  it("devuelve TODAS las categorías del dato, no una lista escrita a mano", () => {
+    const indice = construirIndiceResumen(
+      resumen(["Aguas", 8], ["Refrescos", 12], ["Vermús", 5], ["Zumos", 4]),
+    );
+    expect(indice.map((c) => c.clave)).toEqual(["Aguas", "Refrescos", "Vermús", "Zumos"]);
+    expect(indice.map((c) => c.total)).toEqual([8, 12, 5, 4]);
+  });
+
+  it("respeta el orden conocido y deja las nuevas detrás", () => {
+    const indice = construirIndiceResumen(resumen(["Zumos", 1], ["Aguas", 2]), ["Aguas", "Zumos"]);
+    expect(indice.map((c) => c.clave)).toEqual(["Aguas", "Zumos"]);
+  });
+
+  it("ignora categorías en blanco y un resumen vacío no rompe", () => {
+    expect(construirIndiceResumen(resumen(["   ", 3], ["Aguas", 1]))).toEqual([
+      { clave: "Aguas", slug: "aguas", total: 1 },
+    ]);
+    expect(construirIndiceResumen({ total: 0, categorias: [] })).toEqual([]);
   });
 });
 

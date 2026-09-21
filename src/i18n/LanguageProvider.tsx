@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Locale } from "date-fns";
 import { languageOptions, type Language } from "@/i18n/types";
 import esLanguagePack, { type LanguagePack, type Translations } from "@/i18n/languages/es";
+import enLanguagePack from "@/i18n/languages/en";
+import frLanguagePack from "@/i18n/languages/fr";
 
 type LanguageContextValue = {
   language: Language;
@@ -12,10 +14,26 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
-// El pack 'es' (idioma por defecto) se importa de forma síncrona para que el
-// contenido esté disponible en el primer render — imprescindible para el SSG
-// (vite-react-ssg renderiza en Node sin ejecutar efectos). 'en'/'fr' siguen lazy.
-const languagePackCache: Partial<Record<Language, LanguagePack>> = { es: esLanguagePack };
+/**
+ * Los TRES packs se importan de forma síncrona.
+ *
+ * Antes solo 'es' era síncrono ("es el idioma por defecto, imprescindible
+ * para el SSG") y 'en'/'fr' se cargaban en un efecto — que nunca se ejecuta
+ * en Node. Mientras solo existía la rama "/" (siempre en español) no se
+ * notaba; en cuanto `App.tsx` empezó a montar `LanguageProvider` con
+ * `initialLanguage="en"`/`"fr"` para las ramas `/en` y `/fr`, ese efecto
+ * seguía sin correr en el prerenderizado y `languagePack` se quedaba en
+ * `null` para siempre: el HTML de esas 15 páginas era el placeholder
+ * "Cargando..." (1,4 KB, comprobado en `dist/en.html`), no la página real.
+ * Los tres diccionarios pesan ~20 KB de código fuente cada uno — nada
+ * comparado con el resto del bundle — y de todas formas ya se precargaban
+ * los dos que faltaban a los 3,5 s de cualquier visita (más abajo).
+ */
+const languagePackCache: Record<Language, LanguagePack> = {
+  es: esLanguagePack,
+  en: enLanguagePack,
+  fr: frLanguagePack,
+};
 let hasPreloadedSecondaryLanguagePacks = false;
 const languageLoaders: Record<Language, () => Promise<{ default: LanguagePack }>> = {
   es: () => import("@/i18n/languages/es"),
@@ -44,8 +62,20 @@ const getInitialLanguage = (): Language => {
   return "es";
 };
 
-export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+interface LanguageProviderProps {
+  children: React.ReactNode;
+  /**
+   * Idioma que manda la URL (rama `/`, `/en` o `/fr` de `App.tsx`). Cuando se
+   * pasa, gana siempre sobre `localStorage`/`navigator`: la URL es la fuente
+   * de verdad del idioma, tanto en el HTML del SSG (Node, sin `window`) como
+   * en la hidratación (mismo valor, cero desajuste). Si se omite (los tests
+   * de este componente no la pasan), se conserva la detección de siempre.
+   */
+  initialLanguage?: Language;
+}
+
+export const LanguageProvider = ({ children, initialLanguage }: LanguageProviderProps) => {
+  const [language, setLanguage] = useState<Language>(() => initialLanguage ?? getInitialLanguage());
   const [languagePack, setLanguagePack] = useState<LanguagePack | null>(() => {
     return languagePackCache[language] ?? null;
   });

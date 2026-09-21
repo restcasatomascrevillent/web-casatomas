@@ -6,7 +6,7 @@ import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
 import {
   CATEGORIAS_CARTA,
-  etiquetaCategoria,
+  etiquetaCategoriaIdioma,
   RESUMEN_BEBIDAS,
   RESUMEN_VINOS,
   rutaCategoria,
@@ -14,9 +14,103 @@ import {
   TOTAL_PLATOS,
 } from "@/lib/carta-rutas";
 import { breadcrumbSchema, menuIndiceSchema, SITE_URL } from "@/lib/negocio";
+import { useTranslations } from "@/i18n/LanguageProvider";
+import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
+import type { Language } from "@/i18n/types";
 
 const plural = (n: number, singular: string, plural_: string) =>
   `${n} ${n === 1 ? singular : plural_}`;
+
+const TEXTOS: Record<
+  Language,
+  {
+    title: string;
+    description: (platos: number, vinos: number, bebidas: number) => string;
+    keywords: string[];
+    miga: string;
+    titulo: string;
+    subtitulo: string;
+    platosTitulo: string;
+    platosResumen: (platos: number, categorias: number) => string;
+    vaciaPlatos: string;
+    bodegaTitulo: string;
+    vinosTitulo: string;
+    vinosDetalle: (n: number) => string;
+    bebidasTitulo: string;
+    bebidasDetalle: (n: number) => string;
+    volverA: string;
+    referencia: (n: number) => string;
+    plato: (n: number) => string;
+    categoria: (n: number) => string;
+  }
+> = {
+  es: {
+    title: "Carta y precios | Casa Tomás Restaurante en Crevillent",
+    description: (p, v, b) =>
+      `Carta completa de Casa Tomás (Crevillent, Alicante): ${p} platos con precios y alérgenos, ${v} vinos y ${b} bebidas. Arroces, mariscos, pescados y carnes.`,
+    keywords: ["carta Casa Tomás", "menú restaurante Crevillent", "precios restaurante Crevillent", "carta de vinos Crevillent"],
+    miga: "Carta",
+    titulo: "Nuestra carta",
+    subtitulo:
+      "Cocina tradicional alicantina en Crevillent. Todos los precios y los alérgenos de cada plato, actualizados desde la carta del restaurante.",
+    platosTitulo: "Platos",
+    platosResumen: (p, c) => `${plural(p, "plato", "platos")} en ${plural(c, "categoría", "categorías")}.`,
+    vaciaPlatos: "La carta de platos no está disponible en este momento.",
+    bodegaTitulo: "Bodega y bebidas",
+    vinosTitulo: "Carta de vinos",
+    vinosDetalle: (n) => plural(n, "referencia", "referencias"),
+    bebidasTitulo: "Bebidas",
+    bebidasDetalle: (n) => plural(n, "referencia", "referencias"),
+    volverA: "Volver a la portada",
+    referencia: (n) => `${n} referencias en total`,
+    plato: (n) => (n === 1 ? "plato" : "platos"),
+    categoria: (n) => (n === 1 ? "categoría" : "categorías"),
+  },
+  en: {
+    title: "Menu & Prices | Casa Tomás Restaurant in Crevillent",
+    description: (p, v, b) =>
+      `Full menu at Casa Tomás (Crevillent, Alicante): ${p} dishes with prices and allergens, ${v} wines and ${b} drinks. Rice dishes, seafood, fish and meat.`,
+    keywords: ["Casa Tomás menu", "restaurant menu Crevillent", "restaurant prices Crevillent", "wine list Crevillent"],
+    miga: "Menu",
+    titulo: "Our menu",
+    subtitulo:
+      "Traditional cooking from Alicante, in Crevillent. Prices and allergens for every dish, kept up to date from the restaurant's own menu.",
+    platosTitulo: "Dishes",
+    platosResumen: (p, c) => `${p} ${p === 1 ? "dish" : "dishes"} across ${c} ${c === 1 ? "category" : "categories"}.`,
+    vaciaPlatos: "The food menu isn't available right now.",
+    bodegaTitulo: "Cellar & drinks",
+    vinosTitulo: "Wine list",
+    vinosDetalle: (n) => `${n} ${n === 1 ? "wine" : "wines"}`,
+    bebidasTitulo: "Drinks",
+    bebidasDetalle: (n) => `${n} ${n === 1 ? "item" : "items"}`,
+    volverA: "Back to homepage",
+    referencia: (n) => `${n} items in total`,
+    plato: (n) => (n === 1 ? "dish" : "dishes"),
+    categoria: (n) => (n === 1 ? "category" : "categories"),
+  },
+  fr: {
+    title: "Carte et prix | Restaurant Casa Tomás à Crevillent",
+    description: (p, v, b) =>
+      `Carte complète de Casa Tomás (Crevillent, Alicante) : ${p} plats avec prix et allergènes, ${v} vins et ${b} boissons. Riz, fruits de mer, poissons et viandes.`,
+    keywords: ["carte Casa Tomás", "menu restaurant Crevillent", "prix restaurant Crevillent", "carte des vins Crevillent"],
+    miga: "Carte",
+    titulo: "Notre carte",
+    subtitulo:
+      "Cuisine traditionnelle d'Alicante, à Crevillent. Prix et allergènes de chaque plat, mis à jour depuis la carte du restaurant.",
+    platosTitulo: "Plats",
+    platosResumen: (p, c) => `${p} ${p === 1 ? "plat" : "plats"} dans ${c} ${c === 1 ? "catégorie" : "catégories"}.`,
+    vaciaPlatos: "La carte des plats n'est pas disponible pour le moment.",
+    bodegaTitulo: "Cave et boissons",
+    vinosTitulo: "Carte des vins",
+    vinosDetalle: (n) => `${n} référence${n === 1 ? "" : "s"}`,
+    bebidasTitulo: "Boissons",
+    bebidasDetalle: (n) => `${n} référence${n === 1 ? "" : "s"}`,
+    volverA: "Retour à l'accueil",
+    referencia: (n) => `${n} références au total`,
+    plato: (n) => (n === 1 ? "plat" : "plats"),
+    categoria: (n) => (n === 1 ? "catégorie" : "catégories"),
+  },
+};
 
 /**
  * Tarjeta-enlace de una sección de la carta.
@@ -55,46 +149,44 @@ const TarjetaSeccion = ({
  * JSON-LD es un `Menu` de secciones con recuento y URL, sin `MenuItem`.
  */
 const CartaIndice = () => {
+  const { language } = useTranslations();
+  const textos = TEXTOS[language];
   const secciones = [
     ...CATEGORIAS_CARTA.map((categoria) => ({
-      nombre: etiquetaCategoria(categoria.clave),
+      nombre: etiquetaCategoriaIdioma(categoria.clave, language),
       total: categoria.total,
-      url: `${SITE_URL}${rutaCategoria(categoria.slug)}`,
+      url: `${SITE_URL}${rutaCategoria(categoria.slug, language)}`,
     })),
-    { nombre: "Vinos", total: RESUMEN_VINOS.total, url: `${SITE_URL}/carta/vinos` },
-    { nombre: "Bebidas", total: RESUMEN_BEBIDAS.total, url: `${SITE_URL}/carta/bebidas` },
+    { nombre: textos.vinosTitulo, total: RESUMEN_VINOS.total, url: `${SITE_URL}${construirRutaIdioma("/carta/vinos", language)}` },
+    { nombre: textos.bebidasTitulo, total: RESUMEN_BEBIDAS.total, url: `${SITE_URL}${construirRutaIdioma("/carta/bebidas", language)}` },
   ];
 
   return (
     <>
       <Seo
-        title="Carta y precios | Casa Tomás Restaurante en Crevillent"
-        description={`Carta completa de Casa Tomás (Crevillent, Alicante): ${TOTAL_PLATOS} platos con precios y alérgenos, ${RESUMEN_VINOS.total} vinos y ${RESUMEN_BEBIDAS.total} bebidas. Arroces, mariscos, pescados y carnes.`}
-        canonical={`${SITE_URL}/carta`}
-        keywords={[
-          "carta Casa Tomás",
-          "menú restaurante Crevillent",
-          "precios restaurante Crevillent",
-          "carta de vinos Crevillent",
-        ]}
+        title={textos.title}
+        description={textos.description(TOTAL_PLATOS, RESUMEN_VINOS.total, RESUMEN_BEBIDAS.total)}
+        canonical={`${SITE_URL}${construirRutaIdioma("/carta", language)}`}
+        lang={language}
+        languageAlternates={alternatesDePagina("/carta", SITE_URL)}
+        keywords={textos.keywords}
       />
-      <JsonLd data={breadcrumbSchema([{ nombre: "Carta", path: "/carta" }])} />
-      <JsonLd data={menuIndiceSchema(secciones, "es")} />
+      <JsonLd data={breadcrumbSchema([{ nombre: textos.miga, path: "/carta" }], language)} />
+      <JsonLd data={menuIndiceSchema(secciones, language)} />
 
       <CartaPageLayout
-        titulo="Nuestra carta"
-        subtitulo="Cocina tradicional alicantina en Crevillent. Todos los precios y los alérgenos de cada plato, actualizados desde la carta del restaurante."
-        detalle={`${TOTAL_CARTA} referencias en total`}
-        migas={[{ nombre: "Carta" }]}
-        volverA={{ texto: "Volver a la portada", path: "/" }}
+        titulo={textos.titulo}
+        subtitulo={textos.subtitulo}
+        detalle={textos.referencia(TOTAL_CARTA)}
+        migas={[{ nombre: textos.miga }]}
+        volverA={{ texto: textos.volverA, path: "/" }}
       >
         <section aria-labelledby="platos" className="animate-fade-up">
           <h2 id="platos" className="text-2xl md:text-3xl font-bold text-primary mb-2">
-            Platos
+            {textos.platosTitulo}
           </h2>
           <p className="text-muted-foreground mb-6">
-            {plural(TOTAL_PLATOS, "plato", "platos")} en{" "}
-            {plural(CATEGORIAS_CARTA.length, "categoría", "categorías")}.
+            {textos.platosResumen(TOTAL_PLATOS, CATEGORIAS_CARTA.length)}
           </p>
 
           {CATEGORIAS_CARTA.length > 0 ? (
@@ -102,35 +194,33 @@ const CartaIndice = () => {
               {CATEGORIAS_CARTA.map((categoria) => (
                 <TarjetaSeccion
                   key={categoria.slug}
-                  to={rutaCategoria(categoria.slug)}
-                  titulo={etiquetaCategoria(categoria.clave)}
-                  detalle={plural(categoria.total, "plato", "platos")}
+                  to={rutaCategoria(categoria.slug, language)}
+                  titulo={etiquetaCategoriaIdioma(categoria.clave, language)}
+                  detalle={`${categoria.total} ${textos.plato(categoria.total)}`}
                   icono={<UtensilsCrossed className="w-6 h-6" />}
                 />
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">
-              La carta de platos no está disponible en este momento.
-            </p>
+            <p className="text-muted-foreground">{textos.vaciaPlatos}</p>
           )}
         </section>
 
         <section aria-labelledby="bodega" className="mt-14 animate-fade-up">
           <h2 id="bodega" className="text-2xl md:text-3xl font-bold text-primary mb-6">
-            Bodega y bebidas
+            {textos.bodegaTitulo}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             <TarjetaSeccion
-              to="/carta/vinos"
-              titulo="Carta de vinos"
-              detalle={plural(RESUMEN_VINOS.total, "referencia", "referencias")}
+              to={construirRutaIdioma("/carta/vinos", language)}
+              titulo={textos.vinosTitulo}
+              detalle={textos.vinosDetalle(RESUMEN_VINOS.total)}
               icono={<Wine className="w-6 h-6" />}
             />
             <TarjetaSeccion
-              to="/carta/bebidas"
-              titulo="Bebidas"
-              detalle={plural(RESUMEN_BEBIDAS.total, "referencia", "referencias")}
+              to={construirRutaIdioma("/carta/bebidas", language)}
+              titulo={textos.bebidasTitulo}
+              detalle={textos.bebidasDetalle(RESUMEN_BEBIDAS.total)}
               icono={<Beer className="w-6 h-6" />}
             />
           </div>

@@ -23,6 +23,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 
+// La web de Touza todavía no tiene dominio propio (vive en touza-restaurant-website,
+// pendiente de desplegar). Hasta entonces se mantiene el enlace actual, alojado en
+// Lovable, como fallback — decisión del dueño (sept-2026) para no inventar una URL
+// que no existe. En cuanto haya dominio, basta con fijar VITE_TOUZA_URL.
+const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touzact.lovable.app";
+
 interface MenuDiarioRow {
   id: string;
   fecha: string;
@@ -267,7 +273,7 @@ const EspaciosSection = () => {
           : index === 2
             ? [vinosMarques, carnePlato, pulpoPlato]
             : undefined,
-    link: index === 3 ? "https://touzact.lovable.app" : undefined,
+    link: index === 3 ? TOUZA_URL : undefined,
   }));
 
   return (

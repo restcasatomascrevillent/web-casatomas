@@ -6,6 +6,26 @@ import { JsonLd } from "@/components/JsonLd";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS } from "@/lib/carta-ssg";
 import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
+import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
+import type { Language } from "@/i18n/types";
+
+const SEO_HOME: Record<Language, { title: string; description: string }> = {
+  es: {
+    title: "Casa Tomás Restaurante - Tradición y Calidad en Crevillent",
+    description:
+      "Casa Tomás Restaurante en Crevillent, Alicante. Más de 30 años de tradición culinaria. Cocina de calidad con productos frescos y ambiente familiar. Reserva tu mesa.",
+  },
+  en: {
+    title: "Casa Tomás Restaurant – Traditional Spanish Cuisine in Crevillent",
+    description:
+      "Casa Tomás Restaurant in Crevillent, Alicante (Spain). Over 30 years of traditional cooking with fresh, local ingredients and a family atmosphere. Book your table today.",
+  },
+  fr: {
+    title: "Restaurant Casa Tomás – Cuisine traditionnelle à Crevillent",
+    description:
+      "Restaurant Casa Tomás à Crevillent (Alicante, Espagne). Plus de 30 ans de tradition culinaire, des produits frais et une ambiance familiale. Réservez votre table.",
+  },
+};
 
 const CartaSection = lazy(() => import("@/components/CartaSection"));
 const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
@@ -48,7 +68,13 @@ const Index = () => {
 
   return (
     <>
-      <Seo canonical={`${SITE_URL}/`} />
+      <Seo
+        title={SEO_HOME[language].title}
+        description={SEO_HOME[language].description}
+        canonical={`${SITE_URL}${construirRutaIdioma("/", language)}`}
+        lang={language}
+        languageAlternates={alternatesDePagina("/", SITE_URL)}
+      />
       <JsonLd data={schema} />
       <Header />
       <div className="min-h-screen bg-background">

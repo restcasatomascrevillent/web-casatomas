@@ -6,6 +6,8 @@ import { NavLink } from "@/components/NavLink";
 import logo from "@/assets/logo-casa-tomas.png";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useLocation, useNavigate } from "react-router-dom";
+import { construirRutaIdioma, rutaEquivalente } from "@/i18n/routing";
+import type { Language } from "@/i18n/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,10 +15,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Solo etiquetas de accesibilidad (lector de pantalla, nunca visibles en
+// pantalla): no están en `t.` porque son de este componente únicamente.
+const ARIA: Record<"cambiarIdioma" | "cerrarMenu" | "abrirMenu", Record<Language, string>> = {
+  cambiarIdioma: { es: "Cambiar idioma", en: "Change language", fr: "Changer de langue" },
+  cerrarMenu: { es: "Cerrar menú", en: "Close menu", fr: "Fermer le menu" },
+  abrirMenu: { es: "Abrir menú", en: "Open menu", fr: "Ouvrir le menu" },
+};
+
 const Header = () => {
-  const { t, language, setLanguage, languages } = useTranslations();
+  const { t, language, languages } = useTranslations();
   const location = useLocation();
   const navigate = useNavigate();
+  // Portada DE ESTE idioma: "/", "/en" o "/fr" — no siempre "/". La usan el
+  // logo y la navegación por anclas para saber si ya están en casa.
+  const home = construirRutaIdioma("/", language);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -53,8 +66,8 @@ const Header = () => {
       scrollToSection(sectionId);
       return;
     }
-    if (location.pathname !== "/") {
-      navigate(`/#${sectionId}`);
+    if (location.pathname !== home) {
+      navigate(`${home}#${sectionId}`);
       setIsMobileMenuOpen(false);
       return;
     }
@@ -86,8 +99,8 @@ const Header = () => {
           {/* Logo */}
           <motion.button
             onClick={() => {
-              if (location.pathname !== "/") {
-                navigate("/");
+              if (location.pathname !== home) {
+                navigate(home);
                 return;
               }
               window.scrollTo({ top: 0, behavior: "smooth" });
@@ -132,7 +145,7 @@ const Header = () => {
                   size="sm"
                   variant={language === option.value ? "default" : "ghost"}
                   className="h-8 px-3 rounded-full text-xs font-semibold"
-                  onClick={() => setLanguage(option.value)}
+                  onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
                 >
                   {option.label}
                 </Button>
@@ -153,7 +166,7 @@ const Header = () => {
           <div className="flex items-center gap-1 lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Cambiar idioma">
+                <Button variant="ghost" size="icon" aria-label={ARIA.cambiarIdioma[language]}>
                   <Globe2 className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -161,7 +174,7 @@ const Header = () => {
                 {languages.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => setLanguage(option.value)}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
                     className={language === option.value ? "font-semibold text-primary" : ""}
                   >
                     {option.label}
@@ -172,7 +185,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="icon"
-              aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-label={isMobileMenuOpen ? ARIA.cerrarMenu[language] : ARIA.abrirMenu[language]}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

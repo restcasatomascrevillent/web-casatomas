@@ -1,5 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html>
+  <!-- `lang` NO va aquí: cada página lo fija por su idioma real vía
+       `<Seo lang="…">` (src/components/Seo.tsx), que lo funde en esta
+       etiqueta a través de react-helmet-async. Si este `<html>` llevara un
+       `lang` fijo, el navegador se quedaría con el PRIMERO de los dos
+       atributos duplicados — el fijo, no el de la página. -->
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

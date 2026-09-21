@@ -6,14 +6,86 @@ import ProductoCard from "@/components/carta/ProductoCard";
 import {
   CATEGORIAS_CARTA,
   categoriaPorSlug,
-  etiquetaCategoria,
+  etiquetaCategoriaIdioma,
   platosDeCategoria,
   rutaCategoria,
 } from "@/lib/carta-rutas";
 import { agruparPorCategoria } from "@/lib/carta-ssg";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
+import { useTranslations } from "@/i18n/LanguageProvider";
+import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
+import type { Language } from "@/i18n/types";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+
+const TEXTOS: Record<
+  Language,
+  {
+    tituloSufijo: string;
+    plato: (n: number) => string;
+    descripcion: (n: number, etiqueta: string) => string;
+    subtitulo: (conFoto: number) => string;
+    migaCarta: string;
+    otrasSecciones: string;
+    vinos: string;
+    bebidas: string;
+    vacia: string;
+    noEncontradaTitulo: string;
+    noEncontradaTexto: string;
+  }
+> = {
+  es: {
+    tituloSufijo: "carta y precios | Casa Tomás Crevillent",
+    plato: (n) => (n === 1 ? "plato" : "platos"),
+    descripcion: (n, etiqueta) =>
+      `${n} ${n === 1 ? "plato" : "platos"} de la sección ${etiqueta.toLowerCase()} en Casa Tomás (Crevillent, Alicante), con precio y alérgenos de cada uno.`,
+    subtitulo: (conFoto) =>
+      `Carta de Casa Tomás en Crevillent (Alicante). Precios y alérgenos de cada plato${
+        conFoto > 0 ? `, con foto en ${conFoto} de ellos` : ""
+      }.`,
+    migaCarta: "Carta",
+    otrasSecciones: "Otras secciones",
+    vinos: "Vinos",
+    bebidas: "Bebidas",
+    vacia: "Esta sección de la carta está vacía ahora mismo.",
+    noEncontradaTitulo: "Categoría no encontrada",
+    noEncontradaTexto: "Puede que esa parte de la carta haya cambiado de nombre o ya no esté disponible.",
+  },
+  en: {
+    tituloSufijo: "menu and prices | Casa Tomás Crevillent",
+    plato: (n) => (n === 1 ? "dish" : "dishes"),
+    descripcion: (n, etiqueta) =>
+      `${n} ${n === 1 ? "dish" : "dishes"} in the ${etiqueta.toLowerCase()} section at Casa Tomás (Crevillent, Alicante), with price and allergens for each one.`,
+    subtitulo: (conFoto) =>
+      `Casa Tomás menu in Crevillent (Alicante). Price and allergens for every dish${
+        conFoto > 0 ? `, with a photo for ${conFoto} of them` : ""
+      }.`,
+    migaCarta: "Menu",
+    otrasSecciones: "Other sections",
+    vinos: "Wines",
+    bebidas: "Drinks",
+    vacia: "This section of the menu is empty right now.",
+    noEncontradaTitulo: "Category not found",
+    noEncontradaTexto: "This part of the menu may have been renamed or is no longer available.",
+  },
+  fr: {
+    tituloSufijo: "carte et prix | Casa Tomás Crevillent",
+    plato: (n) => (n === 1 ? "plat" : "plats"),
+    descripcion: (n, etiqueta) =>
+      `${n} ${n === 1 ? "plat" : "plats"} de la section ${etiqueta.toLowerCase()} chez Casa Tomás (Crevillent, Alicante), avec le prix et les allergènes de chacun.`,
+    subtitulo: (conFoto) =>
+      `Carte de Casa Tomás à Crevillent (Alicante). Prix et allergènes de chaque plat${
+        conFoto > 0 ? `, avec une photo pour ${conFoto} d'entre eux` : ""
+      }.`,
+    migaCarta: "Carte",
+    otrasSecciones: "Autres sections",
+    vinos: "Vins",
+    bebidas: "Boissons",
+    vacia: "Cette section de la carte est vide pour le moment.",
+    noEncontradaTitulo: "Catégorie introuvable",
+    noEncontradaTexto: "Cette partie de la carte a peut-être changé de nom ou n'est plus disponible.",
+  },
+};
 
 /**
  * `/carta/:categoria` — una página por categoría con TODOS sus platos visibles.
@@ -24,23 +96,25 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
  * componente solo ve ese caso si alguien navega a él dentro de la SPA.
  */
 const CartaCategoria = () => {
+  const { language } = useTranslations();
+  const textos = TEXTOS[language];
   const { categoria: slug } = useParams<{ categoria: string }>();
   const categoria = categoriaPorSlug(slug);
 
   if (!categoria) {
     return (
       <>
-        <Seo title="Categoría no encontrada | Casa Tomás Restaurante" noindex />
+        <Seo title={`${textos.noEncontradaTitulo} | Casa Tomás Restaurante`} lang={language} noindex />
         <CartaPageLayout
-          titulo="Categoría no encontrada"
-          subtitulo="Puede que esa parte de la carta haya cambiado de nombre o ya no esté disponible."
-          migas={[{ nombre: "Carta", path: "/carta" }, { nombre: "No encontrada" }]}
+          titulo={textos.noEncontradaTitulo}
+          subtitulo={textos.noEncontradaTexto}
+          migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: textos.noEncontradaTitulo }]}
         >
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {CATEGORIAS_CARTA.map((otra) => (
               <li key={otra.slug}>
-                <Link to={rutaCategoria(otra.slug)} className="text-accent hover:underline">
-                  {etiquetaCategoria(otra.clave)}
+                <Link to={rutaCategoria(otra.slug, language)} className="text-accent hover:underline">
+                  {etiquetaCategoriaIdioma(otra.clave, language)}
                 </Link>
               </li>
             ))}
@@ -51,22 +125,26 @@ const CartaCategoria = () => {
   }
 
   const platos = platosDeCategoria(categoria.clave);
-  const etiqueta = etiquetaCategoria(categoria.clave);
-  const url = `${SITE_URL}${rutaCategoria(categoria.slug)}`;
+  const etiqueta = etiquetaCategoriaIdioma(categoria.clave, language);
+  const rutaEs = rutaCategoria(categoria.slug); // sin prefijo: la pide `breadcrumbSchema`
+  const url = `${SITE_URL}${rutaCategoria(categoria.slug, language)}`;
   const conFoto = platos.filter((plato) => plato.imagen_url).length;
 
-  // `agruparPorCategoria` con idioma fijo "es": esta pasada es monolingüe y así
-  // el JSON-LD del build y el del navegador son byte a byte el mismo.
-  const secciones = agruparPorCategoria(platos, "es");
+  // Misma resolución que consume `ProductoCard` (`resolveTranslatedItem` vía
+  // `agruparPorCategoria`): con una sola categoría en `platos`, `secciones`
+  // tiene como mucho UNA entrada, así que sus `items` ya traducidos sirven
+  // también para pintar la rejilla — no hace falta resolver dos veces.
+  const secciones = agruparPorCategoria(platos, language);
+  const platosTraducidos = secciones[0]?.items ?? [];
 
   return (
     <>
       <Seo
-        title={`${etiqueta}: carta y precios | Casa Tomás Crevillent`}
-        description={`${platos.length} ${
-          platos.length === 1 ? "plato" : "platos"
-        } de la sección ${etiqueta.toLowerCase()} en Casa Tomás (Crevillent, Alicante), con precio y alérgenos de cada uno.`}
+        title={`${etiqueta}: ${textos.tituloSufijo}`}
+        description={textos.descripcion(platos.length, etiqueta)}
         canonical={url}
+        lang={language}
+        languageAlternates={alternatesDePagina(rutaEs, SITE_URL)}
         keywords={[
           `${etiqueta.toLowerCase()} Crevillent`,
           `${etiqueta.toLowerCase()} restaurante Alicante`,
@@ -74,15 +152,18 @@ const CartaCategoria = () => {
         ]}
       />
       <JsonLd
-        data={breadcrumbSchema([
-          { nombre: "Carta", path: "/carta" },
-          { nombre: etiqueta, path: rutaCategoria(categoria.slug) },
-        ])}
+        data={breadcrumbSchema(
+          [
+            { nombre: textos.migaCarta, path: "/carta" },
+            { nombre: etiqueta, path: rutaEs },
+          ],
+          language,
+        )}
       />
       {secciones.length > 0 && (
         <JsonLd
           data={menuPagina(
-            menuSchema(secciones, "es", SUPABASE_URL, {
+            menuSchema(secciones, language, SUPABASE_URL, {
               id: `${url}#menu`,
               nombre: `${etiqueta} — Casa Tomás`,
               url,
@@ -93,15 +174,13 @@ const CartaCategoria = () => {
 
       <CartaPageLayout
         titulo={etiqueta}
-        subtitulo={`Carta de Casa Tomás en Crevillent (Alicante). Precios y alérgenos de cada plato${
-          conFoto > 0 ? `, con foto en ${conFoto} de ellos` : ""
-        }.`}
-        detalle={`${platos.length} ${platos.length === 1 ? "plato" : "platos"}`}
-        migas={[{ nombre: "Carta", path: "/carta" }, { nombre: etiqueta }]}
+        subtitulo={textos.subtitulo(conFoto)}
+        detalle={`${platos.length} ${textos.plato(platos.length)}`}
+        migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
-        {platos.length > 0 ? (
+        {platosTraducidos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">
-            {platos.map((plato, indice) => (
+            {platosTraducidos.map((plato, indice) => (
               <ProductoCard
                 key={plato.id ?? `${plato.nombre}-${indice}`}
                 plato={plato}
@@ -111,39 +190,37 @@ const CartaCategoria = () => {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground">
-            Esta sección de la carta está vacía ahora mismo.
-          </p>
+          <p className="text-muted-foreground">{textos.vacia}</p>
         )}
 
-        <nav aria-label="Otras secciones de la carta" className="mt-14">
-          <h2 className="text-xl font-bold text-primary mb-4">Otras secciones</h2>
+        <nav aria-label={textos.otrasSecciones} className="mt-14">
+          <h2 className="text-xl font-bold text-primary mb-4">{textos.otrasSecciones}</h2>
           <ul className="flex flex-wrap gap-2">
             {CATEGORIAS_CARTA.filter((otra) => otra.slug !== categoria.slug).map((otra) => (
               <li key={otra.slug}>
                 <Link
-                  to={rutaCategoria(otra.slug)}
+                  to={rutaCategoria(otra.slug, language)}
                   className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
-                  {etiquetaCategoria(otra.clave)}
+                  {etiquetaCategoriaIdioma(otra.clave, language)}
                   <span className="ml-2 text-xs text-accent font-semibold">{otra.total}</span>
                 </Link>
               </li>
             ))}
             <li>
               <Link
-                to="/carta/vinos"
+                to={construirRutaIdioma("/carta/vinos", language)}
                 className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
-                Vinos
+                {textos.vinos}
               </Link>
             </li>
             <li>
               <Link
-                to="/carta/bebidas"
+                to={construirRutaIdioma("/carta/bebidas", language)}
                 className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
-                Bebidas
+                {textos.bebidas}
               </Link>
             </li>
           </ul>

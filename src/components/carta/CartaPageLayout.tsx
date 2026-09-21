@@ -11,6 +11,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useTranslations } from "@/i18n/LanguageProvider";
+import { construirRutaIdioma } from "@/i18n/routing";
+
+const INICIO_POR_IDIOMA = { es: "Inicio", en: "Home", fr: "Accueil" } as const;
 
 export interface Miga {
   nombre: string;
@@ -43,14 +47,26 @@ interface CartaPageLayoutProps {
  * repo (`animate-fade-up`, definida en `tailwind.config.ts`), cuyo estado final
  * —y el estado sin CSS— es visible.
  */
+const VOLVER_A_LA_CARTA = {
+  es: "Volver a la carta",
+  en: "Back to the menu",
+  fr: "Retour à la carte",
+} as const;
+
 const CartaPageLayout = ({
   titulo,
   subtitulo,
   detalle,
   migas,
-  volverA = { texto: "Volver a la carta", path: "/carta" },
+  volverA,
   children,
 }: CartaPageLayoutProps) => {
+  const { language } = useTranslations();
+  // Cada página pasa sus `migas`/`volverA` "en español" (rutas sin prefijo,
+  // textos ya en su idioma); aquí se prefija cada URL una sola vez, para que
+  // ninguna página tenga que repetir `construirRutaIdioma`.
+  const volverAResuelto =
+    volverA === undefined ? { texto: VOLVER_A_LA_CARTA[language], path: "/carta" } : volverA;
   const anteriores = migas.slice(0, -1);
   const actual = migas[migas.length - 1];
 
@@ -70,7 +86,7 @@ const CartaPageLayout = ({
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild className="hover:text-accent">
-                  <Link to="/">Inicio</Link>
+                  <Link to={construirRutaIdioma("/", language)}>{INICIO_POR_IDIOMA[language]}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {/* Los separadores van como hermanos, ver nota más abajo. */}
@@ -83,7 +99,7 @@ const CartaPageLayout = ({
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild className="hover:text-accent">
-                      <Link to={miga.path ?? "/"}>{miga.nombre}</Link>
+                      <Link to={construirRutaIdioma(miga.path ?? "/", language)}>{miga.nombre}</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                 </Fragment>
@@ -108,14 +124,14 @@ const CartaPageLayout = ({
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 py-12 md:py-16">{children}</main>
 
-      {volverA && (
+      {volverAResuelto && (
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pb-12">
           <Link
-            to={volverA.path}
+            to={construirRutaIdioma(volverAResuelto.path, language)}
             className="inline-flex items-center gap-2 text-accent hover:underline text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
-            {volverA.texto}
+            {volverAResuelto.texto}
           </Link>
         </div>
       )}

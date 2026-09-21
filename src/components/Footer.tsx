@@ -2,9 +2,10 @@ import { Link } from "react-router-dom";
 import { Instagram, Facebook } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
+import { construirRutaIdioma } from "@/i18n/routing";
 
 const Footer = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   return (
     <footer className="bg-dark-slate text-background py-12 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
@@ -22,11 +23,14 @@ const Footer = () => {
               <li>
                 {/* Antes era `#carta`, que fuera de la portada no llevaba a
                     ninguna parte. Ahora la carta tiene página propia. */}
-                <Link to="/carta" className="hover:text-accent transition-colors">
+                <Link to={construirRutaIdioma("/carta", language)} className="hover:text-accent transition-colors">
                   {t.footer.menuLink}
                 </Link>
               </li>
               <li>
+                {/* Reservas se queda solo en español por ahora (ver el informe
+                    del cambio de i18n): el formulario no tiene versión propia
+                    en /en ni /fr todavía. */}
                 <a href="/reservas" className="hover:text-accent transition-colors">{t.footer.reserveLink}</a>
               </li>
               <li>

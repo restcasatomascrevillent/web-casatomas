@@ -24,6 +24,9 @@ export interface PlatoSSG {
   alergenos_oficiales?: string[] | string;
   alergenos_inferidos?: string[] | string;
   alergenos_notas?: string;
+  /** Lista traducida, separada por comas ("Gluten, Milk"). Columna única. */
+  alergenos_en?: string;
+  alergenos_fr?: string;
   traducciones?: unknown;
 }
 
@@ -49,6 +52,8 @@ export interface VinoSSG {
   alergenos_oficiales?: string[] | string;
   alergenos_inferidos?: string[] | string;
   alergenos_notas?: string;
+  alergenos_en?: string;
+  alergenos_fr?: string;
   traducciones?: unknown;
 }
 
@@ -66,6 +71,7 @@ export interface BebidaSSG {
   descripcion_fr?: string;
   precio_eur: number;
   tamano?: string;
+  imagen_url?: string;
   traducciones?: unknown;
 }
 

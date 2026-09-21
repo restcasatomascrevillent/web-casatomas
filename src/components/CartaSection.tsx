@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Wine, Beer, ArrowRight } from "lucide-react";
 import { getUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { construirRutaIdioma } from "@/i18n/routing";
+import type { Language } from "@/i18n/types";
 // Import estático a propósito: `CartaPlatos` se monta siempre (ver abajo) y el
 // SSG tiene que poder renderizarlo para que sus tarjetas queden en el HTML.
 import CartaPlatos from "./carta/CartaPlatos";
 import { semillaCategoriaInicial } from "@/lib/carta-ssg";
 import {
   CATEGORIAS_CARTA,
-  etiquetaCategoria,
+  etiquetaCategoriaIdioma,
   RESUMEN_BEBIDAS,
   RESUMEN_VINOS,
   rutaCategoria,
@@ -28,8 +30,21 @@ const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
 // valor estático, idéntico en Node y en el navegador.
 const PLATOS_SSG = semillaCategoriaInicial() as CartaPlatosSeed;
 
+/**
+ * Las pocas etiquetas de este puente a `/carta` no salían del diccionario de
+ * `t.` (se escribieron sueltas en castellano). Igual que `getInfoLabels` en
+ * `CartaPlatos.tsx`: un mapa local, no una clave nueva en los tres ficheros
+ * de idioma, para tres cadenas cortas que no se usan en ningún otro sitio.
+ */
+const ETIQUETAS_PUENTE: Record<Language, { verCarta: string; referencias: string; nav: string; vinos: string; bebidas: string }> = {
+  es: { verCarta: "Ver la carta completa", referencias: "referencias", nav: "Páginas de la carta", vinos: "Vinos", bebidas: "Bebidas" },
+  en: { verCarta: "See the full menu", referencias: "items", nav: "Menu pages", vinos: "Wines", bebidas: "Drinks" },
+  fr: { verCarta: "Voir la carte complète", referencias: "références", nav: "Pages de la carte", vinos: "Vins", bebidas: "Boissons" },
+};
+
 const CartaSection = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
+  const etiquetas = ETIQUETAS_PUENTE[language];
   const [activeSection, setActiveSection] = useState<Section>(null);
   const [pedidoCount, setPedidoCount] = useState(0);
 
@@ -116,13 +131,13 @@ const CartaSection = () => {
             la carta interactiva aquí mismo; estos enlaces llevan a las páginas
             propias, donde cada sección está entera y con URL propia. Es la vía
             por la que se llega navegando, no solo desde el sitemap. */}
-        <nav aria-label="Páginas de la carta" className="mb-12">
+        <nav aria-label={etiquetas.nav} className="mb-12">
           <div className="flex justify-center mb-5">
             <Link
-              to="/carta"
+              to={construirRutaIdioma("/carta", language)}
               className="inline-flex items-center gap-2 text-accent font-semibold hover:underline underline-offset-4 text-base md:text-lg"
             >
-              Ver la carta completa · {TOTAL_CARTA} referencias
+              {etiquetas.verCarta} · {TOTAL_CARTA} {etiquetas.referencias}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -130,29 +145,29 @@ const CartaSection = () => {
             {CATEGORIAS_CARTA.map((categoria) => (
               <li key={categoria.slug}>
                 <Link
-                  to={rutaCategoria(categoria.slug)}
+                  to={rutaCategoria(categoria.slug, language)}
                   className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
-                  {etiquetaCategoria(categoria.clave)}
+                  {etiquetaCategoriaIdioma(categoria.clave, language)}
                   <span className="text-xs font-semibold text-accent">{categoria.total}</span>
                 </Link>
               </li>
             ))}
             <li>
               <Link
-                to="/carta/vinos"
+                to={construirRutaIdioma("/carta/vinos", language)}
                 className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
-                Vinos
+                {etiquetas.vinos}
                 <span className="text-xs font-semibold text-accent">{RESUMEN_VINOS.total}</span>
               </Link>
             </li>
             <li>
               <Link
-                to="/carta/bebidas"
+                to={construirRutaIdioma("/carta/bebidas", language)}
                 className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
-                Bebidas
+                {etiquetas.bebidas}
                 <span className="text-xs font-semibold text-accent">{RESUMEN_BEBIDAS.total}</span>
               </Link>
             </li>
