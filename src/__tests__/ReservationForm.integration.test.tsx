@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -20,6 +20,7 @@ import esPack from "@/i18n/languages/es";
 import {
   clasificarDisponibilidad,
   interpretarRechazoReserva,
+  type DisponibilidadHueco,
 } from "@/lib/reservas-web";
 import {
   RESERVAS_WEB_CREAR_URL,
@@ -328,6 +329,74 @@ describe("interpretarRechazoReserva — un mensaje distinto por codigo", () => {
 
 const FECHA_OCUPACION = "2026-10-15";
 
+/**
+ * Construye un elemento `kind:"hueco"` con todos los campos del contrato para
+ * no repetirlos en cada test: solo hace falta pasar lo que varia.
+ */
+function hueco(
+  overrides: Partial<DisponibilidadHueco> & { hora: string; turno: "comida" | "cena" },
+): DisponibilidadHueco {
+  return {
+    kind: "hueco",
+    fecha: FECHA_OCUPACION,
+    nivel: 0,
+    minutos_nivel: 60,
+    etiqueta_nivel: "hora en punto",
+    umbral_nivel: 0,
+    estado: "libre",
+    ofrecido: true,
+    motivo: null,
+    periodo: overrides.turno === "comida" ? "Comida" : "Cena",
+    abierto_por: null,
+    abierto_con_porcentaje: null,
+    promovido: false,
+    comensales_hora: 0,
+    reservas_hora: 0,
+    porcentaje_hora: 0,
+    porcentaje_para_umbral: 0,
+    capacidad_maxima: 80,
+    capacidad_disponible: 72,
+    porcentaje_ocupacion: 10,
+    ...overrides,
+  };
+}
+
+/**
+ * Respuesta de `/disponibilidad` con `meta` + un `periodo` (para que
+ * `clasificarDisponibilidad` no la clasifique como "cerrado") + los huecos
+ * que decida cada test.
+ */
+function respuestaConHuecos(huecos: DisponibilidadHueco[]) {
+  return new Response(
+    JSON.stringify([
+      {
+        kind: "meta",
+        fecha: FECHA_OCUPACION,
+        cerrado: false,
+        aforo_turno: {
+          comida: { capacidad_maxima: 80, ocupacion: 8, disponible: 72 },
+          cena: { capacidad_maxima: 80, ocupacion: 0, disponible: 80 },
+        },
+        total_periodos: 1,
+        total_ocupacion: 0,
+      },
+      {
+        kind: "periodo",
+        fecha: FECHA_OCUPACION,
+        nombre_periodo: "Comida",
+        hora_inicio: "13:00",
+        hora_fin: "23:30",
+        intervalo_base_minutos: 60,
+        umbral_apertura_secundario: 0,
+        dias_semana: [],
+        ocultar_primario_si_secundario: false,
+      },
+      ...huecos,
+    ]),
+    { status: 200 },
+  );
+}
+
 /** Array plano con `kind`, tal y como responde `reservas-web/disponibilidad`. */
 const respuestaDisponibilidad = () =>
   new Response(
@@ -365,22 +434,28 @@ const respuestaDisponibilidad = () =>
         capacidad_disponible: 72,
         porcentaje_ocupacion: 10,
       },
+      // NUEVO en el contrato: sin este `kind:"hueco"` la web ya no pinta
+      // ninguna hora, porque el formulario dejo de recalcularlas por su cuenta.
+      hueco({ hora: "13:00", turno: "comida" }),
     ]),
     { status: 200 },
   );
 
 /** Enruta por path: disponibilidad y crear son dos acciones de la misma funcion. */
-function mockReservas(respuestaCrear: () => Response) {
+function mockReservas(
+  respuestaCrear: () => Response,
+  respuestaDisponibilidadFn: () => Response = respuestaDisponibilidad,
+) {
   vi.mocked(fetch).mockImplementation((url) => {
     const destino = String(url);
-    if (destino === RESERVAS_WEB_DISPONIBILIDAD_URL) return Promise.resolve(respuestaDisponibilidad());
+    if (destino === RESERVAS_WEB_DISPONIBILIDAD_URL) return Promise.resolve(respuestaDisponibilidadFn());
     if (destino === RESERVAS_WEB_CREAR_URL) return Promise.resolve(respuestaCrear());
     return Promise.reject(new Error(`URL inesperada en el test: ${destino}`));
   });
 }
 
-/** Rellena el formulario entero y lo envia. */
-async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
+/** Selecciona la ultima fecha disponible del calendario y comprueba disponibilidad. */
+async function comprobarDisponibilidad(user: ReturnType<typeof userEvent.setup>) {
   // El disparador del calendario NO se puede buscar por nombre accesible: al
   // ser un <button> asociado a un <label for>, su nombre accesible es el de la
   // etiqueta ("Fecha *"), no el texto del propio boton.
@@ -398,6 +473,11 @@ async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
   await user.click(dias[dias.length - 1]);
 
   await user.click(screen.getByRole("button", { name: /comprobar disponibilidad/i }));
+}
+
+/** Rellena el formulario entero y lo envia. */
+async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
+  await comprobarDisponibilidad(user);
 
   const hora = await screen.findByRole("button", { name: "13:00" });
   await user.click(hora);
@@ -506,5 +586,200 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
     expect(destinos).toContain(RESERVAS_WEB_DISPONIBILIDAD_URL);
     expect(destinos).toContain(RESERVAS_WEB_CREAR_URL);
     expect(destinos.some((destino) => destino.includes("n8n"))).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// El formulario pinta los `kind:"hueco"` del motor, ya no los recalcula
+// ---------------------------------------------------------------------------
+
+/** No falla ninguna llamada a `/crear` en los tests que no llegan a enviar. */
+const crearNoDeberiaLlamarse = () => new Response(null, { status: 500 });
+
+describe("ReservationForm — pinta los huecos que decide el motor, no los recalcula", () => {
+  it("solo horas en punto: pinta cada kind:\"hueco\" agrupado bajo el turno de comida", async () => {
+    mockReservas(crearNoDeberiaLlamarse, () =>
+      respuestaConHuecos([
+        hueco({ hora: "13:00", turno: "comida" }),
+        hueco({ hora: "14:00", turno: "comida" }),
+      ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    expect(await screen.findByRole("button", { name: "13:00" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "14:00" })).toBeInTheDocument();
+    expect(screen.getByText(esPack.translations.reservationForm.lunchLabel)).toBeInTheDocument();
+    // Sin huecos de cena, la cabecera de cena ni se pinta.
+    expect(screen.queryByText(esPack.translations.reservationForm.dinnerLabel)).toBeNull();
+  });
+
+  it("con medias abiertas: pinta la media junto a la hora en punto y agrupa la cena aparte, en orden", async () => {
+    mockReservas(crearNoDeberiaLlamarse, () =>
+      respuestaConHuecos([
+        hueco({ hora: "13:00", turno: "comida" }),
+        hueco({
+          hora: "13:30",
+          turno: "comida",
+          nivel: 1,
+          minutos_nivel: 30,
+          etiqueta_nivel: "media hora",
+          umbral_nivel: 70,
+          abierto_por: "13:00",
+          abierto_con_porcentaje: 70,
+        }),
+        hueco({ hora: "21:00", turno: "cena" }),
+      ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    expect(await screen.findByRole("button", { name: "13:00" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "13:30" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "21:00" })).toBeInTheDocument();
+
+    // Las dos cabeceras de turno aparecen, y comida siempre antes que cena.
+    const etiquetasTurno = Array.from(
+      document.querySelectorAll("p.text-sm.font-medium.text-muted-foreground"),
+    ).map((el) => el.textContent);
+    expect(etiquetasTurno).toEqual([
+      esPack.translations.reservationForm.lunchLabel,
+      esPack.translations.reservationForm.dinnerLabel,
+    ]);
+  });
+
+  it("con cuartos: pinta el cuarto de hora igual que cualquier otro hueco, sin recalcularlo", async () => {
+    mockReservas(crearNoDeberiaLlamarse, () =>
+      respuestaConHuecos([
+        hueco({ hora: "13:00", turno: "comida" }),
+        hueco({ hora: "13:30", turno: "comida", nivel: 1, minutos_nivel: 30, etiqueta_nivel: "media hora" }),
+        hueco({
+          hora: "13:45",
+          turno: "comida",
+          nivel: 2,
+          minutos_nivel: 15,
+          etiqueta_nivel: "cuarto de hora",
+          umbral_nivel: 85,
+          abierto_por: "13:30",
+          abierto_con_porcentaje: 85,
+        }),
+      ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    expect(await screen.findByRole("button", { name: "13:00" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "13:30" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "13:45" })).toBeInTheDocument();
+  });
+
+  it("dia cerrado: no pinta ningun hueco y avisa con el toast de dia cerrado", async () => {
+    mockReservas(
+      crearNoDeberiaLlamarse,
+      () =>
+        new Response(
+          JSON.stringify([
+            { kind: "meta", fecha: FECHA_OCUPACION, cerrado: true, total_periodos: 0, total_ocupacion: 0 },
+          ]),
+          { status: 200 },
+        ),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    expect(
+      await screen.findByText(esPack.translations.reservationForm.toasts.closedDay),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^\d{2}:\d{2}$/ })).toBeNull();
+  });
+
+  it("error (fallo de red): no pinta huecos y avisa con el toast de error", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error("network down"));
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    expect(
+      await screen.findByText(esPack.translations.reservationForm.toasts.availabilityErrorTitle),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^\d{2}:\d{2}$/ })).toBeNull();
+  });
+
+  it("una hora completa se pinta en gris, y no se puede seleccionar ni enviar", async () => {
+    mockReservas(crearNoDeberiaLlamarse, () =>
+      respuestaConHuecos([
+        hueco({ hora: "13:00", turno: "comida" }),
+        hueco({
+          hora: "14:00",
+          turno: "comida",
+          estado: "completo",
+          ofrecido: false,
+          motivo: "aforo_turno_completo",
+          capacidad_disponible: 0,
+        }),
+      ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    // Nombre accesible parcial: el boton completo concatena la hora con la
+    // etiqueta "Completo", asi que la coincidencia exacta "14:00" no basta.
+    const horaCompleta = await screen.findByRole("button", { name: /14:00/ });
+    expect(horaCompleta).toBeDisabled();
+    expect(within(horaCompleta).getByText(esPack.translations.reservationForm.fullLabel)).toBeInTheDocument();
+
+    // Un boton disabled no dispara el click: intentarlo no debe seleccionar
+    // la hora, y "Reservar ahora" sigue bloqueado.
+    await user.click(horaCompleta);
+    expect(screen.getByRole("button", { name: /reservar ahora/i })).toBeDisabled();
+  });
+
+  it("nunca envia una hora que la web no ofrecio: manda exactamente la del hueco elegido", async () => {
+    mockReservas(
+      () =>
+        new Response(JSON.stringify({ ok: true, reserva_id: "r-4", estado: "pendiente" }), { status: 201 }),
+      () =>
+        respuestaConHuecos([
+          hueco({
+            hora: "13:30",
+            turno: "comida",
+            nivel: 1,
+            minutos_nivel: 30,
+            etiqueta_nivel: "media hora",
+            abierto_por: "13:00",
+            abierto_con_porcentaje: 70,
+          }),
+        ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    await user.click(await screen.findByRole("button", { name: "13:30" }));
+    await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
+    await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
+    await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    await screen.findByText(/reserva confirmada/i);
+
+    const llamadaCrear = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
+    expect(llamadaCrear).toBeDefined();
+    const cuerpo = JSON.parse(String(llamadaCrear?.[1]?.body));
+    // La hora enviada es LITERALMENTE la que trajo el hueco, no una calculada
+    // en el navegador con offsets fijos.
+    expect(cuerpo.hora).toBe("13:30");
   });
 });

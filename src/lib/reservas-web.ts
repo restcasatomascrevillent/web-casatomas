@@ -67,10 +67,56 @@ export type DisponibilidadOcupacion = {
   porcentaje_ocupacion?: number;
 };
 
+/**
+ * Una hora YA DECIDIDA por el motor de disponibilidad (`_shared/disponibilidad.ts`
+ * en adminpanelct, compartido con el panel). Contrato nuevo: el motor decide
+ * qué horas se ofrecen y con qué aforo — este frontend deja de recalcularlo.
+ *
+ * `hora` viene SIN segundos ("HH:MM"), a diferencia de `ocupacion`/`periodo`.
+ */
+export type DisponibilidadHueco = {
+  kind: "hueco";
+  fecha: string;
+  hora: string;
+  turno: "comida" | "cena";
+  /** 0 = hora entera, 1 = media, 2 = cuarto… según la escalera configurada. */
+  nivel: number;
+  minutos_nivel: number;
+  etiqueta_nivel: string;
+  umbral_nivel: number;
+  estado: "libre" | "completo";
+  /** `true` si `estado === "libre"`. Comodidad: no aporta dato nuevo. */
+  ofrecido: boolean;
+  motivo: string | null;
+  periodo: string | null;
+  abierto_por: string | null;
+  abierto_con_porcentaje: number | null;
+  promovido: boolean;
+  comensales_hora: number;
+  reservas_hora: number;
+  porcentaje_hora: number;
+  porcentaje_para_umbral: number;
+  capacidad_maxima: number;
+  capacidad_disponible: number;
+  porcentaje_ocupacion: number;
+};
+
+/**
+ * Diagnóstico de por qué una hora NO se ofrece. Se documenta para que quede
+ * claro que puede venir en el array; el frontend la ignora por completo.
+ */
+export type DisponibilidadDescartado = {
+  kind: "descartado";
+  fecha: string;
+  hora: string;
+};
+
 export type DisponibilidadElemento =
   | DisponibilidadMeta
   | DisponibilidadPeriodo
-  | DisponibilidadOcupacion;
+  | DisponibilidadOcupacion
+  | DisponibilidadHueco
+  | DisponibilidadDescartado;
 
 /** Resultado ya clasificado: éxito con datos, día cerrado, o error. */
 export type ResultadoDisponibilidad =
@@ -79,6 +125,8 @@ export type ResultadoDisponibilidad =
       meta: DisponibilidadMeta;
       periodos: DisponibilidadPeriodo[];
       ocupacion: DisponibilidadOcupacion[];
+      /** Lo que hay que pintar. Ya viene decidido por el servidor. */
+      huecos: DisponibilidadHueco[];
     }
   | { estado: "cerrado"; meta: DisponibilidadMeta }
   | { estado: "error" };
@@ -116,7 +164,14 @@ export function clasificarDisponibilidad(ok: boolean, cuerpo: unknown): Resultad
       !!elemento && typeof elemento === "object" && elemento.kind === "ocupacion",
   );
 
-  return { estado: "ok", meta, periodos, ocupacion };
+  // `kind:"hueco"` es lo que hay que pintar. `kind:"descartado"` se ignora a
+  // propósito: es diagnóstico interno, no algo que el visitante deba ver.
+  const huecos = elementos.filter(
+    (elemento): elemento is DisponibilidadHueco =>
+      !!elemento && typeof elemento === "object" && elemento.kind === "hueco",
+  );
+
+  return { estado: "ok", meta, periodos, ocupacion, huecos };
 }
 
 // ---------------------------------------------------------------------------
