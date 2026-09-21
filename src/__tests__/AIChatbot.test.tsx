@@ -345,6 +345,56 @@ describe("AIChatbot component", () => {
     });
   });
 
+  it("NUNCA ensena un 404 de la pasarela de Supabase (clave `message` en ingles) al visitante", async () => {
+    // Reproduce el cuerpo real que devuelve Supabase cuando `chat-web` no
+    // esta desplegada: JSON con `message` en ingles y SIN `respuesta`,
+    // `mensaje` ni `codigo` conocido. Antes de la correccion, extractAssistantText
+    // aceptaba la clave generica `message` y el bot repetia ese texto tal cual.
+    mockPorRuta(
+      () =>
+        new Response(
+          JSON.stringify({ code: "NOT_FOUND", message: "Requested function was not found" }),
+          { status: 404 }
+        )
+    );
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    await sendChatMessage("Mensaje cualquiera");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/ahora mismo no puedo responder/i)
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/requested function was not found/i)).toBeNull();
+  });
+
+  it("tampoco ensena un `message` en ingles cuando el 404 SI trae un `codigo` conocido pero sin respuesta/mensaje", async () => {
+    // Defensa en profundidad: un `codigo` valido por si solo no basta si no
+    // viene acompanado del texto propio en `respuesta`/`mensaje`.
+    mockPorRuta(
+      () =>
+        new Response(
+          JSON.stringify({ codigo: "rate_limited", message: "Too Many Requests" }),
+          { status: 404 }
+        )
+    );
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    await sendChatMessage("Mensaje cualquiera");
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/ahora mismo no puedo responder/i)
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/too many requests/i)).toBeNull();
+  });
+
   it("shows the error reply when the webhook call throws a network error", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
@@ -450,6 +500,50 @@ describe("AIChatbot component", () => {
       expect(nombres).not.toContain("x-webhook-secret");
       expect(cabeceras["Content-Type"]).toBe("application/json");
     });
+  });
+
+  it("guarda el sessionToken firmado que devuelve chat-web y lo manda como id la siguiente vez", async () => {
+    // El id de sesion sin firmar dejaba leer la conversacion de otro
+    // pasando su id (index.ts:757). Ahora chat-web es quien decide el id
+    // real y lo firma; el frontend solo debe guardar y reenviar ese token.
+    let numeroLlamadaChat = 0;
+    vi.mocked(fetch).mockImplementation((url) => {
+      if (esLlamadaConfig(url)) {
+        return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      }
+      numeroLlamadaChat += 1;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            success: true,
+            respuesta: `Respuesta ${numeroLlamadaChat}`,
+            sessionToken: "id-emitido-por-el-servidor.firmaDeEjemplo",
+          }),
+          { status: 200 }
+        )
+      );
+    });
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    await sendChatMessage("Primer mensaje");
+    await waitFor(() => screen.getByText("Respuesta 1"));
+
+    await sendChatMessage("Segundo mensaje");
+    await waitFor(() => screen.getByText("Respuesta 2"));
+
+    const llamadasChat = vi.mocked(fetch).mock.calls.filter(([url]) => esLlamadaChat(url));
+    expect(llamadasChat).toHaveLength(2);
+
+    const cuerpoPrimeraLlamada = JSON.parse(llamadasChat[0][1]?.body as string);
+    const cuerpoSegundaLlamada = JSON.parse(llamadasChat[1][1]?.body as string);
+
+    // El primer mensaje todavia manda el id "de arranque" generado en el
+    // cliente (distinto del token que emite el servidor)...
+    expect(cuerpoPrimeraLlamada.id).not.toBe("id-emitido-por-el-servidor.firmaDeEjemplo");
+    // ...y a partir de ahi, SIEMPRE el token firmado que devolvio chat-web.
+    expect(cuerpoSegundaLlamada.id).toBe("id-emitido-por-el-servidor.firmaDeEjemplo");
   });
 
   it("ensena el mensaje del servidor cuando chat-web responde 429 rate_limited", async () => {

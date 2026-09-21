@@ -32,6 +32,13 @@ const SUPABASE_CONFIG_BOT_KEY = import.meta.env.VITE_SUPABASE_CONFIG_BOT_KEY;
 const CHATBOT_SESSION_COOKIE = "chatbot_session_id";
 const DEFAULT_ASSISTANT_REPLY = "Recibido. Estoy procesando tu mensaje.";
 const ERROR_ASSISTANT_REPLY = "Ahora mismo no puedo responder. Intentalo de nuevo en unos segundos.";
+/**
+ * Los unicos `codigo` que puede emitir el propio chat-web (index.ts) en una
+ * respuesta `!response.ok`. Sirven para distinguir un control real del bot
+ * (429/503, con su propio texto) de un fallo de la pasarela de Supabase
+ * (404 no desplegada, 401...) que nunca debe ensenarsele al visitante.
+ */
+const CODIGOS_CONTROL_CONOCIDOS = new Set(["rate_limited", "rate_limit_unavailable"]);
 const LOADING_LABEL_BY_LANGUAGE = {
     es: "Escribiendo...",
     en: "Typing...",
@@ -91,6 +98,25 @@ const getChatSessionId = (): string => {
     }
 
     return pageChatSessionId;
+};
+
+/**
+ * Guarda el `sessionToken` firmado que devuelve `chat-web` (ver
+ * `chat-web/index.ts` y `chat-web/session-token.ts`) para reenviarlo como
+ * `id` en la proxima peticion. El UUID que genera `generateChatSessionId`
+ * es solo un valor de arranque para el primerisimo mensaje: chat-web NUNCA
+ * lo acepta como continuacion de una sesion existente porque no lleva su
+ * firma (id de sesion sin firmar = cualquiera podia leer la conversacion
+ * de otro pasando su id), asi que en cuanto llega la primera respuesta,
+ * este token firmado lo sustituye para el resto de la conversacion.
+ */
+const persistSessionToken = (token: unknown) => {
+    if (typeof token !== "string" || !token || token === pageChatSessionId) {
+        return;
+    }
+
+    pageChatSessionId = token;
+    setCookie(CHATBOT_SESSION_COOKIE, token);
 };
 
 const extractAssistantText = (value: unknown): string | null => {
@@ -399,20 +425,45 @@ const AIChatbot = ({
                 cuerpo && typeof cuerpo === "object" && !Array.isArray(cuerpo)
                     ? (cuerpo as Record<string, unknown>)
                     : null;
-            const textoServidor = extractAssistantText(cuerpo);
+
+            // chat-web devuelve un `sessionToken` firmado en TODAS sus
+            // respuestas (exito, 429, 503...): hay que guardarlo pase lo que
+            // pase para seguir mandandolo como `id` la proxima vez.
+            persistSessionToken(cuerpoObjeto?.sessionToken);
 
             if (!response.ok) {
                 const codigo = typeof cuerpoObjeto?.codigo === "string" ? cuerpoObjeto.codigo : null;
                 console.warn("[chat-web] respuesta de control:", response.status, codigo);
-                // 429 (`rate_limited`) y 503 (`rate_limit_unavailable`) traen un
-                // texto pensado para el visitante. Un 500 de la pasarela con un
-                // `text/plain` cualquiera NO: ese usa el mensaje propio.
-                if (!cuerpoObjeto || !textoServidor) {
+                // 429 (`rate_limited`) y 503 (`rate_limit_unavailable`) son los
+                // UNICOS fallos que puede emitir el propio chat-web, y siempre
+                // con su texto en `respuesta`/`mensaje` + ese `codigo`. Cualquier
+                // otro `!response.ok` (404 no desplegada, 401, 500 de la
+                // pasarela...) NO es de chat-web: su cuerpo puede traer una
+                // clave `message` en ingles (p.ej. "Requested function was not
+                // found") que jamas debe ensenarsele al visitante tal cual, asi
+                // que aqui NUNCA se lee `message` (ni el resto de claves
+                // genericas de `extractAssistantText`) — solo `respuesta` o
+                // `mensaje` propios, y solo si ademas el `codigo` es conocido.
+                const textoControl = cuerpoObjeto
+                    ? extractAssistantText(cuerpoObjeto.respuesta) ?? extractAssistantText(cuerpoObjeto.mensaje)
+                    : null;
+                const esControlConocido = codigo !== null && CODIGOS_CONTROL_CONOCIDOS.has(codigo);
+
+                if (!textoControl || !esControlConocido) {
                     throw new Error(`chat-web respondio ${response.status}`);
                 }
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        role: "assistant",
+                        content: textoControl,
+                    },
+                ]);
+                return;
             }
 
-            const assistantReply = textoServidor ?? DEFAULT_ASSISTANT_REPLY;
+            const assistantReply = extractAssistantText(cuerpo) ?? DEFAULT_ASSISTANT_REPLY;
 
             setMessages(prev => [
                 ...prev,
