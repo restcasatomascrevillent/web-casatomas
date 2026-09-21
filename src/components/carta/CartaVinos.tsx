@@ -36,6 +36,9 @@ import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import BackToTopButton from "./BackToTopButton";
+// Vocabulario único de alérgenos: este fichero tenía su propia copia de
+// `normalizeAlergenos`, que ya divergía de la del resto de la carta.
+import { etiquetaAlergeno, normalizeAlergenos } from "@/lib/alergenos";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
@@ -87,19 +90,6 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const { toast } = useToast();
   const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
 
-  const normalizeAlergenos = (value: unknown) => {
-    if (Array.isArray(value)) return value;
-    if (typeof value === "string") {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return value ? [value] : [];
-      }
-    }
-    return [];
-  };
-
   const fetchVinosByCategory = useCallback(
     async (category: string, append = false) => {
       setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
@@ -107,10 +97,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       const to = offset + PAGE_SIZE - 1;
 
       try {
+        // Mismo filtro que el prerenderizado (`scripts/carta-ssg.mjs`):
+        // `restaurante` separa la carta de Casa Tomás de la del bar (`touza`).
         let query = supabase
           .from('Vinos')
           .select('*')
           .eq('activado', true)
+          .is('restaurante', true)
           .order('categoria', { ascending: true })
           .order('orden', { ascending: true })
           .range(offset, to);
@@ -158,7 +151,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       const { data, error } = await supabase
         .from('Vinos')
         .select('categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, precio_eur')
-        .eq('activado', true);
+        .eq('activado', true)
+        .is('restaurante', true);
       if (error) throw error;
       setMapVinos(data || []);
     } catch (error) {
@@ -625,12 +619,12 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                             <div className="flex flex-wrap gap-1">
                               {item.alergenos_oficiales?.map((alergeno: string, idx: number) => (
                                 <Badge key={`oficial-${cardKey}-${idx}`} variant="destructive" className="text-xs">
-                                  {alergeno}
+                                  {etiquetaAlergeno(alergeno, language)}
                                 </Badge>
                               ))}
                               {item.alergenos_inferidos?.map((alergeno: string, idx: number) => (
                                 <Badge key={`inferido-${cardKey}-${idx}`} variant="secondary" className="text-xs">
-                                  {alergeno}
+                                  {etiquetaAlergeno(alergeno, language)}
                                 </Badge>
                               ))}
                             </div>

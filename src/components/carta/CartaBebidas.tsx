@@ -15,6 +15,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { CATEGORIAS_BEBIDAS } from "@/lib/carta-rutas";
+
+/**
+ * Categorías DERIVADAS DEL DATO (recuento que descargó el build), no escritas
+ * a mano. Con la lista fija de cinco pestañas que había aquí, 29 de las 75
+ * bebidas eran inalcanzables desde la portada aunque `/carta/bebidas` sí las
+ * mostrara: en la BD hay siete categorías.
+ */
+const CATEGORIAS = CATEGORIAS_BEBIDAS.map((categoria) => categoria.clave);
+
+/** Determinista (mismo valor en el prerenderizado y al hidratar). */
+const CATEGORIA_INICIAL =
+  CATEGORIAS.find((categoria) => categoria === "Aguas") ?? CATEGORIAS[0] ?? "TODAS";
 
 interface CartaBebidasProps {
   showAddButton: boolean;
@@ -39,7 +52,7 @@ interface Bebida {
 const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Aguas");
+  const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIA_INICIAL);
   const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>({});
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
@@ -53,10 +66,13 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     const offset = append ? (bebidasByCategory[category]?.length || 0) : 0;
     const to = offset + PAGE_SIZE - 1;
     try {
+      // Mismo filtro que el prerenderizado (`scripts/carta-ssg.mjs`):
+      // `restaurante` separa la carta de Casa Tomás de la del bar (`touza`).
       let query = supabase
         .from('Bebidas')
         .select('*')
         .eq('activado', true)
+        .is('restaurante', true)
         .order('orden', { ascending: true })
         .range(offset, to);
 
@@ -108,16 +124,13 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     }
   };
 
-  const CATEGORY_ORDER = [
-    "Aguas",
-    "Refrescos",
-    "Tónicas",
-    "Cervezas",
-    "Tintos de verano",
-    "TODAS"
-  ];
-
-  const categories = CATEGORY_ORDER;
+  const categories = useMemo(() => {
+    const conSeleccion =
+      selectedCategory === "TODAS" || CATEGORIAS.includes(selectedCategory)
+        ? CATEGORIAS
+        : [selectedCategory, ...CATEGORIAS];
+    return [...conSeleccion, "TODAS"];
+  }, [selectedCategory]);
 
   const filteredItems = useMemo(() => {
     const categoryItems = bebidasByCategory[selectedCategory] || [];

@@ -1,24 +1,34 @@
 import { UtensilsCrossed } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { normalizeAlergenos } from "@/lib/carta-i18n";
+import type { ItemTraducido } from "@/lib/carta-i18n";
+import {
+  AVISO_SIN_ALERGENOS,
+  datosAlergenos,
+  etiquetaAlergeno,
+  tieneInformacionAlergenos,
+} from "@/lib/alergenos";
 import { resolverImagen } from "@/lib/carta-ssg";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
+import { useTranslations } from "@/i18n/LanguageProvider";
+import type { Language } from "@/i18n/types";
 
 interface ProductoCardProps {
-  plato: PlatoSSG;
+  /** Ya resuelto al idioma activo (`resolveTranslatedItem`/`agruparPorCategoria`, NO el plato crudo). */
+  plato: ItemTraducido<PlatoSSG>;
   /** Categoría ya traducida, para la etiqueta de la tarjeta. */
   categoria: string;
   /** La primera fila de la rejilla no se carga en diferido: es el LCP. */
   prioridad?: boolean;
 }
 
-const capitalizar = (valor: string) => {
-  const limpio = valor.trim();
-  return limpio ? limpio.charAt(0).toUpperCase() + limpio.slice(1).toLowerCase() : "";
-};
-
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
+
+const ETIQUETAS: Record<Language, { alergenos: string }> = {
+  es: { alergenos: "Alérgenos" },
+  en: { alergenos: "Allergens" },
+  fr: { alergenos: "Allergènes" },
+};
 
 /**
  * Tarjeta de plato para las páginas de carta.
@@ -31,14 +41,16 @@ const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.
  * que está en el HTML tiene que verse sin tocar nada.
  */
 const ProductoCard = ({ plato, categoria, prioridad = false }: ProductoCardProps) => {
+  const { language } = useTranslations();
+  const etiquetas = ETIQUETAS[language];
   const imagen = resolverImagen(plato.imagen_url, SUPABASE_URL);
+  // Mismo vocabulario que la portada (`@/lib/alergenos`): las formas del panel
+  // (`frutos_cascara`) y las de la BD (`frutos de cáscara`) son un solo token.
+  const datos = datosAlergenos(plato);
   const alergenos = Array.from(
     new Set(
-      [
-        ...normalizeAlergenos(plato.alergenos_oficiales),
-        ...normalizeAlergenos(plato.alergenos_inferidos),
-      ]
-        .map(capitalizar)
+      [...datos.oficiales, ...datos.inferidos]
+        .map((alergeno) => etiquetaAlergeno(alergeno, language))
         .filter(Boolean),
     ),
   );
@@ -57,7 +69,7 @@ const ProductoCard = ({ plato, categoria, prioridad = false }: ProductoCardProps
         <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
           <img
             src={imagen}
-            alt={plato.nombre}
+            alt={plato.displayNombre}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
             style={encuadre}
             loading={prioridad ? "eager" : "lazy"}
@@ -84,19 +96,20 @@ const ProductoCard = ({ plato, categoria, prioridad = false }: ProductoCardProps
 
       <CardHeader className="pb-2 px-5 pt-4 flex-shrink-0">
         <CardTitle className="text-base md:text-lg leading-tight whitespace-normal break-words">
-          {plato.nombre}
+          {plato.displayNombre}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="px-5 pb-3">
-        {/* Las descripciones están vacías en las 128 filas: no se inventa ninguna.
-            Lo que sí aporta valor real al visitante son los alérgenos. */}
-        {plato.descripcion && (
-          <p className="text-sm text-muted-foreground mb-3">{plato.descripcion}</p>
+        {/* Las descripciones están vacías en las 128 filas (en los tres
+            idiomas): no se inventa ninguna. Lo que sí aporta valor real al
+            visitante son los alérgenos. */}
+        {plato.displayDescripcion && (
+          <p className="text-sm text-muted-foreground mb-3">{plato.displayDescripcion}</p>
         )}
-        {alergenos.length > 0 ? (
+        {tieneInformacionAlergenos(datos) ? (
           <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-foreground">Alérgenos</p>
+            <p className="text-xs font-semibold text-foreground">{etiquetas.alergenos}</p>
             <div className="flex flex-wrap gap-1">
               {alergenos.map((alergeno) => (
                 <Badge key={alergeno} variant="secondary" className="text-xs font-normal">
@@ -106,7 +119,18 @@ const ProductoCard = ({ plato, categoria, prioridad = false }: ProductoCardProps
             </div>
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Alérgenos: consúltanos en el restaurante</p>
+          // No es "no tiene alérgenos": es que no consta el dato. Se dice así.
+          <p className="text-xs text-destructive bg-destructive/10 px-2 py-1.5 rounded">
+            {AVISO_SIN_ALERGENOS[language]}
+          </p>
+        )}
+        {/* La nota es lo más útil que hay en muchas fichas ("Disponible sin
+            gluten con pan sin gluten") y no se pintaba en las páginas
+            indexables, solo en la tarjeta girable de la portada. */}
+        {plato.displayAlergenosNotas && (
+          <p className="mt-2 text-xs italic text-destructive bg-destructive/10 px-2 py-1.5 rounded">
+            {plato.displayAlergenosNotas}
+          </p>
         )}
       </CardContent>
 

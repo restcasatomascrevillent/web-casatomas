@@ -7,8 +7,10 @@
  */
 import type { ItemTraducido } from "./carta-i18n";
 import type { PlatoSSG } from "./carta-ssg-types";
-import { normalizeAlergenos } from "./carta-i18n";
 import { resolverImagen, type SeccionCarta } from "./carta-ssg";
+import { etiquetaAlergeno } from "./alergenos";
+import { construirRutaIdioma } from "@/i18n/routing";
+import type { Language } from "@/i18n/types";
 
 export const SITE_URL = (
   (import.meta.env.VITE_SITE_URL as string | undefined) ?? "https://restaurantecasatomascrevillente.es"
@@ -77,10 +79,29 @@ export const HORARIOS = [
 
 const ID_RESTAURANTE = `${SITE_URL}/#restaurante`;
 
-/** `MenuItem` de un plato, vino o bebida. Solo campos que existen en la BD. */
-function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, supabaseUrl?: string) {
+const ALERGENOS_PREFIJO: Record<Language, string> = {
+  es: "Alérgenos",
+  en: "Allergens",
+  fr: "Allergènes",
+};
+
+/**
+ * `MenuItem` de un plato, vino o bebida. Solo campos que existen en la BD.
+ *
+ * `item` ya viene resuelto por `resolveTranslatedItem` (vía `agruparPorCategoria`),
+ * así que `displayAlergenosOficiales` está en el idioma de `lang` — antes se leía
+ * `item.alergenos_oficiales` (la columna cruda, siempre en castellano) y el
+ * JSON-LD de una página en inglés/francés listaba los alérgenos en español.
+ */
+function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, lang: Language, supabaseUrl?: string) {
   const imagen = resolverImagen(item.imagen_url, supabaseUrl);
-  const alergenos = normalizeAlergenos(item.alergenos_oficiales);
+  // Por el vocabulario común: el panel guarda `frutos_cascara` y en el JSON-LD
+  // tiene que leerse "Frutos de cáscara", igual que en la tarjeta. El `Set`
+  // hace falta porque varias formas de la BD ("lacteos", "leche", "lactosa")
+  // son el mismo alérgeno y se repetían en la descripción.
+  const alergenos = [
+    ...new Set((item.displayAlergenosOficiales ?? []).map((a) => etiquetaAlergeno(a, lang))),
+  ];
 
   return {
     "@type": "MenuItem",
@@ -106,7 +127,7 @@ function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, supabaseUrl?: string) 
       ? {
           nutrition: {
             "@type": "NutritionInformation",
-            description: `Alérgenos: ${alergenos.join(", ")}`,
+            description: `${ALERGENOS_PREFIJO[lang] ?? ALERGENOS_PREFIJO.es}: ${alergenos.join(", ")}`,
           },
         }
       : {}),
@@ -122,7 +143,7 @@ function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, supabaseUrl?: string) 
  */
 export function menuSchema(
   secciones: SeccionCarta<Partial<PlatoSSG>>[],
-  lang: string,
+  lang: Language,
   supabaseUrl?: string,
   opts: { id?: string; nombre?: string; url?: string } = {},
 ) {
@@ -136,7 +157,7 @@ export function menuSchema(
       "@type": "MenuSection",
       name: seccion.nombre,
       numberOfItems: seccion.items.length,
-      hasMenuItem: seccion.items.map((item) => menuItem(item, supabaseUrl)),
+      hasMenuItem: seccion.items.map((item) => menuItem(item, lang, supabaseUrl)),
     })),
   };
 }
@@ -243,13 +264,25 @@ export function restaurantSchema(opts: {
   };
 }
 
-export const breadcrumbSchema = (trail: { nombre: string; path: string }[]) => ({
+const INICIO_POR_IDIOMA: Record<Language, string> = {
+  es: "Inicio",
+  en: "Home",
+  fr: "Accueil",
+};
+
+/**
+ * `trail` va en rutas "en español" (p. ej. `/carta/vinos`, sin prefijo) y con
+ * el `nombre` ya en el idioma de la página — igual que hace el resto de la
+ * página que llama a esta función. Aquí solo se añade el primer escalón
+ * ("Inicio"/"Home"/"Accueil") y se prefija cada URL con `lang`.
+ */
+export const breadcrumbSchema = (trail: { nombre: string; path: string }[], lang: Language = "es") => ({
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
-  itemListElement: [{ nombre: "Inicio", path: "/" }, ...trail].map((x, i) => ({
+  itemListElement: [{ nombre: INICIO_POR_IDIOMA[lang], path: "/" }, ...trail].map((x, i) => ({
     "@type": "ListItem",
     position: i + 1,
     name: x.nombre,
-    item: `${SITE_URL}${x.path}`,
+    item: `${SITE_URL}${construirRutaIdioma(x.path, lang)}`,
   })),
 });

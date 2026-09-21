@@ -2,18 +2,20 @@
 /**
  * Resolución de idioma y normalización de la carta.
  *
- * Es una extracción literal de lo que vivía dentro de `CartaPlatos.tsx`
- * (`normalizeAlergenos`, `normalizeIngredientes`, `parseTraducciones` y el
- * `useMemo` de `translatedPlatos`). Se mueve aquí sin cambiar la lógica para
- * que la use también el prerenderizado de build (`carta-ssg.ts`) y no existan
- * dos implementaciones que puedan divergir.
+ * Es una extracción de lo que vivía dentro de `CartaPlatos.tsx`
+ * (`normalizeIngredientes`, `parseTraducciones` y el `useMemo` de
+ * `translatedPlatos`), para que la use también el prerenderizado de build
+ * (`carta-ssg.ts`) y no existan dos implementaciones que puedan divergir. El
+ * vocabulario de alérgenos (normalizar, traducir etiquetas, filtrar) vive en
+ * `@/lib/alergenos`; aquí solo se resuelve QUÉ columna se lee.
  *
  * Precedencia, de mayor a menor:
- *   1. columna dedicada `campo_{idioma}` (p. ej. `nombre_en`)
+ *   1. columna dedicada `campo_{idioma}` (p. ej. `nombre_en`, `alergenos_en`)
  *   2. `traducciones[idioma][campo]` (mecanismo antiguo, vivo en 8 filas)
  *   3. el valor base en castellano
  */
 import type { Language } from "@/i18n/types";
+import { normalizeAlergenos } from "./alergenos";
 
 export const parseTraducciones = (value: unknown) => {
   if (!value) return null;
@@ -26,19 +28,6 @@ export const parseTraducciones = (value: unknown) => {
   }
   if (typeof value === "object") return value;
   return null;
-};
-
-export const normalizeAlergenos = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value;
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return value ? [value] : [];
-    }
-  }
-  return [];
 };
 
 export const normalizeIngredientes = (value: unknown): string[] => {
@@ -95,9 +84,14 @@ export function resolveTranslatedItem<T extends Record<string, any>>(
   const columnCategoria = (item as any)[`categoria_${language}`];
   const columnDescripcion = (item as any)[`descripcion_${language}`];
   const columnIngredientes = (item as any)[`ingredientes_${language}`];
-  const columnAlergenosOficiales = (item as any)[`alergenos_oficiales_${language}`];
-  const columnAlergenosInferidos = (item as any)[`alergenos_inferidos_${language}`];
-  const columnAlergenosNotas = (item as any)[`alergenos_notas_${language}`];
+  /**
+   * La columna traducida de alérgenos es `alergenos_en` / `alergenos_fr`: UNA
+   * sola, de texto libre separado por comas ("Gluten, Milk, Sulphites"). Antes
+   * se pedían `alergenos_oficiales_${lang}` y `alergenos_notas_${lang}`, que no
+   * existen en ninguna tabla, así que en inglés y francés los alérgenos se
+   * pintaban siempre en castellano.
+   */
+  const columnAlergenos = (item as any)[`alergenos_${language}`];
 
   if (language === "es") {
     return {
@@ -106,8 +100,8 @@ export function resolveTranslatedItem<T extends Record<string, any>>(
       displayCategoria: item.categoria,
       displayDescripcion: item.descripcion,
       displayIngredientes: normalizeIngredientes((item as any).ingredientes),
-      displayAlergenosOficiales: item.alergenos_oficiales,
-      displayAlergenosInferidos: item.alergenos_inferidos,
+      displayAlergenosOficiales: normalizeAlergenos(item.alergenos_oficiales),
+      displayAlergenosInferidos: normalizeAlergenos(item.alergenos_inferidos),
       displayAlergenosNotas: item.alergenos_notas,
       translatedCategoria: null,
     };
@@ -123,6 +117,21 @@ export function resolveTranslatedItem<T extends Record<string, any>>(
     translation?.alergenos_notas ?? translation?.alergenos?.notas;
   const translationIngredientes = translation?.ingredientes;
 
+  /**
+   * `alergenos_en` / `alergenos_fr` es una lista ÚNICA: no separa oficiales de
+   * inferidos. Cuando existe se usa como lista de oficiales y se deja la de
+   * inferidos vacía, porque si no los mismos alérgenos aparecerían dos veces
+   * (una traducidos y otra en castellano). Si está vacía se cae al castellano:
+   * más vale enseñarlos en otro idioma que no enseñarlos.
+   */
+  const traducidos = normalizeAlergenos(columnAlergenos);
+  const oficiales = traducidos.length
+    ? traducidos
+    : normalizeAlergenos(translationAlergenosOficiales ?? item.alergenos_oficiales);
+  const inferidos = traducidos.length
+    ? []
+    : normalizeAlergenos(translationAlergenosInferidos ?? item.alergenos_inferidos);
+
   return {
     ...item,
     displayNombre: columnName || translation?.nombre || item.nombre,
@@ -131,14 +140,10 @@ export function resolveTranslatedItem<T extends Record<string, any>>(
     displayIngredientes: normalizeIngredientes(
       columnIngredientes ?? translationIngredientes ?? (item as any).ingredientes,
     ),
-    displayAlergenosOficiales: normalizeAlergenos(
-      columnAlergenosOficiales ?? translationAlergenosOficiales ?? item.alergenos_oficiales,
-    ),
-    displayAlergenosInferidos: normalizeAlergenos(
-      columnAlergenosInferidos ?? translationAlergenosInferidos ?? item.alergenos_inferidos,
-    ),
-    displayAlergenosNotas:
-      columnAlergenosNotas ?? translationAlergenosNotas ?? item.alergenos_notas,
+    displayAlergenosOficiales: oficiales,
+    displayAlergenosInferidos: inferidos,
+    // No hay columna traducida para las notas; se usa `traducciones` si la trae.
+    displayAlergenosNotas: translationAlergenosNotas ?? item.alergenos_notas,
     translatedCategoria: columnCategoria || translation?.categoria || null,
   };
 }

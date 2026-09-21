@@ -18,7 +18,16 @@ import {
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import BackToTopButton from "./BackToTopButton";
-import { normalizeAlergenos, resolveTranslatedItem } from "@/lib/carta-i18n";
+import { resolveTranslatedItem } from "@/lib/carta-i18n";
+import {
+  AVISO_SIN_ALERGENOS,
+  cumpleFiltroDietetico,
+  datosAlergenos,
+  etiquetaAlergeno,
+  normalizeAlergenos,
+  tieneInformacionAlergenos,
+} from "@/lib/alergenos";
+import { CATEGORIAS_CARTA } from "@/lib/carta-rutas";
 
 /** Estado inicial de `platosByCategory`: categoria -> platos. */
 export type CartaPlatosSeed = Record<string, Plato[]>;
@@ -37,7 +46,16 @@ interface CartaPlatosProps {
   initialPlatos?: CartaPlatosSeed;
 }
 
-type DietaryFilterKey = "celiaquia" | "lactosa" | "vegano" | "vegetariano";
+/**
+ * Filtros dietéticos que se pueden evaluar con los datos que hay en la BD.
+ *
+ * "Vegano" y "Vegetariano" se han retirado de la interfaz: buscaban esas
+ * palabras dentro de la columna de alérgenos, que nunca las contiene, así que
+ * devolvían CERO platos siempre. La lógica y el motivo quedan documentados en
+ * `FILTROS_DIETETICOS_PENDIENTES` (`@/lib/alergenos`), a la espera de una
+ * columna propia de etiquetas dietéticas.
+ */
+type DietaryFilterKey = "celiaquia" | "lactosa";
 
 interface Plato {
   id?: string;
@@ -86,8 +104,6 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   const [dietaryFilters, setDietaryFilters] = useState<Record<DietaryFilterKey, boolean>>({
     celiaquia: false,
     lactosa: false,
-    vegano: false,
-    vegetariano: false,
   });
   const { toast } = useToast();
   const PAGE_SIZE = 24;
@@ -99,33 +115,6 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
   };
 
-  const normalizeForMatch = (value: string) =>
-    value
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const includesAnyMatcher = (values: string[], matchers: string[]) =>
-    values.some((value) => matchers.some((matcher) => value.includes(matcher)));
-
-  const DIETARY_MATCHERS: Record<DietaryFilterKey, string[]> = {
-    celiaquia: ["gluten"],
-    lactosa: ["lactosa", "lacteo", "lacteos", "leche", "milk", "dairy", "lait"],
-    vegano: ["vegano", "vegana", "vegan", "apto vegano", "apta vegana"],
-    vegetariano: [
-      "vegetariano",
-      "vegetariana",
-      "vegetarian",
-      "apto vegetariano",
-      "apta vegetariana",
-      "vegano",
-      "vegana",
-      "vegan",
-    ],
-  };
-
   const fetchPlatosByCategory = useCallback(
     async (category: string, append = false) => {
       setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
@@ -133,10 +122,14 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
       const to = offset + PAGE_SIZE - 1;
 
       try {
+        // `restaurante` distingue la carta de Casa Tomás de la del bar (`touza`).
+        // El prerenderizado (`scripts/carta-ssg.mjs`) ya filtraba por ella; sin
+        // esto, al hidratar volvían a aparecer platos que el HTML no traía.
         let query = supabase
           .from('Platos')
           .select('*')
           .eq('activado', true)
+          .is('restaurante', true)
           .order('categoria', { ascending: true })
           .order('orden', { ascending: true })
           .range(offset, to);
@@ -184,23 +177,28 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  const CATEGORY_ORDER = [
-    "NOVEDADES DEL DÍA",
-    "SNACK",
-    "ENTRANTES FRÍOS",
-    "ENTRANTES CALIENTES",
-    "ENSALADAS",
-    "SALAZONES",
-    "MARISCOS",
-    "PESCADOS",
-    "CARNES",
-    "ARROCES",
-    "POSTRES",
-    "TODOS"
-  ];
+  /**
+   * Categorías DERIVADAS DEL DATO, no escritas a mano.
+   *
+   * Antes eran una lista fija en este fichero: una categoría nueva creada desde
+   * el panel no aparecía aquí (aunque `/carta/<slug>` sí existiera) y una
+   * borrada seguía ofreciéndose vacía. Ahora salen de `CATEGORIAS_CARTA`, que
+   * es lo que descargó el build — la misma fuente que usan las páginas
+   * estáticas, así que portada y `/carta` no pueden discrepar.
+   *
+   * Se mantiene la categoría seleccionada aunque no esté en los datos del build
+   * (p. ej. la inicial cuando el snapshot está vacío) para que el desplegable
+   * nunca muestre una etiqueta que no está en su propia lista.
+   */
+  const categories = useMemo(() => {
+    const claves = CATEGORIAS_CARTA.map((categoria) => categoria.clave);
+    const conSeleccion =
+      selectedCategory === "TODOS" || claves.includes(selectedCategory)
+        ? claves
+        : [selectedCategory, ...claves];
+    return [...conSeleccion, "TODOS"];
+  }, [selectedCategory]);
 
-  // Mostrar siempre el orden exacto solicitado, independientemente de si hay platos en esa categoría
-  const categories = CATEGORY_ORDER;
   const currentLoading = loadingByCategory[selectedCategory];
 
   // La resolución de idioma vive en `@/lib/carta-i18n` para que la comparta
@@ -217,21 +215,14 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
       (key) => dietaryFilters[key]
     );
 
+    // Filtro de seguridad alimentaria: ver `cumpleFiltroDietetico`. Un plato
+    // sin alérgenos registrados NO aparece —"no consta" no es "es apto"— y la
+    // comparación es por alérgeno completo, no por subcadena, así que un
+    // alérgeno personalizado escrito como "sin gluten" ya no excluye el plato.
     if (activeDietaryFilters.length > 0) {
-      items = items.filter((item: any) => {
-        const officialAllergens = (Array.isArray(item.displayAlergenosOficiales)
-          ? item.displayAlergenosOficiales
-          : []
-        )
-          .map((allergen: string) => normalizeForMatch(allergen))
-          .filter(Boolean);
-
-        return activeDietaryFilters.every((filterKey) => {
-          if (filterKey === "celiaquia" || filterKey === "lactosa") {
-            return !includesAnyMatcher(officialAllergens, DIETARY_MATCHERS[filterKey]);
-          }
-          return includesAnyMatcher(officialAllergens, DIETARY_MATCHERS[filterKey]);
-        });
+      items = items.filter((item) => {
+        const datos = datosAlergenos(item);
+        return activeDietaryFilters.every((filterKey) => cumpleFiltroDietetico(datos, filterKey));
       });
     }
 
@@ -424,11 +415,12 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   };
 
   const infoLabels = getInfoLabels();
+  // Solo los filtros que se pueden responder con datos reales. "Vegano" y
+  // "Vegetariano" devolvían siempre cero platos y se han retirado; ver el
+  // TODO de `FILTROS_DIETETICOS_PENDIENTES` en `@/lib/alergenos`.
   const dietaryFilterOptions: { key: DietaryFilterKey; label: string }[] = [
     { key: "celiaquia", label: t.platos.dietaryFilters.celiaquia },
     { key: "lactosa", label: t.platos.dietaryFilters.lactosa },
-    { key: "vegano", label: t.platos.dietaryFilters.vegano },
-    { key: "vegetariano", label: t.platos.dietaryFilters.vegetariano },
   ];
 
   const handleDietaryFilterChange = (filter: DietaryFilterKey, checked: boolean) => {
@@ -543,10 +535,15 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
           const imagePositionY = getImagePositionY(itemRecord.imagen_posicion_y);
           const imageStyle = imagePositionY === null ? undefined : { objectPosition: `center ${imagePositionY}%` };
           const categoryLabel = item.translatedCategoria ?? translateCategory(item.categoria);
+          // Vocabulario único (`@/lib/alergenos`): "frutos_cascara" del panel y
+          // "frutos de cáscara" de la BD son el mismo alérgeno y se pintan con
+          // la misma etiqueta, traducida al idioma activo.
+          const alergenosItem = datosAlergenos(item);
+          const conAlergenos = tieneInformacionAlergenos(alergenosItem);
           const infoAlergenos = Array.from(
             new Set(
-              [...(item.displayAlergenosOficiales || []), ...(item.displayAlergenosInferidos || [])]
-                .map((alergeno: string) => capitalizeFirst(alergeno))
+              [...alergenosItem.oficiales, ...alergenosItem.inferidos]
+                .map((alergeno) => etiquetaAlergeno(alergeno, language))
                 .filter(Boolean)
             )
           );
@@ -728,7 +725,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                         <p className="text-sm font-semibold text-foreground">
                           {infoLabels.allergens}:
                         </p>
-                        {infoAlergenos.length > 0 ? (
+                        {conAlergenos ? (
                           <div className="flex flex-wrap gap-1">
                             {infoAlergenos.map((alergeno: string, idx: number) => (
                               <Badge key={`info-alergeno-${idx}`} variant="secondary" className="text-xs">
@@ -737,7 +734,12 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground">{infoLabels.noData}</p>
+                          // "No disponible" se podía leer como "no tiene
+                          // alérgenos". Aquí se dice lo que pasa de verdad: no
+                          // consta el dato y hay que preguntar.
+                          <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                            {AVISO_SIN_ALERGENOS[language]}
+                          </p>
                         )}
                       </div>
 

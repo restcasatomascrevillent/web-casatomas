@@ -18,13 +18,14 @@
 /**
  * Columnas que se llevan al bundle.
  *
- * `Platos` va con lista explícita (columnas verificadas). `Vinos` y `Bebidas`
- * se piden con `select=*` y se filtran DESPUÉS con `CAMPOS_SALIDA`: sus tablas
- * han ido ganando columnas (`imagen_url`, `nombre_en`…) que no están en
- * `src/integrations/supabase/types.ts` (se mantiene a mano y va desfasado), y
- * pedir por nombre una columna inexistente devuelve un 400 que rompería el
- * build cada vez que alguien toque el esquema. Con `*` el build aguanta la
- * deriva del esquema y aquí se decide qué se publica.
+ * Las TRES tablas se piden con `select=*` y se filtran DESPUÉS con
+ * `CAMPOS_SALIDA`: han ido ganando columnas (`imagen_url`, `nombre_en`,
+ * `alergenos_en`…) que no están en `src/integrations/supabase/types.ts` (se
+ * mantiene a mano y va desfasado), y pedir por nombre una columna inexistente
+ * devuelve un 400 que rompería el build cada vez que alguien toque el esquema.
+ * `Platos` iba con lista explícita y por eso añadir aquí un campo nuevo era
+ * jugarse el despliegue; con `*` el build aguanta la deriva del esquema y es
+ * este fichero el que decide qué se publica.
  *
  * Se incluye todo lo que las páginas necesitan para pintar una tarjeta
  * idéntica a la que devuelve Supabase en runtime — incluidos `imagen_posicion_y`
@@ -32,6 +33,20 @@
  * navegador sean indistinguibles.
  */
 const CAMPOS = {
+  Platos: '*',
+  Vinos: '*',
+  Bebidas: '*',
+};
+
+/**
+ * Claves que sobreviven al `select=*`. Todo lo demás se descarta.
+ *
+ * `alergenos_en` / `alergenos_fr` son la traducción de los alérgenos: UNA
+ * columna de texto separado por comas, no un array (lo desmenuza
+ * `normalizeAlergenos` en `src/lib/alergenos.ts`). Sin ellas el HTML estático
+ * enseñaba los alérgenos en castellano aunque el visitante navegara en inglés.
+ */
+const CAMPOS_SALIDA = {
   Platos: [
     'id',
     'nombre', 'nombre_en', 'nombre_fr',
@@ -41,14 +56,9 @@ const CAMPOS = {
     'imagen_url', 'imagen_posicion_y', 'expanded',
     'ingredientes',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
+    'alergenos_en', 'alergenos_fr',
     'traducciones',
   ],
-  Vinos: '*',
-  Bebidas: '*',
-};
-
-/** Claves que sobreviven al `select=*`. Todo lo demás se descarta. */
-const CAMPOS_SALIDA = {
   Vinos: [
     'id',
     'nombre', 'nombre_en', 'nombre_fr',
@@ -58,6 +68,7 @@ const CAMPOS_SALIDA = {
     'imagen_url', 'imagen_posicion_y',
     'denominacion_origen', 'ubicacion_region', 'ubicacion_pais',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
+    'alergenos_en', 'alergenos_fr',
     'traducciones',
   ],
   Bebidas: [
@@ -66,6 +77,8 @@ const CAMPOS_SALIDA = {
     'categoria', 'categoria_en', 'categoria_fr',
     'descripcion', 'descripcion_en', 'descripcion_fr',
     'precio_eur', 'tamano',
+    // Las bebidas SÍ tienen foto en la BD y no llegaba al HTML estático.
+    'imagen_url',
     'traducciones',
   ],
 };
@@ -73,15 +86,20 @@ const CAMPOS_SALIDA = {
 const ORDEN = 'categoria.asc,orden.asc';
 
 /**
- * `Platos` filtra por `restaurante=true` (`touza=true` es la carta del bar).
- * `Vinos` y `Bebidas` no tienen esa columna: se replica exactamente el filtro
- * que usan `CartaVinos.tsx` y `CartaBebidas.tsx` en runtime (`activado`), para
- * que el HTML del build y lo que ve el visitante sean el mismo conjunto.
+ * El MISMO filtro en las tres tablas y en los dos caminos.
+ *
+ * `restaurante=true` es la carta de Casa Tomás; `touza=true` es la del bar. Las
+ * tres tablas tienen esa columna, pero hasta ahora solo `Platos` la filtraba
+ * aquí y ningún componente la filtraba en runtime. No se notaba porque todas
+ * las filas están marcadas, pero en cuanto el dueño desmarcara algo el plato
+ * habría desaparecido del HTML estático y habría vuelto a aparecer al hidratar.
+ * `CartaPlatos.tsx`, `CartaVinos.tsx` y `CartaBebidas.tsx` aplican ahora
+ * `.eq('activado', true).is('restaurante', true)`, que es exactamente esto.
  */
 const FILTROS = {
   Platos: 'activado=eq.true&restaurante=is.true',
-  Vinos: 'activado=eq.true',
-  Bebidas: 'activado=eq.true',
+  Vinos: 'activado=eq.true&restaurante=is.true',
+  Bebidas: 'activado=eq.true&restaurante=is.true',
 };
 
 const vacio = (v) =>
