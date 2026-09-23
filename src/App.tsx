@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Analytics } from "@vercel/analytics/react";
 import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -46,6 +47,12 @@ const Layout = ({ lang }: { lang: Language }) => (
         <MobileReserveCTA />
       </TooltipProvider>
     </LanguageProvider>
+    {/* Vercel Web Analytics (sin cookies). Renderiza `null` y solo inyecta el
+        script en un useEffect → no afecta al HTML del SSG. El script sigue los
+        cambios de history (react-router), así que cada navegación en cliente
+        cuenta como page view. Las tres ramas (/, /en, /fr) montan su propio
+        Layout; `inject()` es idempotente (no duplica el <script>). */}
+    <Analytics />
   </QueryClientProvider>
 );
 
