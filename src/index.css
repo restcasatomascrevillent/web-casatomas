@@ -2,9 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Libre Baskerville (variable, wght 400–700) servida como WOFF2 con subset
+ * Latin + Latin-1 + Latin Extended-A + puntuación general + €. Los nombres
+ * llevan hash del contenido porque vercel.json sirve /fonts/* como `immutable`:
+ * si se regeneran, cambia el hash y hay que actualizar estas URLs y el preload
+ * de index.html. Los .ttf originales se conservan como fuente del subset.
+ */
 @font-face {
   font-family: "Libre Baskerville";
-  src: url("/fonts/libre-baskerville/LibreBaskerville-Variable.ttf") format("truetype");
+  src: url("/fonts/libre-baskerville/LibreBaskerville-Variable-latin.c844cbb9.woff2") format("woff2");
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
@@ -12,7 +19,7 @@
 
 @font-face {
   font-family: "Libre Baskerville";
-  src: url("/fonts/libre-baskerville/LibreBaskerville-Italic-Variable.ttf") format("truetype");
+  src: url("/fonts/libre-baskerville/LibreBaskerville-Italic-Variable-latin.c44cc02a.woff2") format("woff2");
   font-style: italic;
   font-weight: 400 700;
   font-display: swap;

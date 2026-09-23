@@ -119,6 +119,14 @@ export default defineConfig(({ mode, command }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    build: {
+      // Las variantes del logo (src/assets/logo/*.png) pesan <4 KB y Vite las
+      // incrustaría como base64 en el JS y en cada HTML prerenderizado (todas las
+      // del srcset, no solo la que elige el navegador). Como fichero aparte se
+      // descargan una vez y quedan en caché `immutable` bajo /assets.
+      assetsInlineLimit: (filePath: string) =>
+        filePath.replace(/\\/g, "/").includes("/src/assets/logo/") ? false : undefined,
+    },
     ssgOptions: {
       // `sitemap.xml` y `robots.txt` se generan aquí, con las rutas que el build
       // ha emitido de verdad, en vez de mantenerlos a mano en `public/`.

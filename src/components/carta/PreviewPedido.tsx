@@ -16,7 +16,7 @@ import saladImg from "@/assets/platos/salad.jpg";
 import riceImg from "@/assets/platos/rice.jpg";
 import dessertImg from "@/assets/platos/dessert.jpg";
 import appetizerImg from "@/assets/platos/appetizer.jpg";
-import logoImg from "@/assets/logo-casa-tomas.png";
+import { LOGO_HEIGHT, LOGO_WIDTH, logoTicket } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useToast } from "@/hooks/use-toast";
 
@@ -295,7 +295,14 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       {/* Header */}
       <div className="text-center border-b-2 border-black pb-3 mb-3">
         <div className="flex justify-center mb-2">
-          <img src={logoImg} alt={t.hero.logoAlt} className="h-24 w-auto object-contain" />
+          {/* Sin srcset: html-to-image lo vacía y captura `src` a pixelRatio 2. */}
+          <img
+            src={logoTicket}
+            alt={t.hero.logoAlt}
+            className="h-24 w-auto object-contain"
+            width={LOGO_WIDTH}
+            height={LOGO_HEIGHT}
+          />
         </div>
         <p className="text-[10px] mt-2">================================</p>
         <p className="text-[10px] mt-1">

@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Suspense, lazy, useRef, useState } from "react";
 import { Calendar, UtensilsCrossed, Bot } from "lucide-react";
-import logo from "@/assets/logo-casa-tomas.png";
+import { LOGO_HEIGHT, LOGO_WIDTH, logoHero } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useNavigate } from "react-router-dom";
 
@@ -56,11 +56,13 @@ const Hero = () => {
           className="mb-8"
         >
           <img
-            src={logo}
+            src={logoHero.src}
+            srcSet={logoHero.srcSet}
+            sizes={logoHero.sizes}
             alt={t.hero.logoAlt}
             className="w-64 md:w-96 lg:w-[28rem] h-auto mx-auto mb-6 drop-shadow-2xl"
-            width={800}
-            height={550}
+            width={LOGO_WIDTH}
+            height={LOGO_HEIGHT}
             loading="eager"
             fetchPriority="high"
             decoding="async"

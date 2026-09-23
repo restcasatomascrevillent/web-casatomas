@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
-import logo from "@/assets/logo-casa-tomas.png";
+import { LOGO_HEIGHT, LOGO_WIDTH, logoSmall } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useLocation, useNavigate } from "react-router-dom";
 import { construirRutaIdioma, rutaEquivalente } from "@/i18n/routing";
@@ -110,11 +110,15 @@ const Header = () => {
             whileTap={{ scale: 0.95 }}
           >
             <img
-              src={logo}
+              src={logoSmall.src}
+              srcSet={logoSmall.srcSet}
+              sizes="(min-width: 768px) 70px, 59px"
               alt={t.hero.logoAlt}
-              className="h-10 md:h-12 w-auto"
-              width={800}
-              height={550}
+              // aspect-ratio explícito: las variantes pequeñas redondean el alto
+              // (70×48) y sin él el ancho variaría unas décimas de píxel.
+              className="h-10 md:h-12 w-auto aspect-[800/550]"
+              width={LOGO_WIDTH}
+              height={LOGO_HEIGHT}
               decoding="async"
             />
           </motion.button>
