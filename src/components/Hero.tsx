@@ -47,7 +47,7 @@ const Hero = () => {
       </div>
       <motion.div
         style={{ y, opacity }}
-        className="absolute inset-0 flex flex-col items-center justify-center pb-20 sm:pb-16 md:pb-0 text-center px-4 z-10"
+        className="absolute inset-0 flex flex-col items-center justify-center pb-28 sm:pb-24 lg:pb-0 text-center px-4 z-10"
       >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -118,7 +118,7 @@ const Hero = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.2 }}
-          className="absolute bottom-4 sm:bottom-6 md:bottom-8"
+          className="absolute bottom-20 sm:bottom-24 lg:bottom-8"
         >
           <div className="animate-float">
             <svg

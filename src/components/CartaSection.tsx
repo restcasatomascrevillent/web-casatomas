@@ -11,14 +11,7 @@ import type { Language } from "@/i18n/types";
 // SSG tiene que poder renderizarlo para que sus tarjetas queden en el HTML.
 import CartaPlatos from "./carta/CartaPlatos";
 import { semillaCategoriaInicial } from "@/lib/carta-ssg";
-import {
-  CATEGORIAS_CARTA,
-  etiquetaCategoriaIdioma,
-  RESUMEN_BEBIDAS,
-  RESUMEN_VINOS,
-  rutaCategoria,
-  TOTAL_CARTA,
-} from "@/lib/carta-rutas";
+import { CATEGORIAS_CARTA, etiquetaCategoriaIdioma, rutaCategoria, TOTAL_CARTA } from "@/lib/carta-rutas";
 import type { CartaPlatosSeed } from "./carta/CartaPlatos";
 
 type Section = "platos" | "vinos" | "bebidas" | null;
@@ -36,10 +29,10 @@ const PLATOS_SSG = semillaCategoriaInicial() as CartaPlatosSeed;
  * `CartaPlatos.tsx`: un mapa local, no una clave nueva en los tres ficheros
  * de idioma, para tres cadenas cortas que no se usan en ningún otro sitio.
  */
-const ETIQUETAS_PUENTE: Record<Language, { verCarta: string; referencias: string; nav: string; vinos: string; bebidas: string }> = {
-  es: { verCarta: "Ver la carta completa", referencias: "referencias", nav: "Páginas de la carta", vinos: "Vinos", bebidas: "Bebidas" },
-  en: { verCarta: "See the full menu", referencias: "items", nav: "Menu pages", vinos: "Wines", bebidas: "Drinks" },
-  fr: { verCarta: "Voir la carte complète", referencias: "références", nav: "Pages de la carte", vinos: "Vins", bebidas: "Boissons" },
+const ETIQUETAS_PUENTE: Record<Language, { verCarta: string; referencias: string; nav: string }> = {
+  es: { verCarta: "Ver la carta completa", referencias: "referencias", nav: "Páginas de la carta" },
+  en: { verCarta: "See the full menu", referencias: "items", nav: "Menu pages" },
+  fr: { verCarta: "Voir la carte complète", referencias: "références", nav: "Pages de la carte" },
 };
 
 const CartaSection = () => {
@@ -85,27 +78,29 @@ const CartaSection = () => {
           </p>
         </div>
 
-        {/* Botones principales */}
-        <div className="flex flex-col items-center gap-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button
-              size="lg"
-              onClick={() => setActiveSection(activeSection === "platos" ? null : "platos")}
-              className={`px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "platos" 
-                  ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
-                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-              }`}
-            >
-              <UtensilsCrossed className="w-5 h-5 mr-2" />
-              {t.carta.buttons.platos}
-            </Button>
+        {/* Botones principales: platos arriba a todo lo ancho, y debajo
+            vinos/bebidas uno al lado del otro (evita repetir esas dos
+            categorías como píldoras sueltas más abajo). */}
+        <div className="flex flex-col items-center gap-3 mb-8 w-full max-w-md mx-auto">
+          <Button
+            size="lg"
+            onClick={() => setActiveSection(activeSection === "platos" ? null : "platos")}
+            className={`w-full px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+              activeSection === "platos"
+                ? "bg-accent hover:bg-accent/90 text-accent-foreground"
+                : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            }`}
+          >
+            <UtensilsCrossed className="w-5 h-5 mr-2" />
+            {t.carta.buttons.platos}
+          </Button>
+          <div className="grid grid-cols-2 gap-3 w-full">
             <Button
               size="lg"
               onClick={() => setActiveSection(activeSection === "vinos" ? null : "vinos")}
-              className={`px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "vinos" 
-                  ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
+              className={`px-4 py-6 text-base sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "vinos"
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
                   : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               }`}
             >
@@ -115,9 +110,9 @@ const CartaSection = () => {
             <Button
               size="lg"
               onClick={() => setActiveSection(activeSection === "bebidas" ? null : "bebidas")}
-              className={`px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "bebidas" 
-                  ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
+              className={`px-4 py-6 text-base sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "bebidas"
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
                   : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               }`}
             >
@@ -141,6 +136,8 @@ const CartaSection = () => {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+          {/* Solo categorías de platos: vinos y bebidas ya tienen su propio
+              botón arriba, listarlas también aquí las duplicaba. */}
           <ul className="flex flex-wrap items-center justify-center gap-2">
             {CATEGORIAS_CARTA.map((categoria) => (
               <li key={categoria.slug}>
@@ -153,24 +150,6 @@ const CartaSection = () => {
                 </Link>
               </li>
             ))}
-            <li>
-              <Link
-                to={construirRutaIdioma("/carta/vinos", language)}
-                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
-              >
-                {etiquetas.vinos}
-                <span className="text-xs font-semibold text-accent">{RESUMEN_VINOS.total}</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                to={construirRutaIdioma("/carta/bebidas", language)}
-                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
-              >
-                {etiquetas.bebidas}
-                <span className="text-xs font-semibold text-accent">{RESUMEN_BEBIDAS.total}</span>
-              </Link>
-            </li>
           </ul>
         </nav>
 
