@@ -40,17 +40,42 @@ const MobileReserveCTA = () => {
   }, [isHome]);
 
   useEffect(() => {
-    const footer = document.querySelector("footer");
-    if (!footer) {
-      setNearFooter(false);
-      return;
+    setNearFooter(false);
+
+    let intersectionObserver: IntersectionObserver | null = null;
+    let mutationObserver: MutationObserver | null = null;
+
+    // El `<footer>` va detrás de un `Suspense` perezoso: en producción (HTML
+    // del SSG) ya está en el DOM cuando este efecto corre, pero en dev o tras
+    // una navegación por cliente puede tardar unos milisegundos en montarse.
+    // Sin este `MutationObserver` de respaldo, buscarlo una sola vez aquí
+    // podía no encontrar nada y la barra se quedaba visible para siempre.
+    const attach = (footer: Element) => {
+      intersectionObserver = new IntersectionObserver(([entry]) => setNearFooter(entry.isIntersecting), {
+        rootMargin: "0px 0px -10% 0px",
+      });
+      intersectionObserver.observe(footer);
+    };
+
+    const existing = document.querySelector("footer");
+    if (existing) {
+      attach(existing);
+    } else {
+      mutationObserver = new MutationObserver(() => {
+        const footer = document.querySelector("footer");
+        if (footer) {
+          mutationObserver?.disconnect();
+          mutationObserver = null;
+          attach(footer);
+        }
+      });
+      mutationObserver.observe(document.body, { childList: true, subtree: true });
     }
 
-    const observer = new IntersectionObserver(([entry]) => setNearFooter(entry.isIntersecting), {
-      rootMargin: "0px 0px -10% 0px",
-    });
-    observer.observe(footer);
-    return () => observer.disconnect();
+    return () => {
+      intersectionObserver?.disconnect();
+      mutationObserver?.disconnect();
+    };
   }, [location.pathname]);
 
   if (HIDE_ON_PATHS.includes(location.pathname)) return null;
@@ -59,9 +84,6 @@ const MobileReserveCTA = () => {
 
   return (
     <>
-      {/* Reserva espacio al final del documento para que la barra no tape el footer */}
-      <div aria-hidden="true" className="h-[4.5rem] lg:hidden" />
-
       <div
         className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transition-all duration-300 ease-out ${
           visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"

@@ -387,19 +387,20 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
             <Button
               type="button"
+              size="lg"
               onClick={checkAvailability}
               disabled={!form.watch("fecha") || !form.watch("numero_comensales") || isCheckingAvailability}
-              className="w-full bg-secondary text-foreground hover:bg-secondary/80 rounded-full"
+              className="w-full h-auto py-4 bg-secondary text-foreground hover:bg-secondary/80 rounded-full text-base font-semibold shadow-sm transition-all"
             >
               {isCheckingAvailability ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t.reservationForm.checkingAvailability}
+                  <Loader2 className="mr-2 h-5 w-5 shrink-0 animate-spin" />
+                  <span className="text-center leading-snug">{t.reservationForm.checkingAvailability}</span>
                 </>
               ) : (
                 <>
-                  <Search className="mr-2 h-4 w-4" />
-                  {t.reservationForm.checkAvailability}
+                  <Search className="mr-2 h-5 w-5 shrink-0" />
+                  <span className="text-center leading-snug">{t.reservationForm.checkAvailability}</span>
                 </>
               )}
             </Button>

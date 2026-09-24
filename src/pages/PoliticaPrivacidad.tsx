@@ -170,15 +170,17 @@ const PoliticaPrivacidad = () => {
 
             </div>
 
-            {/* Footer simple */}
-            <div className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
+            {/* Footer simple. Tag `<footer>` real: MobileReserveCTA lo busca con
+                `document.querySelector("footer")` para ocultar su barra fija
+                al llegar aquí abajo. */}
+            <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
                 <p>© {new Date().getFullYear()} Restaurante Casa Tomás · Todos los derechos reservados</p>
                 <p className="mt-1">
                     <Link to="/" className="hover:text-accent transition-colors">Inicio</Link>
                     {" · "}
                     <Link to="/politica-privacidad" className="hover:text-accent transition-colors">Política de Privacidad</Link>
                 </p>
-            </div>
+            </footer>
         </div>
     );
 };
