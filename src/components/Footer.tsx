@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { Instagram, Facebook } from "lucide-react";
+import { Instagram, Facebook, Star } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
+import { Button } from "@/components/ui/button";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 
@@ -13,9 +14,19 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
             <h3 className="text-xl font-bold mb-4">Casa Tomás</h3>
-            <p className="text-stone text-sm leading-relaxed">
+            <p className="text-stone text-sm leading-relaxed mb-5">
               {t.footer.description}
             </p>
+            <Button
+              asChild
+              size="sm"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full shadow-md"
+            >
+              <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
+                <Star className="w-4 h-4 mr-2 fill-current" />
+                {t.reviews.cta}
+              </a>
+            </Button>
           </div>
 
           <div>
@@ -37,11 +48,6 @@ const Footer = () => {
               <li>
                 <a href="https://restaurantecasatomascrevillente.es/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                   {t.footer.websiteLink}
-                </a>
-              </li>
-              <li>
-                <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
-                  {t.reviews.cta}
                 </a>
               </li>
             </ul>
