@@ -2,16 +2,15 @@ import { motion } from "framer-motion";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Wine, Beer, ArrowRight } from "lucide-react";
+import { UtensilsCrossed, Wine, Beer } from "lucide-react";
 import { getUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 // Import estático a propósito: `CartaPlatos` se monta siempre (ver abajo) y el
 // SSG tiene que poder renderizarlo para que sus tarjetas queden en el HTML.
 import CartaPlatos from "./carta/CartaPlatos";
 import { semillaCategoriaInicial } from "@/lib/carta-ssg";
-import { CATEGORIAS_CARTA, etiquetaCategoriaIdioma, rutaCategoria, TOTAL_CARTA } from "@/lib/carta-rutas";
+import { CATEGORIAS_CARTA, etiquetaCategoriaIdioma, rutaCategoria } from "@/lib/carta-rutas";
 import type { CartaPlatosSeed } from "./carta/CartaPlatos";
 
 type Section = "platos" | "vinos" | "bebidas" | null;
@@ -24,15 +23,15 @@ const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
 const PLATOS_SSG = semillaCategoriaInicial() as CartaPlatosSeed;
 
 /**
- * Las pocas etiquetas de este puente a `/carta` no salían del diccionario de
- * `t.` (se escribieron sueltas en castellano). Igual que `getInfoLabels` en
+ * Las pocas etiquetas de esta sección no salían del diccionario de `t.` (se
+ * escribieron sueltas en castellano). Igual que `getInfoLabels` en
  * `CartaPlatos.tsx`: un mapa local, no una clave nueva en los tres ficheros
- * de idioma, para tres cadenas cortas que no se usan en ningún otro sitio.
+ * de idioma, para dos cadenas cortas que no se usan en ningún otro sitio.
  */
-const ETIQUETAS_PUENTE: Record<Language, { verCarta: string; referencias: string; nav: string }> = {
-  es: { verCarta: "Ver la carta completa", referencias: "referencias", nav: "Páginas de la carta" },
-  en: { verCarta: "See the full menu", referencias: "items", nav: "Menu pages" },
-  fr: { verCarta: "Voir la carte complète", referencias: "références", nav: "Pages de la carte" },
+const ETIQUETAS_PUENTE: Record<Language, { verCarta: string; nav: string }> = {
+  es: { verCarta: "Ver la carta completa", nav: "Páginas de la carta" },
+  en: { verCarta: "See the full menu", nav: "Menu pages" },
+  fr: { verCarta: "Voir la carte complète", nav: "Pages de la carte" },
 };
 
 const CartaSection = () => {
@@ -92,71 +91,29 @@ const CartaSection = () => {
           </p>
         </div>
 
-        {/* Botones principales: platos arriba a todo lo ancho, y debajo
-            vinos/bebidas uno al lado del otro (evita repetir esas dos
-            categorías como píldoras sueltas más abajo). */}
-        <div className="flex flex-col items-center gap-3 mb-8 w-full max-w-md mx-auto">
-          <Button
-            size="lg"
-            onClick={() => setActiveSection(activeSection === "platos" ? null : "platos")}
-            className={`w-full px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-              activeSection === "platos"
-                ? "bg-accent hover:bg-accent/90 text-accent-foreground"
-                : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-            }`}
-          >
-            <UtensilsCrossed className="w-5 h-5 mr-2" />
-            {t.carta.buttons.platos}
-          </Button>
-          <div className="grid grid-cols-2 gap-3 w-full">
+        {/* "Ver la carta completa" abre aquí mismo el buscador de platos (el
+            mismo componente y datos que antes destapaba "Carta de platos",
+            solo que reetiquetado y sin el contador de referencias). Debajo,
+            las categorías de platos como acceso directo a cada una por
+            separado, y al final vinos/bebidas con su propio color cada
+            uno para diferenciarlos a simple vista. */}
+        <div className="max-w-3xl mx-auto mb-12">
+          <div className="flex justify-center mb-8">
             <Button
               size="lg"
-              onClick={() => setActiveSection(activeSection === "vinos" ? null : "vinos")}
-              className={`px-4 py-6 text-base sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "vinos"
+              onClick={() => setActiveSection(activeSection === "platos" ? null : "platos")}
+              className={`w-full sm:w-auto px-8 py-6 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "platos"
                   ? "bg-accent hover:bg-accent/90 text-accent-foreground"
                   : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               }`}
             >
-              <Wine className="w-5 h-5 mr-2" />
-              {t.carta.buttons.vinos}
-            </Button>
-            <Button
-              size="lg"
-              onClick={() => setActiveSection(activeSection === "bebidas" ? null : "bebidas")}
-              className={`px-4 py-6 text-base sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "bebidas"
-                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
-                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-              }`}
-            >
-              <Beer className="w-5 h-5 mr-2" />
-              {t.carta.buttons.bebidas}
+              <UtensilsCrossed className="w-5 h-5 mr-2 shrink-0" />
+              {etiquetas.verCarta}
             </Button>
           </div>
-        </div>
 
-        {/* Puente a las páginas de carta. Los tres botones de arriba despliegan
-            la carta interactiva aquí mismo; estos enlaces llevan a las páginas
-            propias, donde cada sección está entera y con URL propia. Es la vía
-            por la que se llega navegando, no solo desde el sitemap. */}
-        <nav aria-label={etiquetas.nav} className="mb-12">
-          <div className="flex justify-center mb-6">
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="rounded-full border-2 border-accent/40 text-accent font-semibold hover:bg-accent hover:text-accent-foreground hover:border-accent transition-all duration-300"
-            >
-              <Link to={construirRutaIdioma("/carta", language)}>
-                {etiquetas.verCarta} · {TOTAL_CARTA} {etiquetas.referencias}
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Link>
-            </Button>
-          </div>
-          {/* Solo categorías de platos: vinos y bebidas ya tienen su propio
-              botón arriba, listarlas también aquí las duplicaba. */}
-          <div className="max-w-3xl mx-auto rounded-2xl border border-border/60 bg-background/60 p-4 sm:p-5">
+          <nav aria-label={etiquetas.nav} className="rounded-2xl border border-border/60 bg-background/60 p-4 sm:p-5 mb-8">
             <ul className="flex flex-wrap items-center justify-center gap-2.5">
               {CATEGORIAS_CARTA.map((categoria) => (
                 <li key={categoria.slug}>
@@ -170,8 +127,35 @@ const CartaSection = () => {
                 </li>
               ))}
             </ul>
+          </nav>
+
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <Button
+              size="lg"
+              onClick={() => setActiveSection(activeSection === "vinos" ? null : "vinos")}
+              className={`px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "vinos"
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground"
+              }`}
+            >
+              <Wine className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+              {t.carta.buttons.vinos}
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => setActiveSection(activeSection === "bebidas" ? null : "bebidas")}
+              className={`px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
+                activeSection === "bebidas"
+                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
+                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              }`}
+            >
+              <Beer className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+              {t.carta.buttons.bebidas}
+            </Button>
           </div>
-        </nav>
+        </div>
 
         {/* Contenido de las secciones */}
 
