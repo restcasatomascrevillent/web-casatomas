@@ -521,8 +521,14 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               .join(" · ");
 
             return (
+              // Sin `layout`: con él, mostrar/ocultar la foto de UNA tarjeta
+              // cambiaba su alto y Framer Motion recalculaba y volvía a
+              // animar la posición de TODAS las demás tarjetas del grid (el
+              // reflow que provoca ese cambio de alto), no solo la que se
+              // tocó. El propio despliegue de la tarjeta ya anima suave por
+              // su cuenta (motion.div de abajo); las vecinas ahora solo se
+              // reacomodan con el reflow normal del grid.
               <motion.div
-                layout
                 key={cardKey}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -530,7 +536,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                 className="h-full [perspective:1200px]"
               >
                 <Card
-                  className={`font-libre-baskerville flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                  className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
                     expanded ? "h-full card--expanded" : "h-auto card--collapsed"
                   }`}
                 >

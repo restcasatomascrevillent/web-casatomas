@@ -557,8 +557,15 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
           );
           const infoIngredientes = item.displayIngredientes || [];
           return (
+            // Sin `layout`: con él, mostrar/ocultar la foto o la información
+            // de UNA tarjeta cambiaba su alto y Framer Motion recalculaba y
+            // volvía a animar la posición de TODAS las demás tarjetas del
+            // grid (el reflow que provoca ese cambio de alto), no solo la
+            // que se tocó. El propio giro/despliegue de la tarjeta ya anima
+            // suave por su cuenta (motion.div de abajo); las vecinas ahora
+            // solo se reacomodan con el reflow normal del grid, sin el coste
+            // de una animación de layout por cada tarjeta visible.
             <motion.div
-              layout
               key={cardKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -574,7 +581,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
               >
                 <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
                   <Card
-                    className={`font-libre-baskerville flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                    className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
                       expanded || infoOpen ? "h-full" : "h-auto"
                     } ${
                       expanded ? "card--expanded" : "card--collapsed"
