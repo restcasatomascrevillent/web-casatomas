@@ -9,9 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
-import pulpoImage from "@/assets/pulpo-plato.jpg";
-import carneImage from "@/assets/carne-plato.jpg";
-import champanImage from "@/assets/champan.jpg";
+import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 
 type IconKey = "utensils" | "wine" | "gift" | "calendar" | "star" | "sparkles" | "coffee" | "cake";
 
@@ -52,7 +50,14 @@ interface Novedad {
   orden?: number | null;
 }
 
-const fallbackImages = [pulpoImage, carneImage, champanImage];
+const fallbackImages: NombreImagen[] = ["pulpo-plato", "carne-plato", "champan"];
+
+/**
+ * Tarjeta de `max-w-7xl` a 3 columnas desde `md` (≈405 px en escritorio),
+ * ancho completo menos el `px-4` de la sección en móvil. La foto va a `h-44`
+ * con `object-cover`, así que manda el ancho.
+ */
+const SIZES_NOVEDAD = "(min-width: 768px) 33vw, calc(100vw - 32px)";
 
 const getLocalizedContent = (novedad: Novedad, language: Language) => {
   const titleKey = language === "es" ? "titulo" : `titulo_${language}`;
@@ -93,6 +98,14 @@ const NovedadesSection = () => {
     const localized = getLocalizedContent(novedad, language);
     const image = novedad.imagen_url || fallbackImages[idx % fallbackImages.length];
     const imageStyle = novedad.imagen_posicion_y ? { objectPosition: `center ${novedad.imagen_posicion_y}%` } : undefined;
+    const imgProps = {
+      alt: localized.titulo,
+      className: "w-full h-full object-cover",
+      style: imageStyle,
+      loading: "lazy" as const,
+      fetchPriority: "low" as const,
+      decoding: "async" as const,
+    };
 
     return (
       <motion.div
@@ -105,15 +118,11 @@ const NovedadesSection = () => {
         <Card className="h-full overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
           {image ? (
             <div className="relative h-44 overflow-hidden">
-              <img
-                src={image}
-                alt={localized.titulo}
-                className="w-full h-full object-cover"
-                style={imageStyle}
-                loading="lazy"
-                fetchPriority="low"
-                decoding="async"
-              />
+              {novedad.imagen_url ? (
+                <img src={novedad.imagen_url} {...imgProps} />
+              ) : (
+                <ImagenResponsive nombre={image as NombreImagen} sizes={SIZES_NOVEDAD} {...imgProps} />
+              )}
             </div>
           ) : (
             <div className="h-44 flex items-center justify-center bg-muted/40 text-muted-foreground">

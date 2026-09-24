@@ -7,7 +7,8 @@
  * Latin + Latin-1 + Latin Extended-A + puntuación general + €. Los nombres
  * llevan hash del contenido porque vercel.json sirve /fonts/* como `immutable`:
  * si se regeneran, cambia el hash y hay que actualizar estas URLs y el preload
- * de index.html. Los .ttf originales se conservan como fuente del subset.
+ * de index.html. Los .ttf originales (fuente del subset) viven fuera de public/,
+ * en assets-src/fonts/libre-baskerville/, para no publicarlos.
  */
 @font-face {
   font-family: "Libre Baskerville";

@@ -4,17 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, Sparkles, Star, TreePine, Utensils, Wine } from "lucide-react";
 
-import carnePlato from "@/assets/carne-plato.jpg";
-import pulpoPlato from "@/assets/pulpo-plato.jpg";
-import vinosMarques from "@/assets/vinos-marqués.jpeg";
-import salon1 from "@/assets/espacios/salon-1.jpg";
-import salon2 from "@/assets/espacios/salon-2.jpg";
-import salon3 from "@/assets/espacios/salon-3.jpg";
-import salon4 from "@/assets/espacios/salon-4.jpg";
-import salon5 from "@/assets/espacios/salon-5.jpg";
-import comedor1 from "@/assets/espacios/comedor-1.jpg";
-import comedor2 from "@/assets/espacios/comedor-2.jpg";
-import comedor3 from "@/assets/espacios/comedor-3.jpg";
+import manifestImagenes from "@/assets/responsive/manifest";
+import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -161,9 +152,25 @@ const getIdiomAliases = (language: string): string[] => {
   return ["es", "espanol", "español", "spanish"];
 };
 
+/**
+ * Ancho con el que se pinta cada foto de la galería (atributo `sizes`).
+ * Diálogo `max-w-4xl` (896 px) con `p-6` + `p-1` → 840 px de contenido; por
+ * debajo de 896 px de viewport ocupa `100vw - 56px`. Las fotos apaisadas, con
+ * `object-cover` a 250 px de alto en móvil, se escalan por la altura y salen
+ * más anchas que el hueco: se les pide `100vw` para no quedarse cortas.
+ */
+const sizesGaleria = (nombre: NombreImagen) => {
+  const { width, height } = manifestImagenes[nombre];
+  return width > height ? "(max-width: 895px) 100vw, 840px" : "(max-width: 895px) calc(100vw - 56px), 840px";
+};
+
 const EspaciosSection = () => {
   const { t, dateLocale, language } = useTranslations();
   const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
+  // Galería: solo se montan la diapositiva visible y sus vecinas (y las ya
+  // vistas, para no parpadear al volver). Antes, abrirla bajaba las 3–5 fotos.
+  const [galleryApi, setGalleryApi] = useState<CarouselApi | null>(null);
+  const [gallerySlidesMontadas, setGallerySlidesMontadas] = useState<ReadonlySet<number>>(() => new Set([0, 1]));
   const [showTodayMenu, setShowTodayMenu] = useState(false);
   const [showTodayTapas, setShowTodayTapas] = useState(false);
   const [showPastMenus, setShowPastMenus] = useState(false);
@@ -224,6 +231,24 @@ const EspaciosSection = () => {
   const recentTapas = sortedTapas.slice(0, 3);
 
   useEffect(() => {
+    if (!galleryApi) return;
+    const onSelect = () => {
+      const actual = galleryApi.selectedScrollSnap();
+      setGallerySlidesMontadas((prev) =>
+        prev.has(actual - 1) && prev.has(actual) && prev.has(actual + 1)
+          ? prev
+          : new Set([...prev, actual - 1, actual, actual + 1]),
+      );
+    };
+    galleryApi.on("select", onSelect);
+    galleryApi.on("reInit", onSelect);
+    return () => {
+      galleryApi.off("select", onSelect);
+      galleryApi.off("reInit", onSelect);
+    };
+  }, [galleryApi]);
+
+  useEffect(() => {
     if (!menusCarouselApi) return;
     const onSelect = () => setMenuSlide(menusCarouselApi.selectedScrollSnap());
     menusCarouselApi.on("select", onSelect);
@@ -267,11 +292,11 @@ const EspaciosSection = () => {
     hasGallery: index !== 3,
     images:
       index === 0
-        ? [salon1, salon2, salon3, salon4, salon5]
+        ? (["salon-1", "salon-2", "salon-3", "salon-4", "salon-5"] as NombreImagen[])
         : index === 1
-          ? [comedor1, comedor2, comedor3]
+          ? (["comedor-1", "comedor-2", "comedor-3"] as NombreImagen[])
           : index === 2
-            ? [vinosMarques, carnePlato, pulpoPlato]
+            ? (["vinos-marques", "carne-plato", "pulpo-plato"] as NombreImagen[])
             : undefined,
     link: index === 3 ? TOUZA_URL : undefined,
   }));
@@ -332,7 +357,12 @@ const EspaciosSection = () => {
                       <Button
                         variant="default"
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                        onClick={() => setSelectedEspacio(index)}
+                        onClick={() => {
+                          // Se reinicia en el mismo render que abre el diálogo: con un
+                          // useEffect, el primer render montaría las fotos de la galería anterior.
+                          setGallerySlidesMontadas(new Set([0, 1]));
+                          setSelectedEspacio(index);
+                        }}
                       >
                         <Camera className="w-5 h-5 mr-2" />
                         {t.espacios.galleryButton}
@@ -441,22 +471,25 @@ const EspaciosSection = () => {
               </DialogDescription>
             </DialogHeader>
             {selectedEspacio !== null && espacios[selectedEspacio].images && (
-              <Carousel className="w-full">
+              <Carousel className="w-full" setApi={setGalleryApi}>
                 <CarouselContent>
                   {espacios[selectedEspacio].images.map((image, idx) => (
                     <CarouselItem key={idx}>
                       <div className="p-1">
-                        <img
-                          src={image}
-                          alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
-                          className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
-                          width={1050}
-                          height={1400}
-                          loading="lazy"
-                          fetchPriority="low"
-                          decoding="async"
-                          sizes="(max-width: 768px) 100vw, 900px"
-                        />
+                        {gallerySlidesMontadas.has(idx) ? (
+                          <ImagenResponsive
+                            nombre={image}
+                            alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
+                            className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
+                            loading="lazy"
+                            fetchPriority="low"
+                            decoding="async"
+                            sizes={sizesGaleria(image)}
+                          />
+                        ) : (
+                          // Mismo hueco que la foto: el carrusel no cambia de tamaño al montarla.
+                          <div className="w-full h-[250px] md:h-[400px] rounded-lg" aria-hidden="true" />
+                        )}
                       </div>
                     </CarouselItem>
                   ))}

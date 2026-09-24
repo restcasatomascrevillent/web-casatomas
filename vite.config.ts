@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { rm } from "fs/promises";
 import { fetchCartaSSG, CARTA_SSG_VACIA } from "./scripts/carta-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 
@@ -131,6 +132,10 @@ export default defineConfig(({ mode, command }) => {
       // `sitemap.xml` y `robots.txt` se generan aquí, con las rutas que el build
       // ha emitido de verdad, en vez de mantenerlos a mano en `public/`.
       onFinished: async (dir: string) => {
+        // vite-react-ssg fuerza `manifest`/`ssrManifest` y los LEE al prerenderizar,
+        // así que no se pueden desactivar; pero ya no hacen falta y en `dist/` se
+        // publicarían (/.vite/manifest.json, /.vite/ssr-manifest.json).
+        await rm(path.join(path.resolve(dir), ".vite"), { recursive: true, force: true });
         const rutas = await generarSitemapYRobots(dir, siteUrl);
         // eslint-disable-next-line no-console
         console.log(`[sitemap] ${rutas.length} URLs indexables: ${rutas.join(", ")}`);
