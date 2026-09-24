@@ -49,10 +49,15 @@ const Hero = () => {
         style={{ y, opacity }}
         className="absolute inset-0 flex flex-col items-center justify-center pb-28 sm:pb-24 lg:pb-0 text-center px-4 z-10"
       >
+        {/* `initial={false}`: el SSG prerenderiza este bloque (logo + lema),
+            es lo primero que ve cualquier visita. Con `initial` activo,
+            Framer Motion escribe `opacity:0` en el HTML estático y lo deja
+            invisible hasta que el JS hidrata y anima — en 3G eso son
+            segundos de página en blanco. Sin la animación de entrada, el
+            HTML ya sale visible tal cual. */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.2 }}
           className="mb-8"
         >
           <img
@@ -75,12 +80,7 @@ const Hero = () => {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4"
-        >
+        <motion.div initial={false} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row gap-4">
           <Button
             size="lg"
             className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
@@ -106,12 +106,7 @@ const Hero = () => {
           </Suspense>
         )}
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1.2 }}
-          className="absolute bottom-20 sm:bottom-24 lg:bottom-8"
-        >
+        <motion.div initial={false} animate={{ opacity: 1 }} className="absolute bottom-20 sm:bottom-24 lg:bottom-8">
           <div className="animate-float">
             <svg
               className="w-8 h-8 text-foreground/60"

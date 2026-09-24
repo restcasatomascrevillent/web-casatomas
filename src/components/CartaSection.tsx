@@ -65,7 +65,7 @@ const CartaSection = () => {
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={false}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}

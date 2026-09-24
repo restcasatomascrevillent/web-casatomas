@@ -82,11 +82,14 @@ const Header = () => {
     { id: "contacto", label: t.header.nav.contacto },
   ];
 
+  // `initial={false}`: sin esto, Framer Motion deja el header prerenderizado
+  // con `transform: translateY(-100px)` (fuera de pantalla) hasta que el JS
+  // hidrata y lo anima — en una conexión lenta, la web tarda segundos en
+  // mostrar el logo y el menú.
   return (
     <motion.header
-      initial={{ y: -100 }}
+      initial={false}
       animate={{ y: 0 }}
-      transition={{ duration: 0.6 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
           ? "bg-background/95 backdrop-blur-md shadow-lg border-b border-border"

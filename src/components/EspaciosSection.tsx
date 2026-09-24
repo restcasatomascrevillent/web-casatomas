@@ -310,7 +310,7 @@ const EspaciosSection = () => {
   return (
     <section id="espacios" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-muted to-background">
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={false}
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
@@ -318,7 +318,7 @@ const EspaciosSection = () => {
       >
         <div className="text-center mb-12">
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
@@ -327,7 +327,7 @@ const EspaciosSection = () => {
             {t.espacios.title}
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
@@ -343,7 +343,7 @@ const EspaciosSection = () => {
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                initial={false}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
@@ -393,7 +393,7 @@ const EspaciosSection = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}

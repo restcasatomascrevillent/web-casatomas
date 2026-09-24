@@ -171,7 +171,7 @@ const NovedadesSection = () => {
   return (
     <section id="novedades" className="py-20 px-4 md:px-8 lg:px-16 bg-background">
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={false}
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
@@ -179,7 +179,7 @@ const NovedadesSection = () => {
       >
         <div className="text-center mb-12">
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
@@ -188,7 +188,7 @@ const NovedadesSection = () => {
             {t.novedades.title}
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}

@@ -32,7 +32,7 @@ const ContactoSection = () => {
   return (
     <section id="contacto" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-muted to-background">
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={false}
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
@@ -40,7 +40,7 @@ const ContactoSection = () => {
       >
         <div className="text-center mb-12">
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
@@ -49,7 +49,7 @@ const ContactoSection = () => {
             {t.contacto.title}
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
@@ -62,7 +62,7 @@ const ContactoSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Contact information */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
+            initial={false}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
@@ -127,7 +127,7 @@ const ContactoSection = () => {
 
           {/* Regalar Experiencia */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
+            initial={false}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
