@@ -1,8 +1,6 @@
-import { Suspense, type ComponentType } from "react";
+import { lazy, Suspense, type ComponentType } from "react";
 import { Outlet } from "react-router-dom";
 import type { RouteRecord } from "vite-react-ssg";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
@@ -11,7 +9,29 @@ import MobileReserveCTA from "./components/MobileReserveCTA";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 
-const queryClient = new QueryClient();
+// Sin esto, React Query usa sus valores por defecto: `staleTime: 0` (cada
+// montaje de un componente con `useQuery` — novedades, reseñas, menús del
+// día — vuelve a pedir los datos a Supabase, aunque acaben de llegar) y
+// `refetchOnWindowFocus: true` (repite la petición cada vez que el móvil
+// vuelve de segundo plano). Para contenido que cambia como mucho una vez al
+// día, eso es red y parpadeo de "cargando" de más en cada vuelta a la
+// página. 5 minutos de margen antes de refrescar en segundo plano.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Dos librerías de toasts distintas (Radix `Toaster` para carta/contacto,
+// `Sonner` solo para reservas), ninguna pinta nada hasta que algo llama a
+// `toast(...)`. Antes se importaban de forma estática y entraban en el
+// bundle de arranque de CADA página, aunque esa página nunca fuera a lanzar
+// un toast. Perezosas, así ese peso no cuenta para la primera carga.
+const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
+const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
 
 const RouteFallback = () => (
   <div className="min-h-[50vh] flex items-center justify-center text-muted-foreground">
@@ -38,8 +58,10 @@ const Layout = ({ lang }: { lang: Language }) => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider key={lang} initialLanguage={lang}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
+        <Suspense fallback={null}>
+          <Toaster />
+          <Sonner />
+        </Suspense>
         <CookieConsent />
         <Suspense fallback={<RouteFallback />}>
           <Outlet />
