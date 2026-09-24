@@ -21,15 +21,14 @@ const MobileReserveCTA = () => {
       <div aria-hidden="true" className="h-[4.5rem] lg:hidden" />
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-border bg-background/95 backdrop-blur-sm"
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex gap-2 px-3 py-3">
           <Button
             asChild
             size="lg"
-            variant="outline"
-            className="flex-1 border-2 border-primary/30 font-semibold rounded-full"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full shadow-lg"
           >
             <a href={PHONE_HREF} aria-label="Llamar a Casa Tomás">
               <Phone className="w-5 h-5 mr-2" />
@@ -38,7 +37,7 @@ const MobileReserveCTA = () => {
           </Button>
           <Button
             size="lg"
-            className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
+            className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full shadow-lg"
             onClick={() => navigate("/reservas")}
           >
             <Calendar className="w-5 h-5 mr-2" />
