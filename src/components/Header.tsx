@@ -77,7 +77,6 @@ const Header = () => {
   const navItems = [
     { id: "carta", label: t.header.nav.carta },
     { id: "novedades", label: t.header.nav.novedades },
-    { id: "reservas", label: t.header.nav.reservas },
     { id: "espacios", label: t.header.nav.espacios },
     { id: "nosotros", label: t.header.nav.nosotros },
     { id: "contacto", label: t.header.nav.contacto },

@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 // para EXISTIR en el DOM), pero en la home arranca oculta y solo se muestra
 // tras pasar el hero (a pantalla completa) para no taparle sus propios
 // botones nada más cargar. En el resto de páginas, sin hero, se ve siempre.
+// En cualquier página se vuelve a ocultar al llegar al footer, para no
+// tapar sus enlaces/datos de contacto.
 const HIDE_ON_PATHS = ["/reservas", "/404", "/reserva/respuesta", "/newsletter/baja"];
 const HOME_PATHS = ["/", "/en", "/fr"];
 
@@ -19,6 +21,7 @@ const MobileReserveCTA = () => {
   const location = useLocation();
   const isHome = HOME_PATHS.includes(location.pathname);
   const [pastHero, setPastHero] = useState(!isHome);
+  const [nearFooter, setNearFooter] = useState(false);
 
   useEffect(() => {
     if (!isHome) {
@@ -36,7 +39,23 @@ const MobileReserveCTA = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
 
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) {
+      setNearFooter(false);
+      return;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => setNearFooter(entry.isIntersecting), {
+      rootMargin: "0px 0px -10% 0px",
+    });
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [location.pathname]);
+
   if (HIDE_ON_PATHS.includes(location.pathname)) return null;
+
+  const visible = pastHero && !nearFooter;
 
   return (
     <>
@@ -45,7 +64,7 @@ const MobileReserveCTA = () => {
 
       <div
         className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transition-all duration-300 ease-out ${
-          pastHero ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+          visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
         }`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >

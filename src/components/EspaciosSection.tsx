@@ -12,13 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
 
-// La web de Touza todavía no tiene dominio propio (vive en touza-restaurant-website,
-// pendiente de desplegar). Hasta entonces se mantiene el enlace actual, alojado en
-// Lovable, como fallback — decisión del dueño (sept-2026) para no inventar una URL
-// que no existe. En cuanto haya dominio, basta con fijar VITE_TOUZA_URL.
-const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touzact.lovable.app";
+// La web de Touza vive en touza-restaurant-website.vercel.app. Si el dueño
+// pasa a tener dominio propio, basta con fijar VITE_TOUZA_URL para
+// sobrescribir este valor por defecto.
+const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-restaurant-website.vercel.app";
 
 interface MenuDiarioRow {
   id: string;
@@ -185,6 +183,10 @@ const EspaciosSection = () => {
   const { data: rawMenusDelDia = [] } = useQuery({
     queryKey: ["menus_diarios", language],
     queryFn: async () => {
+      // Import perezoso: el SDK de Supabase (~40 KB gzip) no debe entrar en
+      // el chunk que descarga la portada nada más cargar — solo hace falta
+      // al ejecutar esta consulta.
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("menus_diarios")
         .select("id, fecha, menu, idiom")
@@ -206,6 +208,10 @@ const EspaciosSection = () => {
   const { data: rawTapasSemanales = [] } = useQuery({
     queryKey: ["tapas", language],
     queryFn: async () => {
+      // Import perezoso: el SDK de Supabase (~40 KB gzip) no debe entrar en
+      // el chunk que descarga la portada nada más cargar — solo hace falta
+      // al ejecutar esta consulta.
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("tapas")
         .select("id, fecha, tapas, idiom")

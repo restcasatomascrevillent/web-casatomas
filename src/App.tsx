@@ -133,7 +133,6 @@ export const routes: RouteRecord[] = [
         path: "politica-privacidad",
         lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
       },
-      { path: "touza-cocktail", lazy: lazyRoute(() => import("./pages/NotFound")) },
       // Páginas de los enlaces de los correos (Supabase sirve el HTML de sus
       // funciones como text/plain, así que las sirve la web). `noindex`, solo
       // en español como los correos, y el SSG prerenderiza un cascarón vacío:

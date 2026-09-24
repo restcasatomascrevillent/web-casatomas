@@ -29,9 +29,7 @@ const SEO_HOME: Record<Language, { title: string; description: string }> = {
 
 const CartaSection = lazy(() => import("@/components/CartaSection"));
 const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
-const ReservasSection = lazy(() => import("@/components/ReservasSection"));
 const EspaciosSection = lazy(() => import("@/components/EspaciosSection"));
-const ReviewsSection = lazy(() => import("@/components/ReviewsSection"));
 const NosotrosSection = lazy(() => import("@/components/NosotrosSection"));
 const ContactoSection = lazy(() => import("@/components/ContactoSection"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -82,8 +80,6 @@ const Index = () => {
         <SectionBoundary id="carta"><CartaSection /></SectionBoundary>
         <SectionBoundary id="novedades"><NovedadesSection /></SectionBoundary>
         <SectionBoundary id="espacios"><EspaciosSection /></SectionBoundary>
-        <SectionBoundary id="reservas"><ReservasSection /></SectionBoundary>
-        <SectionBoundary id="reviews"><ReviewsSection /></SectionBoundary>
         <SectionBoundary id="nosotros"><NosotrosSection /></SectionBoundary>
         <SectionBoundary id="contacto"><ContactoSection /></SectionBoundary>
         <SectionBoundary id="footer"><Footer /></SectionBoundary>

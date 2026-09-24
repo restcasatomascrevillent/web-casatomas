@@ -6,7 +6,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -122,6 +121,10 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
       const to = offset + PAGE_SIZE - 1;
 
       try {
+        // Import perezoso: el SDK de Supabase (~40 KB gzip) no debe entrar en
+        // el chunk que descarga la portada nada más cargar — solo hace falta
+        // aquí, cuando de verdad se pide esta categoría.
+        const { supabase } = await import("@/integrations/supabase/client");
         // `restaurante` distingue la carta de Casa Tomás de la del bar (`touza`).
         // El prerenderizado (`scripts/carta-ssg.mjs`) ya filtraba por ella; sin
         // esto, al hidratar volvían a aparecer platos que el HTML no traía.

@@ -3,6 +3,7 @@ import { Instagram, Facebook } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
 import { construirRutaIdioma } from "@/i18n/routing";
+import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 
 const Footer = () => {
   const { t, language } = useTranslations();
@@ -36,6 +37,11 @@ const Footer = () => {
               <li>
                 <a href="https://restaurantecasatomascrevillente.es/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
                   {t.footer.websiteLink}
+                </a>
+              </li>
+              <li>
+                <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                  {t.reviews.cta}
                 </a>
               </li>
             </ul>

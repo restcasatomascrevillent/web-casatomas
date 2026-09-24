@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wine, UtensilsCrossed, Gift, Calendar, Star, Sparkles, Coffee, Cake, ImageOff } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,6 +80,10 @@ const NovedadesSection = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["novedades"],
     queryFn: async () => {
+      // Import perezoso: el SDK de Supabase (~40 KB gzip) no debe entrar en
+      // el chunk que descarga la portada nada más cargar — solo hace falta
+      // al ejecutar esta consulta.
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("novedades")
         .select("*")
