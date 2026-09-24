@@ -5,11 +5,21 @@ import { Calendar, UtensilsCrossed } from "lucide-react";
 import { LOGO_HEIGHT, LOGO_WIDTH, logoHero } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useNavigate } from "react-router-dom";
+import type { Language } from "@/i18n/types";
 
 const AIChatbot = lazy(() => import("./AIChatbot"));
 
+// Aria-label de la flecha de scroll. Distinto del texto del botón "Ver
+// carta" (mismo destino) para no repetir el mismo nombre accesible dos
+// veces seguidas en la pantalla de lectores de pantalla.
+const ARIA_SCROLL_DOWN: Record<Language, string> = {
+  es: "Desplázate a la carta",
+  en: "Scroll to the menu",
+  fr: "Faites défiler jusqu'à la carte",
+};
+
 const Hero = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const ref = useRef(null);
@@ -20,13 +30,6 @@ const Hero = () => {
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.8, 0]);
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   return (
     <section
@@ -89,14 +92,20 @@ const Hero = () => {
             <Calendar className="w-5 h-5 mr-2" />
             {t.hero.ctaPrimary}
           </Button>
+          {/* `<a href="#carta">`, no `onClick` + JS: el scroll suave ya lo da
+              `scroll-behavior: smooth` (index.css) de forma nativa, así que
+              este enlace navega bien desde el primer HTML, sin esperar a que
+              React hidrate el botón. */}
           <Button
+            asChild
             size="lg"
             variant="outline"
             className="border-2 border-primary/30 bg-background/50 backdrop-blur-sm text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            onClick={() => scrollToSection("carta")}
           >
-            <UtensilsCrossed className="w-5 h-5 mr-2" />
-            {t.hero.ctaSecondary}
+            <a href="#carta">
+              <UtensilsCrossed className="w-5 h-5 mr-2" />
+              {t.hero.ctaSecondary}
+            </a>
           </Button>
         </motion.div>
 
@@ -106,7 +115,16 @@ const Hero = () => {
           </Suspense>
         )}
 
-        <motion.div initial={false} animate={{ opacity: 1 }} className="absolute bottom-20 sm:bottom-24 lg:bottom-8">
+        {/* Enlace real a `#carta`, no un `<div>` decorativo: funciona en
+            cuanto hay HTML (scroll suave nativo vía CSS), sin esperar a que
+            React hidrate para registrar un click. */}
+        <motion.a
+          href="#carta"
+          aria-label={ARIA_SCROLL_DOWN[language]}
+          initial={false}
+          animate={{ opacity: 1 }}
+          className="absolute bottom-20 sm:bottom-24 lg:bottom-8 block"
+        >
           <div className="animate-float">
             <svg
               className="w-8 h-8 text-foreground/60"
@@ -120,7 +138,7 @@ const Hero = () => {
               <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
             </svg>
           </div>
-        </motion.div>
+        </motion.a>
       </motion.div>
     </section>
   );

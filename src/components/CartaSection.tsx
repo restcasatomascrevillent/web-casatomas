@@ -60,6 +60,20 @@ const CartaSection = () => {
     };
   }, []);
 
+  // Precarga en segundo plano, sin bloquear nada: el SDK de Supabase se
+  // importa de forma perezosa (ver CartaPlatos) para no entrar en la carga
+  // inicial, pero así ya está en caché del navegador cuando el visitante
+  // abra "Carta de platos" en vez de tener que descargarlo justo en ese
+  // click.
+  useEffect(() => {
+    const idle = "requestIdleCallback" in window ? window.requestIdleCallback : (cb: () => void) => setTimeout(cb, 1500);
+    const cancelIdle = "cancelIdleCallback" in window ? window.cancelIdleCallback : clearTimeout;
+    const id = idle(() => {
+      import("@/integrations/supabase/client");
+    });
+    return () => cancelIdle(id as number);
+  }, []);
+
   const shouldRenderPreview = activeSection !== null || pedidoCount > 0;
 
   return (
