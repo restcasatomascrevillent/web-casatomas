@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import BackToTopButton from "./BackToTopButton";
 import { resolveTranslatedItem } from "@/lib/carta-i18n";
 import {
@@ -90,6 +91,10 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  // El input queda ligado a `searchTerm` (respuesta instantánea al teclear);
+  // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
+  // va con retraso, para no recalcular y re-animar en cada pulsación.
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
   const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
   const [platosByCategory, setPlatosByCategory] = useState<Record<string, Plato[]>>(
     () => initialPlatos ?? {},
@@ -229,14 +234,14 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
       });
     }
 
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       items = items.filter(item =>
-        item.displayNombre.toLowerCase().includes(searchTerm.toLowerCase())
+        item.displayNombre.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [dietaryFilters, searchTerm, translatedPlatos]);
+  }, [debouncedSearchTerm, dietaryFilters, translatedPlatos]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -557,7 +562,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
               key={cardKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.03 }}
+              transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
               className="h-full [perspective:1200px]"
             >
               <div

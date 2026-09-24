@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Search, Plus, ChevronDown, Wine } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +52,10 @@ interface Bebida {
 const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
   const { t, language } = useTranslations();
   const [searchTerm, setSearchTerm] = useState("");
+  // El input queda ligado a `searchTerm` (respuesta instantánea al teclear);
+  // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
+  // va con retraso, para no recalcular y re-animar en cada pulsación.
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
   const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIA_INICIAL);
   const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>({});
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
@@ -66,6 +70,10 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     const offset = append ? (bebidasByCategory[category]?.length || 0) : 0;
     const to = offset + PAGE_SIZE - 1;
     try {
+      // Import perezoso: así el resto del módulo (componente, UI de
+      // búsqueda) puede evaluarse y pintar su esqueleto sin esperar a que el
+      // SDK de Supabase (~40 KB gzip) cargue primero.
+      const { supabase } = await import("@/integrations/supabase/client");
       // Mismo filtro que el prerenderizado (`scripts/carta-ssg.mjs`):
       // `restaurante` separa la carta de Casa Tomás de la del bar (`touza`).
       let query = supabase
@@ -146,14 +154,14 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
 
     let items = translated;
 
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       items = items.filter(item =>
-        (item.displayNombre || item.nombre).toLowerCase().includes(searchTerm.toLowerCase())
+        (item.displayNombre || item.nombre).toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [bebidasByCategory, language, searchTerm, selectedCategory]);
+  }, [bebidasByCategory, debouncedSearchTerm, language, selectedCategory]);
 
   const getPedidoItemKey = (item: Bebida & { nombre?: string }) =>
     item.id
@@ -269,7 +277,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
             key={item.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.03 }}
+            transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
           >
             <Card className="font-libre-baskerville h-full flex flex-col hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 text-sm">
               <CardHeader className="pb-3 flex-shrink-0">

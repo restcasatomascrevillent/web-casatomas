@@ -30,11 +30,11 @@ import {
  */
 const MapaMundoVinos = lazy(() => import("./MapaMundoVinos"));
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?? "";
-import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import BackToTopButton from "./BackToTopButton";
 // Vocabulario único de alérgenos: este fichero tenía su propia copia de
 // `normalizeAlergenos`, que ya divergía de la del resto de la carta.
@@ -74,6 +74,10 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  // El input queda ligado a `searchTerm` (respuesta instantánea al teclear);
+  // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
+  // va con retraso, para no recalcular y re-animar en cada pulsación.
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [isAdult, setIsAdult] = useState<boolean | null>(null);
   const [showAgeDialog, setShowAgeDialog] = useState(true);
@@ -97,6 +101,10 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       const to = offset + PAGE_SIZE - 1;
 
       try {
+        // Import perezoso: así el resto del módulo (componente, UI de
+        // búsqueda) puede evaluarse y pintar su esqueleto sin esperar a que
+        // el SDK de Supabase (~40 KB gzip) cargue primero.
+        const { supabase } = await import("@/integrations/supabase/client");
         // Mismo filtro que el prerenderizado (`scripts/carta-ssg.mjs`):
         // `restaurante` separa la carta de Casa Tomás de la del bar (`touza`).
         let query = supabase
@@ -148,6 +156,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   const fetchMap = useCallback(async () => {
     if (mapPrefetched) return;
     try {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from('Vinos')
         .select('categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, precio_eur')
@@ -236,14 +245,14 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       items = items.filter(item => item.categoria === selectedCategory);
     }
 
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
       items = items.filter(item =>
-        (item.displayNombre || item.nombre).toLowerCase().includes(searchTerm.toLowerCase())
+        (item.displayNombre || item.nombre).toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
     return items;
-  }, [language, searchTerm, selectedCategory, vinosByCategory]);
+  }, [debouncedSearchTerm, language, selectedCategory, vinosByCategory]);
 
   const currentLoading = loadingByCategory[selectedCategory];
 
@@ -517,7 +526,7 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                 key={cardKey}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.03 }}
+                transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
                 className="h-full [perspective:1200px]"
               >
                 <Card
