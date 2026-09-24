@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Trash2, Receipt, Plus, Minus, X, Share2, MessageCircle, Instagram, Facebook, Bot } from "lucide-react";
+import { Trash2, Receipt, Plus, Minus, X, Share2, MessageCircle, Instagram, Facebook } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import seafoodImg from "@/assets/platos/seafood.jpg";
@@ -414,18 +414,11 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
         })}
       </div>
 
-      {/* CT AI Button with Prompt */}
+      {/* CT AI Prompt (button removed, chatbot logic kept for future use) */}
       <div className="flex items-center justify-center gap-4 mb-5 px-1">
         <p className="text-[10px] text-gray-500 italic text-center leading-tight max-w-[180px]">
           "{t.preview.aiPrompt}"
         </p>
-        <Button
-          onClick={handleOpenChatbot}
-          className="w-auto px-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
-        >
-          <Bot className="w-4 h-4 mr-2" />
-          {t.hero.ctaAi}
-        </Button>
       </div>
 
       {/* Total */}
