@@ -134,6 +134,12 @@ export const routes: RouteRecord[] = [
         lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
       },
       { path: "touza-cocktail", lazy: lazyRoute(() => import("./pages/NotFound")) },
+      // Páginas de los enlaces de los correos (Supabase sirve el HTML de sus
+      // funciones como text/plain, así que las sirve la web). `noindex`, solo
+      // en español como los correos, y el SSG prerenderiza un cascarón vacío:
+      // el token/firma se lee en el navegador, nunca en el build.
+      { path: "reserva/respuesta", lazy: lazyRoute(() => import("./pages/RespuestaReserva")) },
+      { path: "newsletter/baja", lazy: lazyRoute(() => import("./pages/NewsletterBaja")) },
       // Ruta literal para que el SSG prerenderice `404.html` (vite-react-ssg
       // descarta la ruta "*" al recolectar paths). Vercel sirve ese fichero con
       // status 404 para cualquier URL que no resuelva en el filesystem. Uno

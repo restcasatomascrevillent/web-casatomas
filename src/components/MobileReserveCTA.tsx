@@ -6,7 +6,7 @@ import { PHONE_HREF } from "@/components/TelLink";
 
 // Barra fija de conversión en móvil: llamar o reservar sin hacer scroll.
 // Se renderiza también en el HTML del SSG (no depende de efectos ni de scroll).
-const HIDE_ON_PATHS = ["/reservas", "/404"];
+const HIDE_ON_PATHS = ["/reservas", "/404", "/reserva/respuesta", "/newsletter/baja"];
 
 const MobileReserveCTA = () => {
   const { t } = useTranslations();
