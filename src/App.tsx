@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
+import ScrollToTop from "./components/ScrollToTop";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 
@@ -58,6 +59,7 @@ const Layout = ({ lang }: { lang: Language }) => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider key={lang} initialLanguage={lang}>
       <TooltipProvider>
+        <ScrollToTop />
         <Suspense fallback={null}>
           <Toaster />
           <Sonner />

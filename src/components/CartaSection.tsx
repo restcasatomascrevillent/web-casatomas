@@ -18,6 +18,13 @@ type Section = "platos" | "bebidas" | null;
 const CartaBebidas = lazy(() => import("./carta/CartaBebidas"));
 const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
 
+// Mismo módulo que carga la ruta `/carta/vinos` (ver `App.tsx`): Vite dedupea
+// por fichero resuelto, así que precargarlo aquí deja el chunk en caché del
+// navegador para cuando `lazyRoute` lo pida de verdad al navegar.
+const precargarPaginaVinos = () => {
+  import("@/pages/carta/Vinos");
+};
+
 // La carta que descargó el build. Se calcula una sola vez por módulo: es un
 // valor estático, idéntico en Node y en el navegador.
 const PLATOS_SSG = semillaCategoriaInicial() as CartaPlatosSeed;
@@ -133,10 +140,18 @@ const CartaSection = () => {
             {/* La carta de vinos ya no se despliega aquí: tiene su propia
                 página (`/carta/vinos`), con el mismo buscador/mapa/pedido
                 pero con los vinos ya en el HTML del SSG en vez de a la
-                espera de Supabase. */}
+                espera de Supabase.
+                `onMouseEnter`/`onFocus`/`onTouchStart` precargan el chunk de
+                esa página antes del click (al pasar el cursor, al llegar
+                por teclado, o al tocarlo en móvil): para cuando el usuario
+                suelta el clic, el código ya está en caché y la navegación
+                se siente instantánea en vez de esperar la descarga. */}
             <Button
               asChild
               size="lg"
+              onMouseEnter={precargarPaginaVinos}
+              onFocus={precargarPaginaVinos}
+              onTouchStart={precargarPaginaVinos}
               className="px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Link to={construirRutaIdioma("/carta/vinos", language)}>

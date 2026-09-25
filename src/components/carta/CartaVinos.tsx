@@ -2,8 +2,15 @@ import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } fro
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Wine, ChevronDown, Plus, MapPin, Eye, EyeOff } from "lucide-react";
+import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin, Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +91,14 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
   // va con retraso, para no recalcular y re-animar en cada pulsación.
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
+  // El aviso de edad es una ventana ENCIMA del contenido, no una condición
+  // que decide si ese contenido se pinta: `Dialog` se porta a `<body>` y en
+  // el HTML del SSG no llega a existir (Node no tiene `document`), así que
+  // arrancar en `true` no deja nada invisible ni detrás de una interacción
+  // — la carta ya está en el HTML; esta ventana solo se superpone en el
+  // navegador, un instante después de entrar.
+  const [showAgeDialog, setShowAgeDialog] = useState(true);
+  const [isAdult, setIsAdult] = useState<boolean | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>(
     () => initialVinos ?? {},
@@ -389,22 +404,52 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   const translateCategory = (category: string) =>
     category === "Todos" ? t.vinos.categoriesAll : category;
 
-  // Sin diálogo de edad aquí: esta carta ya solo vive en su propia página
-  // (`/carta/vinos`), que muestra un aviso legal permanente en vez de un
-  // modal — ver el comentario de `pages/carta/Vinos.tsx`. Un `Dialog` se
-  // portaliza a `<body>` y no llega a existir en el HTML del SSG, así que
-  // dejaría el contenido detrás de una interacción y como intersticial al
-  // cargar, justo lo que ese aviso permanente evita.
+  const handleAgeConfirm = (adult: boolean) => {
+    setIsAdult(adult);
+    setShowAgeDialog(false);
+  };
 
   return (
     <div className="space-y-8" ref={sectionRef}>
+      {/* Ventana de verificación de edad: se superpone al contenido, no lo
+          sustituye (el contenido ya está en el HTML del SSG). Aparece un
+          instante después de entrar a la página. */}
+      <Dialog open={showAgeDialog} onOpenChange={setShowAgeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />
+              {t.vinos.ageCheckTitle}
+            </DialogTitle>
+            <DialogDescription>{t.vinos.ageCheckDescription}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-4 justify-center pt-4">
+            <Button onClick={() => handleAgeConfirm(true)} className="bg-accent hover:bg-accent/90">
+              {t.vinos.ageCheckConfirm}
+            </Button>
+            <Button variant="outline" onClick={() => handleAgeConfirm(false)}>
+              {t.vinos.ageCheckDecline}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {isAdult === false && (
+        <div className="text-center py-16">
+          <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
+          <p className="text-xl text-muted-foreground">{t.vinos.ageCheckBlocked}</p>
+        </div>
+      )}
+
       {/* Mapa Mundial de vinos */}
-      {MAPBOX_TOKEN && !mapLoading && (
+      {isAdult !== false && MAPBOX_TOKEN && !mapLoading && (
         <Suspense fallback={null}>
           <MapaMundoVinos vinos={mapVinos} />
         </Suspense>
       )}
 
+      {isAdult !== false && (
+      <>
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">
@@ -674,6 +719,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             {currentLoading ? t.vinos.loading : t.map.showMore}
           </Button>
         </div>
+      )}
+      </>
       )}
       <BackToTopButton targetRef={sectionRef} containerRef={gridRef} />
     </div>
