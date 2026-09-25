@@ -2,15 +2,8 @@ import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } fro
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin, Eye, EyeOff } from "lucide-react";
+import { Search, Wine, ChevronDown, Plus, MapPin, Eye, EyeOff } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +35,19 @@ import { etiquetaAlergeno, normalizeAlergenos } from "@/lib/alergenos";
 
 interface CartaVinosProps {
   showAddButton?: boolean;
+  /**
+   * Vinos de la categoría inicial ("Todos") descargados en build
+   * (`virtual:carta-ssg/vinos`). Evitan el parpadeo de carga al entrar a la
+   * página y son lo que ve el buscador antes de que llegue el refresco de
+   * Supabase.
+   */
+  initialVinos?: Record<string, Vino[]>;
+  /**
+   * Lista completa de vinos (mismo origen que `initialVinos`, sin paginar)
+   * para el desplegable de categorías y el mapa: ambos necesitan verlas
+   * todas, no solo la página inicial de la categoría activa.
+   */
+  initialMapVinos?: Vino[];
 }
 
 interface Vino {
@@ -69,7 +75,7 @@ interface Vino {
 
 type VinoRecord = Vino & Record<string, unknown>;
 
-const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
+const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: CartaVinosProps) => {
   const { t, language } = useTranslations();
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -79,16 +85,16 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
   // va con retraso, para no recalcular y re-animar en cada pulsación.
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
-  const [isAdult, setIsAdult] = useState<boolean | null>(null);
-  const [showAgeDialog, setShowAgeDialog] = useState(true);
-  const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>({});
+  const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>(
+    () => initialVinos ?? {},
+  );
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  const [mapVinos, setMapVinos] = useState<Vino[]>([]);
-  const [mapLoading, setMapLoading] = useState(true);
+  const [mapVinos, setMapVinos] = useState<Vino[]>(() => initialMapVinos ?? []);
+  const [mapLoading, setMapLoading] = useState(() => !initialMapVinos);
   const [mapPrefetched, setMapPrefetched] = useState(false);
   const PAGE_SIZE = 24;
   const { toast } = useToast();
@@ -380,56 +386,15 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
     }
   };
 
-  const handleAgeConfirm = (adult: boolean) => {
-    setIsAdult(adult);
-    setShowAgeDialog(false);
-  };
-
   const translateCategory = (category: string) =>
     category === "Todos" ? t.vinos.categoriesAll : category;
 
-  if (showAgeDialog || isAdult === null) {
-    return (
-      <Dialog open={showAgeDialog} onOpenChange={setShowAgeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="w-6 h-6 text-accent" />
-              {t.vinos.ageCheckTitle}
-            </DialogTitle>
-            <DialogDescription>
-              {t.vinos.ageCheckDescription}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-4 justify-center pt-4">
-            <Button
-              onClick={() => handleAgeConfirm(true)}
-              className="bg-accent hover:bg-accent/90"
-            >
-              {t.vinos.ageCheckConfirm}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleAgeConfirm(false)}
-            >
-              {t.vinos.ageCheckDecline}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  if (isAdult === false) {
-    return (
-      <div className="text-center py-16">
-        <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-        <p className="text-xl text-muted-foreground">
-          {t.vinos.ageCheckBlocked}
-        </p>
-      </div>
-    );
-  }
+  // Sin diálogo de edad aquí: esta carta ya solo vive en su propia página
+  // (`/carta/vinos`), que muestra un aviso legal permanente en vez de un
+  // modal — ver el comentario de `pages/carta/Vinos.tsx`. Un `Dialog` se
+  // portaliza a `<body>` y no llega a existir en el HTML del SSG, así que
+  // dejaría el contenido detrás de una interacción y como intersticial al
+  // cargar, justo lo que ese aviso permanente evita.
 
   return (
     <div className="space-y-8" ref={sectionRef}>
@@ -443,8 +408,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" aria-hidden="true" />
+          {/* El placeholder desaparece al escribir y no sustituye a una
+              etiqueta: `aria-label` es lo que sigue anunciando un lector de
+              pantalla una vez el campo tiene texto. */}
           <Input
+            type="search"
+            aria-label={t.vinos.searchPlaceholder}
             placeholder={t.vinos.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -521,6 +491,13 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               .join(" · ");
 
             return (
+              // Sin `layout` (ver más abajo por qué) y con `initial={false}`:
+              // esta carta vive en su propia página SSG, con los vinos ya en
+              // el HTML — animar una entrada con `initial={{opacity:0}}`
+              // dejaría cada tarjeta invisible en ese HTML hasta que el JS
+              // hidrata (la advertencia de `CartaPageLayout` sobre por qué
+              // aquí no se usa `motion`/`whileInView`).
+              //
               // Sin `layout`: con él, mostrar/ocultar la foto de UNA tarjeta
               // cambiaba su alto y Framer Motion recalculaba y volvía a
               // animar la posición de TODAS las demás tarjetas del grid (el
@@ -530,9 +507,8 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
               // reacomodan con el reflow normal del grid.
               <motion.div
                 key={cardKey}
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
                 className="h-full [perspective:1200px]"
               >
                 <Card
@@ -596,10 +572,10 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       <button
                         type="button"
                         onClick={() => handleToggleCard(itemRecord, expanded)}
-                        aria-label={expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto}
+                        aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
                         className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                       >
-                        {expanded ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        {expanded ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                       </button>
                     </div>
                     {!expanded && (
@@ -666,9 +642,10 @@ const CartaVinos = ({ showAddButton = false }: CartaVinosProps) => {
                       <Button
                         size="sm"
                         onClick={() => addToPedido(item)}
+                        aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`}
                         className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                       >
-                        <Plus className="w-4 h-4 mr-1" />
+                        <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
                         {t.vinos.add}
                       </Button>
                     )}

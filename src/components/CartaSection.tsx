@@ -11,10 +11,10 @@ import type { Language } from "@/i18n/types";
 import CartaPlatos from "./carta/CartaPlatos";
 import { semillaCategoriaInicial } from "@/lib/carta-ssg";
 import { CATEGORIAS_CARTA, etiquetaCategoriaIdioma, rutaCategoria } from "@/lib/carta-rutas";
+import { construirRutaIdioma } from "@/i18n/routing";
 import type { CartaPlatosSeed } from "./carta/CartaPlatos";
 
-type Section = "platos" | "vinos" | "bebidas" | null;
-const CartaVinos = lazy(() => import("./carta/CartaVinos"));
+type Section = "platos" | "bebidas" | null;
 const CartaBebidas = lazy(() => import("./carta/CartaBebidas"));
 const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
 
@@ -130,17 +130,19 @@ const CartaSection = () => {
           </nav>
 
           <div className="grid grid-cols-2 gap-3 w-full">
+            {/* La carta de vinos ya no se despliega aquí: tiene su propia
+                página (`/carta/vinos`), con el mismo buscador/mapa/pedido
+                pero con los vinos ya en el HTML del SSG en vez de a la
+                espera de Supabase. */}
             <Button
+              asChild
               size="lg"
-              onClick={() => setActiveSection(activeSection === "vinos" ? null : "vinos")}
-              className={`px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "vinos"
-                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
-                  : "bg-primary hover:bg-primary/90 text-primary-foreground"
-              }`}
+              className="px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              <Wine className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
-              {t.carta.buttons.vinos}
+              <Link to={construirRutaIdioma("/carta/vinos", language)}>
+                <Wine className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+                {t.carta.buttons.vinos}
+              </Link>
             </Button>
             <Button
               size="lg"
@@ -177,18 +179,6 @@ const CartaSection = () => {
             />
           </motion.div>
         </div>
-
-        {activeSection === "vinos" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t.vinos.loading}</div>}>
-              <CartaVinos showAddButton />
-            </Suspense>
-          </motion.div>
-        )}
 
         {activeSection === "bebidas" && (
           <motion.div

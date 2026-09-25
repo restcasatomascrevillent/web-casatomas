@@ -5,37 +5,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
-import ListaPrecios, { type FilaPrecio } from "@/components/carta/ListaPrecios";
+import CartaVinos from "@/components/carta/CartaVinos";
 import { agruparPorCategoria } from "@/lib/carta-ssg";
-import { etiquetaCategoria, slugificar } from "@/lib/carta-rutas";
+import { normalizeAlergenos } from "@/lib/alergenos";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
-import type { ItemTraducido } from "@/lib/carta-i18n";
-import type { VinoSSG } from "@/lib/carta-ssg-types";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 
 const RUTA_ES = "/carta/vinos";
-
-/** "D.O. Rioja · La Rioja, España" a partir de lo que haya. Sin inventar nada. */
-const origenDe = (vino: VinoSSG) =>
-  [
-    vino.denominacion_origen ? `D.O. ${vino.denominacion_origen}` : null,
-    [vino.ubicacion_region, vino.ubicacion_pais].filter(Boolean).join(", ") || null,
-  ]
-    .filter(Boolean)
-    .join(" · ") || undefined;
-
-// El nombre SÍ se traduce (`displayNombre`, resuelto por `agruparPorCategoria`);
-// D.O./región no tienen columna `_en`/`_fr` en la base de datos — son topónimos
-// y denominaciones oficiales, no prosa — así que `origenDe` se queda igual.
-const aFila = (vino: ItemTraducido<VinoSSG>, indice: number): FilaPrecio => ({
-  id: vino.id ?? `${vino.nombre}-${indice}`,
-  nombre: vino.displayNombre,
-  detalle: origenDe(vino),
-  precio: vino.precio_eur,
-  unidad: vino.unidad,
-});
 
 const TEXTOS: Record<
   Language,
@@ -60,7 +38,7 @@ const TEXTOS: Record<
     keywords: ["carta de vinos Crevillent", "bodega restaurante Alicante", "vinos Casa Tomás", "denominación de origen"],
     miga: "Vinos",
     titulo: "Carta de vinos",
-    subtitulo: "Nuestra bodega, con la denominación de origen y el precio de cada referencia.",
+    subtitulo: "Nuestra bodega, con la denominación de origen y el precio de cada referencia. Busca, filtra por región y añade a tu pedido.",
     detalle: (n) => `${n} referencias`,
     alertTitle: "Solo para mayores de 18 años",
     alertBody: "La venta y el suministro de bebidas alcohólicas a menores de 18 años está prohibido. Disfrútalo con moderación.",
@@ -74,7 +52,7 @@ const TEXTOS: Record<
     keywords: ["wine list Crevillent", "restaurant wine cellar Alicante", "Casa Tomás wines", "designation of origin"],
     miga: "Wines",
     titulo: "Wine list",
-    subtitulo: "Our cellar, with the designation of origin and price of every wine.",
+    subtitulo: "Our cellar, with the designation of origin and price of every wine. Search, filter by region and add to your order.",
     detalle: (n) => `${n} wines`,
     alertTitle: "18+ only",
     alertBody: "The sale and serving of alcoholic drinks to anyone under 18 is prohibited. Please enjoy responsibly.",
@@ -88,7 +66,7 @@ const TEXTOS: Record<
     keywords: ["carte des vins Crevillent", "cave à vins restaurant Alicante", "vins Casa Tomás", "appellation d'origine"],
     miga: "Vins",
     titulo: "Carte des vins",
-    subtitulo: "Notre cave, avec l'appellation d'origine et le prix de chaque référence.",
+    subtitulo: "Notre cave, avec l'appellation d'origine et le prix de chaque référence. Recherchez, filtrez par région et ajoutez à votre commande.",
     detalle: (n) => `${n} références`,
     alertTitle: "Réservé aux plus de 18 ans",
     alertBody: "La vente et le service de boissons alcoolisées aux mineurs de moins de 18 ans sont interdits. À consommer avec modération.",
@@ -99,27 +77,41 @@ const TEXTOS: Record<
 };
 
 /**
- * `/carta/vinos` — las 185 referencias de la bodega, todas visibles.
+ * `/carta/vinos` — las 185 referencias de la bodega, con buscador, filtro por
+ * categoría, mapa de origen y "añadir al pedido" (mismo `CartaVinos` que
+ * antes solo se abría desde la portada).
  *
- * VERIFICACIÓN DE EDAD. La sección de vinos de la portada abre un `Dialog` de
- * Radix al montarse, y eso aquí no sirve por tres motivos: el diálogo se
- * portaliza a `<body>` y en Node no llega a renderizarse (el prerenderizado
- * saldría vacío), el contenido quedaría detrás de una interacción (justo lo que
- * se acaba de retirar de esta web) y un modal al cargar es un patrón que Google
- * penaliza como intersticial. Se sustituye por un aviso permanente y visible:
- * la ley española restringe la VENTA y el suministro de alcohol a menores, no
- * mostrar la lista de lo que sirve un restaurante — la carta física se entrega
- * en mesa a todo el mundo. La portada conserva su diálogo sin cambios.
+ * SIN diálogo de edad. La versión de `CartaVinos` que había en la portada
+ * abre un `Dialog` de Radix al montarse, y eso aquí no sirve por tres
+ * motivos: el diálogo se portaliza a `<body>` y en Node no llega a
+ * renderizarse (el prerenderizado saldría vacío), el contenido quedaría
+ * detrás de una interacción, y un modal al cargar es un patrón que Google
+ * penaliza como intersticial. Se mantiene el aviso permanente y visible de
+ * siempre: la ley española restringe la VENTA y el suministro de alcohol a
+ * menores, no mostrar la lista de lo que sirve un restaurante — la carta
+ * física se entrega en mesa a todo el mundo.
+ *
+ * SEMILLA DEL BUILD. `CartaVinos` recibe `initialVinos`/`initialMapVinos`
+ * (de `virtual:carta-ssg/vinos`, lo mismo que usa el JSON-LD de abajo) para
+ * que los vinos y el mapa ya estén en el HTML del SSG — sin esto, la
+ * cuadrícula nacería vacía a la espera de la respuesta de Supabase.
  */
 const CartaVinosPagina = () => {
   const { language } = useTranslations();
   const textos = TEXTOS[language];
   const url = `${SITE_URL}${construirRutaIdioma(RUTA_ES, language)}`;
   const vinos = datos.vinos ?? [];
-  // `imagen_url` se descarta antes de construir el JSON-LD: `ListaPrecios` no
-  // pinta fotos, y declarar en los datos estructurados una imagen que la página
-  // no enseña es describir algo que el visitante no ve. Hoy ninguna de las 185
-  // filas trae foto; esto lo deja bien atado si alguien la sube desde el panel.
+
+  const vinosSemilla = vinos.map((vino) => ({
+    ...vino,
+    alergenos_oficiales: normalizeAlergenos(vino.alergenos_oficiales),
+    alergenos_inferidos: normalizeAlergenos(vino.alergenos_inferidos),
+  }));
+
+  // `imagen_url` se descarta antes de construir el JSON-LD: los datos
+  // estructurados no deben describir una imagen que la vista previa (antes de
+  // pulsar "ver foto") no enseña. Hoy ninguna de las 185 filas trae foto; esto
+  // lo deja bien atado si alguien la sube desde el panel.
   const secciones = agruparPorCategoria(
     vinos.map(({ imagen_url: _imagen, ...resto }) => resto),
     language,
@@ -165,30 +157,12 @@ const CartaVinosPagina = () => {
           <AlertDescription className="text-muted-foreground">{textos.alertBody}</AlertDescription>
         </Alert>
 
-        {secciones.length > 0 ? (
-          <div className="space-y-12">
-            {secciones.map((seccion) => (
-              <section
-                key={seccion.clave}
-                id={slugificar(seccion.clave) || undefined}
-                aria-labelledby={`vinos-${slugificar(seccion.clave)}`}
-                className="animate-fade-up"
-              >
-                <div className="flex items-baseline justify-between gap-4 mb-4">
-                  <h2
-                    id={`vinos-${slugificar(seccion.clave)}`}
-                    className="text-2xl md:text-3xl font-bold text-primary"
-                  >
-                    {etiquetaCategoria(seccion.nombre)}
-                  </h2>
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {seccion.items.length}
-                  </span>
-                </div>
-                <ListaPrecios filas={seccion.items.map(aFila)} />
-              </section>
-            ))}
-          </div>
+        {vinos.length > 0 ? (
+          <CartaVinos
+            showAddButton
+            initialVinos={{ Todos: vinosSemilla }}
+            initialMapVinos={vinosSemilla}
+          />
         ) : (
           <p className="text-muted-foreground">{textos.vacia}</p>
         )}
