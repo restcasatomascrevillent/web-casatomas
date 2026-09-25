@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { rm } from "fs/promises";
 import { fetchCartaSSG, CARTA_SSG_VACIA } from "./scripts/carta-ssg.mjs";
+import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 
 /**
@@ -101,6 +102,56 @@ function cartaSsgPlugin(env: Record<string, string>, { requerido }: { requerido:
   };
 }
 
+/** Lo que devuelve `fetchNovedadesSSG`. */
+interface NovedadesDescargadas {
+  generadoEn: string;
+  novedades: unknown[];
+}
+
+const VIRTUAL_NOVEDADES = "virtual:novedades-ssg";
+const RESOLVED_NOVEDADES = `\0${VIRTUAL_NOVEDADES}`;
+
+/**
+ * Trae "novedades" de Supabase en build y la expone como
+ * `virtual:novedades-ssg` — mismo patrón que `cartaSsgPlugin` de arriba,
+ * plugin aparte porque es OTRA tabla, sin relación con la carta, y con una
+ * política de errores distinta (ver `scripts/novedades-ssg.mjs`: una tabla
+ * vacía no rompe el build, una petición que falla sí).
+ */
+function novedadesSsgPlugin(env: Record<string, string>, { requerido }: { requerido: boolean }): Plugin {
+  const CACHE = Symbol.for("casa-tomas.novedades-ssg");
+  const global = globalThis as Record<symbol, unknown>;
+
+  return {
+    name: "novedades-ssg",
+    resolveId: (id) => (id === VIRTUAL_NOVEDADES ? RESOLVED_NOVEDADES : undefined),
+    async load(id) {
+      if (id !== RESOLVED_NOVEDADES) return undefined;
+
+      if (!global[CACHE]) {
+        global[CACHE] = (async () => {
+          try {
+            return await fetchNovedadesSSG({
+              url: env.VITE_SUPABASE_URL,
+              key: env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY,
+            });
+          } catch (error) {
+            // En `build` se rompe: una petición que falla (red, HTTP,
+            // credenciales) no se enmascara nunca. En `dev`/test basta con
+            // avisar: trabajar sin red no debe bloquear.
+            if (requerido) throw error;
+            this.warn(`${(error as Error).message}\n  → se sirven 0 novedades (solo en dev).`);
+            return NOVEDADES_SSG_VACIA;
+          }
+        })();
+      }
+
+      const novedades = await (global[CACHE] as Promise<NovedadesDescargadas>);
+      return `export default ${JSON.stringify(novedades)};`;
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -114,6 +165,7 @@ export default defineConfig(({ mode, command }) => {
     plugins: [
       react(),
       cartaSsgPlugin(env, { requerido: command === "build" }),
+      novedadesSsgPlugin(env, { requerido: command === "build" }),
     ].filter(Boolean),
     resolve: {
       alias: {

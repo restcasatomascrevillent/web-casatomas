@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
+import novedadesSSG from "virtual:novedades-ssg";
 
 type IconKey = "utensils" | "wine" | "gift" | "calendar" | "star" | "sparkles" | "coffee" | "cake";
 
@@ -48,6 +49,20 @@ interface Novedad {
   destacado?: boolean | null;
   orden?: number | null;
 }
+
+/**
+ * Novedades tal y como las descargó el build (`virtual:novedades-ssg`).
+ *
+ * Antes esta sección solo se pedía a Supabase desde el navegador: el HTML
+ * que sirve Vercel no traía ni un título, solo el esqueleto de carga
+ * (`isLoading` es `true` durante el prerenderizado, que nunca espera a un
+ * `fetch`). Se siembra como `initialData` del propio `useQuery` de abajo —
+ * mismo truco que `initialPlatos` en `CartaPlatos` y `initialVinos` en
+ * `CartaVinos` — así que el primer render (build y navegador, antes de
+ * hidratar) ya trae las tarjetas reales, y son las MISMAS que pinta el
+ * refresco posterior, no una copia aparte para el buscador.
+ */
+const NOVEDADES_SSG = novedadesSSG.novedades as unknown as Novedad[];
 
 const fallbackImages: NombreImagen[] = ["pulpo-plato", "carne-plato", "champan"];
 
@@ -92,6 +107,11 @@ const NovedadesSection = () => {
       if (error) throw error;
       return data as Novedad[];
     },
+    // Datos del build (ver `NOVEDADES_SSG` arriba): con esto, `isLoading` ya
+    // es `false` en el primer render — SSG y primer pintado en el navegador
+    // — en vez de esperar a este `queryFn`. Sigue refrescando en segundo
+    // plano igual que antes (`staleTime` de 5 min en `App.tsx`).
+    initialData: NOVEDADES_SSG,
   });
 
   const novedades = useMemo(() => data ?? [], [data]);
@@ -113,7 +133,12 @@ const NovedadesSection = () => {
     return (
       <motion.div
         key={novedad.id}
-        initial={{ opacity: 0, y: 50 }}
+        // `initial={false}`: el contenido de esta tarjeta ahora SIEMPRE está
+        // en el HTML (ver `NOVEDADES_SSG`), así que nace en su estado final
+        // en vez de opacity:0 a la espera del JS — mismo fix que ya se
+        // aplicó al resto de la home en el commit "el contenido de la home
+        // ya no se esconde detrás del JS".
+        initial={false}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: idx * 0.12 }}
         viewport={{ once: true }}
