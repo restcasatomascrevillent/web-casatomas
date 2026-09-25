@@ -1,10 +1,18 @@
 import { motion } from "framer-motion";
-import { Suspense, lazy, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Suspense, lazy, useState, useEffect, type MouseEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UtensilsCrossed, Wine, Beer } from "lucide-react";
-import { getUserPedido } from "@/utils/sessionManager";
+import { UtensilsCrossed, Wine, Beer, AlertCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { useToast } from "@/hooks/use-toast";
 import type { Language } from "@/i18n/types";
 // Import estático a propósito: `CartaPlatos` se monta siempre (ver abajo) y el
 // SSG tiene que poder renderizarlo para que sus tarjetas queden en el HTML.
@@ -43,9 +51,42 @@ const ETIQUETAS_PUENTE: Record<Language, { verCarta: string; nav: string }> = {
 
 const CartaSection = () => {
   const { t, language } = useTranslations();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const etiquetas = ETIQUETAS_PUENTE[language];
   const [activeSection, setActiveSection] = useState<Section>(null);
   const [pedidoCount, setPedidoCount] = useState(0);
+  const [showAgeDialog, setShowAgeDialog] = useState(false);
+
+  const rutaVinos = construirRutaIdioma("/carta/vinos", language);
+
+  // El botón "Carta de vinos" ya no navega directo: si el visitante no ha
+  // confirmado su edad en esta sesión del navegador, primero se le pregunta
+  // aquí mismo y solo se le lleva a `/carta/vinos` si responde que sí. Si ya
+  // lo confirmó antes (p. ej. entrando antes a esa página), se le deja pasar
+  // sin volver a preguntar.
+  const handleVinosClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (getEdadVinosConfirmada()) {
+      navigate(rutaVinos);
+      return;
+    }
+    setShowAgeDialog(true);
+  };
+
+  const handleAgeConfirm = (adult: boolean) => {
+    setShowAgeDialog(false);
+    if (adult) {
+      setEdadVinosConfirmada();
+      navigate(rutaVinos);
+    } else {
+      toast({
+        title: t.vinos.ageCheckTitle,
+        description: t.vinos.ageCheckBlocked,
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     const updatePedidoCount = () => {
@@ -145,7 +186,12 @@ const CartaSection = () => {
                 esa página antes del click (al pasar el cursor, al llegar
                 por teclado, o al tocarlo en móvil): para cuando el usuario
                 suelta el clic, el código ya está en caché y la navegación
-                se siente instantánea en vez de esperar la descarga. */}
+                se siente instantánea en vez de esperar la descarga.
+                Sigue siendo un `<Link>` de verdad (con su `href`) para que
+                se pueda rastrear/abrir en pestaña nueva, pero `onClick` frena
+                la navegación con `preventDefault` hasta que se responda al
+                diálogo de edad — así no se llega a `/carta/vinos` antes de
+                pulsar. */}
             <Button
               asChild
               size="lg"
@@ -154,7 +200,7 @@ const CartaSection = () => {
               onTouchStart={precargarPaginaVinos}
               className="px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              <Link to={construirRutaIdioma("/carta/vinos", language)}>
+              <Link to={rutaVinos} onClick={handleVinosClick}>
                 <Wine className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
                 {t.carta.buttons.vinos}
               </Link>
@@ -214,6 +260,33 @@ const CartaSection = () => {
         )}
 
       </motion.div>
+
+      {/* Verificación de edad antes de entrar a "Carta de vinos": solo se
+          cierra pulsando uno de los dos botones (sin clic fuera, sin Escape,
+          sin "X") para que la navegación a `/carta/vinos` no pueda saltársela. */}
+      <Dialog open={showAgeDialog} onOpenChange={() => {}}>
+        <DialogContent
+          hideCloseButton
+          onInteractOutside={(event) => event.preventDefault()}
+          onEscapeKeyDown={(event) => event.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />
+              {t.vinos.ageCheckTitle}
+            </DialogTitle>
+            <DialogDescription>{t.vinos.ageCheckDescription}</DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-4 justify-center pt-4">
+            <Button onClick={() => handleAgeConfirm(true)} className="bg-accent hover:bg-accent/90">
+              {t.vinos.ageCheckConfirm}
+            </Button>
+            <Button variant="outline" onClick={() => handleAgeConfirm(false)}>
+              {t.vinos.ageCheckDecline}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

@@ -32,7 +32,7 @@ const MapaMundoVinos = lazy(() => import("./MapaMundoVinos"));
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?? "";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
+import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import BackToTopButton from "./BackToTopButton";
@@ -97,8 +97,12 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   // arrancar en `true` no deja nada invisible ni detrás de una interacción
   // — la carta ya está en el HTML; esta ventana solo se superpone en el
   // navegador, un instante después de entrar.
-  const [showAgeDialog, setShowAgeDialog] = useState(true);
-  const [isAdult, setIsAdult] = useState<boolean | null>(null);
+  //
+  // Si el visitante ya confirmó su edad en esta sesión del navegador (p. ej.
+  // al pulsar "Carta de vinos" en la portada, que pregunta antes de navegar
+  // aquí), no se le vuelve a preguntar.
+  const [showAgeDialog, setShowAgeDialog] = useState(() => !getEdadVinosConfirmada());
+  const [isAdult, setIsAdult] = useState<boolean | null>(() => (getEdadVinosConfirmada() ? true : null));
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>(
     () => initialVinos ?? {},
@@ -407,6 +411,9 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
     setShowAgeDialog(false);
+    if (adult) {
+      setEdadVinosConfirmada();
+    }
   };
 
   return (
@@ -414,8 +421,12 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
       {/* Ventana de verificación de edad: se superpone al contenido, no lo
           sustituye (el contenido ya está en el HTML del SSG). Aparece un
           instante después de entrar a la página. */}
-      <Dialog open={showAgeDialog} onOpenChange={setShowAgeDialog}>
-        <DialogContent>
+      <Dialog open={showAgeDialog} onOpenChange={() => {}}>
+        <DialogContent
+          hideCloseButton
+          onInteractOutside={(event) => event.preventDefault()}
+          onEscapeKeyDown={(event) => event.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />

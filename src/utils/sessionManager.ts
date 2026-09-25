@@ -1,3 +1,20 @@
+const EDAD_VINOS_KEY = 'edad_vinos_confirmada';
+
+/**
+ * Recuerda, durante la sesión del navegador, que el visitante ya confirmó
+ * ser mayor de 18 años para ver la carta de vinos. Evita que se le pregunte
+ * de nuevo si ya respondió al pulsar "Carta de vinos" en la portada.
+ */
+export const getEdadVinosConfirmada = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return sessionStorage.getItem(EDAD_VINOS_KEY) === 'true';
+};
+
+export const setEdadVinosConfirmada = (): void => {
+  if (typeof window === 'undefined') return;
+  sessionStorage.setItem(EDAD_VINOS_KEY, 'true');
+};
+
 /**
  * Genera un ID único de sesión para cada usuario
  * Este ID se mantiene durante toda la sesión del navegador
