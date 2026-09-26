@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
+import FloatingActions from "./components/FloatingActions";
 import ScrollToTop from "./components/ScrollToTop";
 import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -72,6 +73,9 @@ const Layout = ({ lang }: { lang: Language }) => (
           </Suspense>
         </SectionErrorBoundary>
         <MobileReserveCTA />
+        {/* "Pregunta a Tomy" + ticket del pedido, en todas las páginas (antes el
+            ticket solo existía dentro de `CartaSection`, en la portada). */}
+        <FloatingActions />
       </TooltipProvider>
     </LanguageProvider>
     {/* Vercel Web Analytics (sin cookies). Renderiza `null` y solo inyecta el

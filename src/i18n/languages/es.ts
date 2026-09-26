@@ -42,6 +42,9 @@ export const translations = {
       searchPlaceholder: "Buscar platos...",
       loading: "Cargando carta...",
       add: "Añadir",
+      addAria: "Añadir {name} al pedido",
+      addMoreAria: "Añadir otra vez {name} al pedido (ya llevas {qty})",
+      inOrder: "{qty} en el pedido",
       viewPhoto: "Ver foto",
       hidePhoto: "Ocultar foto",
       empty: "No hay platos que coincidan con los filtros seleccionados",
@@ -104,6 +107,7 @@ export const translations = {
       thanks: "Gracias por tu visita",
       floatingTicketTitle: "Ticket",
       floatingTicketSubtitle: "Ver pedido",
+      openTicketAria: "Abrir el ticket del pedido ({count} artículos)",
       aiPrompt: "Pregúntame por recomendaciones o por cantidades según comensales!",
       share: {
         cta: "Compartir ticket",
@@ -303,6 +307,10 @@ export const translations = {
         },
       },
       roomNotSpecified: "No especificado",
+    },
+    tomy: {
+      cta: "Pregunta a Tomy",
+      aria: "Abrir el chat con Tomy, el asistente de Casa Tomás",
     },
     mobileCta: {
       call: "Llamar",

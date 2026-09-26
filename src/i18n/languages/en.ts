@@ -42,6 +42,9 @@ export const translations: Translations = {
       searchPlaceholder: "Search dishes...",
       loading: "Loading menu...",
       add: "Add",
+      addAria: "Add {name} to your order",
+      addMoreAria: "Add {name} to your order again (you have {qty})",
+      inOrder: "{qty} in your order",
       viewPhoto: "View photo",
       hidePhoto: "Hide photo",
       empty: "No dishes match the selected filters",
@@ -104,6 +107,7 @@ export const translations: Translations = {
       thanks: "Thanks for visiting",
       floatingTicketTitle: "Ticket",
       floatingTicketSubtitle: "View order",
+      openTicketAria: "Open the order ticket ({count} items)",
       aiPrompt: "Ask me for recommendations or for portion sizes according to the number of diners!",
       share: {
         cta: "Share ticket",
@@ -303,6 +307,10 @@ export const translations: Translations = {
         },
       },
       roomNotSpecified: "Not specified",
+    },
+    tomy: {
+      cta: "Ask Tomy",
+      aria: "Open the chat with Tomy, the Casa Tomás assistant",
     },
     mobileCta: {
       call: "Call",

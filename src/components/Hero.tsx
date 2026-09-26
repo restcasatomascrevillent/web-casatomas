@@ -1,14 +1,12 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Suspense, lazy, useRef, useState } from "react";
+import { useRef } from "react";
 import { Calendar, UtensilsCrossed } from "lucide-react";
 import { Head } from "vite-react-ssg";
 import { LOGO_HEIGHT, LOGO_WIDTH, logoHero } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useNavigate } from "react-router-dom";
 import type { Language } from "@/i18n/types";
-
-const AIChatbot = lazy(() => import("./AIChatbot"));
 
 // Aria-label de la flecha de scroll. Distinto del texto del botón "Ver
 // carta" (mismo destino) para no repetir el mismo nombre accesible dos
@@ -22,7 +20,6 @@ const ARIA_SCROLL_DOWN: Record<Language, string> = {
 const Hero = () => {
   const { t, language } = useTranslations();
   const navigate = useNavigate();
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -126,12 +123,6 @@ const Hero = () => {
               </a>
             </Button>
           </motion.div>
-
-          {isChatOpen && (
-            <Suspense fallback={null}>
-              <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-            </Suspense>
-          )}
 
           {/* Enlace real a `#carta`, no un `<div>` decorativo: funciona en
               cuanto hay HTML (scroll suave nativo vía CSS), sin esperar a que

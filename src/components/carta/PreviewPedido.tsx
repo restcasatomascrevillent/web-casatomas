@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Trash2, Receipt, Plus, Minus, X, Share2, MessageCircle, Instagram, Facebook } from "lucide-react";
+import { Trash2, Receipt, Plus, Minus, X, MessageCircle, Instagram, Facebook, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import seafoodImg from "@/assets/platos/seafood.jpg";
@@ -414,11 +414,22 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
         })}
       </div>
 
-      {/* CT AI Prompt (button removed, chatbot logic kept for future use) */}
+      {/* Entrada al chatbot con el ticket adjunto (recomendaciones, raciones
+          según comensales). Se quitó en 650ccd9 y con ella desapareció el
+          único acceso visible al chatbot; ahora convive con el botón global
+          "Pregunta a Tomy" (`FloatingActions`), que lo abre sin ticket. */}
       <div className="flex items-center justify-center gap-4 mb-5 px-1">
         <p className="text-[10px] text-gray-500 italic text-center leading-tight max-w-[180px]">
           "{t.preview.aiPrompt}"
         </p>
+        <Button
+          type="button"
+          onClick={handleOpenChatbot}
+          className="w-auto px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
+        >
+          <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
+          {t.tomy.cta}
+        </Button>
       </div>
 
       {/* Total */}
@@ -534,11 +545,14 @@ type FloatingButtonProps = {
 const FloatingTicketButton = ({ onOpen, isDisabled = false, count = 0 }: FloatingButtonProps) => {
   const { t } = useTranslations();
   return (
-    <div className="fixed bottom-5 right-4 md:right-6 z-50">
+    // Sin `fixed` propio: lo coloca la pila de botones flotantes
+    // (`FloatingActions`), que lo apila con "Pregunta a Tomy" y lo sube por
+    // encima de la barra móvil de llamar/reservar.
+    <div>
       <Button
         onClick={onOpen}
         disabled={isDisabled}
-        aria-label="Abrir ticket del pedido"
+        aria-label={t.preview.openTicketAria.replace("{count}", String(count))}
         className="shadow-lg bg-background/90 backdrop-blur border border-border/70 text-foreground hover:shadow-xl rounded-full px-4 py-3.5 min-h-[3.25rem] flex items-center gap-3"
       >
         <div className="flex items-center justify-center h-10 w-10 rounded-full bg-accent/15 text-accent">

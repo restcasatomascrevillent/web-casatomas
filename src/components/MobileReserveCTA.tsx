@@ -19,6 +19,8 @@ const HIDE_ON_PATHS = ["/reservas", "/404", "/reserva/respuesta", "/newsletter/b
 // parte de abajo de las tarjetas y el propio botón "Volver arriba".
 const HIDE_ON_PATH_SUFFIXES = ["/carta/vinos"];
 const HOME_PATHS = ["/", "/en", "/fr"];
+// Alto de la barra: `py-3` (1.5rem) + botón `size="lg"` (`h-11`, 2.75rem).
+const MOBILE_CTA_HEIGHT = "4.25rem";
 
 const MobileReserveCTA = () => {
   const { t } = useTranslations();
@@ -83,14 +85,31 @@ const MobileReserveCTA = () => {
     };
   }, [location.pathname]);
 
-  if (
+  const hiddenOnPath =
     HIDE_ON_PATHS.includes(location.pathname) ||
-    HIDE_ON_PATH_SUFFIXES.some((suffix) => location.pathname.endsWith(suffix))
-  ) {
+    HIDE_ON_PATH_SUFFIXES.some((suffix) => location.pathname.endsWith(suffix));
+  const visible = !hiddenOnPath && pastHero && !nearFooter;
+
+  // Publica la altura que ocupa la barra (0 si está oculta) en
+  // `--mobile-cta-offset`, para que los botones flotantes (`FloatingActions`,
+  // "Volver arriba") se coloquen justo encima y no la tapen. Solo en el
+  // navegador: en el SSG la variable no existe y el `var(..., 0px)` de quien
+  // la consume cae a 0. En `lg` la barra no se ve (`lg:hidden`) y los
+  // consumidores ignoran la variable con su propia clase `lg:`.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--mobile-cta-offset",
+      visible ? `calc(${MOBILE_CTA_HEIGHT} + env(safe-area-inset-bottom))` : "0px",
+    );
+    return () => {
+      root.style.removeProperty("--mobile-cta-offset");
+    };
+  }, [visible]);
+
+  if (hiddenOnPath) {
     return null;
   }
-
-  const visible = pastHero && !nearFooter;
 
   return (
     <>

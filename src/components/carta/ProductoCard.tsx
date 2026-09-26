@@ -1,4 +1,5 @@
-import { UtensilsCrossed } from "lucide-react";
+import { Plus, UtensilsCrossed } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ItemTraducido } from "@/lib/carta-i18n";
@@ -20,7 +21,22 @@ interface ProductoCardProps {
   categoria: string;
   /** La primera fila de la rejilla no se carga en diferido: es el LCP. */
   prioridad?: boolean;
+  /**
+   * Cuánto hay ya de este plato en el pedido (0 si nada). En el HTML del SSG
+   * siempre es 0: el pedido vive en `sessionStorage` y solo se lee tras
+   * hidratar (ver `usePedido`).
+   */
+  cantidadEnPedido?: number;
+  /** Sin él, la tarjeta no muestra el botón "Añadir" (solo lectura). */
+  onAnadir?: () => void;
 }
+
+/** "2", "2 kg", "200 g": mismo criterio de unidades que el ticket. */
+const formatearCantidad = (cantidad: number, unidad?: string) => {
+  if (unidad === "kg") return `${cantidad.toFixed(1).replace(/\.0$/, "")} kg`;
+  if (unidad === "100 g" || unidad === "100g") return `${cantidad} g`;
+  return `${Math.round(cantidad)}`;
+};
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
 
@@ -40,8 +56,14 @@ const ETIQUETAS: Record<Language, { alergenos: string }> = {
  * tras el giro de la tarjeta; en una página pensada para indexarse, todo lo
  * que está en el HTML tiene que verse sin tocar nada.
  */
-const ProductoCard = ({ plato, categoria, prioridad = false }: ProductoCardProps) => {
-  const { language } = useTranslations();
+const ProductoCard = ({
+  plato,
+  categoria,
+  prioridad = false,
+  cantidadEnPedido = 0,
+  onAnadir,
+}: ProductoCardProps) => {
+  const { language, t } = useTranslations();
   const etiquetas = ETIQUETAS[language];
   const imagen = resolverImagen(plato.imagen_url, SUPABASE_URL);
   // Mismo vocabulario que la portada (`@/lib/alergenos`): las formas del panel
@@ -134,13 +156,41 @@ const ProductoCard = ({ plato, categoria, prioridad = false }: ProductoCardProps
         )}
       </CardContent>
 
-      <CardFooter className="flex justify-between items-center border-t bg-muted/30 flex-shrink-0 px-5 py-3">
+      <CardFooter className="flex flex-wrap justify-between items-center gap-x-3 gap-y-2 border-t bg-muted/30 flex-shrink-0 px-5 py-3">
         <span className="font-bold text-accent text-xl">
           {plato.precio_eur}€
           {plato.unidad && (
             <span className="text-sm font-normal text-muted-foreground"> / {plato.unidad}</span>
           )}
         </span>
+        {/* Mismo botón que las tarjetas de `CartaPlatos` en la portada. Se
+            pinta ya en el HTML del SSG (no depende del navegador); el
+            contador aparece tras hidratar, cuando se lee el pedido. */}
+        {onAnadir && (
+          <div className="flex items-center gap-2">
+            {cantidadEnPedido > 0 && (
+              <span className="text-xs font-semibold text-accent whitespace-nowrap" aria-hidden="true">
+                {t.platos.inOrder.replace("{qty}", formatearCantidad(cantidadEnPedido, plato.unidad))}
+              </span>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={onAnadir}
+              aria-label={
+                cantidadEnPedido > 0
+                  ? t.platos.addMoreAria
+                      .replace("{name}", plato.displayNombre)
+                      .replace("{qty}", formatearCantidad(cantidadEnPedido, plato.unidad))
+                  : t.platos.addAria.replace("{name}", plato.displayNombre)
+              }
+              className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+            >
+              <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
+              {t.platos.add}
+            </Button>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

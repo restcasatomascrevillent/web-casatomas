@@ -13,6 +13,8 @@ import {
 import { agruparPorCategoria } from "@/lib/carta-ssg";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { usePedido } from "@/hooks/usePedido";
+import { useToast } from "@/hooks/use-toast";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 
@@ -96,8 +98,12 @@ const TEXTOS: Record<
  * componente solo ve ese caso si alguien navega a él dentro de la SPA.
  */
 const CartaCategoria = () => {
-  const { language } = useTranslations();
+  const { language, t } = useTranslations();
   const textos = TEXTOS[language];
+  // El pedido (y con él el botón flotante del ticket y la entrada al chatbot)
+  // es global: lo monta `FloatingActions` en el `Layout`. Aquí solo se añade.
+  const { anadir, cantidadDe } = usePedido();
+  const { toast } = useToast();
   const { categoria: slug } = useParams<{ categoria: string }>();
   const categoria = categoriaPorSlug(slug);
 
@@ -186,6 +192,17 @@ const CartaCategoria = () => {
                 plato={plato}
                 categoria={etiqueta}
                 prioridad={indice < 3}
+                cantidadEnPedido={cantidadDe(plato)}
+                onAnadir={() => {
+                  // Mismo nombre y categoría que guarda `CartaPlatos` desde la
+                  // portada: el nombre ya traducido, la categoría cruda (es la
+                  // clave con la que el ticket la traduce).
+                  anadir({ ...plato, nombre: plato.displayNombre || plato.nombre });
+                  toast({
+                    title: t.platos.toasts.addedTitle,
+                    description: t.platos.toasts.addedDescription.replace("{name}", plato.displayNombre),
+                  });
+                }}
               />
             ))}
           </div>

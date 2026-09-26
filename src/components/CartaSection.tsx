@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada } from "@/utils/sessionManager";
+import { getEdadVinosConfirmada, setEdadVinosConfirmada } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useToast } from "@/hooks/use-toast";
 import type { Language } from "@/i18n/types";
@@ -24,7 +24,6 @@ import type { CartaPlatosSeed } from "./carta/CartaPlatos";
 
 type Section = "platos" | "bebidas" | null;
 const CartaBebidas = lazy(() => import("./carta/CartaBebidas"));
-const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
 
 // Mismo módulo que carga la ruta `/carta/vinos` (ver `App.tsx`): Vite dedupea
 // por fichero resuelto, así que precargarlo aquí deja el chunk en caché del
@@ -55,7 +54,6 @@ const CartaSection = () => {
   const navigate = useNavigate();
   const etiquetas = ETIQUETAS_PUENTE[language];
   const [activeSection, setActiveSection] = useState<Section>(null);
-  const [pedidoCount, setPedidoCount] = useState(0);
   const [showAgeDialog, setShowAgeDialog] = useState(false);
 
   const rutaVinos = construirRutaIdioma("/carta/vinos", language);
@@ -88,25 +86,6 @@ const CartaSection = () => {
     }
   };
 
-  useEffect(() => {
-    const updatePedidoCount = () => {
-      const saved = getUserPedido();
-      setPedidoCount(saved.length);
-    };
-    
-    updatePedidoCount();
-    
-    // Listen for storage changes
-    window.addEventListener('storage', updatePedidoCount);
-    // Also listen for custom event when items are added
-    window.addEventListener('pedidoUpdated', updatePedidoCount);
-    
-    return () => {
-      window.removeEventListener('storage', updatePedidoCount);
-      window.removeEventListener('pedidoUpdated', updatePedidoCount);
-    };
-  }, []);
-
   // Precarga en segundo plano, sin bloquear nada: el SDK de Supabase se
   // importa de forma perezosa (ver CartaPlatos) para no entrar en la carga
   // inicial, pero así ya está en caché del navegador cuando el visitante
@@ -120,8 +99,6 @@ const CartaSection = () => {
     });
     return () => cancelIdle(id as number);
   }, []);
-
-  const shouldRenderPreview = activeSection !== null || pedidoCount > 0;
 
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
@@ -252,12 +229,9 @@ const CartaSection = () => {
             </Suspense>
           </motion.div>
         )}
-        {/* Botón flotante del ticket disponible en toda la carta */}
-        {shouldRenderPreview && (
-          <Suspense fallback={null}>
-            <PreviewPedido showFloatingButton hideInline />
-          </Suspense>
-        )}
+        {/* El botón flotante del ticket ya no se monta aquí: lo pone
+            `FloatingActions` (en el `Layout`) para todo el sitio, también en
+            `/carta/:categoria` y `/carta/vinos`. */}
 
       </motion.div>
 

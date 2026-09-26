@@ -28,7 +28,7 @@ const BackToTopButton = ({ targetRef, containerRef }: BackToTopButtonProps) => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-5 left-4 md:left-6 z-40">
+    <div className="fixed bottom-[calc(1.25rem+var(--mobile-cta-offset,0px))] lg:bottom-5 left-4 md:left-6 z-40 transition-[bottom] duration-300">
       <Button
         className="shadow-lg rounded-full px-4 py-3 flex items-center gap-2 border transition-colors"
         style={{
