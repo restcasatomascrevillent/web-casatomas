@@ -58,8 +58,18 @@ const Index = () => {
     const secciones = agruparPorCategoria(cartaSSG.platos, language, CATEGORIAS_PLATOS);
     return restaurantSchema({
       lang: language,
+      // `url` es obligatorio aquí: sin ella, Google no tiene un enlace real
+      // para el "Ver carta" de la ficha y cae al `@id` (`SITE_URL/#carta`),
+      // que NO es una URL para navegar sino solo un identificador interno
+      // del nodo. Si Google la usa igualmente, un visitante que llega por
+      // primera vez desde la búsqueda/Maps aterriza directo en `/#carta`:
+      // el ancla salta el Hero antes de que nadie lo vea (Header.tsx hace
+      // scroll a cualquier hash de la URL nada más cargar). Se enlaza a
+      // `/carta`, la página dedicada de la carta, no a este ancla.
       menu: secciones.length
-        ? menuSchema(secciones, language, import.meta.env.VITE_SUPABASE_URL as string | undefined)
+        ? menuSchema(secciones, language, import.meta.env.VITE_SUPABASE_URL as string | undefined, {
+            url: `${SITE_URL}${construirRutaIdioma("/carta", language)}`,
+          })
         : undefined,
     });
   }, [language]);
