@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
+import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS } from "@/lib/carta-ssg";
 import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
@@ -45,7 +46,9 @@ const SectionPlaceholder = ({ id }: { id: string }) => (
 );
 
 const SectionBoundary = ({ id, children }: { id: string; children: ReactNode }) => (
-  <Suspense fallback={<SectionPlaceholder id={id} />}>{children}</Suspense>
+  <SectionErrorBoundary id={id}>
+    <Suspense fallback={<SectionPlaceholder id={id} />}>{children}</Suspense>
+  </SectionErrorBoundary>
 );
 
 const Index = () => {
