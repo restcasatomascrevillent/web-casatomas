@@ -79,6 +79,11 @@ const PoliticaPrivacidad = () => {
                                 base: "Interés legítimo (Art. 6.1.f RGPD)",
                                 desc: "Registro de llamadas y gestión de una lista de exclusión para prevenir el uso indebido del sistema de reservas.",
                             },
+                            {
+                                fin: "Newsletter (novedades y ofertas)",
+                                base: "Consentimiento (Art. 6.1.a RGPD)",
+                                desc: "Solo si marca la casilla de consentimiento explícita al reservar. Puede retirar su consentimiento y darse de baja en cualquier momento desde el enlace incluido en cada email.",
+                            },
                         ].map((item) => (
                             <div key={item.fin} className="rounded-lg border border-border p-4">
                                 <p className="font-semibold text-sm">{item.fin}</p>

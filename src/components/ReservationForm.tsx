@@ -8,6 +8,7 @@ import { formatearTelefonoWebhook } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -100,6 +101,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       email: "",
       numero_comensales: 2,
       notas_cliente: "",
+      consentimiento_newsletter: false,
     },
   });
 
@@ -243,7 +245,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
           hora: selectedHour.slice(0, 5),
           numero_comensales: data.numero_comensales,
           notas_cliente: data.notas_cliente || "",
-          estado: "pendiente"
+          estado: "pendiente",
+          consentimiento_newsletter: data.consentimiento_newsletter,
         })
       });
 
@@ -632,6 +635,21 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="consentimiento_newsletter"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-border/50 bg-white p-4">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className="font-normal text-foreground cursor-pointer">
+                      {t.reservationForm.newsletterLabel}
+                    </FormLabel>
                   </FormItem>
                 )}
               />

@@ -335,6 +335,7 @@ export const translations: Translations = {
       emailPlaceholder: "vous@email.com",
       notesLabel: "Demandes particulières",
       notesPlaceholder: "Allergies, préférences, occasion...",
+      newsletterLabel: "Je souhaite recevoir par email les actualités et offres de Casa Tomás. Je pourrai me désabonner à tout moment.",
       submit: "Réserver",
       submitting: "Réservation en cours...",
       footer: "Réservation en ligne rapide et sécurisée",

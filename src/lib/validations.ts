@@ -42,6 +42,7 @@ export const createReservationSchema = (messages: ReservationValidationMessages)
       .string()
       .max(500, { message: messages.notesMax })
       .optional(),
+    consentimiento_newsletter: z.boolean().default(false),
   });
 
 export type ReservationFormData = z.infer<ReturnType<typeof createReservationSchema>>;

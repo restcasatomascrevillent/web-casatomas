@@ -37,6 +37,16 @@ import { Toaster } from "sonner";
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
+  // El checkbox de consentimiento del newsletter monta un Checkbox de Radix,
+  // que usa ResizeObserver. setup.ts ya lo simula, pero el unstubAllGlobals()
+  // del afterEach de este archivo lo borra junto con el stub de fetch: sin
+  // volver a ponerlo aqui, todo test que no sea el primero del archivo
+  // revienta con "ResizeObserver is not defined" en cuanto el arbol renderiza
+  // el formulario.
+  vi.stubGlobal(
+    "ResizeObserver",
+    vi.fn(() => ({ observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() })),
+  );
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -101,8 +111,11 @@ describe("ReservationForm — honeypot anti-bot field", () => {
     renderForm();
     await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
 
-    // The honeypot container uses aria-hidden="true"
-    const honeypotContainer = document.querySelector('[aria-hidden="true"]');
+    // El propio checkbox de Radix tambien renderiza un input aria-hidden
+    // (el "bubble input" nativo), asi que hay que anclar la busqueda al
+    // honeypot en concreto en vez de al primer aria-hidden del documento.
+    const honeypot = document.querySelector('input[name="website"]');
+    const honeypotContainer = honeypot?.closest('[aria-hidden="true"]');
     expect(honeypotContainer).not.toBeNull();
   });
 
@@ -119,9 +132,8 @@ describe("ReservationForm — honeypot anti-bot field", () => {
     renderForm();
     await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
 
-    const honeypotContainer = document.querySelector(
-      '[aria-hidden="true"]'
-    ) as HTMLElement | null;
+    const honeypot = document.querySelector('input[name="website"]');
+    const honeypotContainer = honeypot?.closest('[aria-hidden="true"]') as HTMLElement | null;
     expect(honeypotContainer).not.toBeNull();
     expect(honeypotContainer!.style.left).toBe("-9999px");
   });
@@ -1211,5 +1223,61 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
     // La hora enviada es LITERALMENTE la que trajo el hueco, no una calculada
     // en el navegador con offsets fijos.
     expect(cuerpo.hora).toBe("13:30");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Casilla de consentimiento del newsletter: desmarcada por defecto (RGPD
+// exige opt-in explícito, nunca una casilla premarcada), y su valor viaja
+// tal cual a `/crear` en `consentimiento_newsletter`.
+// ---------------------------------------------------------------------------
+
+describe("ReservationForm — consentimiento del newsletter", () => {
+  it("la casilla empieza desmarcada", async () => {
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
+  });
+
+  it("sin marcarla, se envia consentimiento_newsletter:false", async () => {
+    mockReservas(
+      () => new Response(JSON.stringify({ ok: true, reserva_id: "r-5", estado: "pendiente" }), { status: 201 }),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    await screen.findByText(/reserva confirmada/i);
+
+    const llamadaCrear = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
+    const cuerpo = JSON.parse(String(llamadaCrear?.[1]?.body));
+    expect(cuerpo.consentimiento_newsletter).toBe(false);
+  });
+
+  it("al marcarla, se envia consentimiento_newsletter:true", async () => {
+    mockReservas(
+      () => new Response(JSON.stringify({ ok: true, reserva_id: "r-6", estado: "pendiente" }), { status: 201 }),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    const hora = await screen.findByRole("button", { name: "13:00" });
+    await user.click(hora);
+    await user.click(screen.getByRole("checkbox"));
+
+    await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
+    await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
+    await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    await screen.findByText(/reserva confirmada/i);
+
+    const llamadaCrear = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
+    const cuerpo = JSON.parse(String(llamadaCrear?.[1]?.body));
+    expect(cuerpo.consentimiento_newsletter).toBe(true);
   });
 });
