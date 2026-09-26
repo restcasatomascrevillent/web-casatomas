@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/react";
 import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
 import ScrollToTop from "./components/ScrollToTop";
+import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 
@@ -65,9 +66,11 @@ const Layout = ({ lang }: { lang: Language }) => (
           <Sonner />
         </Suspense>
         <CookieConsent />
-        <Suspense fallback={<RouteFallback />}>
-          <Outlet />
-        </Suspense>
+        <SectionErrorBoundary>
+          <Suspense fallback={<RouteFallback />}>
+            <Outlet />
+          </Suspense>
+        </SectionErrorBoundary>
         <MobileReserveCTA />
       </TooltipProvider>
     </LanguageProvider>
