@@ -19,6 +19,7 @@ import appetizerImg from "@/assets/platos/appetizer.jpg";
 import { LOGO_HEIGHT, LOGO_WIDTH, logoTicket } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useToast } from "@/hooks/use-toast";
+import { useChatbotVisible } from "@/hooks/useChatbotVisible";
 
 const AIChatbot = lazy(() => import("../AIChatbot"));
 
@@ -47,6 +48,9 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
   };
   const [pedido, setPedido] = useState<PedidoItem[]>([]);
   const [isTicketOpen, setIsTicketOpen] = useState(false);
+  // Chatbot tras feature flag (`VITE_CHATBOT_PUBLICO` o `?tomy=1`, ver
+  // `src/lib/featureFlags.ts`): oculto, sin botón ni descarga de `AIChatbot`.
+  const chatbotVisible = useChatbotVisible();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatTicketImage, setChatTicketImage] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
@@ -417,20 +421,23 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
       {/* Entrada al chatbot con el ticket adjunto (recomendaciones, raciones
           según comensales). Se quitó en 650ccd9 y con ella desapareció el
           único acceso visible al chatbot; ahora convive con el botón global
-          "Pregunta a Tomy" (`FloatingActions`), que lo abre sin ticket. */}
-      <div className="flex items-center justify-center gap-4 mb-5 px-1">
-        <p className="text-[10px] text-gray-500 italic text-center leading-tight max-w-[180px]">
-          "{t.preview.aiPrompt}"
-        </p>
-        <Button
-          type="button"
-          onClick={handleOpenChatbot}
-          className="w-auto px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
-        >
-          <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
-          {t.tomy.cta}
-        </Button>
-      </div>
+          "Pregunta a Tomy" (`FloatingActions`), que lo abre sin ticket.
+          Solo con el chatbot visible (feature flag / QA). */}
+      {chatbotVisible && (
+        <div className="flex items-center justify-center gap-4 mb-5 px-1">
+          <p className="text-[10px] text-gray-500 italic text-center leading-tight max-w-[180px]">
+            "{t.preview.aiPrompt}"
+          </p>
+          <Button
+            type="button"
+            onClick={handleOpenChatbot}
+            className="w-auto px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
+          >
+            <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
+            {t.tomy.cta}
+          </Button>
+        </div>
+      )}
 
       {/* Total */}
       <div className="border-t-2 border-black pt-3 mb-3">
@@ -515,12 +522,12 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
         onOpenChange={setIsTicketOpen}
         title={t.carta.buttons.pedido}
         description={t.preview.previewLabel}
-        lockOutsideInteractions={isChatOpen}
+        lockOutsideInteractions={chatbotVisible && isChatOpen}
       >
         {ticketCard}
       </TicketDialog>
 
-      {isChatOpen && (
+      {chatbotVisible && isChatOpen && (
         <Suspense fallback={null}>
           <AIChatbot
             isOpen={isChatOpen}
