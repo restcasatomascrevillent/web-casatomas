@@ -43,6 +43,7 @@ describe.each(Object.entries(packs))("Mi mesa — textos (%s)", (idioma, pack) =
     expect(t.preview.aiPrompt).toContain("{n}");
     expect(t.preview.aiQuestion).toContain("{n}");
     expect(t.preview.aiQuestion).toContain("{items}");
+    expect(t.preview.aiQuestionMore).toContain("{n}");
     expect(t.preview.personDefault).toContain("{n}");
     expect(t.preview.sharedLine).toContain("{each}");
     expect(t.preview.share.summaryPerPerson).toContain("{amount}");

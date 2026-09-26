@@ -134,6 +134,7 @@ export const translations: Translations = {
       bookCta: "Book a table for {n}",
       aiPrompt: "Ask Tomy: is it enough for {n}? which wine goes with it?",
       aiQuestion: "We are {n}. Is this enough? Which wine would you recommend? We have: {items}",
+      aiQuestionMore: "and {n} more",
       ticket: {
         date: "Date",
         guests: "Guests",

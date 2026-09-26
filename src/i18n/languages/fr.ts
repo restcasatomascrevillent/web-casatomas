@@ -134,6 +134,7 @@ export const translations: Translations = {
       bookCta: "Réserver une table pour {n}",
       aiPrompt: "Demandez à Tomy : est-ce assez pour {n} ? quel vin l'accompagne ?",
       aiQuestion: "Nous sommes {n}. Est-ce suffisant ? Quel vin nous conseillez-vous ? Nous avons : {items}",
+      aiQuestionMore: "et {n} de plus",
       ticket: {
         date: "Date",
         guests: "Convives",

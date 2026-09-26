@@ -26,11 +26,14 @@ type ChatMessage = {
 };
 
 /**
- * Limite de longitud del mensaje que aplica `chat-web` (MAX_MSG_LEN). Se
+ * Limite de longitud del mensaje que aplica `chat-web` (`max_chars`, 500 por
+ * defecto; rechaza lo que lo supere). Se
  * replica en el `maxLength` del campo para que el visitante lo vea al escribir
  * en vez de recibir un "resume un poco" despues de enviarlo.
  */
-const MAX_MENSAJE_LEN = 600;
+const MAX_MENSAJE_LEN = 500;
+/** A partir de aqui se ensena el contador "432/500" junto al campo. */
+const AVISO_MENSAJE_LEN = 400;
 const SUPABASE_CONFIG_BOT_WEB_URL = "https://jeamoczmbfsnwkfjxcyo.supabase.co/rest/v1/configBotWeb";
 const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -608,16 +611,32 @@ const AIChatbot = ({
 
                         {/* Input */}
                         <div className="p-4 bg-background border-t border-primary/10 flex gap-2">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && void handleSend()}
-                                placeholder="Escribe un mensaje..."
-                                maxLength={MAX_MENSAJE_LEN}
-                                disabled={isSending}
-                                className="flex-1 bg-muted/50 border-none rounded-full px-4 text-base md:text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                            />
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value.slice(0, MAX_MENSAJE_LEN))}
+                                    onKeyDown={(e) => e.key === "Enter" && void handleSend()}
+                                    placeholder="Escribe un mensaje..."
+                                    maxLength={MAX_MENSAJE_LEN}
+                                    disabled={isSending}
+                                    aria-describedby={input.length > AVISO_MENSAJE_LEN ? "chatbot-contador" : undefined}
+                                    className={`h-full w-full bg-muted/50 border-none rounded-full px-4 text-base md:text-sm focus:ring-2 focus:ring-primary/20 outline-none${
+                                        input.length > AVISO_MENSAJE_LEN ? " pr-16" : ""
+                                    }`}
+                                />
+                                {input.length > AVISO_MENSAJE_LEN && (
+                                    <span
+                                        id="chatbot-contador"
+                                        aria-live="polite"
+                                        className={`pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[11px] tabular-nums ${
+                                            input.length >= MAX_MENSAJE_LEN ? "text-destructive" : "text-muted-foreground"
+                                        }`}
+                                    >
+                                        {input.length}/{MAX_MENSAJE_LEN}
+                                    </span>
+                                )}
+                            </div>
                             <Button
                                 size="icon"
                                 className="rounded-full h-10 w-10 bg-primary hover:bg-primary/90 text-primary-foreground"

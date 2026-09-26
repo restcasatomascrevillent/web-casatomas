@@ -18,6 +18,7 @@ import {
   LOCALE_POR_IDIOMA,
   cantidadDeLinea,
   configUnidad,
+  construirPreguntaTomy,
   formatearCantidadLinea,
   formatearEuros,
   importeLinea,
@@ -233,11 +234,7 @@ const PreviewPedido = () => {
     } catch (error) {
       console.error("No se pudo generar la imagen del ticket para Tomy:", error);
     }
-    const platos = lineas.map((l) => `${formatearCantidadLinea(l, language)} × ${l.nombre}`).join(", ");
-    setChat({
-      imagen,
-      pregunta: tp.aiQuestion.replace("{n}", String(comensales)).replace("{items}", platos),
-    });
+    setChat({ imagen, pregunta: construirPreguntaTomy(lineas, comensales, language, tp) });
     setOcupado(null);
     // El chat va encima de todo: se cierra el panel y se vuelve a abrir al cerrar el chat.
     setAbierto(false);

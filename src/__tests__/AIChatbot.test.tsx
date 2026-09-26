@@ -188,12 +188,17 @@ function mockPorRuta(respuestaDelChat: () => Response | Promise<Response>) {
   });
 }
 
-function renderChatbot(props: { isOpen: boolean; onClose?: () => void }) {
+function renderChatbot(props: { isOpen: boolean; onClose?: () => void; initialInput?: string }) {
   const onClose = props.onClose ?? vi.fn();
   const { rerender } = render(
     <MemoryRouter>
       <LanguageProvider>
-        <AIChatbot isOpen={props.isOpen} onClose={onClose} initialGreeting="Hola test" />
+        <AIChatbot
+          isOpen={props.isOpen}
+          onClose={onClose}
+          initialGreeting="Hola test"
+          initialInput={props.initialInput}
+        />
       </LanguageProvider>
     </MemoryRouter>
   );
@@ -577,7 +582,7 @@ describe("AIChatbot component", () => {
     });
   });
 
-  it("limita el campo de texto a los 600 caracteres que acepta chat-web", async () => {
+  it("limita el campo de texto a los 500 caracteres que acepta chat-web", async () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify([]), { status: 200 })
     );
@@ -586,6 +591,39 @@ describe("AIChatbot component", () => {
     await waitFor(() => screen.getByText("Hola test"));
 
     const input = screen.getByPlaceholderText(/escribe un mensaje/i) as HTMLInputElement;
-    expect(input.maxLength).toBe(600);
+    expect(input.maxLength).toBe(500);
+  });
+
+  it("recorta el initialInput a 500 caracteres y enseña el contador cerca del límite", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify([]), { status: 200 })
+    );
+
+    renderChatbot({ isOpen: true, initialInput: "a".repeat(700) });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    const input = screen.getByPlaceholderText(/escribe un mensaje/i) as HTMLInputElement;
+    await waitFor(() => expect(input.value).toHaveLength(500));
+    expect(screen.getByText("500/500")).toBeInTheDocument();
+  });
+
+  it("solo enseña el contador cuando se pasan los 400 caracteres", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify([]), { status: 200 })
+    );
+
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    // Se vuelve a buscar el campo en cada paso: el panel puede remontarlo al cargar el saludo.
+    const escribir = async (valor: string) => {
+      await act(async () => {
+        fireEvent.change(screen.getByPlaceholderText(/escribe un mensaje/i), { target: { value: valor } });
+      });
+    };
+    await escribir("b".repeat(400));
+    expect(screen.queryByText("400/500")).not.toBeInTheDocument();
+    await escribir("b".repeat(432));
+    expect(await screen.findByText("432/500")).toBeInTheDocument();
   });
 });

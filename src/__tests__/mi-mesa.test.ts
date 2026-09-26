@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
+import es from "@/i18n/languages/es";
+import en from "@/i18n/languages/en";
+import fr from "@/i18n/languages/fr";
 import {
   COMENSALES_DEFECTO,
   COMENSALES_MAX,
+  MAX_PREGUNTA_TOMY,
   acotarComensales,
+  construirPreguntaTomy,
   formatearEuros,
   importeLinea,
   leerComensalesReserva,
@@ -156,5 +161,65 @@ describe("compartir", () => {
     expect(texto).toContain("Total orientativo: 39,00 €");
     expect(texto).toContain("≈ 13,00 € por persona (3 comensales)");
     expect(texto).toContain("La carta: https://x.test/carta");
+  });
+});
+
+describe("construirPreguntaTomy", () => {
+  const textos = (idioma: "es" | "en" | "fr") => {
+    const t = { es, en, fr }[idioma].translations.preview;
+    return { aiQuestion: t.aiQuestion, aiQuestionMore: t.aiQuestionMore };
+  };
+  const plato = (i: number) => ({
+    nombre: `Plato de la casa con nombre bastante largo número ${i}`,
+    cantidad: 1,
+  });
+
+  it("lista todos los platos como «cantidad× nombre» si caben", () => {
+    const texto = construirPreguntaTomy(
+      [
+        { nombre: "Croquetas", cantidad: 2 },
+        { nombre: "Chuletón", cantidad: 1.5, unidad: "kg" },
+      ],
+      4,
+      "es",
+      textos("es"),
+    );
+    expect(texto).toBe(
+      "Somos 4. ¿Es suficiente con esto? ¿Qué vino nos recomiendas? Tenemos: 2× Croquetas, 1,5 kg× Chuletón",
+    );
+  });
+
+  it("con muchos platos no pasa de 500 y termina con «y N más»", () => {
+    const lineas = Array.from({ length: 40 }, (_, i) => plato(i + 1));
+    const texto = construirPreguntaTomy(lineas, 6, "es", textos("es"));
+    expect(MAX_PREGUNTA_TOMY).toBe(500);
+    expect(texto.length).toBeLessThanOrEqual(500);
+    const incluidos = (texto.match(/1× /g) ?? []).length;
+    expect(incluidos).toBeGreaterThan(0);
+    expect(texto.endsWith(`y ${40 - incluidos} más`)).toBe(true);
+    // Mete todos los que caben: uno más ya se pasaría.
+    const conUnoMas = textos("es")
+      .aiQuestion.replace("{n}", "6")
+      .replace(
+        "{items}",
+        `${lineas.slice(0, incluidos + 1).map((l) => `1× ${l.nombre}`).join(", ")} y ${40 - incluidos - 1} más`,
+      );
+    expect(conUnoMas.length).toBeGreaterThan(500);
+  });
+
+  it("nunca pasa del máximo aunque un solo plato sea enorme", () => {
+    const texto = construirPreguntaTomy([{ nombre: "x".repeat(2000), cantidad: 1 }], 2, "es", textos("es"));
+    expect(texto.length).toBeLessThanOrEqual(500);
+    expect(texto).toMatch(/y 1 más$/);
+  });
+
+  it.each([
+    ["en", /^We are 3\..*and \d+ more$/],
+    ["fr", /^Nous sommes 3\..*et \d+ de plus$/],
+  ] as const)("localiza la cola en %s", (idioma, patron) => {
+    const lineas = Array.from({ length: 40 }, (_, i) => plato(i + 1));
+    const texto = construirPreguntaTomy(lineas, 3, idioma, textos(idioma));
+    expect(texto.length).toBeLessThanOrEqual(500);
+    expect(texto).toMatch(patron);
   });
 });

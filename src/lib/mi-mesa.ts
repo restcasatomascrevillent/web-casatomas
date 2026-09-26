@@ -273,3 +273,47 @@ export const resumenTextoMesa = (
     textos.summaryLink.replace("{url}", url),
   ].join("\n");
 };
+
+// ---------------------------------------------------------------------------
+// Pregunta a Tomy
+// ---------------------------------------------------------------------------
+
+/** Máximo de caracteres por mensaje que acepta `chat-web` (`max_chars`, 500 por defecto). */
+export const MAX_PREGUNTA_TOMY = 500;
+
+export interface TextosPreguntaTomy {
+  /** Plantilla con `{n}` (comensales) e `{items}` (platos). */
+  aiQuestion: string;
+  /** Cola cuando no caben todos los platos, con `{n}`: "y {n} más". */
+  aiQuestionMore: string;
+}
+
+/**
+ * Mensaje con el que se abre el chat de Tomy desde Mi mesa. Lista los platos
+ * como "2× Croquetas, 1 kg× Chuletón" y, si no caben todos en `max`
+ * caracteres, incluye los que quepan y termina con "y N más". Siempre
+ * devuelve como mucho `max` caracteres (el servidor rechaza los más largos).
+ */
+export const construirPreguntaTomy = (
+  lineas: Pick<LineaMesa, "nombre" | "unidad" | "cantidad">[],
+  comensales: number,
+  idioma: Language,
+  textos: TextosPreguntaTomy,
+  max = MAX_PREGUNTA_TOMY,
+): string => {
+  const plantilla = textos.aiQuestion.replace("{n}", String(acotarComensales(comensales)));
+  const montar = (items: string) => plantilla.replace("{items}", items);
+  const platos = lineas.map((l) => `${formatearCantidadLinea(l, idioma)}× ${l.nombre.trim()}`);
+
+  const completa = montar(platos.join(", "));
+  if (completa.length <= max) return completa;
+
+  for (let incluidos = platos.length - 1; incluidos >= 0; incluidos--) {
+    const cola = textos.aiQuestionMore.replace("{n}", String(platos.length - incluidos));
+    const items = incluidos > 0 ? `${platos.slice(0, incluidos).join(", ")} ${cola}` : cola;
+    const texto = montar(items);
+    if (texto.length <= max) return texto;
+  }
+  // Ni la cola sola cabe (plantilla enorme o `max` minúsculo): se corta en seco.
+  return montar(textos.aiQuestionMore.replace("{n}", String(platos.length))).slice(0, max);
+};
