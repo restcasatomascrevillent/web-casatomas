@@ -1,539 +1,616 @@
-import { Suspense, lazy, useState, useEffect, useRef } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { Link } from "react-router-dom";
+import { Bot, CalendarCheck, Download, Minus, Plus, Share2, Trash2, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Trash2, Receipt, Plus, Minus, X, MessageCircle, Instagram, Facebook, Bot } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
-import seafoodImg from "@/assets/platos/seafood.jpg";
-import meatImg from "@/assets/platos/meat.jpg";
-import saladImg from "@/assets/platos/salad.jpg";
-import riceImg from "@/assets/platos/rice.jpg";
-import dessertImg from "@/assets/platos/dessert.jpg";
-import appetizerImg from "@/assets/platos/appetizer.jpg";
-import { LOGO_HEIGHT, LOGO_WIDTH, logoTicket } from "@/assets/logo";
+import { clavePedido, type LineaPedido } from "@/hooks/usePedido";
+import { useMiMesa } from "@/hooks/useMiMesa";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { construirRutaIdioma } from "@/i18n/routing";
 import { useToast } from "@/hooks/use-toast";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
+import {
+  COMENSALES_MAX,
+  COMENSALES_MIN,
+  LOCALE_POR_IDIOMA,
+  cantidadDeLinea,
+  configUnidad,
+  formatearCantidadLinea,
+  formatearEuros,
+  importeLinea,
+  nombrePersona,
+  porPersona,
+  repartoCadaUno,
+  resumenTextoMesa,
+  rutaReservaMesa,
+  sufijoPrecio,
+  totalMesa,
+  urlCarta,
+} from "@/lib/mi-mesa";
+import { generarMatrizQr } from "@/lib/qr";
+import { cn } from "@/lib/utils";
+import TicketMesa from "./TicketMesa";
 
 const AIChatbot = lazy(() => import("../AIChatbot"));
 
-interface PedidoItem {
-  nombre: string;
-  precio_eur: number;
-  categoria?: string;
-  unidad?: string;
-  cantidad?: number;
-}
+const NOMBRE_IMAGEN = "mi-mesa-casa-tomas.png";
 
-interface PreviewPedidoProps {
-  showFloatingButton?: boolean;
-  hideInline?: boolean;
-}
+type Imagen = { firma: string; file: File; dataUrl: string };
 
-const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: PreviewPedidoProps) => {
+/** Espera a las fuentes y a las imágenes del nodo antes de capturarlo. */
+const esperarRecursos = async (nodo: HTMLElement) => {
+  try {
+    await document.fonts?.ready;
+  } catch {
+    // Sin Font Loading API: se captura con lo que haya.
+  }
+  const imagenes = Array.from(nodo.querySelectorAll("img"));
+  await Promise.all(
+    imagenes.map((img) =>
+      img.complete
+        ? img.decode?.().catch(() => undefined)
+        : new Promise<void>((resolve) => {
+            img.addEventListener("load", () => resolve(), { once: true });
+            img.addEventListener("error", () => resolve(), { once: true });
+          }),
+    ),
+  );
+};
+
+/** ¿Puede este navegador compartir un PNG con `navigator.share`? (síncrono, para no perder el gesto). */
+const puedeCompartirArchivos = (): boolean => {
+  try {
+    if (typeof navigator === "undefined" || typeof navigator.canShare !== "function") return false;
+    return navigator.canShare({ files: [new File([new Blob()], NOMBRE_IMAGEN, { type: "image/png" })] });
+  } catch {
+    return false;
+  }
+};
+
+const esAbort = (error: unknown) => error instanceof Error && error.name === "AbortError";
+
+/**
+ * "Mi mesa" (antes "Mi pedido"): el visitante apunta lo que le apetece de la
+ * carta, ve el total orientativo, cuánto toca a cada uno, y lo comparte con
+ * su grupo como un ticket en imagen. NO es un pedido online.
+ *
+ * Lo monta `FloatingActions` (perezoso) en cuanto hay alguna línea: pinta el
+ * botón flotante "Mi mesa · N" y el panel (hoja inferior en móvil, panel
+ * lateral en escritorio). El ticket para la imagen (`TicketMesa`) solo se
+ * pinta fuera de pantalla con el panel abierto; `html-to-image` y el
+ * generador de QR se descargan al generar la imagen, no antes.
+ */
+const PreviewPedido = () => {
   const { t, language } = useTranslations();
+  const tp = t.preview;
   const { toast } = useToast();
-  const ticketRef = useRef<HTMLDivElement | null>(null);
-  const ticketItemsRef = useRef<HTMLDivElement | null>(null);
-  const localeByLanguage: Record<typeof language, string> = {
-    es: "es-ES",
-    en: "en-US",
-    fr: "fr-FR",
-  };
-  const [pedido, setPedido] = useState<PedidoItem[]>([]);
-  const [isTicketOpen, setIsTicketOpen] = useState(false);
-  // Chatbot tras feature flag (`VITE_CHATBOT_PUBLICO` o `?tomy=1`, ver
-  // `src/lib/featureFlags.ts`): oculto, sin botón ni descarga de `AIChatbot`.
+  const isMobile = useIsMobile();
+  const mesa = useMiMesa();
   const chatbotVisible = useChatbotVisible();
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatTicketImage, setChatTicketImage] = useState<string | null>(null);
-  const [shareLoading, setShareLoading] = useState(false);
-  const [shareError, setShareError] = useState<string | null>(null);
-  const [inputValues, setInputValues] = useState<Record<number, string>>({});
+
+  const [pedido, setPedido] = useState<LineaPedido[]>([]);
+  const [abierto, setAbierto] = useState(false);
+  const [ocupado, setOcupado] = useState<null | "compartir" | "descargar" | "chat">(null);
+  const [confirmarVaciar, setConfirmarVaciar] = useState(false);
+  const [qr, setQr] = useState<boolean[][] | null>(null);
+  const [chat, setChat] = useState<{ imagen: string | null; pregunta: string } | null>(null);
+
+  const ticketRef = useRef<HTMLDivElement | null>(null);
+  const imagenRef = useRef<Imagen | null>(null);
+  const enCursoRef = useRef<{ firma: string; promesa: Promise<Imagen> } | null>(null);
 
   useEffect(() => {
-    const loadPedido = () => {
-      const saved = getUserPedido();
-      setPedido(saved);
+    const cargar = () => {
+      try {
+        setPedido(getUserPedido() as LineaPedido[]);
+      } catch {
+        setPedido([]);
+      }
     };
-
-    loadPedido();
-
-    // Listen for changes
-    window.addEventListener("storage", loadPedido);
-    window.addEventListener("pedidoUpdated", loadPedido);
+    cargar();
+    window.addEventListener("storage", cargar);
+    window.addEventListener("pedidoUpdated", cargar);
     return () => {
-      window.removeEventListener("storage", loadPedido);
-      window.removeEventListener("pedidoUpdated", loadPedido);
+      window.removeEventListener("storage", cargar);
+      window.removeEventListener("pedidoUpdated", cargar);
     };
   }, []);
 
-  useEffect(() => {
-    if (pedido.length === 0 && isTicketOpen) {
-      setIsTicketOpen(false);
+  const guardarPedido = (siguiente: LineaPedido[]) => {
+    setPedido(siguiente);
+    try {
+      setUserPedido(siguiente);
+    } catch {
+      // Sin sessionStorage: vale para esta pantalla.
     }
-  }, [pedido.length, isTicketOpen]);
-
-  const captureTicketAsImage = async () => {
-    if (!ticketRef.current) throw new Error("Ticket no disponible para captura");
-    const node = ticketRef.current;
-    const timestamp = new Date().toISOString().replace(/[:.-]/g, "");
-    const filename = `ticket_${timestamp}.png`;
-    const { toPng } = await import("html-to-image");
-
-    const dataUrl = await toPng(node, {
-      cacheBust: true,
-      pixelRatio: 2,
-      style: { padding: "16px", background: "#f8f8f8" },
-    });
-
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], filename, { type: "image/png" });
-    return { dataUrl, file, filename };
   };
 
-  const shareTicket = async (channel: "whatsapp" | "instagram" | "facebook") => {
+  const lineas = useMemo(() => pedido.map((linea) => ({ ...linea, clave: clavePedido(linea) })), [pedido]);
+  const { comensales, modo, nombres, asignaciones } = mesa;
+  const total = totalMesa(lineas);
+  const parte = porPersona(total, comensales);
+  const reparto = useMemo(
+    () => repartoCadaUno(lineas, (l) => l.clave, asignaciones, comensales),
+    [lineas, asignaciones, comensales],
+  );
+  const cadaUno = modo === "cadaUno" && comensales > 1;
+  const eur = (v: number) => formatearEuros(v, language);
+
+  const rutaCarta = construirRutaIdioma("/carta", language);
+  const origen = typeof window !== "undefined" ? window.location.origin : null;
+  const urlQr = urlCarta(origen, rutaCarta);
+  const resumen = () => resumenTextoMesa(lineas, comensales, language, tp.share, urlQr);
+
+  // Firma de lo que sale en la imagen: si no cambia, se reutiliza la ya generada
+  // (y así `navigator.share` se llama sin esperas, dentro del gesto del usuario).
+  const firma = JSON.stringify([pedido, comensales, modo, nombres, asignaciones, language]);
+
+  const generarImagen = useCallback(async (): Promise<Imagen> => {
+    if (imagenRef.current?.firma === firma) return imagenRef.current;
+    if (enCursoRef.current?.firma === firma) return enCursoRef.current.promesa;
+
+    const promesa = (async () => {
+      if (!qr) {
+        const matriz = await generarMatrizQr(urlQr);
+        flushSync(() => setQr(matriz));
+      }
+      const nodo = ticketRef.current;
+      if (!nodo) throw new Error("Ticket no disponible para captura");
+      await esperarRecursos(nodo);
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(nodo, { pixelRatio: 2, cacheBust: true, backgroundColor: "#fbf8f3" });
+      const blob = await (await fetch(dataUrl)).blob();
+      const imagen = { firma, dataUrl, file: new File([blob], NOMBRE_IMAGEN, { type: "image/png" }) };
+      imagenRef.current = imagen;
+      return imagen;
+    })();
+
+    enCursoRef.current = { firma, promesa };
     try {
-      setShareError(null);
-      setShareLoading(true);
-      const { file } = await captureTicketAsImage();
-      const shareText = t.preview.share.shareMessage;
-      const canShareFile = typeof navigator !== "undefined" && "canShare" in navigator && navigator.canShare({ files: [file] });
+      return await promesa;
+    } finally {
+      if (enCursoRef.current?.promesa === promesa) enCursoRef.current = null;
+    }
+  }, [firma, qr, urlQr]);
 
-      if (canShareFile) {
-        await navigator.share({
-          files: [file],
-          text: shareText,
-          title: t.carta.buttons.pedido,
-        });
-        return;
-      }
+  /** Genera la imagen de antemano (al pasar por encima / enfocar "Compartir"). */
+  const precalentar = () => {
+    if (lineas.length > 0 && puedeCompartirArchivos()) void generarImagen().catch(() => undefined);
+  };
 
-      const blobUrl = URL.createObjectURL(file);
-      if (channel === "whatsapp") {
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-      } else if (channel === "instagram") {
-        window.open(blobUrl, "_blank");
-      } else {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, "_blank");
-      }
-      toast({
-        title: t.preview.share.downloadTitle,
-        description: t.preview.share.downloadDescription,
-      });
+  const avisarError = () =>
+    toast({ title: tp.share.errorTitle, description: tp.share.error, variant: "destructive" });
+
+  const compartir = async () => {
+    const texto = resumen();
+    if (!puedeCompartirArchivos()) {
+      // Escritorio y navegadores sin Web Share de archivos: el resumen va por
+      // WhatsApp (abierto dentro del mismo click para que no lo bloquee el
+      // navegador) y se ofrece la imagen con "Descargar imagen".
+      window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
+      toast({ title: tp.share.fallbackTitle, description: tp.share.fallbackDescription });
+      return;
+    }
+    setOcupado("compartir");
+    try {
+      const { file } = await generarImagen();
+      await navigator.share({ files: [file], text: texto, title: tp.title });
+    } catch (error) {
+      if (esAbort(error)) return; // El usuario cerró la hoja de compartir.
+      console.error(error);
+      avisarError();
+    } finally {
+      setOcupado(null);
+    }
+  };
+
+  const descargar = async () => {
+    setOcupado("descargar");
+    try {
+      const { dataUrl } = await generarImagen();
+      const enlace = document.createElement("a");
+      enlace.href = dataUrl;
+      enlace.download = NOMBRE_IMAGEN;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
     } catch (error) {
       console.error(error);
-      setShareError(t.preview.share.error);
-      toast({
-        title: t.preview.share.errorTitle,
-        description: t.preview.share.error,
-        variant: "destructive",
-      });
+      avisarError();
     } finally {
-      setShareLoading(false);
+      setOcupado(null);
     }
   };
 
-  const captureTicketItemsAsImage = async (): Promise<string | null> => {
-    if (!ticketItemsRef.current || pedido.length === 0) return null;
-    const { toPng } = await import("html-to-image");
-    return toPng(ticketItemsRef.current, {
-      cacheBust: true,
-      pixelRatio: 2,
-      style: { background: "#ffffff", padding: "8px" },
-    });
-  };
-
-  const handleOpenChatbot = async () => {
+  const preguntarATomy = async () => {
+    setOcupado("chat");
+    let imagen: string | null = null;
     try {
-      setChatTicketImage(null);
-      const itemsImage = await captureTicketItemsAsImage();
-      setChatTicketImage(itemsImage);
+      imagen = (await generarImagen()).dataUrl;
     } catch (error) {
-      console.error("No se pudo generar la imagen de alimentos del ticket:", error);
-      setChatTicketImage(null);
-    } finally {
-      setIsChatOpen(true);
+      console.error("No se pudo generar la imagen del ticket para Tomy:", error);
     }
+    const platos = lineas.map((l) => `${formatearCantidadLinea(l, language)} × ${l.nombre}`).join(", ");
+    setChat({
+      imagen,
+      pregunta: tp.aiQuestion.replace("{n}", String(comensales)).replace("{items}", platos),
+    });
+    setOcupado(null);
+    // El chat va encima de todo: se cierra el panel y se vuelve a abrir al cerrar el chat.
+    setAbierto(false);
   };
 
-  const removeItem = (index: number) => {
-    const newPedido = pedido.filter((_, i) => i !== index);
-    setPedido(newPedido);
-    setUserPedido(newPedido);
+  const cambiarCantidad = (indice: number, direccion: 1 | -1) => {
+    const linea = pedido[indice];
+    const cfg = configUnidad(linea.unidad);
+    const actual = cantidadDeLinea(linea);
+    const siguiente = Number((actual + direccion * cfg.paso).toFixed(cfg.decimales));
+    if (siguiente < cfg.minimo) return;
+    guardarPedido(pedido.map((l, i) => (i === indice ? { ...l, cantidad: siguiente } : l)));
   };
 
-  const clearPedido = () => {
-    setPedido([]);
-    setUserPedido([]);
+  const quitarLinea = (indice: number) => {
+    const clave = lineas[indice]?.clave;
+    guardarPedido(pedido.filter((_, i) => i !== indice));
+    if (clave && clave in asignaciones) mesa.asignar(clave, null);
   };
 
-  const updateCantidad = (index: number, newCantidad: number) => {
-    if (newCantidad < 0.01) return;
-    const newPedido = [...pedido];
-    newPedido[index] = { ...newPedido[index], cantidad: newCantidad };
-    setPedido(newPedido);
-    setUserPedido(newPedido);
+  const vaciar = () => {
+    guardarPedido([]);
+    mesa.olvidarAsignaciones();
+    setConfirmarVaciar(false);
   };
 
-  const getUnitConfig = (unidad?: string) => {
-    if (unidad === "kg") {
-      return {
-        defaultAmount: 1,
-        step: 0.1,
-        minValue: 0.1,
-        isWeight: true,
-        format: (val: number) => `${val.toFixed(1).replace(/\.0$/, "")} kg`,
-        priceLabel: "/kg",
-        decimals: 1,
-      };
-    }
-    if (unidad === "100 g" || unidad === "100g") {
-      return {
-        defaultAmount: 100,
-        step: 10,
-        minValue: 10,
-        isWeight: true,
-        format: (val: number) => `${val} g`,
-        priceLabel: "/100g",
-        decimals: 0,
-      };
-    }
-    if (unidad === "unidad" || unidad === "ud" || unidad === "ud.") {
-      return {
-        defaultAmount: 1,
-        step: 1,
-        minValue: 1,
-        isWeight: false,
-        format: (val: number) => `${Math.max(1, Math.round(val))} ud.`,
-        priceLabel: "/ud",
-        decimals: 0,
-      };
-    }
-    return {
-      defaultAmount: 1,
-      step: 1,
-      minValue: 1,
-      isWeight: false,
-      format: (val: number) => `${Math.max(1, Math.round(val))}`,
-      priceLabel: "",
-      decimals: 0,
-    };
-  };
+  useEffect(() => {
+    if (!abierto) setConfirmarVaciar(false);
+  }, [abierto]);
 
-  const calculateSubtotal = (item: PedidoItem) => {
-    const config = getUnitConfig(item.unidad);
-    const cantidad = item.cantidad ?? config.defaultAmount;
-    if (item.unidad === "kg") {
-      return cantidad * (item.precio_eur || 0);
-    }
-    if (item.unidad === "100 g" || item.unidad === "100g") {
-      return (cantidad / 100) * (item.precio_eur || 0);
-    }
-    return cantidad * (item.precio_eur || 0);
-  };
+  const fecha = abierto
+    ? new Date().toLocaleDateString(LOCALE_POR_IDIOMA[language], { day: "numeric", month: "long", year: "numeric" })
+    : "";
+  const comensalesTexto = comensales === 1 ? tp.guestsCountOne : tp.guestsCount.replace("{n}", String(comensales));
+  const vacia = lineas.length === 0;
 
-  const incrementCantidad = (index: number) => {
-    const item = pedido[index];
-    const config = getUnitConfig(item.unidad);
-    const currentCantidad = item.cantidad ?? config.defaultAmount;
-    const newValue = parseFloat((currentCantidad + config.step).toFixed(config.decimals));
-    updateCantidad(index, newValue);
-  };
-
-  const decrementCantidad = (index: number) => {
-    const item = pedido[index];
-    const config = getUnitConfig(item.unidad);
-    const currentCantidad = item.cantidad ?? config.defaultAmount;
-    const newValue = Math.max(config.minValue, parseFloat((currentCantidad - config.step).toFixed(config.decimals)));
-    updateCantidad(index, newValue);
-  };
-
-  const getCategoryImage = (categoria?: string) => {
-    if (!categoria) return appetizerImg;
-    const cat = categoria.toUpperCase();
-    if (cat.includes("MARISCO") || cat.includes("PESCADO")) return seafoodImg;
-    if (cat.includes("CARNE")) return meatImg;
-    if (cat.includes("ENSALADA")) return saladImg;
-    if (cat.includes("ARROZ")) return riceImg;
-    if (cat.includes("POSTRE")) return dessertImg;
-    if (cat.includes("ENTRANTE") || cat.includes("SNACK") || cat.includes("SALAZÓN")) return appetizerImg;
-    return appetizerImg;
-  };
-
-  const total = pedido.reduce((sum, item) => {
-    return sum + calculateSubtotal(item);
-  }, 0);
-
-  const translateCategory = (category?: string) => {
-    if (!category) return "";
-    return (
-      t.categories.platos[category as keyof typeof t.categories.platos] ||
-      t.categories.bebidas[category as keyof typeof t.categories.bebidas] ||
-      (category === "Todos" ? t.vinos.categoriesAll : category)
-    );
-  };
-
-  const empty = (
-    <div className="text-center py-12">
-      <Receipt className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-      <p className="text-xl text-muted-foreground">{t.preview.emptyTitle}</p>
-      <p className="text-sm text-muted-foreground mt-2">{t.preview.emptySubtitle}</p>
-    </div>
-  );
-
-  const ticketCard = pedido.length === 0 ? (
-    <div className="max-w-md mx-auto" ref={ticketRef}>{empty}</div>
-  ) : (
-    <div
-      ref={ticketRef}
-      className="bg-white text-black p-6 rounded-lg shadow-lg text-xs border-2 border-dashed border-gray-300"
-    >
-      {/* Header */}
-      <div className="text-center border-b-2 border-black pb-3 mb-3">
-        <div className="flex justify-center mb-2">
-          {/* Sin srcset: html-to-image lo vacía y captura `src` a pixelRatio 2. */}
-          <img
-            src={logoTicket}
-            alt={t.hero.logoAlt}
-            className="h-24 w-auto object-contain"
-            width={LOGO_WIDTH}
-            height={LOGO_HEIGHT}
-          />
+  const panel = (
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Cabecera */}
+      <div className="flex items-start justify-between gap-3 border-b border-border/60 px-5 pb-4 pt-5">
+        <div className="min-w-0">
+          <SheetTitle className="font-libre-baskerville text-2xl leading-tight text-foreground">{tp.title}</SheetTitle>
+          <SheetDescription className="mt-1 text-sm text-muted-foreground">{tp.subtitle}</SheetDescription>
         </div>
-        <p className="text-[10px] mt-2">================================</p>
-        <p className="text-[10px] mt-1">
-          {new Date().toLocaleDateString(localeByLanguage[language], {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
-        <p className="text-[10px]">================================</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => setAbierto(false)}
+          aria-label={tp.close}
+          className="h-10 w-10 shrink-0 rounded-full"
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+        </Button>
       </div>
 
-      {/* Items */}
-      <div ref={ticketItemsRef} className="space-y-3 mb-3">
-        {pedido.map((item, index) => {
-          const config = getUnitConfig(item.unidad);
-          const cantidad = item.cantidad ?? config.defaultAmount;
-          const subtotal = calculateSubtotal(item);
-          const priceLabel =
-            item.unidad === "kg" ? "/kg" : item.unidad === "100 g" || item.unidad === "100g" ? "/100g" : item.unidad === "unidad" ? "/ud" : "";
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+        {vacia ? (
+          <div className="flex flex-col items-center py-12 text-center">
+            <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <UtensilsCrossed className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <p className="font-libre-baskerville text-lg text-foreground text-balance">{tp.emptyTitle}</p>
+            <p className="mt-2 max-w-xs text-sm text-muted-foreground text-pretty">{tp.emptySubtitle}</p>
+            <Button asChild className="mt-6 rounded-full bg-accent px-6 text-accent-foreground hover:bg-accent/90">
+              <Link to={rutaCarta} onClick={() => setAbierto(false)}>
+                {tp.emptyCta}
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Líneas */}
+            <ul className="divide-y divide-border/60">
+              {lineas.map((linea, indice) => {
+                const cfg = configUnidad(linea.unidad);
+                const cantidad = cantidadDeLinea(linea);
+                const persona = asignaciones[linea.clave];
+                return (
+                  <li key={`${linea.clave}#${indice}`} className="py-3 first:pt-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium leading-snug text-foreground break-words">{linea.nombre}</p>
+                        <p className="text-xs text-muted-foreground tabular-nums">
+                          {eur(linea.precio_eur)}
+                          {sufijoPrecio(linea.unidad)}
+                        </p>
+                      </div>
+                      <p className="shrink-0 font-semibold tabular-nums text-foreground">{eur(importeLinea(linea))}</p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="inline-flex items-center rounded-full border border-border bg-background">
+                        <button
+                          type="button"
+                          onClick={() => cambiarCantidad(indice, -1)}
+                          disabled={cantidad - cfg.paso < cfg.minimo - 1e-9}
+                          aria-label={tp.lineDecrease.replace("{name}", linea.nombre)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                        >
+                          <Minus className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                        <span className="min-w-[3.5rem] text-center text-sm tabular-nums" aria-live="polite">
+                          {formatearCantidadLinea(linea, language)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => cambiarCantidad(indice, 1)}
+                          aria-label={tp.lineIncrease.replace("{name}", linea.nombre)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <Plus className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
 
-          return (
-            <div key={index} className="border-b border-dashed border-gray-400 pb-2">
-              {/* Nombre del producto */}
-              <div className="flex justify-between items-start mb-1">
-                <p className="font-bold text-[11px] uppercase flex-1 pr-2 leading-tight">{item.nombre}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeItem(index)}
-                  className="h-5 w-5 p-0 hover:bg-red-100 text-red-600 flex-shrink-0"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
+                      {cadaUno && (
+                        <select
+                          value={typeof persona === "number" && persona < comensales ? String(persona) : ""}
+                          onChange={(e) => mesa.asignar(linea.clave, e.target.value === "" ? null : Number(e.target.value))}
+                          aria-label={tp.assignAria.replace("{name}", linea.nombre)}
+                          className="h-9 max-w-[11rem] rounded-full border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <option value="">{tp.shared}</option>
+                          {Array.from({ length: comensales }, (_, i) => (
+                            <option key={i} value={i}>
+                              {nombrePersona(nombres, i, tp.personDefault)}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => quitarLinea(indice)}
+                        aria-label={tp.lineRemove.replace("{name}", linea.nombre)}
+                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Comensales y reparto */}
+            <section aria-labelledby="mi-mesa-comensales" className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 id="mi-mesa-comensales" className="text-sm font-medium text-foreground">
+                  {tp.guestsLabel}
+                </h3>
+                <div className="inline-flex items-center rounded-full border border-border bg-background">
+                  <button
+                    type="button"
+                    onClick={() => mesa.setComensales(comensales - 1)}
+                    disabled={comensales <= COMENSALES_MIN}
+                    aria-label={tp.guestsDecrease}
+                    className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                  >
+                    <Minus className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <output className="min-w-[2.5rem] text-center text-base font-semibold tabular-nums" aria-label={comensalesTexto}>
+                    {comensales}
+                  </output>
+                  <button
+                    type="button"
+                    onClick={() => mesa.setComensales(comensales + 1)}
+                    disabled={comensales >= COMENSALES_MAX}
+                    aria-label={tp.guestsIncrease}
+                    className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
 
-              {/* Categoría si existe */}
-              {item.categoria && (
-                <p className="text-[9px] text-gray-600 mb-1">({translateCategory(item.categoria)})</p>
+              {comensales > 1 && (
+                <div className="mt-4">
+                  <p id="mi-mesa-reparto" className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+                    {tp.splitLabel}
+                  </p>
+                  <div role="radiogroup" aria-labelledby="mi-mesa-reparto" className="grid grid-cols-2 gap-1 rounded-full bg-background p-1 border border-border">
+                    {(["igual", "cadaUno"] as const).map((opcion) => (
+                      <button
+                        key={opcion}
+                        type="button"
+                        role="radio"
+                        aria-checked={modo === opcion}
+                        onClick={() => mesa.setModo(opcion)}
+                        className={cn(
+                          "h-9 rounded-full px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          modo === opcion ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted",
+                        )}
+                      >
+                        {opcion === "igual" ? tp.splitEqual : tp.splitEach}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
-              {/* Cantidad y controles */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => decrementCantidad(index)}
-                    disabled={cantidad <= config.minValue}
-                    className="h-5 w-5 p-0 border-black"
-                  >
-                    <Minus className="h-2 w-2" />
-                  </Button>
-
-                  <Input
-                    type="number"
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      // Permitir vacío y solo dígitos/punto
-                      if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                        setInputValues((prev) => ({ ...prev, [index]: val }));
-                      }
-                    }}
-                    onBlur={(e) => {
-                      const val = e.target.value;
-                      const parsed = parseFloat(val);
-                      if (val === "" || !Number.isFinite(parsed) || parsed < config.minValue) {
-                        updateCantidad(index, config.defaultAmount);
-                      } else {
-                        const factor = Math.pow(10, config.decimals);
-                        const rounded = Math.round(parsed * factor) / factor;
-                        updateCantidad(index, rounded);
-                      }
-                      setInputValues((prev) => {
-                        const next = { ...prev };
-                        delete next[index];
-                        return next;
-                      });
-                    }}
-                    value={inputValues[index] ?? cantidad}
-                    className="w-16 h-5 text-center text-[10px] border-black"
-                    min={config.minValue}
-                    step={config.step}
-                  />
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => incrementCantidad(index)}
-                    className="h-5 w-5 p-0 border-black"
-                  >
-                    <Plus className="h-2 w-2" />
-                  </Button>
-
-                  {item.unidad && <span className="text-[9px] ml-1">{item.unidad}</span>}
+              {cadaUno && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs text-muted-foreground text-pretty">{tp.splitEachHint}</p>
+                  <ul className="space-y-1.5">
+                    {reparto.porPersona.map((importe, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={nombres[i] ?? ""}
+                          placeholder={tp.personDefault.replace("{n}", String(i + 1))}
+                          onChange={(e) => mesa.setNombre(i, e.target.value)}
+                          maxLength={40}
+                          autoComplete="off"
+                          spellCheck={false}
+                          aria-label={tp.personNameAria.replace("{n}", String(i + 1))}
+                          className="h-9 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm text-foreground placeholder:text-foreground/70 hover:border-border focus-visible:border-border focus-visible:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        />
+                        <span className="text-sm font-semibold tabular-nums">{eur(importe)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {reparto.compartido > 0 && (
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {tp.sharedLine
+                        .replace("{amount}", eur(reparto.compartido))
+                        .replace("{each}", eur(reparto.compartidoPorPersona))}
+                    </p>
+                  )}
                 </div>
+              )}
+            </section>
 
-                <div className="text-right">
-                  <p className="text-[9px] text-gray-600">
-                    {config.format(cantidad)} x {item.precio_eur?.toFixed(2)}€{priceLabel}
-                  </p>
-                  <p className="font-bold text-[11px]">{subtotal.toFixed(2)}€</p>
-                </div>
+            {/* Total */}
+            <div className="space-y-1">
+              <div className="flex items-baseline justify-between">
+                <span className="font-libre-baskerville text-lg text-foreground">{tp.totalLabel}</span>
+                <span className="text-2xl font-semibold tabular-nums text-foreground">{eur(total)}</span>
               </div>
+              <p className="text-right text-sm font-medium text-accent tabular-nums" aria-live="polite" aria-atomic="true">
+                {tp.perPerson.replace("{amount}", eur(parte))}
+              </p>
+              <p className="pt-2 text-center text-xs text-muted-foreground">{tp.note}</p>
             </div>
-          );
-        })}
+          </div>
+        )}
       </div>
 
-      {/* Entrada al chatbot con el ticket adjunto (recomendaciones, raciones
-          según comensales). Se quitó en 650ccd9 y con ella desapareció el
-          único acceso visible al chatbot; ahora convive con el botón global
-          "Pregunta a Tomy" (`FloatingActions`), que lo abre sin ticket.
-          Solo con el chatbot visible (feature flag / QA). */}
-      {chatbotVisible && (
-        <div className="flex items-center justify-center gap-4 mb-5 px-1">
-          <p className="text-[10px] text-gray-500 italic text-center leading-tight max-w-[180px]">
-            "{t.preview.aiPrompt}"
-          </p>
+      {/* Acciones */}
+      {!vacia && (
+        <div className="space-y-2 border-t border-border/60 bg-background px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
           <Button
             type="button"
-            onClick={handleOpenChatbot}
-            className="w-auto px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-9 text-[11px] shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0"
+            onClick={compartir}
+            onPointerEnter={precalentar}
+            onFocus={precalentar}
+            disabled={ocupado !== null}
+            className="h-12 w-full rounded-full bg-accent text-base text-accent-foreground shadow-md hover:bg-accent/90"
           >
-            <Bot className="w-4 h-4 mr-2" aria-hidden="true" />
-            {t.tomy.cta}
+            <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
+            {ocupado === "compartir" ? tp.share.generating : tp.share.cta}
           </Button>
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+            <Button type="button" variant="outline" onClick={descargar} disabled={ocupado !== null} className="h-11 rounded-full">
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              {ocupado === "descargar" ? tp.share.generating : tp.share.download}
+            </Button>
+            <Button asChild variant="outline" className="h-11 rounded-full">
+              <Link to={rutaReservaMesa(comensales)} onClick={() => setAbierto(false)}>
+                <CalendarCheck className="mr-2 h-4 w-4" aria-hidden="true" />
+                {tp.bookCta.replace("{n}", String(comensales))}
+              </Link>
+            </Button>
+          </div>
+
+          {/* Entrada al chatbot con el ticket adjunto. Solo con el chatbot
+              visible (VITE_CHATBOT_PUBLICO o `?tomy=1`); si no, nada. */}
+          {chatbotVisible && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={preguntarATomy}
+              disabled={ocupado !== null}
+              className="h-auto min-h-11 w-full whitespace-normal rounded-full py-2 text-sm text-foreground"
+            >
+              <Bot className="mr-2 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+              {tp.aiPrompt.replace("{n}", String(comensales))}
+            </Button>
+          )}
+
+          <div className="flex min-h-9 items-center justify-center gap-3 pt-1 text-sm">
+            {confirmarVaciar ? (
+              <>
+                <span className="text-muted-foreground">{tp.clearConfirm}</span>
+                <button
+                  type="button"
+                  onClick={vaciar}
+                  className="rounded-full px-3 py-1.5 font-medium text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {tp.clearYes}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmarVaciar(false)}
+                  autoFocus
+                  className="rounded-full px-3 py-1.5 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {tp.clearNo}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmarVaciar(true)}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                {tp.clear}
+              </button>
+            )}
+          </div>
         </div>
       )}
-
-      {/* Total */}
-      <div className="border-t-2 border-black pt-3 mb-3">
-        <p className="text-[10px]">================================</p>
-        <div className="flex justify-between items-center my-2">
-          <span className="font-bold text-sm">{t.preview.totalLabel}:</span>
-          <span className="font-bold text-xl">{total.toFixed(2)}€</span>
-        </div>
-        <p className="text-[10px]">================================</p>
-      </div>
-
-      {/* Footer */}
-      <div className="text-center text-[9px] text-gray-600 space-y-1 mb-3">
-        <p>{t.preview.previewLabel}</p>
-        <p>{t.preview.notBinding}</p>
-        <p>{t.preview.confirm}</p>
-      </div>
-
-      {/* Botón vaciar */}
-      <Button
-        variant="outline"
-        onClick={clearPedido}
-        className="w-full border-red-600 text-red-600 hover:bg-red-50 text-xs"
-      >
-        <Trash2 className="w-3 h-3 mr-2" />
-        {t.preview.clear}
-      </Button>
-
-      <div className="text-center mt-4 space-y-2">
-        <p className="text-[10px]">********************************</p>
-        <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={() => shareTicket("whatsapp")}
-            disabled={shareLoading}
-            className="text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-50"
-            aria-label="Compartir por WhatsApp"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => shareTicket("instagram")}
-            disabled={shareLoading}
-            className="text-pink-600 hover:text-pink-700 transition-colors disabled:opacity-50"
-            aria-label="Compartir por Instagram"
-          >
-            <Instagram className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => shareTicket("facebook")}
-            disabled={shareLoading}
-            className="text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-50"
-            aria-label="Compartir por Facebook"
-          >
-            <Facebook className="h-5 w-5" />
-          </button>
-        </div>
-        {shareLoading && <p className="text-xs text-muted-foreground">{t.preview.share.generating}</p>}
-        {shareError && <p className="text-xs text-destructive">{shareError}</p>}
-        <p className="text-[10px]">********************************</p>
-      </div>
-
-      <div className="text-center mt-3 space-y-1">
-        <p className="text-[9px] mt-1">{t.preview.thanks}</p>
-      </div>
     </div>
   );
 
   return (
     <>
-      {!hideInline && <div className="max-w-md mx-auto">{ticketCard}</div>}
-
-      {showFloatingButton && pedido.length > 0 && (
-        <FloatingTicketButton
-          onOpen={() => setIsTicketOpen(true)}
-          isDisabled={false}
-          count={pedido.length}
-        />
+      {lineas.length > 0 && (
+        <BotonMiMesa onOpen={() => setAbierto(true)} count={lineas.length} label={tp.floatingLabel} aria={tp.openTicketAria} />
       )}
 
-      <TicketDialog
-        open={isTicketOpen}
-        onOpenChange={setIsTicketOpen}
-        title={t.carta.buttons.pedido}
-        description={t.preview.previewLabel}
-        lockOutsideInteractions={chatbotVisible && isChatOpen}
-      >
-        {ticketCard}
-      </TicketDialog>
+      <Sheet open={abierto} onOpenChange={setAbierto}>
+        <SheetContent
+          side={isMobile ? "bottom" : "right"}
+          className={cn(
+            "flex flex-col gap-0 p-0 [&>button.absolute]:hidden",
+            isMobile ? "max-h-[92dvh] rounded-t-3xl" : "w-full sm:max-w-md",
+          )}
+        >
+          {isMobile && <div aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted" />}
+          {panel}
+        </SheetContent>
+      </Sheet>
 
-      {chatbotVisible && isChatOpen && (
+      {/* Ticket para la imagen: fuera de pantalla y oculto a lectores de pantalla. */}
+      {abierto && !vacia && (
+        <div aria-hidden="true" style={{ position: "fixed", left: -10000, top: 0, pointerEvents: "none" }}>
+          <TicketMesa
+            ref={ticketRef}
+            lineas={lineas}
+            comensales={comensales}
+            modo={cadaUno ? "cadaUno" : "igual"}
+            reparto={reparto}
+            nombres={nombres}
+            idioma={language}
+            t={tp}
+            qr={qr}
+            urlQr={urlQr}
+            fecha={fecha}
+          />
+        </div>
+      )}
+
+      {chatbotVisible && chat && (
         <Suspense fallback={null}>
           <AIChatbot
-            isOpen={isChatOpen}
-            onClose={() => setIsChatOpen(false)}
-            initialTicketImage={chatTicketImage}
-            initialGreeting="Hola! Soy Casa Tomas AI, ¿Con qué te puedo ayudar?"
+            isOpen
+            onClose={() => {
+              setChat(null);
+              setAbierto(true);
+            }}
+            initialTicketImage={chat.imagen}
+            initialInput={chat.pregunta}
           />
         </Suspense>
       )}
@@ -543,101 +620,33 @@ const PreviewPedido = ({ showFloatingButton = false, hideInline = false }: Previ
 
 export default PreviewPedido;
 
-type FloatingButtonProps = {
+type BotonMiMesaProps = {
   onOpen: () => void;
-  isDisabled?: boolean;
-  count?: number;
+  count: number;
+  label: string;
+  aria: string;
 };
 
-const FloatingTicketButton = ({ onOpen, isDisabled = false, count = 0 }: FloatingButtonProps) => {
-  const { t } = useTranslations();
-  return (
-    // Sin `fixed` propio: lo coloca la pila de botones flotantes
-    // (`FloatingActions`), que lo apila con "Pregunta a Tomy" y lo sube por
-    // encima de la barra móvil de llamar/reservar.
-    <div>
-      <Button
-        onClick={onOpen}
-        disabled={isDisabled}
-        aria-label={t.preview.openTicketAria.replace("{count}", String(count))}
-        className="shadow-lg bg-background/90 backdrop-blur border border-border/70 text-foreground hover:shadow-xl rounded-full px-4 py-3.5 min-h-[3.25rem] flex items-center gap-3"
-      >
-        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-accent/15 text-accent">
-          <Receipt className="h-5 w-5" />
-        </div>
-        <div className="flex flex-col items-start leading-tight">
-          <span className="text-xs font-semibold">{t.preview.floatingTicketTitle}</span>
-          <span className="text-[11px] text-muted-foreground">{t.preview.floatingTicketSubtitle}</span>
-        </div>
-        {count > 0 && (
-          <span className="ml-1 inline-flex h-6 px-2 items-center justify-center rounded-full bg-accent text-accent-foreground text-xs font-bold">
-            {count}
-          </span>
-        )}
-      </Button>
-    </div>
-  );
-};
-
-type TicketDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
-  lockOutsideInteractions?: boolean;
-  children: React.ReactNode;
-};
-
-const TicketDialog = ({
-  open,
-  onOpenChange,
-  title,
-  description,
-  lockOutsideInteractions = false,
-  children,
-}: TicketDialogProps) => {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent
-        onPointerDownOutside={(event) => {
-          if (lockOutsideInteractions) event.preventDefault();
-        }}
-        onInteractOutside={(event) => {
-          if (lockOutsideInteractions) event.preventDefault();
-        }}
-        className="sm:max-w-xl p-0 overflow-hidden bg-transparent border-none shadow-none [&>button.absolute]:hidden data-[state=open]:bg-transparent"
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.98 }}
-          transition={{ duration: 0.22, ease: "easeInOut" }}
-          className="rounded-2xl bg-background shadow-2xl border border-border/60"
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-full bg-accent/15 text-accent">
-                <Receipt className="h-4 w-4" />
-              </div>
-              <div>
-                <DialogTitle className="text-sm font-semibold leading-tight">{title}</DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground leading-tight">
-                  {description}
-                </DialogDescription>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="h-9 w-9 rounded-full"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="p-4 sm:p-6 max-h-[70vh] overflow-auto space-y-4">{children}</div>
-        </motion.div>
-      </DialogContent>
-    </Dialog>
-  );
-};
+/**
+ * "Mi mesa · N". Sin `fixed` propio: lo coloca la pila de botones flotantes
+ * (`FloatingActions`), que lo apila con "Pregunta a Tomy" y lo sube por
+ * encima de la barra móvil de llamar/reservar (`--mobile-cta-offset`).
+ */
+const BotonMiMesa = ({ onOpen, count, label, aria }: BotonMiMesaProps) => (
+  <Button
+    type="button"
+    onClick={onOpen}
+    aria-haspopup="dialog"
+    aria-label={aria.replace("{count}", String(count))}
+    className="h-12 gap-2.5 rounded-full border border-border/70 bg-background/95 pl-2 pr-4 text-foreground shadow-lg backdrop-blur hover:bg-background hover:shadow-xl"
+  >
+    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-accent">
+      <UtensilsCrossed className="h-4 w-4" aria-hidden="true" />
+    </span>
+    <span className="font-libre-baskerville text-sm">{label}</span>
+    <span aria-hidden="true" className="text-muted-foreground">·</span>
+    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-accent px-2 text-xs font-bold tabular-nums text-accent-foreground">
+      {count}
+    </span>
+  </Button>
+);

@@ -29,6 +29,7 @@ import {
   type DisponibilidadHueco,
   type RechazoReserva,
 } from "@/lib/reservas-web";
+import { leerComensalesReserva } from "@/lib/mi-mesa";
 
 type ReservationFormProps = {
   onSuccessClose?: () => void;
@@ -87,6 +88,18 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   });
 
   const watchFecha = form.watch("fecha");
+
+  // `?comensales=N` (lo manda "Reservar mesa para N" desde Mi mesa). Se lee
+  // tras montar — en el prerender SSG no hay URL y el HTML debe coincidir con
+  // la hidratación —: 1–12 rellena el campo; más de 12 no rellena nada y
+  // enseña el aviso de grupos grandes por teléfono (la web los rechaza con
+  // `grupo_grande`).
+  const [grupoGrandeDesdeMesa, setGrupoGrandeDesdeMesa] = useState(false);
+  useEffect(() => {
+    const { comensales, grupoGrande } = leerComensalesReserva(window.location.search);
+    if (comensales !== null) form.setValue("numero_comensales", comensales);
+    setGrupoGrandeDesdeMesa(grupoGrande);
+  }, [form]);
 
   /** Huecos agrupados por turno, en el mismo orden en que los manda el motor. */
   const huecosPorTurno = useMemo(
@@ -384,6 +397,18 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                 )}
               />
             </div>
+
+            {grupoGrandeDesdeMesa && (
+              <p
+                role="status"
+                className="flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-foreground"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                <span>
+                  <TextoSalida texto={t.reservationForm.largeGroupNotice} />
+                </span>
+              </p>
+            )}
 
             <Button
               type="button"

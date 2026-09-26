@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,10 @@ const OCULTAR_EN = ["/reserva/respuesta", "/newsletter/baja"];
  * - "Pregunta a Tomy": abre el chatbot sin ticket. Es la entrada al chatbot
  *   independiente del pedido (el botón del hero se quitó en 650ccd9 y el
  *   chatbot se quedó sin ningún acceso visible).
- * - El ticket del pedido (`PreviewPedido`), solo cuando hay ≥1 línea. Antes
- *   lo montaba `CartaSection`, así que en `/carta/:categoria` y
- *   `/carta/vinos` no existía; aquí vale para cualquier página.
+ * - "Mi mesa · N" (`PreviewPedido`), en cuanto hay ≥1 línea. Una vez
+ *   montado se queda montado aunque se vacíe la mesa, para que el panel
+ *   abierto pase al estado vacío ("Añade platos y vinos…") en vez de
+ *   desaparecer; el botón flotante solo se pinta si hay líneas.
  *
  * Una sola columna `fixed` para que no se pisen entre sí, y con el fondo
  * subido por `--mobile-cta-offset` (lo publica `MobileReserveCTA`) para no
@@ -48,6 +49,11 @@ const FloatingActions = () => {
   const { total } = usePedido();
   const chatbotVisible = useChatbotVisible();
   const [chatAbierto, setChatAbierto] = useState(false);
+  const [mesaMontada, setMesaMontada] = useState(false);
+
+  useEffect(() => {
+    if (total > 0) setMesaMontada(true);
+  }, [total]);
 
   if (OCULTAR_EN.some((ruta) => location.pathname.endsWith(ruta))) {
     return null;
@@ -74,9 +80,9 @@ const FloatingActions = () => {
           </Button>
         )}
 
-        {total > 0 && (
+        {(total > 0 || mesaMontada) && (
           <Suspense fallback={null}>
-            <PreviewPedido showFloatingButton hideInline />
+            <PreviewPedido />
           </Suspense>
         )}
       </div>

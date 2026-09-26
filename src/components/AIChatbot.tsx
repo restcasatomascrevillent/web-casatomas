@@ -11,6 +11,12 @@ interface AIChatbotProps {
     onClose: () => void;
     initialTicketImage?: string | null;
     initialGreeting?: string;
+    /**
+     * Texto con el que arranca el campo de mensaje (sin enviarlo): "Mi mesa" lo
+     * usa para dejar preparada la pregunta con los comensales y los platos,
+     * porque la imagen del ticket solo se ve en el chat, no viaja al bot.
+     */
+    initialInput?: string;
 }
 
 type ChatMessage = {
@@ -238,6 +244,7 @@ const AIChatbot = ({
     onClose,
     initialTicketImage = null,
     initialGreeting = "¡Hola! Soy el asistente de Casa Tomás. ¿En qué puedo ayudarte hoy?",
+    initialInput,
 }: AIChatbotProps) => {
     const { language } = useTranslations();
     const [input, setInput] = useState("");
@@ -251,6 +258,10 @@ const AIChatbot = ({
         setMounted(true);
         getChatSessionId();
     }, []);
+
+    useEffect(() => {
+        if (isOpen && initialInput) setInput(initialInput.slice(0, MAX_MENSAJE_LEN));
+    }, [isOpen, initialInput]);
 
     useEffect(() => {
         if (!isOpen) {

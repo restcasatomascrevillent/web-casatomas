@@ -56,3 +56,31 @@ export const setUserPedido = (pedido: any[]): void => {
   // Disparar evento para actualizar UI
   window.dispatchEvent(new Event('pedidoUpdated'));
 };
+
+const MESA_KEY = 'mi_mesa';
+
+/**
+ * Ajustes de "Mi mesa" (comensales, modo de reparto, nombres y a quién va
+ * cada línea), junto al pedido en `sessionStorage`. Devuelve el JSON crudo:
+ * lo sanea `normalizarEstadoMesa` (`src/lib/mi-mesa.ts`). Sin `window`
+ * (prerender SSG) o sin `sessionStorage` devuelve `null`.
+ */
+export const getMesaConfig = (): unknown => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const crudo = sessionStorage.getItem(MESA_KEY);
+    return crudo ? JSON.parse(crudo) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const setMesaConfig = (config: unknown): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(MESA_KEY, JSON.stringify(config));
+  } catch {
+    // Modo privado estricto: los ajustes valen solo mientras la página siga abierta.
+  }
+  window.dispatchEvent(new Event('miMesaUpdated'));
+};
