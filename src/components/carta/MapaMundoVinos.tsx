@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
@@ -267,16 +268,13 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
           });
         }
 
+        // La info de la región sale en un popup (más abajo), no ya en un
+        // panel bajo el mapa: no hace falta desplazar la página para
+        // enseñarla, aparece encima de donde esté mirando el visitante.
         el.addEventListener('click', () => {
           setSelectedRegion({ region, vinos: data.vinos, category: data.category });
           if (map.current) {
             map.current.flyTo({ center: coords, zoom: isMobile ? 2 : 3, speed: 0.7, essential: true });
-          }
-          if (!isMobile) {
-            const containerBottom = mapContainer.current?.getBoundingClientRect().bottom;
-            if (typeof containerBottom === "number") {
-              window.scrollTo({ top: containerBottom + window.scrollY - 80, behavior: "smooth" });
-            }
           }
         });
 
@@ -399,70 +397,78 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
         style={{ maxWidth: '100%', overflow: 'hidden' }}
       />
-      {selectedRegion && (
-        <div className="mt-4 md:mt-6 w-full px-2 md:px-0">
-          <div
-            className="rounded-xl border shadow-md p-4 md:p-6 space-y-4"
-            style={{ backgroundColor: hexToRgba(colorByCategory[selectedRegion.category || "otro"] || colorByCategory.otro, 0.08) }}
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="space-y-1">
+      {/* Info de la región en un popup, no en un panel bajo el mapa: antes
+          había que desplazar la página para verlo (y en móvil quedaba fuera
+          de la vista); ahora aparece encima, dondequiera que esté mirando
+          el visitante, y se cierra con la X, Escape o clic fuera. */}
+      <Dialog open={!!selectedRegion} onOpenChange={(open) => !open && setSelectedRegion(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          {selectedRegion && (
+            <>
+              <DialogHeader
+                className="rounded-xl -m-2 p-4 space-y-1"
+                style={{ backgroundColor: hexToRgba(colorByCategory[selectedRegion.category || "otro"] || colorByCategory.otro, 0.08) }}
+              >
                 <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">{t.vinos.originLabel}</p>
-                <h4 className="text-lg md:text-xl font-bold">{selectedRegion.region}</h4>
-                <p className="text-sm text-muted-foreground">
+                <DialogTitle className="text-lg md:text-xl">{selectedRegion.region}</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
                   {selectedRegion.vinos.length === 1
                     ? t.map.countSingle.replace("{count}", selectedRegion.vinos.length.toString())
                     : t.map.countPlural.replace("{count}", selectedRegion.vinos.length.toString())}
-                </p>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-wrap gap-4">
+                <div className="text-sm text-muted-foreground max-w-xl">
+                  <p className="font-semibold text-foreground mb-1">{t.map.aboutDO ?? "Sobre esta D.O."}</p>
+                  <p className="leading-snug">{getRegionInsight(selectedRegion.region, selectedRegion.category || "otro", selectedRegion.vinos)}</p>
+                </div>
+                {selectedUniqueDO.length > 0 && (
+                  <div className="text-sm text-muted-foreground max-w-sm">
+                    <p className="font-semibold text-foreground mb-1">{t.vinos.doLabel}:</p>
+                    <p className="leading-snug">{selectedUniqueDO.join(" · ")}</p>
+                  </div>
+                )}
               </div>
-              <div className="text-sm text-muted-foreground max-w-xl">
-                <p className="font-semibold text-foreground mb-1">{t.map.aboutDO ?? "Sobre esta D.O."}</p>
-                <p className="leading-snug">{getRegionInsight(selectedRegion.region, selectedRegion.category || "otro", selectedRegion.vinos)}</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {visibleVinos.map((vino) => {
+                  const categoryKey = getCategoryKey(vino.categoria);
+                  const cardColor = colorByCategory[categoryKey] || colorByCategory.otro;
+                  const cardBg = hexToRgba(cardColor, 0.1);
+                  const borderColor = hexToRgba(cardColor, 0.5);
+
+                  return (
+                    <div
+                      key={vino.nombre + vino.denominacion_origen}
+                      className="rounded-lg border p-3 flex flex-col gap-1 shadow-sm transition-transform duration-150 hover:-translate-y-0.5"
+                      style={{ backgroundColor: cardBg, borderColor }}
+                    >
+                      <p className="font-semibold text-foreground leading-tight">{vino.nombre}</p>
+                      {vino.denominacion_origen && (
+                        <p className="text-xs text-muted-foreground">{vino.denominacion_origen}</p>
+                      )}
+                      <p className="text-xs font-semibold uppercase" style={{ color: cardColor }}>
+                        {vino.categoria || categoryKey}
+                      </p>
+                      <p className="text-sm font-bold" style={{ color: cardColor }}>
+                        {vino.precio_eur}€
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
-              {selectedUniqueDO.length > 0 && (
-                <div className="text-sm text-muted-foreground max-w-sm">
-                  <p className="font-semibold text-foreground mb-1">{t.vinos.doLabel}:</p>
-                  <p className="leading-snug">{selectedUniqueDO.join(" · ")}</p>
+              {hasMoreVinos && (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
+                    {t.map.showMore ?? "Mostrar más"}
+                  </Button>
                 </div>
               )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {visibleVinos.map((vino) => {
-                const categoryKey = getCategoryKey(vino.categoria);
-                const cardColor = colorByCategory[categoryKey] || colorByCategory.otro;
-                const cardBg = hexToRgba(cardColor, 0.1);
-                const borderColor = hexToRgba(cardColor, 0.5);
-
-                return (
-                  <div
-                    key={vino.nombre + vino.denominacion_origen}
-                    className="rounded-lg border p-3 flex flex-col gap-1 shadow-sm transition-transform duration-150 hover:-translate-y-0.5"
-                    style={{ backgroundColor: cardBg, borderColor }}
-                  >
-                    <p className="font-semibold text-foreground leading-tight">{vino.nombre}</p>
-                    {vino.denominacion_origen && (
-                      <p className="text-xs text-muted-foreground">{vino.denominacion_origen}</p>
-                    )}
-                    <p className="text-xs font-semibold uppercase" style={{ color: cardColor }}>
-                      {vino.categoria || categoryKey}
-                    </p>
-                    <p className="text-sm font-bold" style={{ color: cardColor }}>
-                      {vino.precio_eur}€
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-            {hasMoreVinos && (
-              <div className="flex justify-center pt-2">
-                <Button variant="outline" onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}>
-                  {t.map.showMore ?? "Mostrar más"}
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

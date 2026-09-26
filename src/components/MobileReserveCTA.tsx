@@ -13,6 +13,11 @@ import { useEffect, useState } from "react";
 // En cualquier página se vuelve a ocultar al llegar al footer, para no
 // tapar sus enlaces/datos de contacto.
 const HIDE_ON_PATHS = ["/reservas", "/404", "/reserva/respuesta", "/newsletter/baja"];
+// Rutas de las tres ramas de idioma ("/carta/vinos", "/en/carta/vinos",
+// "/fr/carta/vinos"): comparadas por sufijo, no por igualdad exacta, para no
+// tener que repetir las tres. En la carta de vinos esta barra tapaba la
+// parte de abajo de las tarjetas y el propio botón "Volver arriba".
+const HIDE_ON_PATH_SUFFIXES = ["/carta/vinos"];
 const HOME_PATHS = ["/", "/en", "/fr"];
 
 const MobileReserveCTA = () => {
@@ -78,7 +83,12 @@ const MobileReserveCTA = () => {
     };
   }, [location.pathname]);
 
-  if (HIDE_ON_PATHS.includes(location.pathname)) return null;
+  if (
+    HIDE_ON_PATHS.includes(location.pathname) ||
+    HIDE_ON_PATH_SUFFIXES.some((suffix) => location.pathname.endsWith(suffix))
+  ) {
+    return null;
+  }
 
   const visible = pastHero && !nearFooter;
 
