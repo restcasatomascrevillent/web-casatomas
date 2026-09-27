@@ -11,9 +11,11 @@ import {
   leerToken,
   llamarEnlace,
   textosEstado,
+  textosSinConexion,
   type RespuestaEnlace,
   type Tono,
 } from "@/lib/respuesta-reserva";
+import type { TipoFallo } from "@/lib/supabase-functions";
 
 /**
  * /reserva/respuesta?token=... — página de los botones "Aceptar" / "Rechazar"
@@ -27,7 +29,7 @@ type Fase =
   | { tipo: "cargando" }
   | { tipo: "sin_token" }
   | { tipo: "lista"; respuesta: RespuestaEnlace; enviando: boolean }
-  | { tipo: "sin_conexion"; reintentar: "consultar" | "ejecutar" };
+  | { tipo: "sin_conexion"; reintentar: "consultar" | "ejecutar"; fallo: TipoFallo };
 
 const ICONO: Record<Tono, typeof Info> = {
   exito: CheckCircle2,
@@ -56,7 +58,10 @@ const RespuestaReserva = () => {
       setFase({ tipo: "lista", respuesta: await llamarEnlace("consultar", token), enviando: false });
     } catch (e) {
       if (!(e instanceof ErrorConexion)) console.error("[respuesta-reserva]", e);
-      setFase({ tipo: "sin_conexion", reintentar: "consultar" });
+      // Lo que no es un `ErrorConexion` es un fallo de nuestro propio código:
+      // también es NUESTRO, así que por defecto "servidor".
+      const fallo: TipoFallo = e instanceof ErrorConexion ? e.tipo : "servidor";
+      setFase({ tipo: "sin_conexion", reintentar: "consultar", fallo });
     }
   }, []);
 
@@ -68,7 +73,8 @@ const RespuestaReserva = () => {
       setFase({ tipo: "lista", respuesta: await llamarEnlace("ejecutar", token), enviando: false });
     } catch (e) {
       if (!(e instanceof ErrorConexion)) console.error("[respuesta-reserva]", e);
-      setFase({ tipo: "sin_conexion", reintentar: "ejecutar" });
+      const fallo: TipoFallo = e instanceof ErrorConexion ? e.tipo : "servidor";
+      setFase({ tipo: "sin_conexion", reintentar: "ejecutar", fallo });
     }
   }, []);
 
@@ -127,15 +133,16 @@ const RespuestaReserva = () => {
               />
             ) : fase.tipo === "sin_conexion" ? (
               <>
+                {/*
+                  Solo se le pide comprobar su conexión si de verdad no la tiene.
+                  Si el fallo es nuestro (5xx, CORS, la función caída), se dice
+                  así y se le da el teléfono: culparle de lo nuestro es lo que le
+                  manda a mirar su wifi y, de ahí, a otro restaurante.
+                */}
                 <Estado
                   tituloRef={tituloRef}
                   tono="aviso"
-                  titulo="No hemos podido conectar"
-                  parrafos={[
-                    fase.reintentar === "ejecutar"
-                      ? "No sabemos si tu respuesta ha llegado. Vuelve a intentarlo: si ya estaba registrada, te lo diremos."
-                      : "Comprueba tu conexión e inténtalo de nuevo.",
-                  ]}
+                  {...textosSinConexion(fase.fallo, fase.reintentar, telTexto)}
                 />
                 <Button
                   className="mt-6 w-full min-h-12 text-base"

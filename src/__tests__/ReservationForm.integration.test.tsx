@@ -27,7 +27,10 @@ import {
 import {
   RESERVAS_WEB_CREAR_URL,
   RESERVAS_WEB_DISPONIBILIDAD_URL,
+  clasificarFallo,
+  estaEnLinea,
 } from "@/lib/supabase-functions";
+import { PHONE_DISPLAY } from "@/components/TelLink";
 
 // Sonner toaster must be in the tree for toasts to render
 import { Toaster } from "sonner";
@@ -246,6 +249,67 @@ describe("clasificarDisponibilidad — dia cerrado frente a error", () => {
     const resultado = clasificarDisponibilidad(true, [periodo]);
     expect(resultado.estado).toBe("error");
   });
+
+  it("TODO estado 'error' es un fallo nuestro: si hubo respuesta, la red del visitante va bien", () => {
+    // Los tres caminos que devuelven `error` salen de una respuesta HTTP, y
+    // eso prueba que el visitante tiene conexion. Ninguno puede ser `sin_red`.
+    for (const [ok, cuerpo] of [
+      [false, { ok: false, error: "fecha_invalida" }],
+      [true, { ok: true }],
+      [true, [periodo]],
+    ] as const) {
+      expect(clasificarDisponibilidad(ok, cuerpo).estado).toBe("error");
+    }
+    expect(clasificarFallo(500)).toBe("servidor");
+    expect(clasificarFallo(200)).toBe("servidor");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// De quien es la culpa: `clasificarFallo`
+//
+// El bug de hoy: la Edge Function se desplego con un fichero marcador, el
+// worker moria al arrancar y devolvia 500 hasta en el OPTIONS del preflight.
+// El navegador lo traduce a error de CORS, `fetch` lanza `TypeError: Failed to
+// fetch`, y la web le decia al cliente "comprueba tu conexion". El cliente
+// mira su wifi, no ve nada raro, y se va a otro restaurante.
+// ---------------------------------------------------------------------------
+
+describe("clasificarFallo — nunca se culpa al visitante de lo nuestro", () => {
+  it("con respuesta HTTP el fallo es NUESTRO, pase lo que pase con navigator.onLine", () => {
+    expect(clasificarFallo(500)).toBe("servidor");
+    expect(clasificarFallo(503)).toBe("servidor");
+    expect(clasificarFallo(200)).toBe("servidor");
+    expect(clasificarFallo(422)).toBe("servidor");
+    // Llegaron bytes desde nuestro host: su red funciona por definicion.
+    expect(clasificarFallo(500, false)).toBe("servidor");
+  });
+
+  it("status 0 con el dispositivo en linea: NUESTRO (es el caso del CORS de hoy)", () => {
+    expect(clasificarFallo(0, true)).toBe("servidor");
+  });
+
+  it("status 0 sin red: ahi si es su conexion", () => {
+    expect(clasificarFallo(0, false)).toBe("sin_red");
+  });
+});
+
+describe("estaEnLinea — ante la duda, la culpa es nuestra", () => {
+  it("sin `navigator.onLine` booleano devuelve true, para que el fallo salga como nuestro", () => {
+    // Pasa en el prerender del SSG (no hay `navigator`) y en navegadores que
+    // no lo implementan. `true` => `clasificarFallo` dice "servidor".
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(undefined as unknown as boolean);
+    expect(estaEnLinea()).toBe(true);
+    expect(clasificarFallo(0, estaEnLinea())).toBe("servidor");
+  });
+
+  it("solo un `false` explicito se toma por falta de red", () => {
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    expect(estaEnLinea()).toBe(false);
+
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+    expect(estaEnLinea()).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -322,6 +386,127 @@ describe("interpretarRechazoReserva — un mensaje distinto por codigo", () => {
 
     expect(resultado.mensaje).toBe(TEXTOS.errorMessage);
     expect(resultado.salida).toBe(TEXTOS.exits.retryOrCall);
+  });
+
+  it("status 0 SIN red: titulo, mensaje y salida de offline", () => {
+    const resultado = interpretarRechazoReserva(0, null, TEXTOS, "sin_red");
+
+    expect(resultado.titulo).toBe(TEXTOS.offlineTitle);
+    expect(resultado.mensaje).toBe(TEXTOS.offlineMessage);
+    expect(resultado.salida).toBe(TEXTOS.exits.offline);
+  });
+
+  it("status 0 con red (CORS / funcion caida): se dice que el fallo es NUESTRO", () => {
+    const resultado = interpretarRechazoReserva(0, null, TEXTOS, "servidor");
+
+    expect(resultado.titulo).toBe(TEXTOS.title);
+    expect(resultado.mensaje).toBe(TEXTOS.errorMessage);
+    expect(resultado.salida).toBe(TEXTOS.exits.retryOrCall);
+    // La regresion exacta de hoy: ni una palabra sobre SU conexion.
+    expect(resultado.mensaje).not.toMatch(/conexi[oó]n|connection/i);
+  });
+
+  it("los dos casos del status 0 no dicen lo mismo", () => {
+    const sinRed = interpretarRechazoReserva(0, null, TEXTOS, "sin_red");
+    const nuestro = interpretarRechazoReserva(0, null, TEXTOS, "servidor");
+
+    expect(sinRed.titulo).not.toBe(nuestro.titulo);
+    expect(sinRed.mensaje).not.toBe(nuestro.mensaje);
+    expect(sinRed.salida).not.toBe(nuestro.salida);
+  });
+
+  it("un 5xx con respuesta lleva el titulo normal y el mensaje de culpa nuestra", () => {
+    const resultado = interpretarRechazoReserva(500, null, TEXTOS);
+
+    expect(resultado.titulo).toBe(TEXTOS.title);
+    expect(resultado.mensaje).toBe(TEXTOS.errorMessage);
+    expect(resultado.mensaje).not.toMatch(/conexi[oó]n|connection/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Los tres idiomas, y la guardia contra la regresion de hoy
+// ---------------------------------------------------------------------------
+
+describe("textos de fallo en es/en/fr", () => {
+  const packs = [
+    ["es", esPack],
+    ["en", enPack],
+    ["fr", frPack],
+  ] as const;
+
+  it("los tres idiomas traen las claves nuevas y ninguna vacia", () => {
+    for (const [idioma, pack] of packs) {
+      const { toasts, rejection } = pack.translations.reservationForm;
+      const textos = [
+        toasts.availabilityOfflineTitle,
+        toasts.availabilityOfflineDescription,
+        toasts.availabilityServerErrorTitle,
+        toasts.availabilityServerErrorDescription,
+        toasts.noSlots,
+        rejection.offlineTitle,
+        rejection.offlineMessage,
+        rejection.errorMessage,
+        rejection.exits.offline,
+      ];
+      for (const texto of textos) expect(texto.trim(), idioma).not.toBe("");
+
+      // Los que ofrecen el telefono tienen que traer el marcador.
+      expect(toasts.availabilityServerErrorDescription).toContain("{phone}");
+      expect(toasts.noSlots).toContain("{phone}");
+      expect(rejection.exits.offline).toContain("{phone}");
+    }
+  });
+
+  it("en/fr estan traducidos de verdad, no copiados del castellano", () => {
+    const es = esPack.translations.reservationForm;
+    for (const [idioma, pack] of packs.filter(([codigo]) => codigo !== "es")) {
+      const otro = pack.translations.reservationForm;
+      const pares: [string, string][] = [
+        [otro.toasts.availabilityOfflineTitle, es.toasts.availabilityOfflineTitle],
+        [otro.toasts.availabilityOfflineDescription, es.toasts.availabilityOfflineDescription],
+        [otro.toasts.availabilityServerErrorTitle, es.toasts.availabilityServerErrorTitle],
+        [otro.toasts.availabilityServerErrorDescription, es.toasts.availabilityServerErrorDescription],
+        [otro.toasts.noSlots, es.toasts.noSlots],
+        [otro.rejection.offlineTitle, es.rejection.offlineTitle],
+        [otro.rejection.offlineMessage, es.rejection.offlineMessage],
+        [otro.rejection.errorMessage, es.rejection.errorMessage],
+        [otro.rejection.exits.offline, es.rejection.exits.offline],
+      ];
+      for (const [traducido, castellano] of pares) {
+        expect(traducido, idioma).not.toBe(castellano);
+      }
+    }
+  });
+
+  it("NINGUN texto del caso 'servidor' le habla de su conexion", () => {
+    // La regresion de hoy, fijada en los tres idiomas: cuando el fallo es
+    // nuestro no aparece "conexion"/"connection"/"connexion" en ninguna parte.
+    const culpaAjena = /conexi[oó]n|connection|connexion/i;
+    for (const [idioma, pack] of packs) {
+      const { toasts, rejection } = pack.translations.reservationForm;
+      const delServidor = [
+        toasts.availabilityServerErrorTitle,
+        toasts.availabilityServerErrorDescription,
+        rejection.errorMessage,
+        rejection.exits.retryOrCall,
+      ];
+      for (const texto of delServidor) expect(texto, `${idioma}: ${texto}`).not.toMatch(culpaAjena);
+
+      // Y al contrario: el caso de verdad sin red SÍ habla de la conexión.
+      expect(
+        `${toasts.availabilityOfflineTitle} ${toasts.availabilityOfflineDescription} ${rejection.offlineMessage} ${rejection.exits.offline}`,
+        idioma,
+      ).toMatch(culpaAjena);
+    }
+  });
+
+  it("el caso 'servidor' siempre ofrece el telefono como salida util", () => {
+    for (const [idioma, pack] of packs) {
+      const { toasts, rejection } = pack.translations.reservationForm;
+      expect(toasts.availabilityServerErrorDescription, idioma).toContain("{phone}");
+      expect(rejection.exits.retryOrCall, idioma).toContain("{phone}");
+    }
   });
 
   it("403, 409 y 422 producen textos distintos entre si", () => {
@@ -872,17 +1057,91 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
     expect(screen.queryByRole("button", { name: /^\d{2}:\d{2}$/ })).toBeNull();
   });
 
-  it("error (fallo de red): no pinta huecos y avisa con el toast de error", async () => {
-    vi.mocked(fetch).mockRejectedValueOnce(new Error("network down"));
+  it("fetch que lanza con el dispositivo en linea: el fallo se cuenta como NUESTRO, no como su wifi", async () => {
+    // Es el bug que tumbo el formulario: la Edge Function moria al arrancar y
+    // ni contestaba al OPTIONS, el navegador lo daba como error de CORS y
+    // `fetch` lanzaba `TypeError: Failed to fetch`. `navigator.onLine` era
+    // `true` (jsdom, como el movil del cliente), asi que la culpa es nuestra.
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
 
     const user = userEvent.setup();
     renderForm();
     await comprobarDisponibilidad(user);
 
+    const toasts = esPack.translations.reservationForm.toasts;
+    expect(await screen.findByText(toasts.availabilityServerErrorTitle)).toBeInTheDocument();
+    // Y con el telefono ya sustituido: en un toast no puede ir como enlace.
     expect(
-      await screen.findByText(esPack.translations.reservationForm.toasts.availabilityErrorTitle),
+      screen.getByText(toasts.availabilityServerErrorDescription.replace("{phone}", PHONE_DISPLAY)),
     ).toBeInTheDocument();
+    // Ni rastro del viejo "comprueba tu conexion".
+    expect(screen.queryByText(toasts.availabilityOfflineTitle)).toBeNull();
     expect(screen.queryByRole("button", { name: /^\d{2}:\d{2}$/ })).toBeNull();
+  });
+
+  it("dispositivo sin red de verdad: ahi si se le pide que compruebe su conexion", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    const toasts = esPack.translations.reservationForm.toasts;
+    expect(await screen.findByText(toasts.availabilityOfflineTitle)).toBeInTheDocument();
+    expect(screen.queryByText(toasts.availabilityServerErrorTitle)).toBeNull();
+  });
+
+  it("un 500 de la funcion tampoco se le achaca a la conexion del visitante", async () => {
+    mockReservas(crearNoDeberiaLlamarse, () => new Response("boom", { status: 500 }));
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    const toasts = esPack.translations.reservationForm.toasts;
+    expect(await screen.findByText(toasts.availabilityServerErrorTitle)).toBeInTheDocument();
+    expect(screen.queryByText(toasts.availabilityOfflineTitle)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^\d{2}:\d{2}$/ })).toBeNull();
+  });
+
+  it("dia abierto pero sin ninguna hora libre: lo dice, en vez de un exito con la lista vacia", async () => {
+    // El engaño que había: `toast.success("Disponibilidad actualizada")` y una
+    // sección "Horarios disponibles" vacía, sin que nadie explicara nada.
+    mockReservas(crearNoDeberiaLlamarse, () =>
+      respuestaConHuecos([
+        hueco({ hora: "13:00", turno: "comida", estado: "completo", ofrecido: false, capacidad_disponible: 0 }),
+      ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    const toasts = esPack.translations.reservationForm.toasts;
+    expect(
+      await screen.findByText(toasts.noSlots.replace("{phone}", PHONE_DISPLAY)),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(toasts.availabilityChecked)).toBeNull();
+    // La hora completa se sigue pintando en gris: es informacion, no un hueco.
+    expect(screen.getByRole("button", { name: /13:00/ })).toBeDisabled();
+  });
+
+  it("con al menos una hora libre sigue siendo un exito normal", async () => {
+    mockReservas(crearNoDeberiaLlamarse, () =>
+      respuestaConHuecos([
+        hueco({ hora: "13:00", turno: "comida", estado: "completo", ofrecido: false }),
+        hueco({ hora: "14:00", turno: "comida" }),
+      ]),
+    );
+
+    const user = userEvent.setup();
+    renderForm();
+    await comprobarDisponibilidad(user);
+
+    const toasts = esPack.translations.reservationForm.toasts;
+    expect(await screen.findByText(toasts.availabilityChecked)).toBeInTheDocument();
+    expect(screen.queryByText(toasts.noSlots.replace("{phone}", PHONE_DISPLAY))).toBeNull();
   });
 
   it("una hora completa se pinta en gris, y no se puede seleccionar ni enviar", async () => {

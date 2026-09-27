@@ -12,7 +12,15 @@
  *      `mensaje` legible, y `if (!response.ok) throw` los descartaba: el
  *      visitante veía un toast genérico (o peor, el diálogo de éxito) mientras
  *      recibía por email un "solicitud no procesada".
+ *
+ * De quién es la culpa (lo que costó horas de formulario caído): si llega una
+ * RESPUESTA HTTP — con `ok` o sin él —, la red del visitante funciona por
+ * definición, así que el fallo es NUESTRO y jamás se le pide que compruebe su
+ * conexión. Eso incluye TODO `estado: "error"` de `clasificarDisponibilidad`.
+ * El único caso en que la culpa puede no ser nuestra es el `catch` del `fetch`
+ * (`status` 0), y ahí lo desempata `clasificarFallo`.
  */
+import { clasificarFallo, type TipoFallo } from "@/lib/supabase-functions";
 
 // ---------------------------------------------------------------------------
 // POST /disponibilidad — array plano discriminado por `kind`
@@ -136,6 +144,12 @@ export type ResultadoDisponibilidad =
  *
  * `ok` es el `response.ok` del fetch: en 4xx/5xx el cuerpo es un OBJETO
  * `{ ok:false, error }` y no se puede recorrer como array.
+ *
+ * `estado: "error"` SIEMPRE es un fallo NUESTRO: si esta función se ejecuta es
+ * porque hubo respuesta HTTP, lo que prueba que la red del visitante funciona.
+ * Un 5xx, un cuerpo que no es array o un array sin `meta` son cosas nuestras.
+ * El caso `sin_red` no puede aparecer por aquí: solo sale del `catch` del
+ * `fetch`, donde no hay respuesta que clasificar.
  */
 export function clasificarDisponibilidad(ok: boolean, cuerpo: unknown): ResultadoDisponibilidad {
   if (!ok || !Array.isArray(cuerpo)) return { estado: "error" };
@@ -186,14 +200,19 @@ export type SalidaRechazo =
   | "otherDate"
   | "guests"
   | "checkForm"
-  | "retryOrCall";
+  | "retryOrCall"
+  | "offline";
 
 export type TextosRechazo = {
   title: string;
   close: string;
   /** 400: entrada malformada, la función NO manda `mensaje`. */
   invalidMessage: string;
-  /** 5xx o fallo de red. */
+  /** Título cuando el visitante no tiene red: el único caso en que el problema NO es nuestro. */
+  offlineTitle: string;
+  /** Mensaje de ese mismo caso: la solicitud no ha salido del dispositivo. */
+  offlineMessage: string;
+  /** 5xx o fallo nuestro sin respuesta útil. Dice que la culpa es nuestra. */
   errorMessage: string;
   /** Rechazo sin `mensaje` legible por cualquier otro motivo. */
   fallbackMessage: string;
@@ -203,6 +222,8 @@ export type TextosRechazo = {
 export type RechazoReserva = {
   /** `motivo` tal cual viene de la función, o `null` si no venía. */
   motivo: string | null;
+  /** Título del diálogo: ya no puede ser fijo, el caso sin red necesita otro. */
+  titulo: string;
   /** Lo que se le enseña al visitante. Se prioriza el `mensaje` del servidor. */
   mensaje: string;
   /** Qué puede hacer a continuación. Puede contener el marcador `{phone}`. */
@@ -243,11 +264,13 @@ function salidaPorEstado(status: number): SalidaRechazo {
  * Traduce una respuesta no-201 de `/crear` a título + mensaje + salida.
  *
  * `status` 0 representa "ni siquiera hubo respuesta" (fallo de red o de CORS).
+ * `fallo` dice de quién es la culpa; por defecto lo deduce `clasificarFallo`.
  */
 export function interpretarRechazoReserva(
   status: number,
   cuerpo: unknown,
   textos: TextosRechazo,
+  fallo: TipoFallo = clasificarFallo(status),
 ): RechazoReserva {
   const objeto =
     cuerpo && typeof cuerpo === "object" && !Array.isArray(cuerpo)
@@ -259,6 +282,17 @@ export function interpretarRechazoReserva(
     typeof objeto?.mensaje === "string" && objeto.mensaje.trim() ? objeto.mensaje.trim() : null;
 
   const salida = (motivo && SALIDA_POR_MOTIVO[motivo]) || salidaPorEstado(status);
+
+  // Sin red: el ÚNICO caso en que la culpa no es nuestra. Con `status === 0`
+  // no hay cuerpo del servidor, así que no hay `mensaje` que priorizar.
+  if (status === 0 && fallo === "sin_red") {
+    return {
+      motivo,
+      titulo: textos.offlineTitle,
+      mensaje: textos.offlineMessage,
+      salida: textos.exits.offline,
+    };
+  }
 
   let mensaje: string;
   if (mensajeServidor) {
@@ -274,5 +308,5 @@ export function interpretarRechazoReserva(
     mensaje = textos.fallbackMessage;
   }
 
-  return { motivo, mensaje, salida: textos.exits[salida] };
+  return { motivo, titulo: textos.title, mensaje, salida: textos.exits[salida] };
 }

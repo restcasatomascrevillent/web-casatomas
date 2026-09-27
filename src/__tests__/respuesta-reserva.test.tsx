@@ -12,11 +12,13 @@ import {
   llamarEnlace,
   formatearFecha,
   textosEstado,
+  textosSinConexion,
   ErrorConexion,
   ENLACE_CONSULTAR_URL,
   ENLACE_EJECUTAR_URL,
   type RespuestaEnlace,
 } from "@/lib/respuesta-reserva";
+import { PHONE_DISPLAY } from "@/components/TelLink";
 
 vi.mock("@/components/Seo", () => ({ Seo: () => null }));
 
@@ -73,6 +75,65 @@ describe("llamarEnlace", () => {
     await expect(llamarEnlace("consultar", "t", vi.fn().mockRejectedValue(new TypeError("fail")))).rejects.toBeInstanceOf(ErrorConexion);
     await expect(llamarEnlace("consultar", "t", vi.fn().mockResolvedValue(new Response("boom", { status: 502 })))).rejects.toBeInstanceOf(ErrorConexion);
   });
+
+  it("el ErrorConexion dice de quién es la culpa", async () => {
+    // 502 con cuerpo ilegible: llegó respuesta, así que el fallo es NUESTRO.
+    await expect(
+      llamarEnlace("consultar", "t", vi.fn().mockResolvedValue(new Response("boom", { status: 502 }))),
+    ).rejects.toMatchObject({ tipo: "servidor" });
+
+    // `fetch` que lanza con el dispositivo en línea: CORS o función caída, o
+    // sea, también nuestro. Es el fallo que dejó el formulario mudo horas.
+    await expect(
+      llamarEnlace("consultar", "t", vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))),
+    ).rejects.toMatchObject({ tipo: "servidor" });
+
+    // Y solo sin red de verdad la culpa deja de ser nuestra. El espía se
+    // restaura a mano: este fichero no tiene `restoreAllMocks` global y un
+    // `navigator.onLine` falseado se colaría en los tests de abajo.
+    const enLinea = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    try {
+      await expect(
+        llamarEnlace("consultar", "t", vi.fn().mockRejectedValue(new TypeError("Failed to fetch"))),
+      ).rejects.toMatchObject({ tipo: "sin_red" });
+    } finally {
+      enLinea.mockRestore();
+    }
+  });
+});
+
+describe("textosSinConexion", () => {
+  it("fallo nuestro: lo admite, da el teléfono y NO le manda a mirar su conexión", () => {
+    const { titulo, parrafos } = textosSinConexion("servidor", "consultar", PHONE_DISPLAY);
+
+    expect(titulo).toBe("No es cosa tuya: el fallo es nuestro");
+    expect(parrafos.join(" ")).toContain(PHONE_DISPLAY);
+    // La regresión de hoy: "comprueba tu conexión" cuando la conexión va bien.
+    expect(`${titulo} ${parrafos.join(" ")}`).not.toMatch(/comprueba tu conexi[oó]n/i);
+  });
+
+  it("fallo nuestro al ejecutar: avisa de que no sabe si la respuesta llegó", () => {
+    const { parrafos } = textosSinConexion("servidor", "ejecutar", PHONE_DISPLAY);
+
+    expect(parrafos[0]).toContain("No sabemos si tu respuesta ha llegado");
+    expect(parrafos.join(" ")).toContain(PHONE_DISPLAY);
+  });
+
+  it("sin red: ahí sí se le habla de su conexión, y no se le da el teléfono como parche", () => {
+    const sinRed = textosSinConexion("sin_red", "consultar", PHONE_DISPLAY);
+
+    expect(sinRed.titulo).toBe("Parece que te has quedado sin conexión");
+    expect(sinRed.parrafos.join(" ")).toMatch(/recuperes|recuperes la conexi[oó]n/i);
+    expect(sinRed.parrafos.join(" ")).not.toContain(PHONE_DISPLAY);
+  });
+
+  it("los dos casos no cuentan lo mismo", () => {
+    const nuestro = textosSinConexion("servidor", "ejecutar", PHONE_DISPLAY);
+    const sinRed = textosSinConexion("sin_red", "ejecutar", PHONE_DISPLAY);
+
+    expect(nuestro.titulo).not.toBe(sinRed.titulo);
+    expect(nuestro.parrafos).not.toEqual(sinRed.parrafos);
+  });
 });
 
 describe("formatearFecha", () => {
@@ -105,6 +166,9 @@ describe("<RespuestaReserva />", () => {
   afterEach(() => {
     Object.defineProperty(window, "location", { configurable: true, value: original });
     vi.unstubAllGlobals();
+    // Incluye el espía de `navigator.onLine`: sin esto, un `false` falseado se
+    // colaría en los tests siguientes y cambiaría el texto que esperan.
+    vi.restoreAllMocks();
   });
 
   const pintar = async () => {
@@ -148,6 +212,34 @@ describe("<RespuestaReserva />", () => {
     await pintar();
     await userEvent.click(await screen.findByRole("button", { name: "Reintentar" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Confirma tu reserva" })).toBeInTheDocument());
+  });
+
+  it("con el dispositivo en línea el fallo se cuenta como NUESTRO, con el teléfono", async () => {
+    // `Failed to fetch` con red buena = CORS o función caída: nuestro.
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    await pintar();
+
+    expect(
+      await screen.findByRole("heading", { name: "No es cosa tuya: el fallo es nuestro" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/comprueba tu conexi[oó]n/i)).toBeNull();
+    // El teléfono, en el propio aviso y no solo al pie de la tarjeta: es la
+    // salida que de verdad le sirve cuando lo nuestro está caído.
+    expect(
+      screen.getByText(`Si sigue sin funcionar, llámanos al ${PHONE_DISPLAY} y lo resolvemos en un momento.`),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reintentar" })).toBeInTheDocument();
+  });
+
+  it("sin red de verdad: se le dice que ha perdido la conexión", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    await pintar();
+
+    expect(
+      await screen.findByRole("heading", { name: "Parece que te has quedado sin conexión" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reintentar" })).toBeInTheDocument();
   });
 
   it("sin token no llama a la función", async () => {

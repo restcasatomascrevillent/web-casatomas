@@ -24,12 +24,14 @@ import { AlertCircle, CalendarIcon, Loader2, Search, X } from "lucide-react";
 import TicketReserva, { type DatosTicket } from "@/components/reservas/TicketReserva";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { TelLink } from "@/components/TelLink";
+import { PHONE_DISPLAY, TelLink } from "@/components/TelLink";
 import {
   RESERVAS_WEB_CREAR_URL,
   RESERVAS_WEB_DISPONIBILIDAD_URL,
+  clasificarFallo,
   functionHeaders,
   leerCuerpo,
+  type TipoFallo,
 } from "@/lib/supabase-functions";
 import {
   clasificarDisponibilidad,
@@ -63,6 +65,14 @@ const TextoSalida = ({ texto }: { texto: string }) => {
     </>
   );
 };
+
+/**
+ * `{phone}` en un toast no puede ser un enlace (`sonner` recibe una cadena y
+ * el aviso se va solo), así que ahí el número va como texto legible. En el
+ * diálogo de rechazo, que se queda hasta que lo cierras, sigue siendo
+ * pulsable vía `TextoSalida`.
+ */
+const conTelefono = (texto: string) => texto.replace("{phone}", PHONE_DISPLAY);
 
 export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
   const { t, dateLocale } = useTranslations();
@@ -128,12 +138,22 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       return;
     }
 
-    const mostrarErrorDisponibilidad = () => {
+    const mostrarFalloDisponibilidad = (fallo: TipoFallo) => {
       setDisponibilidad([]);
       setHasCheckedAvailability(true);
       setSelectedHour(null);
-      toast.error(t.reservationForm.toasts.availabilityErrorTitle, {
-        description: t.reservationForm.toasts.availabilityErrorDescription,
+      const toasts = t.reservationForm.toasts;
+      if (fallo === "sin_red") {
+        toast.error(toasts.availabilityOfflineTitle, {
+          description: toasts.availabilityOfflineDescription,
+        });
+        return;
+      }
+      // Fallo nuestro: el visitante necesita tiempo para leer el teléfono, que
+      // es la única salida que de verdad le sirve.
+      toast.error(toasts.availabilityServerErrorTitle, {
+        description: conTelefono(toasts.availabilityServerErrorDescription),
+        duration: 10000,
       });
     };
 
@@ -154,8 +174,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       const resultado = clasificarDisponibilidad(response.ok, await leerCuerpo(response));
 
       if (resultado.estado === "error") {
+        // Llegó respuesta HTTP, asi que la red del visitante funciona: el 5xx o
+        // el cuerpo invalido es NUESTRO y no se le pide que mire su wifi.
         console.error("Error checking availability: respuesta no valida", response.status);
-        mostrarErrorDisponibilidad();
+        mostrarFalloDisponibilidad("servidor");
         return;
       }
 
@@ -175,12 +197,21 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       setDisponibilidad(resultado.huecos);
       setHasCheckedAvailability(true);
       setSelectedHour(null);
+      // "No queda hueco" NO es un fallo: es una respuesta buena que dice que ese
+      // día está completo. Antes caía en el mismo `toast.success` que un día con
+      // horas libres y el visitante se quedaba mirando una lista vacía sin que
+      // nadie le dijera nada. Las horas `completo` se siguen pintando en gris.
+      if (!resultado.huecos.some((hueco) => hueco.estado === "libre")) {
+        toast.message(conTelefono(t.reservationForm.toasts.noSlots));
+        return;
+      }
       toast.success(t.reservationForm.toasts.availabilityChecked);
     } catch (error) {
+      // `fetch` lanzó sin respuesta (red, DNS, TLS o CORS — este último es lo
+      // que enseña el navegador cuando la función muere al arrancar y ni
+      // contesta al `OPTIONS`). `navigator.onLine` es lo único que desempata.
       console.error("Error checking availability:", error);
-      toast.error(t.reservationForm.toasts.availabilityErrorTitle, {
-        description: t.reservationForm.toasts.availabilityErrorDescription,
-      });
+      mostrarFalloDisponibilidad(clasificarFallo(0));
     } finally {
       setIsCheckingAvailability(false);
     }
@@ -246,7 +277,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       setHasCheckedAvailability(false);
     } catch (error) {
       // Ni siquiera hubo respuesta (red caida, CORS): se representa con
-      // status 0 para que el mensaje sea el de "reintenta o llamanos".
+      // status 0, y ahi `interpretarRechazoReserva` decide con `navigator.onLine`
+      // si el visitante esta sin red o si el fallo es NUESTRO (lo segundo, por
+      // defecto: culpar a su conexion cuando la funcion estaba caida es lo que
+      // dejo el formulario mudo horas).
       console.error("Error sending reservation:", error);
       setRechazo(interpretarRechazoReserva(0, null, t.reservationForm.rejection));
     } finally {
@@ -340,7 +374,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
               <AlertCircle className="w-10 h-10 text-amber-600" />
             </div>
-            <DialogTitle className="text-2xl">{t.reservationForm.rejection.title}</DialogTitle>
+            <DialogTitle className="text-2xl">{rechazo?.titulo ?? t.reservationForm.rejection.title}</DialogTitle>
             <DialogDescription asChild>
               <div className="text-base space-y-2">
                 {rechazo && (

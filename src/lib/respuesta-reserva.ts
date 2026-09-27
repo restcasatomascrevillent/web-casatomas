@@ -18,7 +18,7 @@
  *
  * Gotcha SSG: nada de `window` a nivel de módulo (se importa en el prerender).
  */
-import { FUNCTIONS_BASE_URL, leerCuerpo } from "@/lib/supabase-functions";
+import { FUNCTIONS_BASE_URL, clasificarFallo, leerCuerpo, type TipoFallo } from "@/lib/supabase-functions";
 
 export const ENLACE_CONSULTAR_URL = `${FUNCTIONS_BASE_URL}/emails-reserva/enlace/consultar`;
 export const ENLACE_EJECUTAR_URL = `${FUNCTIONS_BASE_URL}/emails-reserva/enlace/ejecutar`;
@@ -117,7 +117,15 @@ export function normalizarRespuesta(x: unknown): RespuestaEnlace | null {
   };
 }
 
-export class ErrorConexion extends Error {}
+/**
+ * `tipo` dice de quién es la culpa, para que la página no le pida al visitante
+ * que compruebe su conexión cuando lo que está caído es lo nuestro.
+ */
+export class ErrorConexion extends Error {
+  constructor(message: string, readonly tipo: TipoFallo = "servidor") {
+    super(message);
+  }
+}
 
 /**
  * Llama a la función. Lanza `ErrorConexion` si no hay respuesta útil (red
@@ -139,10 +147,12 @@ export async function llamarEnlace(
       referrerPolicy: "no-referrer",
     });
   } catch {
-    throw new ErrorConexion("sin_conexion");
+    // `fetch` lanzó sin respuesta: red, DNS, TLS o CORS. Único caso ambiguo.
+    throw new ErrorConexion("sin_conexion", clasificarFallo(0));
   }
   const respuesta = normalizarRespuesta(await leerCuerpo(response));
-  if (!respuesta) throw new ErrorConexion(`respuesta_invalida_${response.status}`);
+  // Llegó respuesta y no cumple el contrato: el fallo es nuestro, sin más.
+  if (!respuesta) throw new ErrorConexion(`respuesta_invalida_${response.status}`, "servidor");
   return respuesta;
 }
 
@@ -282,4 +292,34 @@ export function textosEstado(r: Pick<RespuestaEnlace, "estado" | "tipo" | "accio
         conDetalles: false,
       };
   }
+}
+
+/**
+ * Textos del fallo de conexión de la página de respuesta. `telefono` es el
+ * número ya formateado para leer (el mismo que se enseña al pie de la tarjeta).
+ */
+export function textosSinConexion(
+  fallo: TipoFallo,
+  reintentar: "consultar" | "ejecutar",
+  telefono: string,
+): { titulo: string; parrafos: string[] } {
+  if (fallo === "sin_red") {
+    return {
+      titulo: "Parece que te has quedado sin conexión",
+      parrafos: [
+        reintentar === "ejecutar"
+          ? "No sabemos si tu respuesta ha llegado. En cuanto recuperes la conexión, vuelve a intentarlo: si ya estaba registrada, te lo diremos."
+          : "En cuanto la recuperes, vuelve a intentarlo.",
+      ],
+    };
+  }
+  return {
+    titulo: "No es cosa tuya: el fallo es nuestro",
+    parrafos: [
+      reintentar === "ejecutar"
+        ? "No sabemos si tu respuesta ha llegado. Vuelve a intentarlo: si ya estaba registrada, te lo diremos."
+        : "No hemos podido cargar tu reserva ahora mismo.",
+      `Si sigue sin funcionar, llámanos al ${telefono} y lo resolvemos en un momento.`,
+    ],
+  };
 }
