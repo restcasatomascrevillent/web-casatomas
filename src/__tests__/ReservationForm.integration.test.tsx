@@ -17,6 +17,8 @@ import { MemoryRouter } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { ReservationForm } from "@/components/ReservationForm";
 import esPack from "@/i18n/languages/es";
+import enPack from "@/i18n/languages/en";
+import frPack from "@/i18n/languages/fr";
 import {
   clasificarDisponibilidad,
   interpretarRechazoReserva,
@@ -196,6 +198,15 @@ describe("ReservationForm — guests field constraints", () => {
 // ---------------------------------------------------------------------------
 
 const TEXTOS = esPack.translations.reservationForm.rejection;
+/**
+ * Textos del resguardo de solicitud (el diálogo de éxito).
+ *
+ * Se comparan por cadena exacta y NO con /reserva confirmada/i: la frase
+ * honesta del resguardo ("Aún no es una reserva confirmada…") contiene esa
+ * subcadena, así que el regex daba positivo con el texto que precisamente
+ * niega la confirmación.
+ */
+const EXITO = esPack.translations.reservationForm;
 
 describe("clasificarDisponibilidad — dia cerrado frente a error", () => {
   const meta = (cerrado: boolean) => ({
@@ -507,8 +518,8 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
       "href",
       "tel:+34966107887",
     );
-    // El fallo original: un rechazo acababa en "Reserva confirmada".
-    expect(screen.queryByText(/reserva confirmada/i)).toBeNull();
+    // El fallo original: un rechazo acababa abriendo el diálogo de éxito.
+    expect(screen.queryByText(EXITO.successTitle)).toBeNull();
   });
 
   it("409 sin_disponibilidad: mensaje del servidor y salida de elegir otra hora", async () => {
@@ -522,7 +533,7 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
       await screen.findByText("No queda disponibilidad para esa fecha y hora."),
     ).toBeInTheDocument();
     expect(screen.getByText(TEXTOS.exits.otherTime)).toBeInTheDocument();
-    expect(screen.queryByText(/reserva confirmada/i)).toBeNull();
+    expect(screen.queryByText(EXITO.successTitle)).toBeNull();
   });
 
   it("422 grupo_grande: mensaje del servidor y salida distinta a la del 409", async () => {
@@ -538,10 +549,10 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
       await screen.findByText("Para grupos de mas de 12 personas lo gestionamos por telefono."),
     ).toBeInTheDocument();
     expect(screen.queryByText(TEXTOS.exits.otherTime)).toBeNull();
-    expect(screen.queryByText(/reserva confirmada/i)).toBeNull();
+    expect(screen.queryByText(EXITO.successTitle)).toBeNull();
   });
 
-  it("201: es el unico codigo que abre el dialogo de reserva confirmada", async () => {
+  it("201: es el unico codigo que abre el resguardo de solicitud recibida", async () => {
     mockReservas(
       () =>
         new Response(JSON.stringify({ ok: true, reserva_id: "r-1", estado: "pendiente" }), {
@@ -553,7 +564,7 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
     renderForm();
     await enviarReserva(user);
 
-    expect(await screen.findByText(/reserva confirmada/i)).toBeInTheDocument();
+    expect(await screen.findByText(EXITO.successTitle)).toBeInTheDocument();
     expect(screen.queryByText(TEXTOS.title)).toBeNull();
   });
 
@@ -565,7 +576,7 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
     await enviarReserva(user);
 
     expect(await screen.findByText(TEXTOS.title)).toBeInTheDocument();
-    expect(screen.queryByText(/reserva confirmada/i)).toBeNull();
+    expect(screen.queryByText(EXITO.successTitle)).toBeNull();
   });
 
   it("la reserva se envia a la Edge Function, no a n8n", async () => {
@@ -580,12 +591,172 @@ describe("ReservationForm — lo que ve el visitante en cada rechazo", () => {
     renderForm();
     await enviarReserva(user);
 
-    await screen.findByText(/reserva confirmada/i);
+    await screen.findByText(EXITO.successTitle);
 
     const destinos = vi.mocked(fetch).mock.calls.map(([url]) => String(url));
     expect(destinos).toContain(RESERVAS_WEB_DISPONIBILIDAD_URL);
     expect(destinos).toContain(RESERVAS_WEB_CREAR_URL);
     expect(destinos.some((destino) => destino.includes("n8n"))).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// El resguardo de solicitud (diálogo de éxito)
+//
+// La reserva se crea en estado `pendiente` — lo manda así el formulario y así
+// lo devuelve `reservas-web/crear`. El diálogo decía "¡Reserva confirmada!",
+// que además contradecía el aviso de la propia página ("no queda confirmada
+// hasta que recibas el email"). Estos tests fijan que no vuelva.
+// ---------------------------------------------------------------------------
+
+/** 201 tal y como lo devuelve `reservas-web/crear`. */
+const creada = () =>
+  new Response(JSON.stringify({ ok: true, reserva_id: "r-ticket", estado: "pendiente" }), { status: 201 });
+
+const TICKET = EXITO.successTicket;
+
+describe("ReservationForm — el resguardo no promete una mesa que no está confirmada", () => {
+  it("el titulo dice que la solicitud se ha recibido, no que la reserva este confirmada", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    const titulo = await screen.findByRole("heading", { name: EXITO.successTitle });
+    expect(titulo).toBeInTheDocument();
+
+    // Ninguna variante del título antiguo, en ningún idioma.
+    for (const pack of [esPack, enPack, frPack]) {
+      expect(pack.translations.reservationForm.successTitle).not.toMatch(/confirmad|confirmed|confirmée/i);
+    }
+
+    // Y el diálogo dice explícitamente que falta el correo.
+    expect(screen.getByText(EXITO.successLead)).toBeInTheDocument();
+  });
+
+  it("sella el estado pendiente, y no lo pinta como algo ya hecho", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    expect(await screen.findByText(TICKET.stamp)).toBeInTheDocument();
+    expect(screen.getByText(TICKET.documentType)).toBeInTheDocument();
+  });
+
+  it("enseña los datos de la solicitud y el correo al que llegara la confirmacion", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    await screen.findByRole("heading", { name: EXITO.successTitle });
+
+    // Los que escribió el visitante en el formulario.
+    expect(screen.getByText("Marta Ruiz")).toBeInTheDocument();
+    expect(screen.getByText("marta@example.com")).toBeInTheDocument();
+    expect(screen.getByText("13:00")).toBeInTheDocument();
+
+    // Con su etiqueta, como una línea de recibo.
+    for (const etiqueta of [TICKET.nameLabel, TICKET.dateLabel, TICKET.timeLabel, TICKET.guestsLabel]) {
+      expect(screen.getByText(etiqueta)).toBeInTheDocument();
+    }
+    expect(screen.getByText(TICKET.emailLabel)).toBeInTheDocument();
+  });
+
+  it("dice en que paso del circuito esta: 2 de 4, con los dos ultimos pendientes", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    await screen.findByRole("heading", { name: EXITO.successTitle });
+
+    const leyenda = TICKET.stepCaption.replace("{done}", "2").replace("{total}", "4");
+    expect(screen.getByText(leyenda)).toBeInTheDocument();
+
+    // Los cuatro pasos, y su estado leíble por un lector de pantalla. La
+    // leyenda "Paso 2 de 4" es el nombre accesible de la lista.
+    const pasos = screen.getByRole("list", { name: leyenda });
+    expect(within(pasos).getAllByRole("listitem")).toHaveLength(4);
+    expect(within(pasos).getAllByText(`— ${TICKET.stepDone}`)).toHaveLength(2);
+    expect(within(pasos).getAllByText(`— ${TICKET.stepPending}`)).toHaveLength(2);
+  });
+
+  it("al abrirse, el foco entra en el resguardo (no en el boton de cerrar)", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    const titulo = await screen.findByRole("heading", { name: EXITO.successTitle });
+    const dialogo = titulo.closest('[role="dialog"]');
+    expect(dialogo).not.toBeNull();
+
+    // El papel es el contenedor con tabIndex -1 que envuelve al título.
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(document.body);
+      expect(dialogo!.contains(document.activeElement)).toBe(true);
+    });
+    expect(document.activeElement).toHaveAttribute("tabindex", "-1");
+    expect(document.activeElement).toContainElement(titulo as HTMLElement);
+  });
+
+  it("se cierra con Escape", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    await screen.findByRole("heading", { name: EXITO.successTitle });
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("heading", { name: EXITO.successTitle })).toBeNull();
+    });
+  });
+
+  it("los tres idiomas traducen todos los textos del resguardo", async () => {
+    for (const pack of [esPack, enPack, frPack]) {
+      const ticket = pack.translations.reservationForm.successTicket;
+      const textos = [
+        pack.translations.reservationForm.successTitle,
+        pack.translations.reservationForm.successLead,
+        pack.translations.reservationForm.successCloseAria,
+        ticket.documentType,
+        ticket.stamp,
+        ticket.nameLabel,
+        ticket.dateLabel,
+        ticket.timeLabel,
+        ticket.guestsLabel,
+        ticket.emailLabel,
+        ticket.emailHint,
+        ticket.stepCaption,
+        ticket.stepDone,
+        ticket.stepPending,
+        ticket.thanks,
+        ticket.issuedLabel,
+        ...ticket.steps,
+      ];
+      for (const texto of textos) expect(texto.trim()).not.toBe("");
+      expect(ticket.steps).toHaveLength(4);
+      expect(ticket.stepCaption).toContain("{done}");
+      expect(ticket.stepCaption).toContain("{total}");
+    }
+
+    // Ningún texto del resguardo se ha quedado en castellano en en/fr.
+    expect(enPack.translations.reservationForm.successTicket.stamp).not.toBe(
+      esPack.translations.reservationForm.successTicket.stamp,
+    );
+    expect(frPack.translations.reservationForm.successTicket.stamp).not.toBe(
+      esPack.translations.reservationForm.successTicket.stamp,
+    );
   });
 });
 
@@ -773,7 +944,7 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
     await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
     await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
 
-    await screen.findByText(/reserva confirmada/i);
+    await screen.findByText(EXITO.successTitle);
 
     const llamadaCrear = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
     expect(llamadaCrear).toBeDefined();

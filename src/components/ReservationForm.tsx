@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -11,9 +11,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { AlertCircle, CalendarIcon, CheckCircle, Loader2, Search } from "lucide-react";
+import { AlertCircle, CalendarIcon, Loader2, Search, X } from "lucide-react";
+import TicketReserva, { type DatosTicket } from "@/components/reservas/TicketReserva";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
@@ -67,12 +75,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [rechazo, setRechazo] = useState<RechazoReserva | null>(null);
-  const [reservationDetails, setReservationDetails] = useState<{
-    fecha: Date;
-    hora: string;
-    comensales: number;
-  } | null>(null);
+  const [reservationDetails, setReservationDetails] = useState<DatosTicket | null>(null);
   const navigate = useNavigate();
+  /** El resguardo recibe el foco al abrirse, para que se lea desde arriba. */
+  const ticketRef = useRef<HTMLDivElement>(null);
 
   const reservationSchema = useMemo(() => createReservationSchema(t.validation), [t]);
 
@@ -221,10 +227,16 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         return;
       }
 
+      // Se captura ANTES del `form.reset()` de abajo: el resguardo enseña el
+      // nombre y el email, y reseteado el formulario ya no habría de dónde
+      // sacarlos.
       setReservationDetails({
+        nombre: data.nombre,
+        email: data.email,
         fecha: data.fecha,
         hora: selectedHour.slice(0, 5),
-        comensales: data.numero_comensales
+        comensales: data.numero_comensales,
+        solicitadaEn: new Date(),
       });
       setShowSuccessDialog(true);
 
@@ -254,43 +266,64 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
     if (navigateOnClose) navigate("/");
   };
 
-  const formattedSuccessDate = reservationDetails?.fecha
-    ? format(reservationDetails.fecha, "PPP", { locale: dateLocale })
-    : "";
-  const successDateLine =
-    reservationDetails && formattedSuccessDate
-      ? t.reservationForm.successLine2
-        .replace("{date}", formattedSuccessDate)
-        .replace("{time}", reservationDetails.hora)
-      : "";
-
   return (
     <>
+      {/*
+        Resguardo de la solicitud. La "bandeja" (el DialogContent) es la que
+        pone la elevación y el color de fondo que asoma por el troquelado del
+        papel; el botón vive en la bandeja para que el recibo quede limpio y
+        se pueda capturar de pantalla sin cromo de interfaz encima.
+      */}
       <Dialog open={showSuccessDialog} onOpenChange={handleCloseSuccessDialog}>
-        <DialogContent className="sm:max-w-md text-center">
-          <DialogHeader className="space-y-4">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-10 h-10 text-green-600" />
-            </div>
-            <DialogTitle className="text-2xl">{t.reservationForm.successTitle}</DialogTitle>
-            <DialogDescription asChild>
-              <div className="text-base space-y-2">
-                {reservationDetails && (
-                  <>
-                    <p>{t.reservationForm.successLine1.replace("{guests}", reservationDetails.comensales.toString())}</p>
-                    <p>{successDateLine}</p>
-                    <p className="text-muted-foreground mt-4">{t.reservationForm.successLine3}</p>
-                  </>
-                )}
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <Button
-            onClick={handleCloseSuccessDialog}
-            className="w-full mt-4 bg-primary hover:bg-primary/90 rounded-full"
+        <DialogContent
+          hideCloseButton
+          onOpenAutoFocus={(evento) => {
+            // El foco va al papel, no al primer botón: así el lector de
+            // pantalla lee el resguardo desde el principio (título, frase de
+            // "aún no está confirmada", sello) en vez de anunciar "Cerrar".
+            // Si por lo que sea no hubiera papel, NO se intercepta y Radix
+            // hace lo de siempre — nunca se queda el diálogo sin foco.
+            const papel = ticketRef.current;
+            if (!papel) return;
+            evento.preventDefault();
+            papel.focus();
+          }}
+          className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[26rem] gap-0 overflow-y-auto rounded-2xl border-border/70 bg-ticket-tray p-3 shadow-[0_24px_60px_-20px_hsl(var(--dark-slate)/0.45)] sm:p-3.5"
+        >
+          <DialogClose
+            aria-label={t.reservationForm.successCloseAria}
+            className="absolute right-5 top-5 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink-soft transition-colors hover:bg-ticket-ink/10 hover:text-ticket-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ticket-paper"
           >
-            {t.reservationForm.successButton}
-          </Button>
+            <X className="h-4 w-4" aria-hidden="true" />
+          </DialogClose>
+
+          {reservationDetails && (
+            <>
+              <TicketReserva
+                ref={ticketRef}
+                datos={reservationDetails}
+                t={t.reservationForm}
+                dateLocale={dateLocale}
+                titulo={
+                  <DialogTitle className="mt-4 text-[1.625rem] font-bold leading-[1.15] tracking-tight text-ticket-ink [text-wrap:balance]">
+                    {t.reservationForm.successTitle}
+                  </DialogTitle>
+                }
+                lead={
+                  <DialogDescription className="mt-2 text-[0.875rem] leading-snug text-ticket-ink-soft [text-wrap:balance]">
+                    {t.reservationForm.successLead}
+                  </DialogDescription>
+                }
+              />
+
+              <Button
+                onClick={handleCloseSuccessDialog}
+                className="mt-3 w-full rounded-full bg-primary text-base hover:bg-primary/90"
+              >
+                {t.reservationForm.successButton}
+              </Button>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

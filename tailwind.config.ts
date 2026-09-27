@@ -51,6 +51,14 @@ export default {
         "dark-slate": "hsl(var(--dark-slate))",
         "mid-gray": "hsl(var(--mid-gray))",
         gold: "hsl(var(--gold))",
+        ticket: {
+          paper: "hsl(var(--ticket-paper))",
+          tray: "hsl(var(--ticket-tray))",
+          ink: "hsl(var(--ticket-ink))",
+          "ink-soft": "hsl(var(--ticket-ink-soft))",
+          rule: "hsl(var(--ticket-rule))",
+          stamp: "hsl(var(--ticket-stamp))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

@@ -67,6 +67,25 @@ All colors MUST be HSL.
     --dark-slate: 206 11% 25%;
     --mid-gray: 15 4% 39%;
     --gold: 38 59% 45%;
+
+    /*
+     * Ticket (resguardo de solicitud de reserva).
+     *
+     * Misma gramática que el ticket de "Mi mesa" (components/carta/TicketMesa),
+     * que fija los colores a mano porque se captura como imagen. Aquí sí son
+     * tokens: este ticket es DOM vivo y tiene que responder al tema.
+     *
+     * `--ticket-stamp` NO es `--gold`: el oro (38 59% 45%) sobre el papel da
+     * 3,1:1 de contraste — vale para una filigrana, no para el texto del sello,
+     * que es justo el dato que no se puede perder. Este oro oscurecido da
+     * 5,4:1 (AA) y sigue leyéndose como la misma familia de tinta ámbar.
+     */
+    --ticket-paper: 36 50% 97%;
+    --ticket-tray: 28 22% 90%;
+    --ticket-ink: 206 11% 25%;
+    --ticket-ink-soft: 15 4% 39%;
+    --ticket-rule: 38 59% 45%;
+    --ticket-stamp: 38 62% 32%;
     
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(206 11% 25% / 0.95), hsl(15 4% 39% / 0.9));
@@ -128,6 +147,16 @@ All colors MUST be HSL.
     --border: 206 11% 30%;
     --input: 206 11% 30%;
     --ring: 38 59% 45%;
+
+    /* El papel se mantiene claro en tema oscuro (un ticket es un ticket), pero
+       la bandeja se hunde para que el recibo siga pareciendo un objeto encima. */
+    --ticket-paper: 36 28% 94%;
+    --ticket-tray: 206 11% 22%;
+    --ticket-ink: 206 14% 20%;
+    --ticket-ink-soft: 15 6% 36%;
+    --ticket-rule: 38 59% 40%;
+    --ticket-stamp: 38 62% 30%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -296,5 +325,88 @@ All colors MUST be HSL.
   .scroll-reveal-scale.is-visible {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+
+  /* ---------------------------------------------------------------------
+   * Ticket de reserva (components/reservas/TicketReserva)
+   * ------------------------------------------------------------------ */
+
+  /*
+   * Borde troquelado: dos capas de máscara que muerden semicírculos en el
+   * canto superior e inferior. Cada capa cubre el 51 % del alto (la unión
+   * pasa del 100 %, así que no queda banda sin pintar por el medio) y se
+   * repite en horizontal cada `--muesca-paso`.
+   *
+   * Va con `-webkit-mask` además de `mask` por Safari < 15.4. Donde no haya
+   * soporte de máscaras el papel sale rectangular: se pierde el troquel, no
+   * el contenido. OJO: enmascarar recorta también `box-shadow`, así que la
+   * elevación la pone la bandeja (el DialogContent), nunca este elemento.
+   */
+  .ticket-paper {
+    --muesca: 7px;
+    --muesca-paso: 22px;
+    -webkit-mask:
+      radial-gradient(var(--muesca) at 50% 0, #0000 98%, #000 100%) 0 0 / var(--muesca-paso) 51% repeat-x,
+      radial-gradient(var(--muesca) at 50% 100%, #0000 98%, #000 100%) 0 100% / var(--muesca-paso) 51% repeat-x;
+    mask:
+      radial-gradient(var(--muesca) at 50% 0, #0000 98%, #000 100%) 0 0 / var(--muesca-paso) 51% repeat-x,
+      radial-gradient(var(--muesca) at 50% 100%, #0000 98%, #000 100%) 0 100% / var(--muesca-paso) 51% repeat-x;
+  }
+
+  /*
+   * Grano del papel: un `feTurbulence` en un SVG embebido (≈300 B, cero
+   * peticiones). Es `background-image`, NO un `filter`: una textura teselada
+   * se rasteriza una vez, mientras que un filtro dentro de un contenedor que
+   * hace scroll repinta en cada frame.
+   */
+  .ticket-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  /* El recibo "sale de la impresora": baja a su sitio y se asienta. */
+  @keyframes ticket-print {
+    from {
+      opacity: 0;
+      transform: translateY(-14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /*
+   * El sello se estampa. Se anima `scale` (propiedad individual) y no
+   * `transform`, porque el giro del sello vive en `rotate` y un keyframe con
+   * `transform` lo pisaría y dejaría el sello recto.
+   */
+  @keyframes ticket-stamp {
+    0% {
+      opacity: 0;
+      scale: 1.3;
+    }
+    55% {
+      opacity: 1;
+      scale: 0.97;
+    }
+    100% {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  .animate-ticket-print {
+    animation: ticket-print 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-ticket-stamp {
+    animation: ticket-stamp 460ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ticket-print,
+    .animate-ticket-stamp {
+      animation: none;
+    }
   }
 }

@@ -283,11 +283,41 @@ export const translations = {
       },
     },
     reservationForm: {
-      successTitle: "¡Reserva confirmada!",
-      successLine1: "Tu reserva para {guests} comensales ha sido recibida.",
-      successLine2: "{date} a las {time}",
+      /*
+       * OJO al título: la reserva se crea en estado `pendiente` (lo manda así
+       * el propio formulario y así la devuelve `reservas-web/crear`), de modo
+       * que "¡Reserva confirmada!" era falso — y además contradecía el aviso
+       * que la misma página enseña dos bloques más arriba ("no queda
+       * confirmada hasta que recibas el email"). Un cliente que leía eso se
+       * presentaba creyendo que tenía mesa.
+       */
+      successTitle: "Solicitud recibida",
+      successLead: "Aún no es una reserva confirmada: te la confirmamos por correo.",
       successLine3: "Nos pondremos en contacto pronto para confirmar los detalles.",
       successButton: "Volver al inicio",
+      successCloseAria: "Cerrar el resguardo",
+      successTicket: {
+        documentType: "Solicitud de reserva",
+        stamp: "Pendiente de confirmar",
+        nameLabel: "Nombre",
+        dateLabel: "Fecha",
+        timeLabel: "Hora",
+        guestsLabel: "Comensales",
+        emailLabel: "Confirmación a",
+        emailHint: "Revisa tu bandeja de entrada y, si no lo ves, la carpeta de spam.",
+        stepCaption: "Paso {done} de {total}",
+        /* Los mismos cuatro pasos que anuncia `reservas.disclaimer.steps`. */
+        steps: [
+          "Disponibilidad consultada",
+          "Solicitud enviada",
+          "Verificación de Casa Tomás",
+          "Confirmación por correo",
+        ],
+        stepDone: "completado",
+        stepPending: "pendiente",
+        thanks: "Gracias por elegir Casa Tomás.",
+        issuedLabel: "Solicitud registrada",
+      },
       stepOne: "Paso 1: Elige fecha, sala y número de comensales",
       dateLabel: "Fecha *",
       datePlaceholder: "Selecciona una fecha",
