@@ -288,7 +288,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             evento.preventDefault();
             papel.focus();
           }}
-          className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[26rem] gap-0 overflow-y-auto rounded-2xl border-border/70 bg-ticket-tray p-3 shadow-[0_24px_60px_-20px_hsl(var(--dark-slate)/0.45)] sm:p-3.5"
+          // `flex` pisa al `grid` del DialogContent (tailwind-merge se queda
+          // con el ultimo `display`): el papel scrollea y el boton se queda
+          // clavado abajo. Antes el diálogo entero scrolleaba y en un movil
+          // el "Volver al inicio" caia siempre fuera de la pantalla.
+          className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-[26rem] flex-col gap-0 overflow-hidden rounded-2xl border-border/70 bg-ticket-tray p-3 shadow-[0_24px_60px_-20px_hsl(var(--dark-slate)/0.45)] sm:p-3.5"
         >
           <DialogClose
             aria-label={t.reservationForm.successCloseAria}
@@ -299,26 +303,29 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
           {reservationDetails && (
             <>
-              <TicketReserva
-                ref={ticketRef}
-                datos={reservationDetails}
-                t={t.reservationForm}
-                dateLocale={dateLocale}
-                titulo={
-                  <DialogTitle className="mt-4 text-[1.625rem] font-bold leading-[1.15] tracking-tight text-ticket-ink [text-wrap:balance]">
-                    {t.reservationForm.successTitle}
-                  </DialogTitle>
-                }
-                lead={
-                  <DialogDescription className="mt-2 text-[0.875rem] leading-snug text-ticket-ink-soft [text-wrap:balance]">
-                    {t.reservationForm.successLead}
-                  </DialogDescription>
-                }
-              />
+              {/* El papel es lo unico que scrollea. */}
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <TicketReserva
+                  ref={ticketRef}
+                  datos={reservationDetails}
+                  t={t.reservationForm}
+                  dateLocale={dateLocale}
+                  titulo={
+                    <DialogTitle className="mt-4 text-[1.625rem] font-bold leading-[1.15] tracking-tight text-ticket-ink [text-wrap:balance]">
+                      {t.reservationForm.successTitle}
+                    </DialogTitle>
+                  }
+                  lead={
+                    <DialogDescription className="mt-2 text-[0.875rem] leading-snug text-ticket-ink-soft [text-wrap:balance]">
+                      {t.reservationForm.successLead}
+                    </DialogDescription>
+                  }
+                />
+              </div>
 
               <Button
                 onClick={handleCloseSuccessDialog}
-                className="mt-3 w-full rounded-full bg-primary text-base hover:bg-primary/90"
+                className="mt-3 w-full shrink-0 rounded-full bg-primary text-base hover:bg-primary/90"
               >
                 {t.reservationForm.successButton}
               </Button>
