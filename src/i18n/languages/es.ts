@@ -292,9 +292,9 @@ export const translations = {
         callUs: "Si no hay disponibilidad online, llámanos al",
         steps: [
           "Consultar disponibilidad (cliente)",
-          "Solicitar reserva (recibirás un primer correo)",
+          "Solicitar reserva (cliente)",
           "Verificación de reserva (Casa Tomás)",
-          "Confirmar reserva (recibirás el segundo correo)",
+          "Confirmar reserva (recibirás el correo de confirmación)",
         ],
       },
     },
@@ -308,8 +308,8 @@ export const translations = {
        * presentaba creyendo que tenía mesa.
        */
       successTitle: "Solicitud recibida",
-      successLead: "Aún no es una reserva confirmada: te la confirmamos por correo.",
-      successLine3: "Nos pondremos en contacto pronto para confirmar los detalles.",
+      successLead: "Aún no es una reserva confirmada: te escribiremos por correo cuando el restaurante la confirme.",
+      successLine3: "Guarda este resguardo: es el único acuse de que tu solicitud ha llegado.",
       successButton: "Volver al inicio",
       successCloseAria: "Cerrar el resguardo",
       successTicket: {
@@ -320,7 +320,7 @@ export const translations = {
         timeLabel: "Hora",
         guestsLabel: "Comensales",
         emailLabel: "Confirmación a",
-        emailHint: "Revisa tu bandeja de entrada y, si no lo ves, la carpeta de spam.",
+        emailHint: "Ahora no recibirás ningún correo: te escribiremos a esta dirección cuando el restaurante confirme la reserva. Revisa también la carpeta de spam.",
         stepCaption: "Paso {done} de {total}",
         /* Los mismos cuatro pasos que anuncia `reservas.disclaimer.steps`. */
         steps: [

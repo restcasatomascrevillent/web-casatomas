@@ -286,16 +286,16 @@ export const translations: Translations = {
         callUs: "Si aucune disponibilité n'est affichée en ligne, appelez-nous au",
         steps: [
           "Vérifier la disponibilité (client)",
-          "Demander la réservation (vous recevrez le premier email)",
+          "Demander la réservation (client)",
           "Vérification de la réservation (Casa Tomás)",
-          "Confirmer la réservation (vous recevrez le deuxième email)",
+          "Confirmer la réservation (vous recevrez l'e-mail de confirmation)",
         ],
       },
     },
     reservationForm: {
       successTitle: "Demande reçue",
-      successLead: "Ce n'est pas encore une réservation confirmée : nous vous la confirmons par e-mail.",
-      successLine3: "Nous vous contacterons rapidement pour confirmer les détails.",
+      successLead: "Ce n'est pas encore une réservation confirmée : nous vous écrirons par e-mail dès que le restaurant l'aura confirmée.",
+      successLine3: "Conservez ce reçu : c'est le seul accusé de réception de votre demande.",
       successButton: "Retour à l'accueil",
       successCloseAria: "Fermer le reçu",
       successTicket: {
@@ -306,7 +306,7 @@ export const translations: Translations = {
         timeLabel: "Heure",
         guestsLabel: "Convives",
         emailLabel: "Confirmation à",
-        emailHint: "Vérifiez votre boîte de réception et, à défaut, vos courriers indésirables.",
+        emailHint: "Vous ne recevrez aucun e-mail maintenant : nous écrirons à cette adresse dès que le restaurant confirmera la réservation. Vérifiez aussi vos courriers indésirables.",
         stepCaption: "Étape {done} sur {total}",
         steps: [
           "Disponibilité vérifiée",
