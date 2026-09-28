@@ -6,6 +6,8 @@ import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, S
 
 import manifestImagenes from "@/assets/responsive/manifest";
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
+import CartaDelDia, { CLASES_TITULO_CARTA } from "@/components/espacios/CartaDelDia";
+import { parsearMenuDiario, type MenuDelDia, type MenuDiarioRow } from "@/lib/menu-dia";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,21 +19,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 // pasa a tener dominio propio, basta con fijar VITE_TOUZA_URL para
 // sobrescribir este valor por defecto.
 const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-restaurant-website.vercel.app";
-
-interface MenuDiarioRow {
-  id: string;
-  fecha: string;
-  menu: unknown;
-  idiom?: string | null;
-}
-
-interface MenuDelDia {
-  id: string;
-  date: Date;
-  primeros: string[];
-  segundos: string[];
-  postre: string;
-}
 
 interface TapasRow {
   id?: string;
@@ -46,6 +33,14 @@ interface TapasDelDia {
   tapas: string[];
 }
 
+/**
+ * Normaliza la columna de tapas.
+ *
+ * OJO: NO parte por saltos de línea. El menú del día sí lo hace desde
+ * `@/lib/menu-dia` (era un fallo: dos platos en dos líneas se pintaban como un
+ * bloque). Aquí se deja como estaba a propósito, para no cambiar de paso cómo
+ * se ven las tapas, que es otro bloque de la página.
+ */
 const normalizeMenuItems = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value
@@ -96,28 +91,6 @@ const parseMenuPayload = (value: unknown): Record<string, unknown> => {
   }
 
   return {};
-};
-
-const toMenuDelDia = (row: MenuDiarioRow): MenuDelDia | null => {
-  const parsedDate = parseISO(row.fecha);
-  if (!isValid(parsedDate)) return null;
-
-  const payload = parseMenuPayload(row.menu);
-  const primeros = normalizeMenuItems(payload.primero ?? payload.primeros);
-  const segundos = normalizeMenuItems(payload.segundo ?? payload.segundos);
-  const postre = normalizeMenuItems(payload.postre ?? payload.postres).join(", ");
-
-  if (primeros.length === 0 && segundos.length === 0 && !postre) {
-    return null;
-  }
-
-  return {
-    id: row.id,
-    date: parsedDate,
-    primeros,
-    segundos,
-    postre,
-  };
 };
 
 const toTapasDelDia = (row: TapasRow, index: number): TapasDelDia | null => {
@@ -201,8 +174,8 @@ const EspaciosSection = () => {
   const menusDelDia = useMemo(
     () =>
       rawMenusDelDia
-        .map((row) => toMenuDelDia(row))
-        .filter((menu): menu is MenuDelDia => Boolean(menu)),
+        .map((row) => parsearMenuDiario(row))
+        .filter((menu): menu is MenuDelDia => menu !== null),
     [rawMenusDelDia]
   );
   const { data: rawTapasSemanales = [] } = useQuery({
@@ -507,65 +480,26 @@ const EspaciosSection = () => {
           </DialogContent>
         </Dialog>
 
+        {/* El menú de hoy, como una carta impresa sobre la bandeja del diálogo.
+            El ancho es el de una carta (no el de un panel): con fotos, tres
+            columnas de texto obligaban a leer en zigzag. */}
         <Dialog open={showTodayMenu} onOpenChange={setShowTodayMenu}>
-          <DialogContent className="w-[90vw] sm:max-w-2xl md:max-w-3xl rounded-2xl border border-border/70 bg-gradient-to-b from-background via-muted/40 to-background p-4 sm:p-6">
-            <DialogHeader className="space-y-2 items-center text-center">
-              <DialogTitle className="flex items-center gap-2 text-xl leading-tight text-center">
-                <ChefHat className="w-5 h-5 text-primary" />
-                {t.espacios.todayMenuTitle}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Menú diario cargado desde base de datos.
-              </DialogDescription>
-              {todayMenu && (
-                <p className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
-                  <CalendarDays className="w-4 h-4 text-primary" />
-                  {format(todayMenu.date, "EEEE d MMMM", { locale: dateLocale })}
-                </p>
-              )}
-            </DialogHeader>
+          <DialogContent className="w-[92vw] sm:max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-border/60 bg-ticket-tray p-3 sm:p-5">
+            <DialogDescription className="sr-only">
+              Menú diario cargado desde base de datos.
+            </DialogDescription>
             {todayMenu ? (
-              <div className="space-y-4">
-                <Card className="border border-border/70 bg-background/80 shadow-inner">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="rounded-xl bg-muted/40 p-4 border border-border/60">
-                        <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.starters}</h4>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                          {todayMenu.primeros.map((plato, i) => (
-                            <li key={i} className="flex gap-2">
-                              <span className="text-primary">•</span>
-                              <span>{plato}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="rounded-xl bg-muted/40 p-4 border border-border/60">
-                        <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.mains}</h4>
-                        <ul className="space-y-2 text-sm text-muted-foreground">
-                          {todayMenu.segundos.map((plato, i) => (
-                            <li key={i} className="flex gap-2">
-                              <span className="text-primary">•</span>
-                              <span>{plato}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="rounded-xl bg-muted/40 p-4 border border-border/60 flex flex-col justify-between">
-                        <div>
-                          <h4 className="font-semibold text-primary mb-2">{t.espacios.menuLabels.dessert}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {todayMenu.postre ? `• ${todayMenu.postre}` : t.espacios.noMenuToday}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <CartaDelDia
+                menu={todayMenu}
+                titulo={
+                  <DialogTitle className={CLASES_TITULO_CARTA}>{t.espacios.todayMenuTitle}</DialogTitle>
+                }
+                subtitulo={format(todayMenu.date, "EEEE d MMMM", { locale: dateLocale })}
+              />
             ) : (
-              <div className="rounded-xl border border-border/70 bg-muted/30 p-6 text-center text-muted-foreground">
-                {t.espacios.noMenuToday}
+              <div className="rounded-lg border border-ticket-rule/25 bg-ticket-paper px-5 py-6 text-center font-libre-baskerville text-ticket-ink">
+                <DialogTitle className={CLASES_TITULO_CARTA}>{t.espacios.todayMenuTitle}</DialogTitle>
+                <p className="mt-3 text-sm text-ticket-ink-soft">{t.espacios.noMenuToday}</p>
               </div>
             )}
           </DialogContent>
@@ -618,7 +552,7 @@ const EspaciosSection = () => {
         </Dialog>
 
         <Dialog open={showPastMenus} onOpenChange={setShowPastMenus}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background text-center">
+          <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[88vh] overflow-y-auto p-2 sm:p-6 bg-ticket-tray text-center">
             <DialogHeader className="items-center text-center">
               <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
               <DialogDescription className="sr-only">
@@ -630,62 +564,20 @@ const EspaciosSection = () => {
             </p>
             <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setMenusCarouselApi}>
               <CarouselContent className="-ml-2 sm:-ml-5 py-2">
-                {recentMenus.map((menu, idx) => (
-                  <CarouselItem key={idx} className="pl-2 sm:pl-5 basis-[85%] sm:basis-[48%] lg:basis-[32%]">
-                    <Card className="relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
-                      <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(217,70,239,0.12),transparent_35%)]" />
-                      <div className="relative h-full p-2.5 sm:p-4 flex flex-col gap-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center sm:text-left">
-                          <div className="flex items-center gap-3 sm:justify-start justify-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary">
-                              <ChefHat className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-primary">{t.espacios.middayMenuTitle}</p>
-                              <p className="font-semibold capitalize leading-tight">
-                                <span className="hidden sm:inline">
-                                  {format(menu.date, "EEEE d MMMM", { locale: dateLocale })}
-                                </span>
-                                <span className="sm:hidden">
-                                  {format(menu.date, "EEE d MMM", { locale: dateLocale })}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant="secondary" className="bg-background/70 text-foreground border border-border/70">
-                            {format(menu.date, "dd MMM", { locale: dateLocale })}
-                          </Badge>
-                        </div>
-                        <div className="grid gap-2">
-                          <div className="rounded-lg bg-background/60 border border-border/40 p-2.5 sm:p-3">
-                            <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base text-center sm:text-left">{t.espacios.menuLabels.starters}</h4>
-                            <ul className="text-xs sm:text-sm text-muted-foreground space-y-0.5 text-center sm:text-left">
-                              {menu.primeros.map((plato, i) => (
-                                <li key={i} className="flex gap-2 items-start">
-                                  <span className="text-primary">•</span>
-                                  <span>{plato}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="rounded-lg bg-background/60 border border-border/40 p-2.5 sm:p-3">
-                            <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base text-center sm:text-left">{t.espacios.menuLabels.mains}</h4>
-                            <ul className="text-xs sm:text-sm text-muted-foreground space-y-0.5 text-center sm:text-left">
-                              {menu.segundos.map((plato, i) => (
-                                <li key={i} className="flex gap-2 items-start">
-                                  <span className="text-primary">•</span>
-                                  <span>{plato}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="rounded-lg bg-background/60 border border-border/40 p-2.5 sm:p-3 text-center sm:text-left">
-                            <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base">{t.espacios.menuLabels.dessert}</h4>
-                            <p className="text-xs sm:text-sm text-muted-foreground">• {menu.postre}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
+                {recentMenus.map((menu) => (
+                  <CarouselItem key={menu.id} className="pl-2 sm:pl-5 basis-[88%] sm:basis-[58%] lg:basis-[42%]">
+                    <CartaDelDia
+                      menu={menu}
+                      compacta
+                      // Sin `h-full`: un menú corto no se estira hasta la
+                      // altura del más largo, que dejaba media hoja en blanco.
+                      className="text-left"
+                      titulo={
+                        <h3 className={`${CLASES_TITULO_CARTA} capitalize`}>
+                          {format(menu.date, "EEEE d MMMM", { locale: dateLocale })}
+                        </h3>
+                      }
+                    />
                   </CarouselItem>
                 ))}
               </CarouselContent>
