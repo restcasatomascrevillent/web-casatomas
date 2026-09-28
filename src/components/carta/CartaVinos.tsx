@@ -311,9 +311,6 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     setInfoCards((prev) => ({ ...prev, [key]: !currentOpen }));
   };
 
-  const getInfoAriaLabel = (open: boolean) =>
-    open ? "Ocultar información del vino" : "Mostrar información del vino";
-
   const toPublicImageUrl = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return null;
@@ -565,13 +562,15 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
               .join(" · ");
             const alergenosItem = datosAlergenos(item);
             const conAlergenos = tieneInformacionAlergenos(alergenosItem);
-            const infoAlergenos = Array.from(
-              new Set(
-                [...alergenosItem.oficiales, ...alergenosItem.inferidos]
-                  .map((alergeno) => etiquetaAlergeno(alergeno, language))
-                  .filter(Boolean),
-              ),
+            // Declarados e inferidos no se mezclan en el mismo badge: un
+            // inferido nunca puede parecer tan seguro como lo que el
+            // restaurante certifica.
+            const alergenosOficiales = Array.from(
+              new Set(alergenosItem.oficiales.map((a) => etiquetaAlergeno(a, language)).filter(Boolean)),
             );
+            const alergenosInferidos = Array.from(
+              new Set(alergenosItem.inferidos.map((a) => etiquetaAlergeno(a, language)).filter(Boolean)),
+            ).filter((etiqueta) => !alergenosOficiales.includes(etiqueta));
 
             return (
               // Sin `layout` (ver más abajo por qué) y con `initial={false}`:
@@ -675,7 +674,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                             <button
                               type="button"
                               onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                              aria-label={`${getInfoAriaLabel(infoOpen)} — ${item.displayNombre || item.nombre}`}
+                              aria-label={`${infoOpen ? t.vinos.hideInfo : t.vinos.viewInfo} — ${item.displayNombre || item.nombre}`}
                               className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                             >
                               <Info className="w-5 h-5" aria-hidden="true" />
@@ -764,7 +763,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                           <button
                             type="button"
                             onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                            aria-label={`${getInfoAriaLabel(infoOpen)} — ${item.displayNombre || item.nombre}`}
+                            aria-label={`${infoOpen ? t.vinos.hideInfo : t.vinos.viewInfo} — ${item.displayNombre || item.nombre}`}
                             className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                           >
                             <Info className="w-5 h-5" aria-hidden="true" />
@@ -774,14 +773,27 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
 
                       <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
                         <div className="space-y-2">
-                          <p className="text-sm font-semibold text-foreground">Alérgenos:</p>
+                          <p className="text-sm font-semibold text-foreground">{t.vinos.allergensTitle}:</p>
                           {conAlergenos ? (
-                            <div className="flex flex-wrap gap-1">
-                              {infoAlergenos.map((alergeno, idx) => (
-                                <Badge key={`info-alergeno-${cardKey}-${idx}`} variant="secondary" className="text-xs">
-                                  {alergeno}
-                                </Badge>
-                              ))}
+                            <div className="space-y-2">
+                              {alergenosOficiales.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {alergenosOficiales.map((alergeno) => (
+                                    <Badge key={`oficial-${cardKey}-${alergeno}`} variant="destructive" className="text-xs">
+                                      {alergeno}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              {alergenosInferidos.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {alergenosInferidos.map((alergeno) => (
+                                    <Badge key={`inferido-${cardKey}-${alergeno}`} variant="secondary" className="text-xs">
+                                      {alergeno}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ) : (
                             // "No disponible" se podía leer como "no tiene
