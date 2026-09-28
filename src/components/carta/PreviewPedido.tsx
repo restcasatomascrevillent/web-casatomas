@@ -12,6 +12,8 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { useToast } from "@/hooks/use-toast";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
+import { LOGO_HEIGHT, LOGO_WIDTH, logoSmall } from "@/assets/logo";
+import { NEGOCIO } from "@/lib/negocio";
 import {
   COMENSALES_MAX,
   COMENSALES_MIN,
@@ -83,6 +85,13 @@ const esAbort = (error: unknown) => error instanceof Error && error.name === "Ab
  * lateral en escritorio). El ticket para la imagen (`TicketMesa`) solo se
  * pinta fuera de pantalla con el panel abierto; `html-to-image` y el
  * generador de QR se descargan al generar la imagen, no antes.
+ *
+ * El panel visible usa la misma gramática de "ticket" que `TicketReserva`
+ * (papel cálido `--ticket-*`, filete de oro, separadores de puntos, cifras
+ * tabulares): antes de la reescritura del reparto de cuenta, lo que se veía
+ * al abrir "Mi mesa" YA era un ticket de verdad, no un panel genérico. Solo
+ * cambia el fondo/tipografía/separadores — toda la lógica de líneas, reparto
+ * y acciones sigue igual.
  */
 const PreviewPedido = () => {
   const { t, language } = useTranslations();
@@ -272,12 +281,23 @@ const PreviewPedido = () => {
   const vacia = lineas.length === 0;
 
   const panel = (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col bg-ticket-paper text-ticket-ink">
       {/* Cabecera */}
-      <div className="flex items-start justify-between gap-3 border-b border-border/60 px-5 pb-4 pt-5">
-        <div className="min-w-0">
-          <SheetTitle className="font-libre-baskerville text-2xl leading-tight text-foreground">{tp.title}</SheetTitle>
-          <SheetDescription className="mt-1 text-sm text-muted-foreground">{tp.subtitle}</SheetDescription>
+      <div className="flex items-start justify-between gap-3 border-b border-dashed border-ticket-ink-soft/40 px-5 pb-4 pt-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <img
+            src={logoSmall.src}
+            srcSet={logoSmall.srcSet}
+            sizes="40px"
+            width={LOGO_WIDTH}
+            height={LOGO_HEIGHT}
+            alt={NEGOCIO.nombre}
+            className="h-10 w-auto shrink-0"
+          />
+          <div className="min-w-0">
+            <SheetTitle className="font-libre-baskerville text-2xl leading-tight text-ticket-ink">{tp.title}</SheetTitle>
+            <SheetDescription className="mt-1 text-sm text-ticket-ink-soft">{tp.subtitle}</SheetDescription>
+          </div>
         </div>
         <Button
           type="button"
@@ -285,7 +305,7 @@ const PreviewPedido = () => {
           size="icon"
           onClick={() => setAbierto(false)}
           aria-label={tp.close}
-          className="h-10 w-10 shrink-0 rounded-full"
+          className="h-10 w-10 shrink-0 rounded-full text-ticket-ink hover:bg-ticket-ink/10"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </Button>
@@ -297,8 +317,8 @@ const PreviewPedido = () => {
             <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
               <UtensilsCrossed className="h-6 w-6" aria-hidden="true" />
             </span>
-            <p className="font-libre-baskerville text-lg text-foreground text-balance">{tp.emptyTitle}</p>
-            <p className="mt-2 max-w-xs text-sm text-muted-foreground text-pretty">{tp.emptySubtitle}</p>
+            <p className="font-libre-baskerville text-lg text-ticket-ink text-balance">{tp.emptyTitle}</p>
+            <p className="mt-2 max-w-xs text-sm text-ticket-ink-soft text-pretty">{tp.emptySubtitle}</p>
             <Button asChild className="mt-6 rounded-full bg-accent px-6 text-accent-foreground hover:bg-accent/90">
               <Link to={rutaCarta} onClick={() => setAbierto(false)}>
                 {tp.emptyCta}
@@ -308,42 +328,54 @@ const PreviewPedido = () => {
         ) : (
           <div className="space-y-6">
             {/* Líneas */}
-            <ul className="divide-y divide-border/60">
+            <ul className="divide-y divide-dashed divide-ticket-ink-soft/30">
               {lineas.map((linea, indice) => {
                 const cfg = configUnidad(linea.unidad);
                 const cantidad = cantidadDeLinea(linea);
                 const persona = asignaciones[linea.clave];
                 return (
                   <li key={`${linea.clave}#${indice}`} className="py-3 first:pt-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium leading-snug text-foreground break-words">{linea.nombre}</p>
-                        <p className="text-xs text-muted-foreground tabular-nums">
-                          {eur(linea.precio_eur)}
-                          {sufijoPrecio(linea.unidad)}
-                        </p>
-                      </div>
-                      <p className="shrink-0 font-semibold tabular-nums text-foreground">{eur(importeLinea(linea))}</p>
+                    {/* Fila del recibo: cantidad × nombre ⋯⋯⋯ importe, con la
+                        guía de puntos absorbiendo el espacio sobrante — mismo
+                        patrón que la línea del ticket compartible (`TicketMesa`). */}
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-ticket-ink">
+                        {formatearCantidadLinea(linea, language)} ×
+                      </span>
+                      <span className="min-w-0 font-medium leading-snug text-ticket-ink [overflow-wrap:anywhere]">
+                        {linea.nombre}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="min-w-3 flex-1 -translate-y-[3px] self-end border-b border-dotted border-ticket-ink-soft/50"
+                      />
+                      <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-ticket-ink">
+                        {eur(importeLinea(linea))}
+                      </span>
                     </div>
+                    <p className="mt-0.5 text-xs text-ticket-ink-soft tabular-nums">
+                      {eur(linea.precio_eur)}
+                      {sufijoPrecio(linea.unidad)}
+                    </p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <div className="inline-flex items-center rounded-full border border-border bg-background">
+                      <div className="inline-flex items-center rounded-full border border-ticket-ink-soft/40 bg-ticket-paper">
                         <button
                           type="button"
                           onClick={() => cambiarCantidad(indice, -1)}
                           disabled={cantidad - cfg.paso < cfg.minimo - 1e-9}
                           aria-label={tp.lineDecrease.replace("{name}", linea.nombre)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
                         >
                           <Minus className="h-4 w-4" aria-hidden="true" />
                         </button>
-                        <span className="min-w-[3.5rem] text-center text-sm tabular-nums" aria-live="polite">
+                        <span className="min-w-[3.5rem] text-center text-sm tabular-nums text-ticket-ink" aria-live="polite">
                           {formatearCantidadLinea(linea, language)}
                         </span>
                         <button
                           type="button"
                           onClick={() => cambiarCantidad(indice, 1)}
                           aria-label={tp.lineIncrease.replace("{name}", linea.nombre)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <Plus className="h-4 w-4" aria-hidden="true" />
                         </button>
@@ -354,7 +386,7 @@ const PreviewPedido = () => {
                           value={typeof persona === "number" && persona < comensales ? String(persona) : ""}
                           onChange={(e) => mesa.asignar(linea.clave, e.target.value === "" ? null : Number(e.target.value))}
                           aria-label={tp.assignAria.replace("{name}", linea.nombre)}
-                          className="h-9 max-w-[11rem] rounded-full border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="h-9 max-w-[11rem] rounded-full border border-ticket-ink-soft/40 bg-ticket-paper px-3 text-sm text-ticket-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <option value="">{tp.shared}</option>
                           {Array.from({ length: comensales }, (_, i) => (
@@ -369,7 +401,7 @@ const PreviewPedido = () => {
                         type="button"
                         onClick={() => quitarLinea(indice)}
                         aria-label={tp.lineRemove.replace("{name}", linea.nombre)}
-                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink-soft transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -380,22 +412,22 @@ const PreviewPedido = () => {
             </ul>
 
             {/* Comensales y reparto */}
-            <section aria-labelledby="mi-mesa-comensales" className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+            <section aria-labelledby="mi-mesa-comensales" className="rounded-2xl border border-dashed border-ticket-ink-soft/40 bg-ticket-tray/40 p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 id="mi-mesa-comensales" className="text-sm font-medium text-foreground">
+                <h3 id="mi-mesa-comensales" className="text-sm font-medium text-ticket-ink">
                   {tp.guestsLabel}
                 </h3>
-                <div className="inline-flex items-center rounded-full border border-border bg-background">
+                <div className="inline-flex items-center rounded-full border border-ticket-ink-soft/40 bg-ticket-paper">
                   <button
                     type="button"
                     onClick={() => mesa.setComensales(comensales - 1)}
                     disabled={comensales <= COMENSALES_MIN}
                     aria-label={tp.guestsDecrease}
-                    className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
                   >
                     <Minus className="h-4 w-4" aria-hidden="true" />
                   </button>
-                  <output className="min-w-[2.5rem] text-center text-base font-semibold tabular-nums" aria-label={comensalesTexto}>
+                  <output className="min-w-[2.5rem] text-center text-base font-semibold tabular-nums text-ticket-ink" aria-label={comensalesTexto}>
                     {comensales}
                   </output>
                   <button
@@ -403,7 +435,7 @@ const PreviewPedido = () => {
                     onClick={() => mesa.setComensales(comensales + 1)}
                     disabled={comensales >= COMENSALES_MAX}
                     aria-label={tp.guestsIncrease}
-                    className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
                   >
                     <Plus className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -412,10 +444,10 @@ const PreviewPedido = () => {
 
               {comensales > 1 && (
                 <div className="mt-4">
-                  <p id="mi-mesa-reparto" className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+                  <p id="mi-mesa-reparto" className="mb-2 text-xs uppercase tracking-wider text-ticket-ink-soft">
                     {tp.splitLabel}
                   </p>
-                  <div role="radiogroup" aria-labelledby="mi-mesa-reparto" className="grid grid-cols-2 gap-1 rounded-full bg-background p-1 border border-border">
+                  <div role="radiogroup" aria-labelledby="mi-mesa-reparto" className="grid grid-cols-2 gap-1 rounded-full bg-ticket-paper p-1 border border-ticket-ink-soft/40">
                     {(["igual", "cadaUno"] as const).map((opcion) => (
                       <button
                         key={opcion}
@@ -425,7 +457,7 @@ const PreviewPedido = () => {
                         onClick={() => mesa.setModo(opcion)}
                         className={cn(
                           "h-9 rounded-full px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          modo === opcion ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted",
+                          modo === opcion ? "bg-primary text-primary-foreground" : "text-ticket-ink hover:bg-ticket-ink/10",
                         )}
                       >
                         {opcion === "igual" ? tp.splitEqual : tp.splitEach}
@@ -437,7 +469,7 @@ const PreviewPedido = () => {
 
               {cadaUno && (
                 <div className="mt-4 space-y-2">
-                  <p className="text-xs text-muted-foreground text-pretty">{tp.splitEachHint}</p>
+                  <p className="text-xs text-ticket-ink-soft text-pretty">{tp.splitEachHint}</p>
                   <ul className="space-y-1.5">
                     {reparto.porPersona.map((importe, i) => (
                       <li key={i} className="flex items-center gap-2">
@@ -450,14 +482,14 @@ const PreviewPedido = () => {
                           autoComplete="off"
                           spellCheck={false}
                           aria-label={tp.personNameAria.replace("{n}", String(i + 1))}
-                          className="h-9 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm text-foreground placeholder:text-foreground/70 hover:border-border focus-visible:border-border focus-visible:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="h-9 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm text-ticket-ink placeholder:text-ticket-ink/70 hover:border-ticket-ink-soft/40 focus-visible:border-ticket-ink-soft/40 focus-visible:bg-ticket-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         />
-                        <span className="text-sm font-semibold tabular-nums">{eur(importe)}</span>
+                        <span className="text-sm font-semibold tabular-nums text-ticket-ink">{eur(importe)}</span>
                       </li>
                     ))}
                   </ul>
                   {reparto.compartido > 0 && (
-                    <p className="text-xs text-muted-foreground tabular-nums">
+                    <p className="text-xs text-ticket-ink-soft tabular-nums">
                       {tp.sharedLine
                         .replace("{amount}", eur(reparto.compartido))
                         .replace("{each}", eur(reparto.compartidoPorPersona))}
@@ -468,15 +500,15 @@ const PreviewPedido = () => {
             </section>
 
             {/* Total */}
-            <div className="space-y-1">
+            <div className="space-y-1 border-t border-dashed border-ticket-ink-soft/40 pt-4">
               <div className="flex items-baseline justify-between">
-                <span className="font-libre-baskerville text-lg text-foreground">{tp.totalLabel}</span>
-                <span className="text-2xl font-semibold tabular-nums text-foreground">{eur(total)}</span>
+                <span className="font-libre-baskerville text-lg text-ticket-ink">{tp.totalLabel}</span>
+                <span className="text-2xl font-semibold tabular-nums text-ticket-ink">{eur(total)}</span>
               </div>
-              <p className="text-right text-sm font-medium text-accent tabular-nums" aria-live="polite" aria-atomic="true">
+              <p className="text-right text-sm font-medium text-ticket-rule tabular-nums" aria-live="polite" aria-atomic="true">
                 {tp.perPerson.replace("{amount}", eur(parte))}
               </p>
-              <p className="pt-2 text-center text-xs text-muted-foreground">{tp.note}</p>
+              <p className="pt-2 text-center text-xs text-ticket-ink-soft">{tp.note}</p>
             </div>
           </div>
         )}
@@ -484,7 +516,7 @@ const PreviewPedido = () => {
 
       {/* Acciones */}
       {!vacia && (
-        <div className="space-y-2 border-t border-border/60 bg-background px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
+        <div className="space-y-2 border-t border-dashed border-ticket-ink-soft/40 bg-ticket-paper px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
           <Button
             type="button"
             onClick={compartir}
@@ -517,7 +549,7 @@ const PreviewPedido = () => {
               variant="ghost"
               onClick={preguntarATomy}
               disabled={ocupado !== null}
-              className="h-auto min-h-11 w-full whitespace-normal rounded-full py-2 text-sm text-foreground"
+              className="h-auto min-h-11 w-full whitespace-normal rounded-full py-2 text-sm text-ticket-ink"
             >
               <Bot className="mr-2 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
               {tp.aiPrompt.replace("{n}", String(comensales))}
@@ -527,7 +559,7 @@ const PreviewPedido = () => {
           <div className="flex min-h-9 items-center justify-center gap-3 pt-1 text-sm">
             {confirmarVaciar ? (
               <>
-                <span className="text-muted-foreground">{tp.clearConfirm}</span>
+                <span className="text-ticket-ink-soft">{tp.clearConfirm}</span>
                 <button
                   type="button"
                   onClick={vaciar}
@@ -539,7 +571,7 @@ const PreviewPedido = () => {
                   type="button"
                   onClick={() => setConfirmarVaciar(false)}
                   autoFocus
-                  className="rounded-full px-3 py-1.5 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-full px-3 py-1.5 text-ticket-ink hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {tp.clearNo}
                 </button>
@@ -548,7 +580,7 @@ const PreviewPedido = () => {
               <button
                 type="button"
                 onClick={() => setConfirmarVaciar(true)}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-ticket-ink-soft hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                 {tp.clear}
@@ -570,11 +602,11 @@ const PreviewPedido = () => {
         <SheetContent
           side={isMobile ? "bottom" : "right"}
           className={cn(
-            "flex flex-col gap-0 p-0 [&>button.absolute]:hidden",
+            "flex flex-col gap-0 overflow-hidden bg-ticket-paper p-0 [&>button.absolute]:hidden",
             isMobile ? "max-h-[92dvh] rounded-t-3xl" : "w-full sm:max-w-md",
           )}
         >
-          {isMobile && <div aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted" />}
+          {isMobile && <div aria-hidden="true" className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-ticket-ink-soft/30" />}
           {panel}
         </SheetContent>
       </Sheet>
