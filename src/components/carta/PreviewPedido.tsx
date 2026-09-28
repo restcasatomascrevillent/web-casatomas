@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { Bot, CalendarCheck, Download, Minus, Plus, Share2, Trash2, UtensilsCrossed, X } from "lucide-react";
+import { Bot, CalendarCheck, Download, Share2, Trash2, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
@@ -12,25 +12,14 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { useToast } from "@/hooks/use-toast";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
-import { LOGO_HEIGHT, LOGO_WIDTH, logoSmall } from "@/assets/logo";
-import { NEGOCIO } from "@/lib/negocio";
 import {
-  COMENSALES_MAX,
-  COMENSALES_MIN,
   LOCALE_POR_IDIOMA,
   cantidadDeLinea,
   configUnidad,
   construirPreguntaTomy,
-  formatearCantidadLinea,
-  formatearEuros,
-  importeLinea,
-  nombrePersona,
-  porPersona,
   repartoCadaUno,
   resumenTextoMesa,
   rutaReservaMesa,
-  sufijoPrecio,
-  totalMesa,
   urlCarta,
 } from "@/lib/mi-mesa";
 import { generarMatrizQr } from "@/lib/qr";
@@ -82,16 +71,14 @@ const esAbort = (error: unknown) => error instanceof Error && error.name === "Ab
  *
  * Lo monta `FloatingActions` (perezoso) en cuanto hay alguna línea: pinta el
  * botón flotante "Mi mesa · N" y el panel (hoja inferior en móvil, panel
- * lateral en escritorio). El ticket para la imagen (`TicketMesa`) solo se
- * pinta fuera de pantalla con el panel abierto; `html-to-image` y el
- * generador de QR se descargan al generar la imagen, no antes.
+ * lateral en escritorio).
  *
- * El panel visible usa la misma gramática de "ticket" que `TicketReserva`
- * (papel cálido `--ticket-*`, filete de oro, separadores de puntos, cifras
- * tabulares): antes de la reescritura del reparto de cuenta, lo que se veía
- * al abrir "Mi mesa" YA era un ticket de verdad, no un panel genérico. Solo
- * cambia el fondo/tipografía/separadores — toda la lógica de líneas, reparto
- * y acciones sigue igual.
+ * El panel ES el ticket: `TicketMesa` se pinta EN VIVO ahí dentro (con
+ * `edicion`, que teje los controles de cantidad/comensales/reparto en el
+ * propio recibo) y, sin `edicion`, fuera de pantalla para capturarlo como
+ * imagen al compartir/descargar. Mismo componente, mismo layout — nunca hay
+ * un panel genérico por un lado y el ticket de verdad por otro, que podrían
+ * acabar desincronizados entre sí.
  */
 const PreviewPedido = () => {
   const { t, language } = useTranslations();
@@ -140,14 +127,11 @@ const PreviewPedido = () => {
 
   const lineas = useMemo(() => pedido.map((linea) => ({ ...linea, clave: clavePedido(linea) })), [pedido]);
   const { comensales, modo, nombres, asignaciones } = mesa;
-  const total = totalMesa(lineas);
-  const parte = porPersona(total, comensales);
   const reparto = useMemo(
     () => repartoCadaUno(lineas, (l) => l.clave, asignaciones, comensales),
     [lineas, asignaciones, comensales],
   );
   const cadaUno = modo === "cadaUno" && comensales > 1;
-  const eur = (v: number) => formatearEuros(v, language);
 
   const rutaCarta = construirRutaIdioma("/carta", language);
   const origen = typeof window !== "undefined" ? window.location.origin : null;
@@ -157,6 +141,23 @@ const PreviewPedido = () => {
   // Firma de lo que sale en la imagen: si no cambia, se reutiliza la ya generada
   // (y así `navigator.share` se llama sin esperas, dentro del gesto del usuario).
   const firma = JSON.stringify([pedido, comensales, modo, nombres, asignaciones, language]);
+
+  // El ticket en vivo lleva el QR desde que se abre (antes solo se generaba
+  // al pulsar compartir/descargar, así que ese hueco del recibo salía vacío
+  // mientras tanto). Si `generarImagen` ya lo está generando a la vez
+  // (p. ej. se precalentó la imagen antes de abrir), la llamada de aquí es
+  // redundante pero inofensiva: `generarMatrizQr` es determinista y ambas
+  // acaban fijando el mismo resultado.
+  useEffect(() => {
+    if (!abierto || qr) return;
+    let cancelado = false;
+    void generarMatrizQr(urlQr).then((matriz) => {
+      if (!cancelado) setQr(matriz);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [abierto, qr, urlQr]);
 
   const generarImagen = useCallback(async (): Promise<Imagen> => {
     if (imagenRef.current?.firma === firma) return imagenRef.current;
@@ -277,41 +278,30 @@ const PreviewPedido = () => {
   const fecha = abierto
     ? new Date().toLocaleDateString(LOCALE_POR_IDIOMA[language], { day: "numeric", month: "long", year: "numeric" })
     : "";
-  const comensalesTexto = comensales === 1 ? tp.guestsCountOne : tp.guestsCount.replace("{n}", String(comensales));
   const vacia = lineas.length === 0;
 
   const panel = (
-    <div className="flex h-full min-h-0 flex-col bg-ticket-paper text-ticket-ink">
-      {/* Cabecera */}
-      <div className="flex items-start justify-between gap-3 border-b border-dashed border-ticket-ink-soft/40 px-5 pb-4 pt-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <img
-            src={logoSmall.src}
-            srcSet={logoSmall.srcSet}
-            sizes="40px"
-            width={LOGO_WIDTH}
-            height={LOGO_HEIGHT}
-            alt={NEGOCIO.nombre}
-            className="h-10 w-auto shrink-0"
-          />
-          <div className="min-w-0">
-            <SheetTitle className="font-libre-baskerville text-2xl leading-tight text-ticket-ink">{tp.title}</SheetTitle>
-            <SheetDescription className="mt-1 text-sm text-ticket-ink-soft">{tp.subtitle}</SheetDescription>
-          </div>
-        </div>
+    <div className="flex h-full min-h-0 flex-col bg-ticket-paper">
+      {/* El propio ticket (`TicketMesa`, justo debajo) ya trae el logo y el
+          título — un segundo título visible aquí sería redundante. Radix
+          exige `SheetTitle`/`SheetDescription` para la accesibilidad del
+          `Sheet`; se mantienen, solo que ocultos a la vista. */}
+      <SheetTitle className="sr-only">{tp.title}</SheetTitle>
+      <SheetDescription className="sr-only">{tp.subtitle}</SheetDescription>
+      <div className="flex justify-end px-3 pt-3">
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={() => setAbierto(false)}
           aria-label={tp.close}
-          className="h-10 w-10 shrink-0 rounded-full text-ticket-ink hover:bg-ticket-ink/10"
+          className="h-9 w-9 shrink-0 rounded-full text-ticket-ink hover:bg-ticket-ink/10"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
         {vacia ? (
           <div className="flex flex-col items-center py-12 text-center">
             <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -326,191 +316,30 @@ const PreviewPedido = () => {
             </Button>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Líneas */}
-            <ul className="divide-y divide-dashed divide-ticket-ink-soft/30">
-              {lineas.map((linea, indice) => {
-                const cfg = configUnidad(linea.unidad);
-                const cantidad = cantidadDeLinea(linea);
-                const persona = asignaciones[linea.clave];
-                return (
-                  <li key={`${linea.clave}#${indice}`} className="py-3 first:pt-0">
-                    {/* Fila del recibo: cantidad × nombre ⋯⋯⋯ importe, con la
-                        guía de puntos absorbiendo el espacio sobrante — mismo
-                        patrón que la línea del ticket compartible (`TicketMesa`). */}
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-ticket-ink">
-                        {formatearCantidadLinea(linea, language)} ×
-                      </span>
-                      <span className="min-w-0 font-medium leading-snug text-ticket-ink [overflow-wrap:anywhere]">
-                        {linea.nombre}
-                      </span>
-                      <span
-                        aria-hidden="true"
-                        className="min-w-3 flex-1 -translate-y-[3px] self-end border-b border-dotted border-ticket-ink-soft/50"
-                      />
-                      <span className="shrink-0 whitespace-nowrap font-semibold tabular-nums text-ticket-ink">
-                        {eur(importeLinea(linea))}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-ticket-ink-soft tabular-nums">
-                      {eur(linea.precio_eur)}
-                      {sufijoPrecio(linea.unidad)}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <div className="inline-flex items-center rounded-full border border-ticket-ink-soft/40 bg-ticket-paper">
-                        <button
-                          type="button"
-                          onClick={() => cambiarCantidad(indice, -1)}
-                          disabled={cantidad - cfg.paso < cfg.minimo - 1e-9}
-                          aria-label={tp.lineDecrease.replace("{name}", linea.nombre)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
-                        >
-                          <Minus className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <span className="min-w-[3.5rem] text-center text-sm tabular-nums text-ticket-ink" aria-live="polite">
-                          {formatearCantidadLinea(linea, language)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => cambiarCantidad(indice, 1)}
-                          aria-label={tp.lineIncrease.replace("{name}", linea.nombre)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          <Plus className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                      </div>
-
-                      {cadaUno && (
-                        <select
-                          value={typeof persona === "number" && persona < comensales ? String(persona) : ""}
-                          onChange={(e) => mesa.asignar(linea.clave, e.target.value === "" ? null : Number(e.target.value))}
-                          aria-label={tp.assignAria.replace("{name}", linea.nombre)}
-                          className="h-9 max-w-[11rem] rounded-full border border-ticket-ink-soft/40 bg-ticket-paper px-3 text-sm text-ticket-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          <option value="">{tp.shared}</option>
-                          {Array.from({ length: comensales }, (_, i) => (
-                            <option key={i} value={i}>
-                              {nombrePersona(nombres, i, tp.personDefault)}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => quitarLinea(indice)}
-                        aria-label={tp.lineRemove.replace("{name}", linea.nombre)}
-                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ticket-ink-soft transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-
-            {/* Comensales y reparto */}
-            <section aria-labelledby="mi-mesa-comensales" className="rounded-2xl border border-dashed border-ticket-ink-soft/40 bg-ticket-tray/40 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h3 id="mi-mesa-comensales" className="text-sm font-medium text-ticket-ink">
-                  {tp.guestsLabel}
-                </h3>
-                <div className="inline-flex items-center rounded-full border border-ticket-ink-soft/40 bg-ticket-paper">
-                  <button
-                    type="button"
-                    onClick={() => mesa.setComensales(comensales - 1)}
-                    disabled={comensales <= COMENSALES_MIN}
-                    aria-label={tp.guestsDecrease}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
-                  >
-                    <Minus className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                  <output className="min-w-[2.5rem] text-center text-base font-semibold tabular-nums text-ticket-ink" aria-label={comensalesTexto}>
-                    {comensales}
-                  </output>
-                  <button
-                    type="button"
-                    onClick={() => mesa.setComensales(comensales + 1)}
-                    disabled={comensales >= COMENSALES_MAX}
-                    aria-label={tp.guestsIncrease}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-ticket-ink transition-colors hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
-                  >
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-
-              {comensales > 1 && (
-                <div className="mt-4">
-                  <p id="mi-mesa-reparto" className="mb-2 text-xs uppercase tracking-wider text-ticket-ink-soft">
-                    {tp.splitLabel}
-                  </p>
-                  <div role="radiogroup" aria-labelledby="mi-mesa-reparto" className="grid grid-cols-2 gap-1 rounded-full bg-ticket-paper p-1 border border-ticket-ink-soft/40">
-                    {(["igual", "cadaUno"] as const).map((opcion) => (
-                      <button
-                        key={opcion}
-                        type="button"
-                        role="radio"
-                        aria-checked={modo === opcion}
-                        onClick={() => mesa.setModo(opcion)}
-                        className={cn(
-                          "h-9 rounded-full px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          modo === opcion ? "bg-primary text-primary-foreground" : "text-ticket-ink hover:bg-ticket-ink/10",
-                        )}
-                      >
-                        {opcion === "igual" ? tp.splitEqual : tp.splitEach}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {cadaUno && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs text-ticket-ink-soft text-pretty">{tp.splitEachHint}</p>
-                  <ul className="space-y-1.5">
-                    {reparto.porPersona.map((importe, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={nombres[i] ?? ""}
-                          placeholder={tp.personDefault.replace("{n}", String(i + 1))}
-                          onChange={(e) => mesa.setNombre(i, e.target.value)}
-                          maxLength={40}
-                          autoComplete="off"
-                          spellCheck={false}
-                          aria-label={tp.personNameAria.replace("{n}", String(i + 1))}
-                          className="h-9 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 text-sm text-ticket-ink placeholder:text-ticket-ink/70 hover:border-ticket-ink-soft/40 focus-visible:border-ticket-ink-soft/40 focus-visible:bg-ticket-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        />
-                        <span className="text-sm font-semibold tabular-nums text-ticket-ink">{eur(importe)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {reparto.compartido > 0 && (
-                    <p className="text-xs text-ticket-ink-soft tabular-nums">
-                      {tp.sharedLine
-                        .replace("{amount}", eur(reparto.compartido))
-                        .replace("{each}", eur(reparto.compartidoPorPersona))}
-                    </p>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {/* Total */}
-            <div className="space-y-1 border-t border-dashed border-ticket-ink-soft/40 pt-4">
-              <div className="flex items-baseline justify-between">
-                <span className="font-libre-baskerville text-lg text-ticket-ink">{tp.totalLabel}</span>
-                <span className="text-2xl font-semibold tabular-nums text-ticket-ink">{eur(total)}</span>
-              </div>
-              <p className="text-right text-sm font-medium text-ticket-rule tabular-nums" aria-live="polite" aria-atomic="true">
-                {tp.perPerson.replace("{amount}", eur(parte))}
-              </p>
-              <p className="pt-2 text-center text-xs text-ticket-ink-soft">{tp.note}</p>
-            </div>
-          </div>
+          // El ticket real, en vivo: mismo componente que genera la imagen de
+          // compartir/descargar (ver más abajo), con `edicion` tejiendo los
+          // controles de cantidad/comensales/reparto en el propio recibo.
+          <TicketMesa
+            lineas={lineas}
+            comensales={comensales}
+            modo={cadaUno ? "cadaUno" : "igual"}
+            reparto={reparto}
+            nombres={nombres}
+            idioma={language}
+            t={tp}
+            qr={qr}
+            urlQr={urlQr}
+            fecha={fecha}
+            edicion={{
+              onCambiarCantidad: cambiarCantidad,
+              onQuitarLinea: quitarLinea,
+              onComensalesChange: mesa.setComensales,
+              onModoChange: mesa.setModo,
+              onAsignar: mesa.asignar,
+              onNombreChange: mesa.setNombre,
+              asignaciones,
+            }}
+          />
         )}
       </div>
 
