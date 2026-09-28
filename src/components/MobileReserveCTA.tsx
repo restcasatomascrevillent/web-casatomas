@@ -14,10 +14,11 @@ import { useEffect, useState } from "react";
 // tapar sus enlaces/datos de contacto.
 const HIDE_ON_PATHS = ["/reservas", "/404", "/reserva/respuesta", "/newsletter/baja"];
 // Rutas de las tres ramas de idioma ("/carta/vinos", "/en/carta/vinos",
-// "/fr/carta/vinos"): comparadas por sufijo, no por igualdad exacta, para no
-// tener que repetir las tres. En la carta de vinos esta barra tapaba la
-// parte de abajo de las tarjetas y el propio botón "Volver arriba".
-const HIDE_ON_PATH_SUFFIXES = ["/carta/vinos"];
+// "/fr/carta/vinos"...): comparadas por sufijo, no por igualdad exacta, para
+// no tener que repetir las tres de cada una. En la carta de vinos y en la de
+// bebidas esta barra tapaba la parte de abajo de las tarjetas y el propio
+// botón "Volver arriba".
+const HIDE_ON_PATH_SUFFIXES = ["/carta/vinos", "/carta/bebidas"];
 const HOME_PATHS = ["/", "/en", "/fr"];
 // Alto de la barra: `py-3` (1.5rem) + botón `size="lg"` (`h-11`, 2.75rem).
 const MOBILE_CTA_HEIGHT = "4.25rem";

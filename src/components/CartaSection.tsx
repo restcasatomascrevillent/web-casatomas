@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Suspense, lazy, useState, useEffect, type MouseEvent } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Wine, Beer, AlertCircle } from "lucide-react";
@@ -22,14 +22,17 @@ import { CATEGORIAS_CARTA, etiquetaCategoriaIdioma, rutaCategoria } from "@/lib/
 import { construirRutaIdioma } from "@/i18n/routing";
 import type { CartaPlatosSeed } from "./carta/CartaPlatos";
 
-type Section = "platos" | "bebidas" | null;
-const CartaBebidas = lazy(() => import("./carta/CartaBebidas"));
+type Section = "platos" | null;
 
-// Mismo módulo que carga la ruta `/carta/vinos` (ver `App.tsx`): Vite dedupea
-// por fichero resuelto, así que precargarlo aquí deja el chunk en caché del
-// navegador para cuando `lazyRoute` lo pida de verdad al navegar.
+// Mismos módulos que cargan las rutas `/carta/vinos` y `/carta/bebidas` (ver
+// `App.tsx`): Vite dedupea por fichero resuelto, así que precargarlos aquí
+// deja el chunk en caché del navegador para cuando `lazyRoute` lo pida de
+// verdad al navegar.
 const precargarPaginaVinos = () => {
   import("@/pages/carta/Vinos");
+};
+const precargarPaginaBebidas = () => {
+  import("@/pages/carta/Bebidas");
 };
 
 // La carta que descargó el build. Se calcula una sola vez por módulo: es un
@@ -57,6 +60,7 @@ const CartaSection = () => {
   const [showAgeDialog, setShowAgeDialog] = useState(false);
 
   const rutaVinos = construirRutaIdioma("/carta/vinos", language);
+  const rutaBebidas = construirRutaIdioma("/carta/bebidas", language);
 
   // El botón "Carta de vinos" ya no navega directo: si el visitante no ha
   // confirmado su edad en esta sesión del navegador, primero se le pregunta
@@ -182,17 +186,22 @@ const CartaSection = () => {
                 {t.carta.buttons.vinos}
               </Link>
             </Button>
+            {/* Misma lógica que "Carta de vinos": página propia
+                (`/carta/bebidas`) con el mismo buscador/filtro/pedido, y
+                precarga del chunk al pasar el cursor/tocar/llegar por
+                teclado para que la navegación se sienta instantánea. */}
             <Button
+              asChild
               size="lg"
-              onClick={() => setActiveSection(activeSection === "bebidas" ? null : "bebidas")}
-              className={`px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 ${
-                activeSection === "bebidas"
-                  ? "bg-accent hover:bg-accent/90 text-accent-foreground"
-                  : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-              }`}
+              onMouseEnter={precargarPaginaBebidas}
+              onFocus={precargarPaginaBebidas}
+              onTouchStart={precargarPaginaBebidas}
+              className="px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
             >
-              <Beer className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
-              {t.carta.buttons.bebidas}
+              <Link to={rutaBebidas}>
+                <Beer className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+                {t.carta.buttons.bebidas}
+              </Link>
             </Button>
           </div>
         </div>
@@ -218,20 +227,11 @@ const CartaSection = () => {
           </motion.div>
         </div>
 
-        {activeSection === "bebidas" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t.bebidas.loading}</div>}>
-              <CartaBebidas showAddButton />
-            </Suspense>
-          </motion.div>
-        )}
+        {/* Las bebidas ya no se despliegan aquí: tienen su propia página
+            (`/carta/bebidas`), igual que los vinos. */}
         {/* El botón flotante del ticket ya no se monta aquí: lo pone
             `FloatingActions` (en el `Layout`) para todo el sitio, también en
-            `/carta/:categoria` y `/carta/vinos`. */}
+            `/carta/:categoria`, `/carta/vinos` y `/carta/bebidas`. */}
 
       </motion.div>
 
