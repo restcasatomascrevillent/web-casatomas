@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wine, Beer, AlertCircle } from "lucide-react";
+import { ChevronDown, Wine, Beer, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -115,15 +115,28 @@ const CartaSection = () => {
     clave,
     etiqueta: [etiquetas.snacks, etiquetas.calientes, etiquetas.frios][indice],
     categoria: buscarCategoria(clave),
-  })).filter((item) => item.categoria);
+  })).filter(
+    (item): item is { clave: string; etiqueta: string; categoria: CategoriaCarta } => Boolean(item.categoria),
+  );
   const ensaladas = CLAVES_ENSALADAS.map((clave, indice) => ({
     clave,
     etiqueta: [etiquetas.verde, etiquetas.salazones][indice],
     categoria: buscarCategoria(clave),
-  })).filter((item) => item.categoria);
+  })).filter(
+    (item): item is { clave: string; etiqueta: string; categoria: CategoriaCarta } => Boolean(item.categoria),
+  );
   const simples = CLAVES_SIMPLES.map((clave) => buscarCategoria(clave)).filter(
     (categoria): categoria is CategoriaCarta => Boolean(categoria),
   );
+
+  // Suma de las pestañas de cada grupo: "Entrantes" y "Ensaladas" no son
+  // categorías reales con su propio recuento, así que se calcula sumando el
+  // de las que sí lo son.
+  const totalEntrantes = entrantes.reduce((suma, item) => suma + item.categoria.total, 0);
+  const totalEnsaladas = ensaladas.reduce((suma, item) => suma + item.categoria.total, 0);
+
+  const [entrantesAbierto, setEntrantesAbierto] = useState(false);
+  const [ensaladasAbierto, setEnsaladasAbierto] = useState(false);
 
   // El botón "Carta de vinos" ya no navega directo: si el visitante no ha
   // confirmado su edad en esta sesión del navegador, primero se le pregunta
@@ -166,12 +179,14 @@ const CartaSection = () => {
     return () => cancelIdle(id as number);
   }, []);
 
-  const filaClass =
-    "flex items-baseline justify-between gap-4 py-4 border-b border-border/70 last:border-b-0";
+  const filaClass = "py-4 border-b border-border/70 last:border-b-0";
+  const filaEnlaceClass = `${filaClass} flex items-baseline justify-between gap-4`;
+  const filaBotonClass = `${filaClass} flex items-baseline justify-between gap-4 w-full text-left`;
   const nombreClass =
     "font-libre-baskerville text-lg sm:text-xl text-foreground transition-colors group-hover:text-accent";
   const contadorClass = "text-sm text-muted-foreground shrink-0";
-  const subEnlaceClass = "text-sm sm:text-base text-muted-foreground transition-colors hover:text-accent";
+  const opcionClass =
+    "inline-flex items-center rounded-full border border-border/70 px-4 py-2 text-sm sm:text-base text-foreground transition-colors hover:border-accent hover:text-accent";
 
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
@@ -192,13 +207,17 @@ const CartaSection = () => {
         {/* Cada categoría es un enlace real a su propia página
             (`/carta/<slug>`, ya prerenderizada con su buscador y filtros):
             esto no es un acordeón que abre contenido aquí mismo, es
-            navegación de verdad, igual que ya hacen vinos y bebidas. Las dos
-            filas de grupo ("Entrantes", "Ensaladas") no son enlaces en sí
-            —no hay una página que las represente— sino la etiqueta seguida
-            de sus pestañas reales. */}
+            navegación de verdad, igual que ya hacen vinos y bebidas.
+
+            "Entrantes" y "Ensaladas" no son categorías reales —no hay una
+            página que las represente— así que su fila es un botón que
+            despliega sus pestañas reales en vez de un enlace directo. Esas
+            pestañas están SIEMPRE en el HTML (con `hidden`, no condicionadas
+            a `entrantesAbierto`/`ensaladasAbierto`): un buscador las indexa
+            igual estén plegadas o no, solo cambia lo que ve quien tiene JS. */}
         <nav aria-label={etiquetas.nav} className="max-w-2xl mx-auto mb-12">
           {novedades && (
-            <Link to={rutaCategoria(novedades.slug, language)} className={`${filaClass} group`}>
+            <Link to={rutaCategoria(novedades.slug, language)} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(novedades.clave, language)}</span>
               <span className={contadorClass}>{novedades.total}</span>
             </Link>
@@ -206,38 +225,73 @@ const CartaSection = () => {
 
           {entrantes.length > 0 && (
             <div className={filaClass}>
-              <span className={nombreClass}>{etiquetas.entrantes}</span>
-              <div className="flex items-center gap-2.5 flex-wrap justify-end">
-                {entrantes.map((item, indice) => (
-                  <span key={item.clave} className="flex items-center gap-2.5">
-                    {indice > 0 && <span className="text-border" aria-hidden="true">·</span>}
-                    <Link to={rutaCategoria(item.categoria!.slug, language)} className={subEnlaceClass}>
+              <button
+                type="button"
+                onClick={() => setEntrantesAbierto((abierto) => !abierto)}
+                aria-expanded={entrantesAbierto}
+                aria-controls="entrantes-opciones"
+                className={filaBotonClass}
+              >
+                <span className={nombreClass}>{etiquetas.entrantes}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className={contadorClass}>{totalEntrantes}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-muted-foreground transition-transform ${entrantesAbierto ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+              {/* `hidden` en el `<div>` exterior, SIN clase de `display` en
+                  él: una utilidad `flex`/`block` en el mismo elemento que
+                  `hidden` gana la pelea de especificidad (misma
+                  especificidad, pero la hoja de Tailwind es de autor y la de
+                  `[hidden]` es de user-agent) y el navegador lo pinta igual.
+                  El `flex flex-wrap` va en el `<div>` interior, que no lleva
+                  `hidden`. */}
+              <div id="entrantes-opciones" hidden={!entrantesAbierto} className="mt-4">
+                <div className="flex flex-wrap gap-2.5">
+                  {entrantes.map((item) => (
+                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
                       {item.etiqueta}
                     </Link>
-                  </span>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {ensaladas.length > 0 && (
             <div className={filaClass}>
-              <span className={nombreClass}>{etiquetas.ensaladas}</span>
-              <div className="flex items-center gap-2.5 flex-wrap justify-end">
-                {ensaladas.map((item, indice) => (
-                  <span key={item.clave} className="flex items-center gap-2.5">
-                    {indice > 0 && <span className="text-border" aria-hidden="true">·</span>}
-                    <Link to={rutaCategoria(item.categoria!.slug, language)} className={subEnlaceClass}>
+              <button
+                type="button"
+                onClick={() => setEnsaladasAbierto((abierto) => !abierto)}
+                aria-expanded={ensaladasAbierto}
+                aria-controls="ensaladas-opciones"
+                className={filaBotonClass}
+              >
+                <span className={nombreClass}>{etiquetas.ensaladas}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className={contadorClass}>{totalEnsaladas}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-muted-foreground transition-transform ${ensaladasAbierto ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  />
+                </span>
+              </button>
+              <div id="ensaladas-opciones" hidden={!ensaladasAbierto} className="mt-4">
+                <div className="flex flex-wrap gap-2.5">
+                  {ensaladas.map((item) => (
+                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
                       {item.etiqueta}
                     </Link>
-                  </span>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {simples.map((categoria) => (
-            <Link key={categoria.slug} to={rutaCategoria(categoria.slug, language)} className={`${filaClass} group`}>
+            <Link key={categoria.slug} to={rutaCategoria(categoria.slug, language)} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(categoria.clave, language)}</span>
               <span className={contadorClass}>{categoria.total}</span>
             </Link>
