@@ -8,6 +8,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS } from "@/lib/carta-ssg";
 import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
+import { idleImport } from "@/lib/lazyIdle";
 import type { Language } from "@/i18n/types";
 
 const SEO_HOME: Record<Language, { title: string; description: string }> = {
@@ -28,12 +29,18 @@ const SEO_HOME: Record<Language, { title: string; description: string }> = {
   },
 };
 
-const CartaSection = lazy(() => import("@/components/CartaSection"));
-const NovedadesSection = lazy(() => import("@/components/NovedadesSection"));
-const EspaciosSection = lazy(() => import("@/components/EspaciosSection"));
-const NosotrosSection = lazy(() => import("@/components/NosotrosSection"));
-const ContactoSection = lazy(() => import("@/components/ContactoSection"));
-const Footer = lazy(() => import("@/components/Footer"));
+// `idleImport`: mismo `lazy()` de siempre, pero en el navegador el `import()`
+// de cada sección espera a que el hilo principal esté libre en vez de
+// competir con la cabecera y el hero por la conexión/CPU nada más entrar
+// (ver el comentario de `idleImport`). El contenido de estas secciones ya
+// está en el HTML del SSG; lo único que se retrasa es cuándo se vuelven
+// interactivas.
+const CartaSection = lazy(idleImport(() => import("@/components/CartaSection")));
+const NovedadesSection = lazy(idleImport(() => import("@/components/NovedadesSection")));
+const EspaciosSection = lazy(idleImport(() => import("@/components/EspaciosSection")));
+const NosotrosSection = lazy(idleImport(() => import("@/components/NosotrosSection")));
+const ContactoSection = lazy(idleImport(() => import("@/components/ContactoSection")));
+const Footer = lazy(idleImport(() => import("@/components/Footer")));
 
 const SectionPlaceholder = ({ id }: { id: string }) => (
   <section id={id} className="py-16 px-4 md:px-8 lg:px-16 bg-background">
