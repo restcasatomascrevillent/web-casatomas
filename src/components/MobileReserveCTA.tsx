@@ -13,12 +13,14 @@ import { useEffect, useState } from "react";
 // En cualquier página se vuelve a ocultar al llegar al footer, para no
 // tapar sus enlaces/datos de contacto.
 const HIDE_ON_PATHS = ["/reservas", "/404", "/reserva/respuesta", "/newsletter/baja"];
-// Rutas de las tres ramas de idioma ("/carta/vinos", "/en/carta/vinos",
-// "/fr/carta/vinos"...): comparadas por sufijo, no por igualdad exacta, para
-// no tener que repetir las tres de cada una. En la carta de vinos y en la de
-// bebidas esta barra tapaba la parte de abajo de las tarjetas y el propio
-// botón "Volver arriba".
-const HIDE_ON_PATH_SUFFIXES = ["/carta/vinos", "/carta/bebidas"];
+// Cualquier página de la carta ("/carta", "/carta/vinos", "/carta/postres",
+// "/en/carta"...): el visitante ya está mirando qué pedir, no reservando
+// mesa, así que esta barra no debe verse ahí; en vinos y bebidas además
+// tapaba la parte de abajo de las tarjetas y el propio botón "Volver
+// arriba". Se detecta por segmento de ruta (no por igualdad exacta) para
+// cubrir "/carta", "/carta/:categoria", "/carta/vinos" y "/carta/bebidas" en
+// las tres ramas de idioma sin listarlas una a una.
+const RUTA_CARTA = /^\/(en\/|fr\/)?carta(\/|$)/;
 const HOME_PATHS = ["/", "/en", "/fr"];
 // Alto de la barra: `py-3` (1.5rem) + botón `size="lg"` (`h-11`, 2.75rem).
 const MOBILE_CTA_HEIGHT = "4.25rem";
@@ -87,8 +89,7 @@ const MobileReserveCTA = () => {
   }, [location.pathname]);
 
   const hiddenOnPath =
-    HIDE_ON_PATHS.includes(location.pathname) ||
-    HIDE_ON_PATH_SUFFIXES.some((suffix) => location.pathname.endsWith(suffix));
+    HIDE_ON_PATHS.includes(location.pathname) || RUTA_CARTA.test(location.pathname);
   const visible = !hiddenOnPath && pastHero && !nearFooter;
 
   // Publica la altura que ocupa la barra (0 si está oculta) en
