@@ -10,6 +10,7 @@ import {
   construirPreguntaTomy,
   formatearEuros,
   importeLinea,
+  type LineaMesa,
   leerComensalesReserva,
   nombrePersona,
   normalizarEstadoMesa,
@@ -63,11 +64,11 @@ describe("importes de Mi mesa", () => {
 });
 
 describe("reparto «cada uno lo suyo»", () => {
-  const clave = (l: { clave: string }) => l.clave;
+  const clave = (l: LineaMesa & { clave: string }) => l.clave;
 
   it("suma lo asignado a cada persona y reparte lo no asignado entre todos", () => {
     // Persona 1 → chuletón (60); persona 2 → croquetas (18); jamón y vino (30) para compartir.
-    const r = repartoCadaUno(lineas, clave, { c: 0, a: 1 }, 3);
+    const r = repartoCadaUno(lineas, clave, { c: [0], a: [1] }, 3);
     expect(r.compartido).toBeCloseTo(30);
     expect(r.compartidoPorPersona).toBeCloseTo(10);
     expect(r.propio).toEqual([expect.closeTo(60), 18, 0]);
@@ -78,11 +79,36 @@ describe("reparto «cada uno lo suyo»", () => {
     expect(suma).toBeCloseTo(totalMesa(lineas));
   });
 
+  it("una línea con varias personas se divide a partes iguales solo entre ellas", () => {
+    // Chuletón (60) → persona 0; croquetas (18) → persona 1; jamón (9) lo
+    // comparten 0 y 2 (4,5 cada uno); vino (21) sin asignar, para compartir.
+    const r = repartoCadaUno(lineas, clave, { c: [0], a: [1], b: [0, 2] }, 3);
+    expect(r.propio[0]).toBeCloseTo(60 + 4.5);
+    expect(r.propio[1]).toBeCloseTo(18);
+    expect(r.propio[2]).toBeCloseTo(4.5);
+    expect(r.compartido).toBeCloseTo(21);
+    expect(r.compartidoPorPersona).toBeCloseTo(7);
+    expect(r.porPersona[0]).toBeCloseTo(71.5);
+    expect(r.porPersona[1]).toBeCloseTo(25);
+    expect(r.porPersona[2]).toBeCloseTo(11.5);
+    const suma = r.porPersona.reduce((a, b) => a + b, 0);
+    expect(suma).toBeCloseTo(totalMesa(lineas));
+  });
+
   it("si se bajan los comensales, lo asignado a quien ya no está pasa a compartido", () => {
-    const r = repartoCadaUno(lineas, clave, { c: 3 }, 2);
+    const r = repartoCadaUno(lineas, clave, { c: [3] }, 2);
     expect(r.propio).toEqual([0, 0]);
     expect(r.compartido).toBeCloseTo(108);
     expect(r.porPersona).toEqual([expect.closeTo(54), expect.closeTo(54)]);
+  });
+
+  it("una persona fuera de rango dentro de una línea compartida no cuenta, pero no invalida al resto", () => {
+    // Jamón (9) "compartido" entre 0 y 5, con solo 2 comensales: 5 se
+    // descarta, así que el importe entero (no la mitad) va a la persona 0.
+    const r = repartoCadaUno(lineas, clave, { b: [0, 5] }, 2);
+    expect(r.propio[0]).toBeCloseTo(9);
+    expect(r.propio[1]).toBeCloseTo(0);
+    expect(r.compartido).toBeCloseTo(99); // croquetas + chuletón + vino
   });
 
   it("usa «Persona N» cuando el nombre está vacío", () => {
@@ -100,9 +126,12 @@ describe("estado persistido de Mi mesa", () => {
         comensales: 500,
         modo: "cadaUno",
         nombres: ["Ana", 3],
-        asignaciones: { a: 1, b: -1, c: "x", d: 2.5 },
+        // `a`: formato anterior (un número suelto) — compatible, se envuelve
+        // en array. `b`/`c`/`d`: inválidos sueltos, se descartan. `e`: array
+        // con un valor inválido mezclado y un duplicado. `f`: array vacío.
+        asignaciones: { a: 1, b: -1, c: "x", d: 2.5, e: [2, 2, "x", 3.5, 40], f: [] },
       }),
-    ).toEqual({ comensales: 30, modo: "cadaUno", nombres: ["Ana", ""], asignaciones: { a: 1 } });
+    ).toEqual({ comensales: 30, modo: "cadaUno", nombres: ["Ana", ""], asignaciones: { a: [1], e: [2] } });
     expect(normalizarEstadoMesa({ modo: "raro" }).modo).toBe("igual");
   });
 });

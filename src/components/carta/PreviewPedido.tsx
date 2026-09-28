@@ -193,7 +193,7 @@ const PreviewPedido = () => {
   const quitarLinea = (indice: number) => {
     const clave = lineas[indice]?.clave;
     guardarPedido(pedido.filter((_, i) => i !== indice));
-    if (clave && clave in asignaciones) mesa.asignar(clave, null);
+    if (clave && clave in asignaciones) mesa.limpiarAsignacion(clave);
   };
 
   const vaciar = () => {
@@ -272,7 +272,7 @@ const PreviewPedido = () => {
               onQuitarLinea: quitarLinea,
               onComensalesChange: mesa.setComensales,
               onModoChange: mesa.setModo,
-              onAsignar: mesa.asignar,
+              onAsignar: mesa.alternarAsignacion,
               onNombreChange: mesa.setNombre,
               asignaciones,
               vaciar: {

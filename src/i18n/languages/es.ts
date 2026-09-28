@@ -121,7 +121,7 @@ export const translations = {
       splitLabel: "Cómo dividís la cuenta",
       splitEqual: "A partes iguales",
       splitEach: "Cada uno lo suyo",
-      splitEachHint: "Asigna cada plato a quien lo pide. Lo que queda «Para compartir» se divide entre todos.",
+      splitEachHint: "Toca a quién comparte cada plato (puede ser más de uno). Lo que quede sin marcar se reparte entre todos.",
       personDefault: "Persona {n}",
       personNameAria: "Nombre de la persona {n}",
       assignAria: "¿Para quién es {name}?",

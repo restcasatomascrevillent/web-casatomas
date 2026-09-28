@@ -30,8 +30,13 @@ export interface EstadoMesa {
   modo: ModoReparto;
   /** Nombres editados por el visitante; vacío o ausente → "Persona N". */
   nombres: string[];
-  /** Clave de línea (`clavePedido`) → índice de la persona (0-based). Sin clave = para compartir. */
-  asignaciones: Record<string, number>;
+  /**
+   * Clave de línea (`clavePedido`) → índices de las personas que la comparten
+   * (0-based). Sin clave, o array vacío, = para compartir entre todos. Una
+   * línea con varias personas divide su importe a partes iguales solo entre
+   * ellas (p. ej. un plato entre 2 de 3 comensales).
+   */
+  asignaciones: Record<string, number[]>;
 }
 
 export const ESTADO_MESA_INICIAL: EstadoMesa = {
@@ -58,12 +63,20 @@ export const normalizarEstadoMesa = (crudo: unknown): EstadoMesa => {
   const nombres = Array.isArray(o.nombres)
     ? o.nombres.slice(0, COMENSALES_MAX).map((n) => (typeof n === "string" ? n.slice(0, 40) : ""))
     : [];
-  const asignaciones: Record<string, number> = {};
+  const asignaciones: Record<string, number[]> = {};
   if (o.asignaciones && typeof o.asignaciones === "object") {
-    for (const [clave, persona] of Object.entries(o.asignaciones as Record<string, unknown>)) {
-      if (typeof persona === "number" && Number.isInteger(persona) && persona >= 0 && persona < COMENSALES_MAX) {
-        asignaciones[clave] = persona;
-      }
+    for (const [clave, valor] of Object.entries(o.asignaciones as Record<string, unknown>)) {
+      // Compatibilidad con el formato anterior (una persona por línea, sin
+      // array): sessionStorage puede traer datos de antes de este cambio.
+      const bruto = Array.isArray(valor) ? valor : typeof valor === "number" ? [valor] : [];
+      const personas = Array.from(
+        new Set(
+          bruto.filter(
+            (p): p is number => typeof p === "number" && Number.isInteger(p) && p >= 0 && p < COMENSALES_MAX,
+          ),
+        ),
+      ).sort((a, b) => a - b);
+      if (personas.length > 0) asignaciones[clave] = personas;
     }
   }
   return {
@@ -126,14 +139,17 @@ export interface RepartoCadaUno {
 }
 
 /**
- * "Cada uno lo suyo": cada línea asignada suma a su persona; las no asignadas
- * (o asignadas a alguien que ya no está porque se bajaron los comensales) se
- * reparten a partes iguales. La suma de `porPersona` es siempre el total.
+ * "Cada uno lo suyo": cada línea asignada divide su importe a partes iguales
+ * entre quienes la comparten (una persona sola se lo come entero; dos o más
+ * se lo reparten entre ellas, p. ej. un plato entre 2 de 3 comensales). Las
+ * líneas sin nadie asignado (o asignadas solo a quien ya no está porque se
+ * bajaron los comensales) se reparten entre todos. La suma de `porPersona`
+ * es siempre el total.
  */
 export const repartoCadaUno = <L extends LineaMesa>(
   lineas: L[],
   claveDe: (linea: L) => string,
-  asignaciones: Record<string, number>,
+  asignaciones: Record<string, number[]>,
   comensales: number,
 ): RepartoCadaUno => {
   const n = acotarComensales(comensales);
@@ -141,9 +157,13 @@ export const repartoCadaUno = <L extends LineaMesa>(
   let compartido = 0;
   for (const linea of lineas) {
     const importe = importeLinea(linea);
-    const persona = asignaciones[claveDe(linea)];
-    if (typeof persona === "number" && persona >= 0 && persona < n) propio[persona] += importe;
-    else compartido += importe;
+    const personas = (asignaciones[claveDe(linea)] ?? []).filter((p) => p >= 0 && p < n);
+    if (personas.length > 0) {
+      const parte = importe / personas.length;
+      for (const persona of personas) propio[persona] += parte;
+    } else {
+      compartido += importe;
+    }
   }
   const compartidoPorPersona = compartido / n;
   return {

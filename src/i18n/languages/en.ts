@@ -121,7 +121,7 @@ export const translations: Translations = {
       splitLabel: "How you split the bill",
       splitEqual: "Split evenly",
       splitEach: "Each pays their own",
-      splitEachHint: "Assign each dish to whoever is having it. Anything left “To share” is split among everyone.",
+      splitEachHint: "Tap who's sharing each dish (more than one is fine). Anything left unmarked is split among everyone.",
       personDefault: "Person {n}",
       personNameAria: "Name of person {n}",
       assignAria: "Who is {name} for?",
