@@ -311,6 +311,9 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     setInfoCards((prev) => ({ ...prev, [key]: !currentOpen }));
   };
 
+  const getInfoAriaLabel = (open: boolean) =>
+    open ? "Ocultar información del vino" : "Mostrar información del vino";
+
   const toPublicImageUrl = (value: string) => {
     const trimmed = value.trim();
     if (!trimmed) return null;
@@ -560,18 +563,15 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             const originLabel = [item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais]
               .filter(Boolean)
               .join(" · ");
-            // Mismo vocabulario que el resto de la carta (`@/lib/alergenos`):
-            // declarados e inferidos no se mezclan, cada uno con su propio
-            // peso visual (el inferido nunca puede parecer tan seguro como lo
-            // que el restaurante certifica).
-            const datosAlergenosItem = datosAlergenos(item);
-            const conAlergenos = tieneInformacionAlergenos(datosAlergenosItem);
-            const alergenosOficiales = Array.from(
-              new Set(datosAlergenosItem.oficiales.map((a) => etiquetaAlergeno(a, language)).filter(Boolean)),
+            const alergenosItem = datosAlergenos(item);
+            const conAlergenos = tieneInformacionAlergenos(alergenosItem);
+            const infoAlergenos = Array.from(
+              new Set(
+                [...alergenosItem.oficiales, ...alergenosItem.inferidos]
+                  .map((alergeno) => etiquetaAlergeno(alergeno, language))
+                  .filter(Boolean),
+              ),
             );
-            const alergenosInferidos = Array.from(
-              new Set(datosAlergenosItem.inferidos.map((a) => etiquetaAlergeno(a, language)).filter(Boolean)),
-            ).filter((etiqueta) => !alergenosOficiales.includes(etiqueta));
 
             return (
               // Sin `layout` (ver más abajo por qué) y con `initial={false}`:
@@ -581,19 +581,24 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
               // hidrata (la advertencia de `CartaPageLayout` sobre por qué
               // aquí no se usa `motion`/`whileInView`).
               //
-              // Sin `layout`: con él, mostrar/ocultar la foto o los alérgenos
-              // de UNA tarjeta cambiaba su alto y Framer Motion recalculaba y
-              // volvía a animar la posición de TODAS las demás tarjetas del
-              // grid (el reflow que provoca ese cambio de alto), no solo la
-              // que se tocó. El propio giro/despliegue de la tarjeta ya anima
-              // suave por su cuenta (motion.div de abajo); las vecinas ahora
-              // solo se reacomodan con el reflow normal del grid.
+              // Sin `layout`: con él, mostrar/ocultar la foto de UNA tarjeta
+              // cambiaba su alto y Framer Motion recalculaba y volvía a
+              // animar la posición de TODAS las demás tarjetas del grid (el
+              // reflow que provoca ese cambio de alto), no solo la que se
+              // tocó. El propio despliegue de la tarjeta ya anima suave por
+              // su cuenta (motion.div de abajo); las vecinas ahora solo se
+              // reacomodan con el reflow normal del grid.
               <motion.div
                 key={cardKey}
                 initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 className="h-full [perspective:1200px]"
               >
+                {/* Envoltorio del giro 3D: mismo patrón que `CartaPlatos.tsx`
+                    (la "i" gira la tarjeta con `rotateY`, no abre nada aparte).
+                    La cara trasera va con `backface-visibility:hidden` y
+                    posicionada en `absolute` salvo cuando está boca arriba —
+                    ahí pasa a `relative` para que sí ocupe sitio en el grid. */}
                 <div
                   className={`relative transition-transform duration-500 [transform-style:preserve-3d] ${
                     expanded || infoOpen ? "h-full" : "h-auto"
@@ -602,8 +607,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                   <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
                     <Card
                       className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
-                        expanded ? "h-full card--expanded" : "h-auto card--collapsed"
-                      }`}
+                        expanded || infoOpen ? "h-full" : "h-auto"
+                      } ${expanded ? "card--expanded" : "card--collapsed"}`}
                     >
                       <AnimatePresence initial={false}>
                         {expanded && (
@@ -670,7 +675,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                             <button
                               type="button"
                               onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                              aria-label={`${infoOpen ? t.vinos.hideInfo : t.vinos.viewInfo} — ${item.displayNombre || item.nombre}`}
+                              aria-label={`${getInfoAriaLabel(infoOpen)} — ${item.displayNombre || item.nombre}`}
                               className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                             >
                               <Info className="w-5 h-5" aria-hidden="true" />
@@ -733,6 +738,9 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                     </Card>
                   </div>
 
+                  {/* Cara trasera: alérgenos, igual que la "i" de `CartaPlatos.tsx`.
+                      Sin `ingredientes` (los vinos no tienen esa columna), así
+                      que aquí solo va lo que sí hay: alérgenos y notas. */}
                   <div
                     className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
                   >
@@ -756,7 +764,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                           <button
                             type="button"
                             onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                            aria-label={`${infoOpen ? t.vinos.hideInfo : t.vinos.viewInfo} — ${item.displayNombre || item.nombre}`}
+                            aria-label={`${getInfoAriaLabel(infoOpen)} — ${item.displayNombre || item.nombre}`}
                             className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                           >
                             <Info className="w-5 h-5" aria-hidden="true" />
@@ -766,47 +774,36 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
 
                       <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
                         <div className="space-y-2">
-                          <p className="text-sm font-semibold text-foreground">{t.vinos.allergensTitle}:</p>
+                          <p className="text-sm font-semibold text-foreground">Alérgenos:</p>
                           {conAlergenos ? (
-                            <div className="space-y-2">
-                              {alergenosOficiales.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {alergenosOficiales.map((alergeno) => (
-                                    <Badge key={`oficial-${cardKey}-${alergeno}`} variant="destructive" className="text-xs">
-                                      {alergeno}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                              {alergenosInferidos.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {alergenosInferidos.map((alergeno) => (
-                                    <Badge key={`inferido-${cardKey}-${alergeno}`} variant="secondary" className="text-xs">
-                                      {alergeno}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
+                            <div className="flex flex-wrap gap-1">
+                              {infoAlergenos.map((alergeno, idx) => (
+                                <Badge key={`info-alergeno-${cardKey}-${idx}`} variant="secondary" className="text-xs">
+                                  {alergeno}
+                                </Badge>
+                              ))}
                             </div>
                           ) : (
                             // "No disponible" se podía leer como "no tiene
                             // alérgenos". Aquí se dice lo que pasa de verdad:
-                            // no consta el dato.
+                            // no consta el dato y hay que preguntar.
                             <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">
                               {AVISO_SIN_ALERGENOS[language]}
                             </p>
                           )}
                         </div>
 
-                        {item.alergenos_notas && (
+                        {alergenosItem.notas && (
                           <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
-                            {item.alergenos_notas}
+                            {alergenosItem.notas}
                           </p>
                         )}
                       </CardContent>
 
                       <CardFooter className="flex justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-6 py-3">
-                        <span className="font-bold text-accent text-2xl">{item.precio_eur}€</span>
+                        <span className="font-bold text-accent text-2xl">
+                          {item.precio_eur}€
+                        </span>
                         {showAddButton && (
                           <Button
                             size="sm"
