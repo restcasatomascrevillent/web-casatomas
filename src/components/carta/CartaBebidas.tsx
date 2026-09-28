@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { CATEGORIAS_BEBIDAS } from "@/lib/carta-rutas";
+import BackToTopButton from "./BackToTopButton";
 
 /**
  * Categorías DERIVADAS DEL DATO (recuento que descargó el build), no escritas
@@ -31,6 +32,13 @@ const CATEGORIA_INICIAL =
 
 interface CartaBebidasProps {
   showAddButton: boolean;
+  /**
+   * Bebidas de la categoría inicial ("TODAS") descargadas en build
+   * (`virtual:carta-ssg/bebidas`). Evitan el parpadeo de carga al entrar a
+   * `/carta/bebidas` y son lo que ve el buscador antes de que llegue el
+   * refresco de Supabase — mismo patrón que `initialVinos` en `CartaVinos`.
+   */
+  initialBebidas?: Record<string, Bebida[]>;
 }
 
 interface Bebida {
@@ -49,15 +57,25 @@ interface Bebida {
   cantidad?: number;
 }
 
-const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
+const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
   const { t, language } = useTranslations();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   // El input queda ligado a `searchTerm` (respuesta instantánea al teclear);
   // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
   // va con retraso, para no recalcular y re-animar en cada pulsación.
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
-  const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIA_INICIAL);
-  const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>({});
+  // Con semilla del build (`/carta/bebidas`) se arranca en "TODAS" para
+  // enseñarlas todas de golpe, igual que `CartaVinos` arranca en "Todos":
+  // sin semilla (el desplegable de la portada, antes de tener página propia)
+  // se mantiene el comportamiento previo de abrir por la primera categoría.
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    initialBebidas ? "TODAS" : CATEGORIA_INICIAL,
+  );
+  const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>(
+    () => initialBebidas ?? {},
+  );
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
@@ -203,7 +221,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
     t.categories.bebidas[category as keyof typeof t.categories.bebidas] ?? category;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" ref={sectionRef}>
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">
@@ -271,11 +289,15 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
           <p className="text-xl text-muted-foreground">{t.bebidas.loading}</p>
         </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, index) => (
+          // `initial={false}`: esta cuadrícula vive en `/carta/bebidas`, con
+          // las bebidas ya en el HTML del SSG — animar una entrada con
+          // `initial={{opacity:0}}` dejaría cada tarjeta invisible en ese
+          // HTML hasta que el JS hidrata (mismo motivo que en `CartaVinos`).
           <motion.div
             key={item.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
           >
@@ -338,6 +360,7 @@ const CartaBebidas = ({ showAddButton }: CartaBebidasProps) => {
           </Button>
         </div>
       )}
+      <BackToTopButton targetRef={sectionRef} containerRef={gridRef} />
     </div>
   );
 };

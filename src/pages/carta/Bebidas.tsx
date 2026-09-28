@@ -3,28 +3,14 @@ import datos from "virtual:carta-ssg/bebidas";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
-import ListaPrecios, { type FilaPrecio } from "@/components/carta/ListaPrecios";
+import CartaBebidas from "@/components/carta/CartaBebidas";
 import { agruparPorCategoria } from "@/lib/carta-ssg";
-import { etiquetaCategoria, slugificar } from "@/lib/carta-rutas";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
-import type { ItemTraducido } from "@/lib/carta-i18n";
-import type { BebidaSSG } from "@/lib/carta-ssg-types";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 
 const RUTA_ES = "/carta/bebidas";
-
-// El tamaño ("33 cl") no lleva traducción propia — es una medida, no prosa —
-// así que se deja igual; la descripción sí usa `displayDescripcion`.
-const aFila = (bebida: ItemTraducido<BebidaSSG>, indice: number): FilaPrecio => ({
-  id: bebida.id ?? `${bebida.nombre}-${indice}`,
-  nombre: bebida.displayNombre,
-  // `tamano` y `descripcion` están vacíos en casi todas las filas; si no hay
-  // dato no se pinta la línea secundaria en vez de inventarse una.
-  detalle: bebida.tamano || bebida.displayDescripcion || undefined,
-  precio: bebida.precio_eur,
-});
 
 const TEXTOS: Record<
   Language,
@@ -79,7 +65,16 @@ const TEXTOS: Record<
   },
 };
 
-/** `/carta/bebidas` — refrescos, aguas, cervezas y tónicas con su precio. */
+/**
+ * `/carta/bebidas` — refrescos, aguas, cervezas y tónicas, con buscador,
+ * filtro por categoría y "añadir a Mi mesa" (mismo `CartaBebidas` que antes
+ * solo se abría desde la portada, igual que ya pasó con `CartaVinos`).
+ *
+ * SEMILLA DEL BUILD. `CartaBebidas` recibe `initialBebidas` (de
+ * `virtual:carta-ssg/bebidas`, lo mismo que usa el JSON-LD de abajo) para que
+ * las bebidas ya estén en el HTML del SSG — sin esto, la cuadrícula nacería
+ * vacía a la espera de la respuesta de Supabase.
+ */
 const CartaBebidasPagina = () => {
   const { language } = useTranslations();
   const textos = TEXTOS[language];
@@ -116,30 +111,8 @@ const CartaBebidasPagina = () => {
         detalle={textos.detalle(bebidas.length)}
         migas={[{ nombre: textos.miga }]}
       >
-        {secciones.length > 0 ? (
-          <div className="space-y-12">
-            {secciones.map((seccion) => (
-              <section
-                key={seccion.clave}
-                id={slugificar(seccion.clave) || undefined}
-                aria-labelledby={`bebidas-${slugificar(seccion.clave)}`}
-                className="animate-fade-up"
-              >
-                <div className="flex items-baseline justify-between gap-4 mb-4">
-                  <h2
-                    id={`bebidas-${slugificar(seccion.clave)}`}
-                    className="text-2xl md:text-3xl font-bold text-primary"
-                  >
-                    {etiquetaCategoria(seccion.nombre)}
-                  </h2>
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {seccion.items.length}
-                  </span>
-                </div>
-                <ListaPrecios filas={seccion.items.map(aFila)} />
-              </section>
-            ))}
-          </div>
+        {bebidas.length > 0 ? (
+          <CartaBebidas showAddButton initialBebidas={{ TODAS: bebidas }} />
         ) : (
           <p className="text-muted-foreground">{textos.vacia}</p>
         )}
