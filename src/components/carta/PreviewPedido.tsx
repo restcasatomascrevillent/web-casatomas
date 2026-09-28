@@ -223,7 +223,7 @@ const PreviewPedido = () => {
           </div>
           <div className="min-w-0">
             <SheetTitle className="text-sm font-semibold leading-tight text-ticket-ink">{tp.title}</SheetTitle>
-            <SheetDescription className="text-xs leading-tight text-ticket-ink-soft truncate">{tp.subtitle}</SheetDescription>
+            <SheetDescription className="text-xs leading-tight text-ticket-ink-soft line-clamp-2">{tp.subtitle}</SheetDescription>
           </div>
         </div>
         <Button

@@ -106,7 +106,7 @@ const BotonPaso = ({
     onClick={onClick}
     disabled={disabled}
     aria-label={label}
-    className="flex h-7 w-7 items-center justify-center rounded-full border transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
+    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
     style={{ color: TINTA, borderColor: BORDE }}
   >
     {children}
@@ -212,7 +212,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                     role="radio"
                     aria-checked={modo === opcion}
                     onClick={() => edicion.onModoChange(opcion)}
-                    className="rounded border px-2.5 py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex-1 rounded border px-2 py-2 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{
                       borderColor: modo === opcion ? TINTA : BORDE,
                       background: modo === opcion ? TINTA : "transparent",
@@ -252,7 +252,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                       type="button"
                       onClick={() => edicion.onQuitarLinea(indice)}
                       aria-label={t.lineRemove.replace("{name}", linea.nombre)}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -300,7 +300,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                     value={typeof persona === "number" && persona < comensales ? String(persona) : ""}
                     onChange={(e) => edicion.onAsignar(linea.clave, e.target.value === "" ? null : Number(e.target.value))}
                     aria-label={t.assignAria.replace("{name}", linea.nombre)}
-                    className="mt-2 h-7 max-w-[10rem] rounded border bg-transparent px-2 text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="mt-2 h-9 max-w-[11rem] rounded border bg-transparent px-2 text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{ borderColor: BORDE, color: TINTA }}
                   >
                     <option value="">{t.shared}</option>
@@ -373,24 +373,30 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
         {edicion && (
           <div style={{ marginTop: 14 }}>
             {edicion.vaciar.confirmando ? (
-              <div className="flex items-center justify-center gap-3 text-xs" style={{ color: TINTA_SUAVE }}>
-                <span>{t.clearConfirm}</span>
-                <button
-                  type="button"
-                  onClick={edicion.vaciar.onConfirmar}
-                  className="rounded px-2 py-1 font-semibold text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {t.clearYes}
-                </button>
-                <button
-                  type="button"
-                  onClick={edicion.vaciar.onCancelar}
-                  autoFocus
-                  className="rounded px-2 py-1 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  style={{ color: TINTA }}
-                >
-                  {t.clearNo}
-                </button>
+              <div className="text-center text-xs" style={{ color: TINTA_SUAVE }}>
+                <p className="mb-2">{t.clearConfirm}</p>
+                {/* Dos botones grandes y bien separados: en un dedo de por
+                    medio no es sitio para acertar "cancelar" cuando el de al
+                    lado vacía la mesa. */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={edicion.vaciar.onCancelar}
+                    autoFocus
+                    className="flex h-10 items-center justify-center rounded-md border text-sm font-medium transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    style={{ borderColor: BORDE, color: TINTA }}
+                  >
+                    {t.clearNo}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={edicion.vaciar.onConfirmar}
+                    className="flex h-10 items-center justify-center rounded-md border text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    style={{ borderColor: "#dc2626" }}
+                  >
+                    {t.clearYes}
+                  </button>
+                </div>
               </div>
             ) : (
               <button
