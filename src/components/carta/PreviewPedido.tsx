@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { Bot, CalendarCheck, Download, Share2, Trash2, UtensilsCrossed, X } from "lucide-react";
+import { Bot, CalendarCheck, Download, Receipt, Share2, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
@@ -282,13 +282,19 @@ const PreviewPedido = () => {
 
   const panel = (
     <div className="flex h-full min-h-0 flex-col bg-ticket-paper">
-      {/* El propio ticket (`TicketMesa`, justo debajo) ya trae el logo y el
-          título — un segundo título visible aquí sería redundante. Radix
-          exige `SheetTitle`/`SheetDescription` para la accesibilidad del
-          `Sheet`; se mantienen, solo que ocultos a la vista. */}
-      <SheetTitle className="sr-only">{tp.title}</SheetTitle>
-      <SheetDescription className="sr-only">{tp.subtitle}</SheetDescription>
-      <div className="flex justify-end px-3 pt-3">
+      {/* Cabecera del diálogo: distinta del papel del ticket (justo debajo),
+          igual que en el diseño original — un pequeño icono, título y
+          descripción, y el cierre. */}
+      <div className="flex items-center justify-between gap-3 border-b border-ticket-ink-soft/20 px-4 py-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+            <Receipt className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <SheetTitle className="text-sm font-semibold leading-tight text-ticket-ink">{tp.title}</SheetTitle>
+            <SheetDescription className="text-xs leading-tight text-ticket-ink-soft truncate">{tp.subtitle}</SheetDescription>
+          </div>
+        </div>
         <Button
           type="button"
           variant="ghost"
@@ -301,7 +307,7 @@ const PreviewPedido = () => {
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
         {vacia ? (
           <div className="flex flex-col items-center py-12 text-center">
             <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
@@ -338,6 +344,12 @@ const PreviewPedido = () => {
               onAsignar: mesa.asignar,
               onNombreChange: mesa.setNombre,
               asignaciones,
+              vaciar: {
+                confirmando: confirmarVaciar,
+                onPedir: () => setConfirmarVaciar(true),
+                onConfirmar: vaciar,
+                onCancelar: () => setConfirmarVaciar(false),
+              },
             }}
           />
         )}
@@ -384,38 +396,6 @@ const PreviewPedido = () => {
               {tp.aiPrompt.replace("{n}", String(comensales))}
             </Button>
           )}
-
-          <div className="flex min-h-9 items-center justify-center gap-3 pt-1 text-sm">
-            {confirmarVaciar ? (
-              <>
-                <span className="text-ticket-ink-soft">{tp.clearConfirm}</span>
-                <button
-                  type="button"
-                  onClick={vaciar}
-                  className="rounded-full px-3 py-1.5 font-medium text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {tp.clearYes}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmarVaciar(false)}
-                  autoFocus
-                  className="rounded-full px-3 py-1.5 text-ticket-ink hover:bg-ticket-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  {tp.clearNo}
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmarVaciar(true)}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-ticket-ink-soft hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                {tp.clear}
-              </button>
-            )}
-          </div>
         </div>
       )}
     </div>
