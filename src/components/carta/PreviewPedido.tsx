@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { Bot, CalendarCheck, Download, Receipt, Share2, UtensilsCrossed, X } from "lucide-react";
+import { Bot, Receipt, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
@@ -10,7 +10,6 @@ import { useMiMesa } from "@/hooks/useMiMesa";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
-import { useToast } from "@/hooks/use-toast";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
 import {
   LOCALE_POR_IDIOMA,
@@ -18,8 +17,6 @@ import {
   configUnidad,
   construirPreguntaTomy,
   repartoCadaUno,
-  resumenTextoMesa,
-  rutaReservaMesa,
   urlCarta,
 } from "@/lib/mi-mesa";
 import { generarMatrizQr } from "@/lib/qr";
@@ -28,9 +25,7 @@ import TicketMesa from "./TicketMesa";
 
 const AIChatbot = lazy(() => import("../AIChatbot"));
 
-const NOMBRE_IMAGEN = "mi-mesa-casa-tomas.png";
-
-type Imagen = { firma: string; file: File; dataUrl: string };
+type Imagen = { firma: string; dataUrl: string };
 
 /** Espera a las fuentes y a las imágenes del nodo antes de capturarlo. */
 const esperarRecursos = async (nodo: HTMLElement) => {
@@ -52,22 +47,10 @@ const esperarRecursos = async (nodo: HTMLElement) => {
   );
 };
 
-/** ¿Puede este navegador compartir un PNG con `navigator.share`? (síncrono, para no perder el gesto). */
-const puedeCompartirArchivos = (): boolean => {
-  try {
-    if (typeof navigator === "undefined" || typeof navigator.canShare !== "function") return false;
-    return navigator.canShare({ files: [new File([new Blob()], NOMBRE_IMAGEN, { type: "image/png" })] });
-  } catch {
-    return false;
-  }
-};
-
-const esAbort = (error: unknown) => error instanceof Error && error.name === "AbortError";
-
 /**
  * "Mi mesa" (antes "Mi pedido"): el visitante apunta lo que le apetece de la
- * carta, ve el total orientativo, cuánto toca a cada uno, y lo comparte con
- * su grupo como un ticket en imagen. NO es un pedido online.
+ * carta y ve el total orientativo y cuánto toca a cada uno, como un ticket
+ * de verdad. NO es un pedido online.
  *
  * Lo monta `FloatingActions` (perezoso) en cuanto hay alguna línea: pinta el
  * botón flotante "Mi mesa · N" y el panel (hoja inferior en móvil, panel
@@ -75,22 +58,21 @@ const esAbort = (error: unknown) => error instanceof Error && error.name === "Ab
  *
  * El panel ES el ticket: `TicketMesa` se pinta EN VIVO ahí dentro (con
  * `edicion`, que teje los controles de cantidad/comensales/reparto en el
- * propio recibo) y, sin `edicion`, fuera de pantalla para capturarlo como
- * imagen al compartir/descargar. Mismo componente, mismo layout — nunca hay
- * un panel genérico por un lado y el ticket de verdad por otro, que podrían
- * acabar desincronizados entre sí.
+ * propio recibo) y, sin `edicion`, fuera de pantalla: esa copia oculta es la
+ * que captura `generarImagen` para adjuntar el ticket al preguntar a Tomy.
+ * Mismo componente, mismo layout — nunca hay un panel genérico por un lado y
+ * el ticket de verdad por otro, que podrían acabar desincronizados entre sí.
  */
 const PreviewPedido = () => {
   const { t, language } = useTranslations();
   const tp = t.preview;
-  const { toast } = useToast();
   const isMobile = useIsMobile();
   const mesa = useMiMesa();
   const chatbotVisible = useChatbotVisible();
 
   const [pedido, setPedido] = useState<LineaPedido[]>([]);
   const [abierto, setAbierto] = useState(false);
-  const [ocupado, setOcupado] = useState<null | "compartir" | "descargar" | "chat">(null);
+  const [ocupado, setOcupado] = useState<null | "chat">(null);
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
   const [qr, setQr] = useState<boolean[][] | null>(null);
   const [chat, setChat] = useState<{ imagen: string | null; pregunta: string } | null>(null);
@@ -136,16 +118,15 @@ const PreviewPedido = () => {
   const rutaCarta = construirRutaIdioma("/carta", language);
   const origen = typeof window !== "undefined" ? window.location.origin : null;
   const urlQr = urlCarta(origen, rutaCarta);
-  const resumen = () => resumenTextoMesa(lineas, comensales, language, tp.share, urlQr);
 
-  // Firma de lo que sale en la imagen: si no cambia, se reutiliza la ya generada
-  // (y así `navigator.share` se llama sin esperas, dentro del gesto del usuario).
+  // Firma de lo que sale en la imagen: si no cambia, se reutiliza la ya
+  // generada (evita regenerarla cada vez que se pregunta a Tomy con el mismo
+  // ticket).
   const firma = JSON.stringify([pedido, comensales, modo, nombres, asignaciones, language]);
 
-  // El ticket en vivo lleva el QR desde que se abre (antes solo se generaba
-  // al pulsar compartir/descargar, así que ese hueco del recibo salía vacío
-  // mientras tanto). Si `generarImagen` ya lo está generando a la vez
-  // (p. ej. se precalentó la imagen antes de abrir), la llamada de aquí es
+  // El ticket en vivo lleva el QR desde que se abre (si no, ese hueco del
+  // recibo saldría vacío hasta la primera captura para Tomy). Si
+  // `generarImagen` ya lo está generando a la vez, la llamada de aquí es
   // redundante pero inofensiva: `generarMatrizQr` es determinista y ambas
   // acaban fijando el mismo resultado.
   useEffect(() => {
@@ -173,8 +154,7 @@ const PreviewPedido = () => {
       await esperarRecursos(nodo);
       const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(nodo, { pixelRatio: 2, cacheBust: true, backgroundColor: "#fbf8f3" });
-      const blob = await (await fetch(dataUrl)).blob();
-      const imagen = { firma, dataUrl, file: new File([blob], NOMBRE_IMAGEN, { type: "image/png" }) };
+      const imagen = { firma, dataUrl };
       imagenRef.current = imagen;
       return imagen;
     })();
@@ -186,55 +166,6 @@ const PreviewPedido = () => {
       if (enCursoRef.current?.promesa === promesa) enCursoRef.current = null;
     }
   }, [firma, qr, urlQr]);
-
-  /** Genera la imagen de antemano (al pasar por encima / enfocar "Compartir"). */
-  const precalentar = () => {
-    if (lineas.length > 0 && puedeCompartirArchivos()) void generarImagen().catch(() => undefined);
-  };
-
-  const avisarError = () =>
-    toast({ title: tp.share.errorTitle, description: tp.share.error, variant: "destructive" });
-
-  const compartir = async () => {
-    const texto = resumen();
-    if (!puedeCompartirArchivos()) {
-      // Escritorio y navegadores sin Web Share de archivos: el resumen va por
-      // WhatsApp (abierto dentro del mismo click para que no lo bloquee el
-      // navegador) y se ofrece la imagen con "Descargar imagen".
-      window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
-      toast({ title: tp.share.fallbackTitle, description: tp.share.fallbackDescription });
-      return;
-    }
-    setOcupado("compartir");
-    try {
-      const { file } = await generarImagen();
-      await navigator.share({ files: [file], text: texto, title: tp.title });
-    } catch (error) {
-      if (esAbort(error)) return; // El usuario cerró la hoja de compartir.
-      console.error(error);
-      avisarError();
-    } finally {
-      setOcupado(null);
-    }
-  };
-
-  const descargar = async () => {
-    setOcupado("descargar");
-    try {
-      const { dataUrl } = await generarImagen();
-      const enlace = document.createElement("a");
-      enlace.href = dataUrl;
-      enlace.download = NOMBRE_IMAGEN;
-      document.body.appendChild(enlace);
-      enlace.click();
-      enlace.remove();
-    } catch (error) {
-      console.error(error);
-      avisarError();
-    } finally {
-      setOcupado(null);
-    }
-  };
 
   const preguntarATomy = async () => {
     setOcupado("chat");
@@ -292,7 +223,7 @@ const PreviewPedido = () => {
           </div>
           <div className="min-w-0">
             <SheetTitle className="text-sm font-semibold leading-tight text-ticket-ink">{tp.title}</SheetTitle>
-            <SheetDescription className="text-xs leading-tight text-ticket-ink-soft truncate">{tp.subtitle}</SheetDescription>
+            <SheetDescription className="text-xs leading-tight text-ticket-ink-soft line-clamp-2">{tp.subtitle}</SheetDescription>
           </div>
         </div>
         <Button
@@ -322,8 +253,8 @@ const PreviewPedido = () => {
             </Button>
           </div>
         ) : (
-          // El ticket real, en vivo: mismo componente que genera la imagen de
-          // compartir/descargar (ver más abajo), con `edicion` tejiendo los
+          // El ticket real, en vivo: mismo componente que se captura como
+          // imagen para Tomy (ver más abajo), con `edicion` tejiendo los
           // controles de cantidad/comensales/reparto en el propio recibo.
           <TicketMesa
             lineas={lineas}
@@ -355,47 +286,21 @@ const PreviewPedido = () => {
         )}
       </div>
 
-      {/* Acciones */}
-      {!vacia && (
+      {/* Entrada al chatbot con el ticket adjunto: la única acción que queda
+          fuera del ticket. Solo con el chatbot visible (VITE_CHATBOT_PUBLICO
+          o `?tomy=1`); si no, nada — el ticket ya no lleva más botones debajo. */}
+      {!vacia && chatbotVisible && (
         <div className="space-y-2 border-t border-dashed border-ticket-ink-soft/40 bg-ticket-paper px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
           <Button
             type="button"
-            onClick={compartir}
-            onPointerEnter={precalentar}
-            onFocus={precalentar}
+            variant="ghost"
+            onClick={preguntarATomy}
             disabled={ocupado !== null}
-            className="h-12 w-full rounded-full bg-accent text-base text-accent-foreground shadow-md hover:bg-accent/90"
+            className="h-auto min-h-11 w-full whitespace-normal rounded-full py-2 text-sm text-ticket-ink"
           >
-            <Share2 className="mr-2 h-4 w-4" aria-hidden="true" />
-            {ocupado === "compartir" ? tp.share.generating : tp.share.cta}
+            <Bot className="mr-2 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+            {tp.aiPrompt.replace("{n}", String(comensales))}
           </Button>
-          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-            <Button type="button" variant="outline" onClick={descargar} disabled={ocupado !== null} className="h-11 rounded-full">
-              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-              {ocupado === "descargar" ? tp.share.generating : tp.share.download}
-            </Button>
-            <Button asChild variant="outline" className="h-11 rounded-full">
-              <Link to={rutaReservaMesa(comensales)} onClick={() => setAbierto(false)}>
-                <CalendarCheck className="mr-2 h-4 w-4" aria-hidden="true" />
-                {tp.bookCta.replace("{n}", String(comensales))}
-              </Link>
-            </Button>
-          </div>
-
-          {/* Entrada al chatbot con el ticket adjunto. Solo con el chatbot
-              visible (VITE_CHATBOT_PUBLICO o `?tomy=1`); si no, nada. */}
-          {chatbotVisible && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={preguntarATomy}
-              disabled={ocupado !== null}
-              className="h-auto min-h-11 w-full whitespace-normal rounded-full py-2 text-sm text-ticket-ink"
-            >
-              <Bot className="mr-2 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-              {tp.aiPrompt.replace("{n}", String(comensales))}
-            </Button>
-          )}
         </div>
       )}
     </div>
