@@ -56,9 +56,11 @@ export type EdicionTicketMesa = {
   onQuitarLinea: (indice: number) => void;
   onComensalesChange: (siguiente: number) => void;
   onModoChange: (modo: ModoReparto) => void;
-  onAsignar: (clave: string, persona: number | null) => void;
+  /** Añade o quita a `persona` de quienes comparten la línea `clave`. */
+  onAsignar: (clave: string, persona: number) => void;
   onNombreChange: (indice: number, valor: string) => void;
-  asignaciones: Record<string, number | null | undefined>;
+  /** Vacío o ausente = para compartir entre todos. */
+  asignaciones: Record<string, number[] | undefined>;
   vaciar: {
     confirmando: boolean;
     onPedir: () => void;
@@ -224,6 +226,11 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                 ))}
               </div>
             )}
+            {cadaUno && (
+              <p className="mt-2 text-[10px]" style={{ color: TINTA_SUAVE }}>
+                {t.splitEachHint}
+              </p>
+            )}
           </div>
         )}
 
@@ -232,7 +239,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
           {lineas.map((linea, indice) => {
             const cfg = edicion ? configUnidad(linea.unidad) : null;
             const cantidad = edicion ? cantidadDeLinea(linea) : null;
-            const persona = edicion?.asignaciones[linea.clave];
+            const personasLinea = edicion?.asignaciones[linea.clave] ?? [];
             const esUltima = indice === lineas.length - 1;
             return (
               <div
@@ -296,20 +303,41 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                 </div>
 
                 {edicion && cadaUno && (
-                  <select
-                    value={typeof persona === "number" && persona < comensales ? String(persona) : ""}
-                    onChange={(e) => edicion.onAsignar(linea.clave, e.target.value === "" ? null : Number(e.target.value))}
-                    aria-label={t.assignAria.replace("{name}", linea.nombre)}
-                    className="mt-2 h-9 max-w-[11rem] rounded border bg-transparent px-2 text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    style={{ borderColor: BORDE, color: TINTA }}
-                  >
-                    <option value="">{t.shared}</option>
-                    {Array.from({ length: comensales }, (_, i) => (
-                      <option key={i} value={i}>
-                        {nombrePersona(nombres, i, t.personDefault)}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-2">
+                    {/* Botones de alternar, no un desplegable: más de una
+                        persona puede compartir el mismo plato (p. ej. entre
+                        2 de 3 comensales). */}
+                    <div
+                      role="group"
+                      aria-label={t.assignAria.replace("{name}", linea.nombre)}
+                      className="flex flex-wrap gap-1.5"
+                    >
+                      {Array.from({ length: comensales }, (_, i) => {
+                        const seleccionado = personasLinea.includes(i);
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            aria-pressed={seleccionado}
+                            onClick={() => edicion.onAsignar(linea.clave, i)}
+                            className="rounded-full border px-2.5 py-1 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            style={{
+                              borderColor: seleccionado ? TINTA : BORDE,
+                              background: seleccionado ? TINTA : "transparent",
+                              color: seleccionado ? PAPEL : TINTA,
+                            }}
+                          >
+                            {nombrePersona(nombres, i, t.personDefault)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {personasLinea.length === 0 && (
+                      <p className="mt-1 text-[10px] italic" style={{ color: TINTA_SUAVE }}>
+                        {t.shared}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             );

@@ -38,16 +38,27 @@ describe("useMiMesa", () => {
     act(() => {
       result.current.setModo("cadaUno");
       result.current.setNombre(1, "Luis");
-      result.current.asignar("id:p1", 1);
+      result.current.alternarAsignacion("id:p1", 1);
     });
     expect(result.current.modo).toBe("cadaUno");
     expect(result.current.nombres).toEqual(["", "Luis"]);
-    expect(result.current.asignaciones).toEqual({ "id:p1": 1 });
+    expect(result.current.asignaciones).toEqual({ "id:p1": [1] });
 
-    act(() => result.current.asignar("id:p1", null));
+    // Volver a tocar a la misma persona la quita: la línea vuelve a compartirse.
+    act(() => result.current.alternarAsignacion("id:p1", 1));
     expect(result.current.asignaciones).toEqual({});
 
-    act(() => result.current.asignar("id:p2", 0));
+    // Dos personas pueden compartir la misma línea.
+    act(() => {
+      result.current.alternarAsignacion("id:p2", 0);
+      result.current.alternarAsignacion("id:p2", 2);
+    });
+    expect(result.current.asignaciones).toEqual({ "id:p2": [0, 2] });
+
+    act(() => result.current.limpiarAsignacion("id:p2"));
+    expect(result.current.asignaciones).toEqual({});
+
+    act(() => result.current.alternarAsignacion("id:p2", 0));
     act(() => result.current.olvidarAsignaciones());
     expect(result.current.asignaciones).toEqual({});
     await waitFor(() => expect(getMesaConfig()).toMatchObject({ modo: "cadaUno", nombres: ["", "Luis"] }));

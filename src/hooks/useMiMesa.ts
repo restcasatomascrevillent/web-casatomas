@@ -57,13 +57,29 @@ export const useMiMesa = () => {
     [actualizar],
   );
 
-  /** `persona === null` → la línea vuelve a "para compartir". */
-  const asignar = useCallback(
-    (clave: string, persona: number | null) =>
+  /** Añade o quita a `persona` de quienes comparten esta línea. Vacía → vuelve a "para compartir". */
+  const alternarAsignacion = useCallback(
+    (clave: string, persona: number) =>
       actualizar((e) => {
+        const actuales = e.asignaciones[clave] ?? [];
+        const siguiente = actuales.includes(persona)
+          ? actuales.filter((p) => p !== persona)
+          : [...actuales, persona].sort((a, b) => a - b);
         const asignaciones = { ...e.asignaciones };
-        if (persona === null) delete asignaciones[clave];
-        else asignaciones[clave] = persona;
+        if (siguiente.length === 0) delete asignaciones[clave];
+        else asignaciones[clave] = siguiente;
+        return { ...e, asignaciones };
+      }),
+    [actualizar],
+  );
+
+  /** Borra toda la asignación de una línea (p. ej. al quitarla del pedido). */
+  const limpiarAsignacion = useCallback(
+    (clave: string) =>
+      actualizar((e) => {
+        if (!(clave in e.asignaciones)) return e;
+        const asignaciones = { ...e.asignaciones };
+        delete asignaciones[clave];
         return { ...e, asignaciones };
       }),
     [actualizar],
@@ -75,5 +91,13 @@ export const useMiMesa = () => {
     [actualizar],
   );
 
-  return { ...estado, setComensales, setModo, setNombre, asignar, olvidarAsignaciones };
+  return {
+    ...estado,
+    setComensales,
+    setModo,
+    setNombre,
+    alternarAsignacion,
+    limpiarAsignacion,
+    olvidarAsignaciones,
+  };
 };
