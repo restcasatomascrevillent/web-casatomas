@@ -120,13 +120,13 @@ const BotonPaso = ({
  *
  * Un único layout para DOS usos:
  *  1. Sin `edicion`, pintado fuera de pantalla: lo que captura
- *     `html-to-image` para compartir/descargar. Un `<div>` puro, sin un
- *     solo evento — el comportamiento de siempre.
+ *     `html-to-image` para adjuntar al preguntar a Tomy. Un `<div>` puro,
+ *     sin un solo evento — el comportamiento de siempre.
  *  2. Con `edicion`, pintado dentro del panel: lo que el visitante ve y
  *     toca de verdad. Mismos datos, con botones de cantidad, comensales,
  *     reparto y vaciar tejidos en el propio recibo. Nunca hay una segunda
  *     vista del ticket (un panel de app aparte) que pueda desincronizarse
- *     de la imagen que se comparte.
+ *     de la imagen capturada.
  */
 const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
   ({ lineas, comensales, modo, reparto, nombres, idioma, t, qr, urlQr, fecha, edicion }, ref) => {
