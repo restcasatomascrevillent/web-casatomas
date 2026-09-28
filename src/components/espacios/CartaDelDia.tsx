@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -167,6 +167,12 @@ const AlergenosDelPlato = ({ item }: { item: ItemMenu }) => {
  * es la miniatura, sin foto es el rombo de oro de la casa. Así conviven los dos
  * casos (lo normal es una mezcla) sin recuadros grises ni texto desalineado, y
  * la ausencia de foto queda como una viñeta, no como un fallo.
+ *
+ * Una foto que NO carga cae en ese mismo rombo. No es un caso raro: el menú
+ * guarda una COPIA de la url del plato (ver `lib/menu-dia`), así que un menú de
+ * hace tres meses puede seguir apuntando a un fichero que ya se borró del
+ * almacén. Sin esto, el navegador pinta el recuadro roto del `<img>` —
+ * comprobado en el navegador— y una carta impresa no puede permitirse eso.
  */
 const Plato = ({
   item,
@@ -177,6 +183,8 @@ const Plato = ({
   compacta: boolean;
   conAlergenos: boolean;
 }) => {
+  const [fotoRota, setFotoRota] = useState(false);
+
   // El ancho va aparte del alto: la casilla sin foto ocupa la misma columna
   // pero mide lo que mide su viñeta, no lo que mediría una miniatura.
   const ancho = compacta ? "w-11" : "w-12 sm:w-16";
@@ -184,7 +192,7 @@ const Plato = ({
 
   return (
     <li className="flex gap-3 sm:gap-4">
-      {item.imagenUrl ? (
+      {item.imagenUrl && !fotoRota ? (
         <img
           src={item.imagenUrl}
           // Decorativa: el nombre del plato está justo al lado, repetirlo en el
@@ -192,6 +200,7 @@ const Plato = ({
           alt=""
           loading="lazy"
           decoding="async"
+          onError={() => setFotoRota(true)}
           width={128}
           height={128}
           style={

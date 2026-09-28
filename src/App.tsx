@@ -1,5 +1,4 @@
 import { lazy, Suspense, type ComponentType } from "react";
-import { Outlet } from "react-router-dom";
 import type { RouteRecord } from "vite-react-ssg";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +7,7 @@ import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
 import FloatingActions from "./components/FloatingActions";
 import ScrollToTop from "./components/ScrollToTop";
+import PageTransition from "./components/PageTransition";
 import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
@@ -69,7 +69,7 @@ const Layout = ({ lang }: { lang: Language }) => (
         <CookieConsent />
         <SectionErrorBoundary>
           <Suspense fallback={<RouteFallback />}>
-            <Outlet />
+            <PageTransition />
           </Suspense>
         </SectionErrorBoundary>
         <MobileReserveCTA />
