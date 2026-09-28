@@ -211,7 +211,20 @@ export const translations = {
         starters: "Entrantes",
         mains: "Principales",
         dessert: "Postre",
+        desserts: "Postres",
         tapasOfDay: "Tapas de la semana",
+      },
+      /**
+       * Alérgenos del menú del día. Van plegados en la carta (ver
+       * `components/espacios/CartaDelDia`): lo declarado por el restaurante y
+       * lo deducido de los ingredientes se enseñan por separado, porque no
+       * tienen la misma fiabilidad.
+       */
+      menuAllergens: {
+        summary: "Alérgenos",
+        declared: "Declarados por el restaurante",
+        inferred: "Deducidos de los ingredientes",
+        inferredHint: "Orientativo: confírmelo con el personal.",
       },
       menus: [
         {

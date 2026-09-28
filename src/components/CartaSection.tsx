@@ -2,13 +2,14 @@ import { motion } from "framer-motion";
 import { useEffect, useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wine, Beer, AlertCircle } from "lucide-react";
+import { ChevronRight, Wine, Beer, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { getEdadVinosConfirmada, setEdadVinosConfirmada } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -43,6 +44,7 @@ const ETIQUETAS_PUENTE: Record<
     nav: string;
     entrantes: string;
     ensaladas: string;
+    elige: string;
     snacks: string;
     calientes: string;
     frios: string;
@@ -54,6 +56,7 @@ const ETIQUETAS_PUENTE: Record<
     nav: "Categorías de la carta",
     entrantes: "Entrantes",
     ensaladas: "Ensaladas",
+    elige: "Elige un tipo",
     snacks: "Snacks",
     calientes: "Calientes",
     frios: "Fríos",
@@ -64,6 +67,7 @@ const ETIQUETAS_PUENTE: Record<
     nav: "Menu categories",
     entrantes: "Starters",
     ensaladas: "Salads",
+    elige: "Choose a type",
     snacks: "Snacks",
     calientes: "Hot",
     frios: "Cold",
@@ -74,6 +78,7 @@ const ETIQUETAS_PUENTE: Record<
     nav: "Catégories de la carte",
     entrantes: "Entrées",
     ensaladas: "Salades",
+    elige: "Choisissez un type",
     snacks: "Snacks",
     calientes: "Chauds",
     frios: "Froids",
@@ -115,15 +120,25 @@ const CartaSection = () => {
     clave,
     etiqueta: [etiquetas.snacks, etiquetas.calientes, etiquetas.frios][indice],
     categoria: buscarCategoria(clave),
-  })).filter((item) => item.categoria);
+  })).filter(
+    (item): item is { clave: string; etiqueta: string; categoria: CategoriaCarta } => Boolean(item.categoria),
+  );
   const ensaladas = CLAVES_ENSALADAS.map((clave, indice) => ({
     clave,
     etiqueta: [etiquetas.verde, etiquetas.salazones][indice],
     categoria: buscarCategoria(clave),
-  })).filter((item) => item.categoria);
+  })).filter(
+    (item): item is { clave: string; etiqueta: string; categoria: CategoriaCarta } => Boolean(item.categoria),
+  );
   const simples = CLAVES_SIMPLES.map((clave) => buscarCategoria(clave)).filter(
     (categoria): categoria is CategoriaCarta => Boolean(categoria),
   );
+
+  // Suma de las pestañas de cada grupo: "Entrantes" y "Ensaladas" no son
+  // categorías reales con su propio recuento, así que se calcula sumando el
+  // de las que sí lo son.
+  const totalEntrantes = entrantes.reduce((suma, item) => suma + item.categoria.total, 0);
+  const totalEnsaladas = ensaladas.reduce((suma, item) => suma + item.categoria.total, 0);
 
   // El botón "Carta de vinos" ya no navega directo: si el visitante no ha
   // confirmado su edad en esta sesión del navegador, primero se le pregunta
@@ -166,12 +181,14 @@ const CartaSection = () => {
     return () => cancelIdle(id as number);
   }, []);
 
-  const filaClass =
-    "flex items-baseline justify-between gap-4 py-4 border-b border-border/70 last:border-b-0";
+  const filaClass = "py-4 border-b border-border/70 last:border-b-0";
+  const filaEnlaceClass = `${filaClass} flex items-baseline justify-between gap-4`;
+  const filaBotonClass = `${filaClass} flex items-center justify-between gap-4 w-full text-left`;
   const nombreClass =
     "font-libre-baskerville text-lg sm:text-xl text-foreground transition-colors group-hover:text-accent";
   const contadorClass = "text-sm text-muted-foreground shrink-0";
-  const subEnlaceClass = "text-sm sm:text-base text-muted-foreground transition-colors hover:text-accent";
+  const opcionClass =
+    "flex items-center justify-between gap-4 rounded-xl border border-border/70 px-4 py-3 font-libre-baskerville text-base text-foreground transition-colors hover:border-accent hover:text-accent";
 
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
@@ -192,52 +209,82 @@ const CartaSection = () => {
         {/* Cada categoría es un enlace real a su propia página
             (`/carta/<slug>`, ya prerenderizada con su buscador y filtros):
             esto no es un acordeón que abre contenido aquí mismo, es
-            navegación de verdad, igual que ya hacen vinos y bebidas. Las dos
-            filas de grupo ("Entrantes", "Ensaladas") no son enlaces en sí
-            —no hay una página que las represente— sino la etiqueta seguida
-            de sus pestañas reales. */}
+            navegación de verdad, igual que ya hacen vinos y bebidas.
+
+            "Entrantes" y "Ensaladas" no son categorías reales —no hay una
+            página que las represente—, así que su fila abre un diálogo con
+            sus pestañas reales para elegir una y entrar. Esos enlaces NO
+            están en el HTML del SSG hasta que se abre el diálogo (un
+            `Dialog` de Radix no se renderiza en Node), pero eso no dificulta
+            encontrarlos: `/carta` y el `sitemap.xml` ya enlazan a cada
+            categoría por su cuenta, esta lista no es su única puerta de
+            entrada. */}
         <nav aria-label={etiquetas.nav} className="max-w-2xl mx-auto mb-12">
           {novedades && (
-            <Link to={rutaCategoria(novedades.slug, language)} className={`${filaClass} group`}>
+            <Link to={rutaCategoria(novedades.slug, language)} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(novedades.clave, language)}</span>
               <span className={contadorClass}>{novedades.total}</span>
             </Link>
           )}
 
           {entrantes.length > 0 && (
-            <div className={filaClass}>
-              <span className={nombreClass}>{etiquetas.entrantes}</span>
-              <div className="flex items-center gap-2.5 flex-wrap justify-end">
-                {entrantes.map((item, indice) => (
-                  <span key={item.clave} className="flex items-center gap-2.5">
-                    {indice > 0 && <span className="text-border" aria-hidden="true">·</span>}
-                    <Link to={rutaCategoria(item.categoria!.slug, language)} className={subEnlaceClass}>
-                      {item.etiqueta}
-                    </Link>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button type="button" className={filaBotonClass}>
+                  <span className={nombreClass}>{etiquetas.entrantes}</span>
+                  <span className="flex items-center gap-1.5 shrink-0">
+                    <span className={contadorClass}>{totalEntrantes}</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                   </span>
-                ))}
-              </div>
-            </div>
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{etiquetas.entrantes}</DialogTitle>
+                  <DialogDescription>{etiquetas.elige}</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-2.5 pt-2">
+                  {entrantes.map((item) => (
+                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
+                      <span>{item.etiqueta}</span>
+                      <span className={contadorClass}>{item.categoria.total}</span>
+                    </Link>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
 
           {ensaladas.length > 0 && (
-            <div className={filaClass}>
-              <span className={nombreClass}>{etiquetas.ensaladas}</span>
-              <div className="flex items-center gap-2.5 flex-wrap justify-end">
-                {ensaladas.map((item, indice) => (
-                  <span key={item.clave} className="flex items-center gap-2.5">
-                    {indice > 0 && <span className="text-border" aria-hidden="true">·</span>}
-                    <Link to={rutaCategoria(item.categoria!.slug, language)} className={subEnlaceClass}>
-                      {item.etiqueta}
-                    </Link>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button type="button" className={filaBotonClass}>
+                  <span className={nombreClass}>{etiquetas.ensaladas}</span>
+                  <span className="flex items-center gap-1.5 shrink-0">
+                    <span className={contadorClass}>{totalEnsaladas}</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                   </span>
-                ))}
-              </div>
-            </div>
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{etiquetas.ensaladas}</DialogTitle>
+                  <DialogDescription>{etiquetas.elige}</DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-2.5 pt-2">
+                  {ensaladas.map((item) => (
+                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
+                      <span>{item.etiqueta}</span>
+                      <span className={contadorClass}>{item.categoria.total}</span>
+                    </Link>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
 
           {simples.map((categoria) => (
-            <Link key={categoria.slug} to={rutaCategoria(categoria.slug, language)} className={`${filaClass} group`}>
+            <Link key={categoria.slug} to={rutaCategoria(categoria.slug, language)} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(categoria.clave, language)}</span>
               <span className={contadorClass}>{categoria.total}</span>
             </Link>

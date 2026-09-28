@@ -211,7 +211,14 @@ export const translations: Translations = {
         starters: "Starters",
         mains: "Mains",
         dessert: "Dessert",
+        desserts: "Desserts",
         tapasOfDay: "Tapas of the week",
+      },
+      menuAllergens: {
+        summary: "Allergens",
+        declared: "Declared by the restaurant",
+        inferred: "Deduced from the ingredients",
+        inferredHint: "For guidance only — please confirm with our staff.",
       },
       menus: [
         {
