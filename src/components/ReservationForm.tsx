@@ -337,8 +337,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
           {reservationDetails && (
             <>
-              {/* El papel es lo unico que scrollea. */}
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              {/* El papel es lo unico que scrollea, y lo hace sin barra: el
+                  raíl nativo se pegaba al borde del troquel y rompía el
+                  diseño del ticket. `scrollbar-oculta` esconde la barra, no
+                  el scroll. */}
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-oculta">
                 <TicketReserva
                   ref={ticketRef}
                   datos={reservationDetails}

@@ -316,6 +316,21 @@ All colors MUST be HSL.
     font-family: "Libre Baskerville", "Bodoni MT", serif;
   }
 
+  /* Oculta la barra de scroll SIN quitar el scroll. Para superficies donde la
+     barra nativa rompe el diseño —el ticket de reserva, que imita un papel
+     troquelado y no puede llevar un raíl gris pegado al borde—. El contenido
+     se sigue pudiendo desplazar con rueda, dedo y teclado, que es lo que
+     importa para accesibilidad: sin `overflow` no habría forma de llegar
+     al final del papel en una pantalla baja. */
+  .scrollbar-oculta {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Edge antiguo */
+  }
+
+  .scrollbar-oculta::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
   .scroll-reveal-scale {
     opacity: 0;
     transform: translateY(24px) scale(0.98);
