@@ -323,7 +323,7 @@ export const translations: Translations = {
         thanks: "Merci d'avoir choisi Casa Tomás.",
         issuedLabel: "Demande enregistrée",
       },
-      stepOne: "Étape 1 : choisissez la date, la salle et le nombre de convives",
+      stepOne: "Étape 1 : choisissez la date, l'heure et le nombre de convives",
       dateLabel: "Date *",
       datePlaceholder: "Choisissez une date",
       roomLabel: "Salle préférée *",
