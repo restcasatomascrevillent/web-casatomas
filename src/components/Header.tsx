@@ -208,7 +208,7 @@ const Header = () => {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:hidden bg-background/98 backdrop-blur-md border-t border-border"
+            className="lg:hidden bg-background border-t border-border"
           >
             <nav className="flex flex-col p-4 space-y-2">
               {navItems.map((item, index) => (

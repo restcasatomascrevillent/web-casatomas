@@ -240,7 +240,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 text-base font-semibold text-left touch-manipulation"
+                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition duration-300 text-base font-semibold text-left touch-manipulation"
               >
                 <span className="flex items-start gap-2 text-left whitespace-normal break-words leading-tight flex-1">
                   <Wine className="w-5 h-5 text-accent" />
@@ -262,9 +262,9 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
                     event.preventDefault();
                     handleCategorySelect(category);
                   }}
-                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition-all duration-200 touch-manipulation ${
-                    selectedCategory === category 
-                      ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md" 
+                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition duration-200 touch-manipulation ${
+                    selectedCategory === category
+                      ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md"
                       : "hover:bg-muted/70 hover:translate-x-1"
                   }`}
                 >
