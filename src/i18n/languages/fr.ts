@@ -47,6 +47,10 @@ export const translations: Translations = {
       inOrder: "{qty} sur votre table",
       viewPhoto: "Voir la photo",
       hidePhoto: "Masquer la photo",
+      viewInfo: "Voir les ingrédients et allergènes",
+      hideInfo: "Masquer les ingrédients et allergènes",
+      allergensTitle: "Allergènes",
+      ingredientsTitle: "Ingrédients",
       empty: "Aucun plat ne correspond aux filtres sélectionnés",
       dietaryTitle: "Filtrer par besoins alimentaires",
       dietaryFilters: {

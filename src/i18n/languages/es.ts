@@ -47,6 +47,10 @@ export const translations = {
       inOrder: "{qty} en tu mesa",
       viewPhoto: "Ver foto",
       hidePhoto: "Ocultar foto",
+      viewInfo: "Ver ingredientes y alérgenos",
+      hideInfo: "Ocultar ingredientes y alérgenos",
+      allergensTitle: "Alérgenos",
+      ingredientsTitle: "Ingredientes",
       empty: "No hay platos que coincidan con los filtros seleccionados",
       dietaryTitle: "Filtrar por necesidades",
       dietaryFilters: {
