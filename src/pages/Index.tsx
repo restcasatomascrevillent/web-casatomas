@@ -1,6 +1,8 @@
 import { Suspense, lazy, useMemo, type ReactNode } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import CartaSection from "@/components/CartaSection";
+import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
@@ -35,12 +37,10 @@ const SEO_HOME: Record<Language, { title: string; description: string }> = {
 // (ver el comentario de `idleImport`). El contenido de estas secciones ya
 // está en el HTML del SSG; lo único que se retrasa es cuándo se vuelven
 // interactivas.
-const CartaSection = lazy(idleImport(() => import("@/components/CartaSection")));
 const NovedadesSection = lazy(idleImport(() => import("@/components/NovedadesSection")));
 const EspaciosSection = lazy(idleImport(() => import("@/components/EspaciosSection")));
 const NosotrosSection = lazy(idleImport(() => import("@/components/NosotrosSection")));
 const ContactoSection = lazy(idleImport(() => import("@/components/ContactoSection")));
-const Footer = lazy(idleImport(() => import("@/components/Footer")));
 
 const SectionPlaceholder = ({ id }: { id: string }) => (
   <section id={id} className="py-16 px-4 md:px-8 lg:px-16 bg-background">
@@ -97,15 +97,16 @@ const Index = () => {
       <Header />
       <div className="min-h-screen bg-background">
         <Hero />
-        <SectionBoundary id="carta"><CartaSection /></SectionBoundary>
+        <SectionErrorBoundary id="carta"><CartaSection /></SectionErrorBoundary>
         <SectionBoundary id="novedades"><NovedadesSection /></SectionBoundary>
         <SectionBoundary id="espacios"><EspaciosSection /></SectionBoundary>
         <SectionBoundary id="nosotros"><NosotrosSection /></SectionBoundary>
         <SectionBoundary id="contacto"><ContactoSection /></SectionBoundary>
-        <SectionBoundary id="footer"><Footer /></SectionBoundary>
+        <SectionErrorBoundary id="footer"><Footer /></SectionErrorBoundary>
       </div>
     </>
   );
 };
 
 export default Index;
+

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Cookie } from "lucide-react";
@@ -27,18 +26,14 @@ const CookieConsent = () => {
   };
 
   return (
-    <AnimatePresence>
+    <>
       {showBanner && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ duration: 0.3 }}
+        <div
           /* En móvil se ancla por encima de la barra fija de CTA (MobileReserveCTA)
              para no tapar "Llamar" / "Reservar mesa". */
           className="fixed bottom-[4.5rem] lg:bottom-0 left-0 right-0 z-50 p-2 md:p-6"
         >
-          <Card className="max-w-4xl mx-auto p-3 md:p-6 shadow-2xl border-2 border-primary/20 bg-background/95 backdrop-blur-sm">
+          <Card className="max-w-4xl mx-auto p-3 md:p-6 shadow-2xl border-2 border-primary/20 bg-background">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
               <div className="flex-shrink-0 hidden md:block">
                 <Cookie className="w-8 h-8 text-accent" />
@@ -72,10 +67,11 @@ const CookieConsent = () => {
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 };
 
 export default CookieConsent;
+
