@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,12 +53,61 @@ const Header = () => {
     return () => window.clearTimeout(timer);
   }, [location.hash]);
 
+  // Corrección en marcha (si la hay) de una llamada anterior a
+  // `scrollToSection`: se cancela al empezar una nueva, para que dos clics
+  // seguidos no acaben tirando cada uno hacia su sección a la vez.
+  const detenerCorreccionRef = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => () => detenerCorreccionRef.current?.(), []);
+
+  /**
+   * Lleva la vista hasta `sectionId` y la mantiene ahí mientras la página
+   * siga cambiando de alto.
+   *
+   * Las secciones de la portada se cargan en diferido (`idleImport`, ver
+   * `lib/lazyIdle.ts`): el esqueleto de `Suspense` nace con el mismo `id`,
+   * así que el primer `scrollIntoView` ya encuentra dónde ir, pero en
+   * cuanto cada sección resuelve sustituye su esqueleto (bajito) por el
+   * contenido real (mucho más alto), lo que empuja hacia abajo todo lo que
+   * hay debajo — si eso pasa justo después de llegar, el ancla se queda
+   * desalineada. Se nota sobre todo en Chrome (Windows y Android):
+   * `requestIdleCallback` puede tardar bastante si el hilo principal está
+   * ocupado (p. ej. con la propia animación de abrir el menú), así que las
+   * secciones no siempre han cargado ya cuando se pulsa un enlace.
+   *
+   * Se corrige con un `ResizeObserver` sobre `<body>` durante unos segundos
+   * — sin volver a animar el scroll, para no repetirlo cada vez — y se para
+   * en cuanto el visitante toca la rueda o la pantalla: seguir tirando de
+   * la vista por encima de lo que esté haciendo sería peor que dejar el
+   * desajuste.
+   */
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
-    }
+    const elemento = document.getElementById(sectionId);
+    if (!elemento) return;
+
+    detenerCorreccionRef.current?.();
+    setIsMobileMenuOpen(false);
+
+    let primeraVez = true;
+    const alinear = () => {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: primeraVez ? "smooth" : "auto" });
+      primeraVez = false;
+    };
+
+    const observador = new ResizeObserver(alinear);
+    observador.observe(document.body);
+
+    const detener = () => {
+      observador.disconnect();
+      window.clearTimeout(limite);
+      window.removeEventListener("wheel", detener);
+      window.removeEventListener("touchmove", detener);
+      if (detenerCorreccionRef.current === detener) detenerCorreccionRef.current = undefined;
+    };
+    const limite = window.setTimeout(detener, 5000);
+    window.addEventListener("wheel", detener, { passive: true, once: true });
+    window.addEventListener("touchmove", detener, { passive: true, once: true });
+    detenerCorreccionRef.current = detener;
   };
 
   const handleNavClick = (sectionId: string) => {
