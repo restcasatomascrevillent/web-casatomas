@@ -21,6 +21,7 @@ const TEXTOS: Record<
     title: string;
     description: (n: number) => string;
     keywords: string[];
+    migaCarta: string;
     miga: string;
     titulo: string;
     detalle: (n: number) => string;
@@ -35,6 +36,7 @@ const TEXTOS: Record<
     title: "Carta de vinos y precios | Casa Tomás Crevillent",
     description: (n) => `Bodega de Casa Tomás en Crevillent (Alicante): ${n} referencias con su denominación de origen y su precio. Tintos, blancos, cavas y generosos.`,
     keywords: ["carta de vinos Crevillent", "bodega restaurante Alicante", "vinos Casa Tomás", "denominación de origen"],
+    migaCarta: "Carta",
     miga: "Vinos",
     titulo: "Carta de vinos",
     detalle: (n) => `${n} referencias`,
@@ -48,6 +50,7 @@ const TEXTOS: Record<
     title: "Wine List & Prices | Casa Tomás Crevillent",
     description: (n) => `Casa Tomás wine cellar in Crevillent (Alicante): ${n} wines with their designation of origin and price. Reds, whites, cava and fortified wines.`,
     keywords: ["wine list Crevillent", "restaurant wine cellar Alicante", "Casa Tomás wines", "designation of origin"],
+    migaCarta: "Menu",
     miga: "Wines",
     titulo: "Wine list",
     detalle: (n) => `${n} wines`,
@@ -61,6 +64,7 @@ const TEXTOS: Record<
     title: "Carte des vins et prix | Casa Tomás Crevillent",
     description: (n) => `Cave à vins de Casa Tomás à Crevillent (Alicante) : ${n} références avec leur appellation d'origine et leur prix. Rouges, blancs, cavas et vins doux.`,
     keywords: ["carte des vins Crevillent", "cave à vins restaurant Alicante", "vins Casa Tomás", "appellation d'origine"],
+    migaCarta: "Carte",
     miga: "Vins",
     titulo: "Carte des vins",
     detalle: (n) => `${n} références`,
@@ -125,7 +129,10 @@ const CartaVinosPagina = () => {
       />
       <JsonLd
         data={breadcrumbSchema(
-          [{ nombre: textos.miga, path: RUTA_ES }],
+          [
+            { nombre: textos.migaCarta, path: "/carta" },
+            { nombre: textos.miga, path: RUTA_ES },
+          ],
           language,
         )}
       />
@@ -144,7 +151,7 @@ const CartaVinosPagina = () => {
       <CartaPageLayout
         titulo={textos.titulo}
         detalle={textos.detalle(vinos.length)}
-        migas={[{ nombre: textos.miga }]}
+        migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: textos.miga }]}
       >
         <Alert className="mb-10 border-accent/40 bg-accent/5">
           <AlertCircle className="h-5 w-5 text-accent" />
