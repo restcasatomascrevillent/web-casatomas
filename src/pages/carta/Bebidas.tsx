@@ -20,7 +20,6 @@ const TEXTOS: Record<
     keywords: string[];
     miga: string;
     titulo: string;
-    subtitulo: string;
     detalle: (n: number) => string;
     vacia: string;
     tambien: string;
@@ -33,7 +32,6 @@ const TEXTOS: Record<
     keywords: ["bebidas Casa Tomás", "refrescos Crevillent", "cervezas restaurante Alicante"],
     miga: "Bebidas",
     titulo: "Bebidas",
-    subtitulo: "Aguas, refrescos, tónicas y cervezas, con el precio de cada una.",
     detalle: (n) => `${n} referencias`,
     vacia: "Las bebidas no están disponibles ahora mismo.",
     tambien: "También puedes consultar la",
@@ -45,7 +43,6 @@ const TEXTOS: Record<
     keywords: ["Casa Tomás drinks", "soft drinks Crevillent", "restaurant beers Alicante"],
     miga: "Drinks",
     titulo: "Drinks",
-    subtitulo: "Water, soft drinks, tonics and beers, with the price of each one.",
     detalle: (n) => `${n} items`,
     vacia: "Drinks aren't available right now.",
     tambien: "You can also check our",
@@ -57,7 +54,6 @@ const TEXTOS: Record<
     keywords: ["boissons Casa Tomás", "boissons gazeuses Crevillent", "bières restaurant Alicante"],
     miga: "Boissons",
     titulo: "Boissons",
-    subtitulo: "Eaux, boissons gazeuses, toniques et bières, avec le prix de chacune.",
     detalle: (n) => `${n} références`,
     vacia: "Les boissons ne sont pas disponibles pour le moment.",
     tambien: "Vous pouvez aussi consulter la",
@@ -107,7 +103,6 @@ const CartaBebidasPagina = () => {
 
       <CartaPageLayout
         titulo={textos.titulo}
-        subtitulo={textos.subtitulo}
         detalle={textos.detalle(bebidas.length)}
         migas={[{ nombre: textos.miga }]}
       >

@@ -23,7 +23,6 @@ const TEXTOS: Record<
     keywords: string[];
     miga: string;
     titulo: string;
-    subtitulo: string;
     detalle: (n: number) => string;
     alertTitle: string;
     alertBody: string;
@@ -38,7 +37,6 @@ const TEXTOS: Record<
     keywords: ["carta de vinos Crevillent", "bodega restaurante Alicante", "vinos Casa Tomás", "denominación de origen"],
     miga: "Vinos",
     titulo: "Carta de vinos",
-    subtitulo: "Nuestra bodega, con la denominación de origen y el precio de cada referencia. Busca, filtra por región y añade a Mi mesa.",
     detalle: (n) => `${n} referencias`,
     alertTitle: "Solo para mayores de 18 años",
     alertBody: "La venta y el suministro de bebidas alcohólicas a menores de 18 años está prohibido. Disfrútalo con moderación.",
@@ -52,7 +50,6 @@ const TEXTOS: Record<
     keywords: ["wine list Crevillent", "restaurant wine cellar Alicante", "Casa Tomás wines", "designation of origin"],
     miga: "Wines",
     titulo: "Wine list",
-    subtitulo: "Our cellar, with the designation of origin and price of every wine. Search, filter by region and add to My table.",
     detalle: (n) => `${n} wines`,
     alertTitle: "18+ only",
     alertBody: "The sale and serving of alcoholic drinks to anyone under 18 is prohibited. Please enjoy responsibly.",
@@ -66,7 +63,6 @@ const TEXTOS: Record<
     keywords: ["carte des vins Crevillent", "cave à vins restaurant Alicante", "vins Casa Tomás", "appellation d'origine"],
     miga: "Vins",
     titulo: "Carte des vins",
-    subtitulo: "Notre cave, avec l'appellation d'origine et le prix de chaque référence. Recherchez, filtrez par région et ajoutez à Ma table.",
     detalle: (n) => `${n} références`,
     alertTitle: "Réservé aux plus de 18 ans",
     alertBody: "La vente et le service de boissons alcoolisées aux mineurs de moins de 18 ans sont interdits. À consommer avec modération.",
@@ -147,7 +143,6 @@ const CartaVinosPagina = () => {
 
       <CartaPageLayout
         titulo={textos.titulo}
-        subtitulo={textos.subtitulo}
         detalle={textos.detalle(vinos.length)}
         migas={[{ nombre: textos.miga }]}
       >

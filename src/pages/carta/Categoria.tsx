@@ -26,7 +26,6 @@ const TEXTOS: Record<
     tituloSufijo: string;
     plato: (n: number) => string;
     descripcion: (n: number, etiqueta: string) => string;
-    subtitulo: (conFoto: number) => string;
     migaCarta: string;
     otrasSecciones: string;
     vinos: string;
@@ -41,10 +40,6 @@ const TEXTOS: Record<
     plato: (n) => (n === 1 ? "plato" : "platos"),
     descripcion: (n, etiqueta) =>
       `${n} ${n === 1 ? "plato" : "platos"} de la sección ${etiqueta.toLowerCase()} en Casa Tomás (Crevillent, Alicante), con precio y alérgenos de cada uno.`,
-    subtitulo: (conFoto) =>
-      `Carta de Casa Tomás en Crevillent (Alicante). Precios y alérgenos de cada plato${
-        conFoto > 0 ? `, con foto en ${conFoto} de ellos` : ""
-      }.`,
     migaCarta: "Carta",
     otrasSecciones: "Otras secciones",
     vinos: "Vinos",
@@ -58,10 +53,6 @@ const TEXTOS: Record<
     plato: (n) => (n === 1 ? "dish" : "dishes"),
     descripcion: (n, etiqueta) =>
       `${n} ${n === 1 ? "dish" : "dishes"} in the ${etiqueta.toLowerCase()} section at Casa Tomás (Crevillent, Alicante), with price and allergens for each one.`,
-    subtitulo: (conFoto) =>
-      `Casa Tomás menu in Crevillent (Alicante). Price and allergens for every dish${
-        conFoto > 0 ? `, with a photo for ${conFoto} of them` : ""
-      }.`,
     migaCarta: "Menu",
     otrasSecciones: "Other sections",
     vinos: "Wines",
@@ -75,10 +66,6 @@ const TEXTOS: Record<
     plato: (n) => (n === 1 ? "plat" : "plats"),
     descripcion: (n, etiqueta) =>
       `${n} ${n === 1 ? "plat" : "plats"} de la section ${etiqueta.toLowerCase()} chez Casa Tomás (Crevillent, Alicante), avec le prix et les allergènes de chacun.`,
-    subtitulo: (conFoto) =>
-      `Carte de Casa Tomás à Crevillent (Alicante). Prix et allergènes de chaque plat${
-        conFoto > 0 ? `, avec une photo pour ${conFoto} d'entre eux` : ""
-      }.`,
     migaCarta: "Carte",
     otrasSecciones: "Autres sections",
     vinos: "Vins",
@@ -134,7 +121,6 @@ const CartaCategoria = () => {
   const etiqueta = etiquetaCategoriaIdioma(categoria.clave, language);
   const rutaEs = rutaCategoria(categoria.slug); // sin prefijo: la pide `breadcrumbSchema`
   const url = `${SITE_URL}${rutaCategoria(categoria.slug, language)}`;
-  const conFoto = platos.filter((plato) => plato.imagen_url).length;
 
   // Misma resolución que consume `ProductoCard` (`resolveTranslatedItem` vía
   // `agruparPorCategoria`): con una sola categoría en `platos`, `secciones`
@@ -180,7 +166,6 @@ const CartaCategoria = () => {
 
       <CartaPageLayout
         titulo={etiqueta}
-        subtitulo={textos.subtitulo(conFoto)}
         detalle={`${platos.length} ${textos.plato(platos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
