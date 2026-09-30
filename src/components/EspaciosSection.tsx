@@ -1,15 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { compareDesc, format, isSameDay, isValid, parseISO } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, CalendarDays, Camera, ChefHat, Clock, ExternalLink, Home, Sparkles, Star, TreePine, Utensils, Wine } from "lucide-react";
+import { Camera, ExternalLink, Home, TreePine, Utensils, Wine } from "lucide-react";
 
 import manifestImagenes from "@/assets/responsive/manifest";
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
-import CartaDelDia, { CLASES_TITULO_CARTA } from "@/components/espacios/CartaDelDia";
-import { parsearMenuDiario, type MenuDelDia, type MenuDiarioRow } from "@/lib/menu-dia";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,107 +15,20 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 // sobrescribir este valor por defecto.
 const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-restaurant-website.vercel.app";
 
-interface TapasRow {
-  id?: string;
-  fecha: string;
-  tapas: unknown;
-  idiom?: string | null;
-}
-
-interface TapasDelDia {
-  id: string;
-  date: Date;
-  tapas: string[];
-}
-
 /**
- * Normaliza la columna de tapas.
- *
- * OJO: NO parte por saltos de línea. El menú del día sí lo hace desde
- * `@/lib/menu-dia` (era un fallo: dos platos en dos líneas se pintaban como un
- * bloque). Aquí se deja como estaba a propósito, para no cambiar de paso cómo
- * se ven las tapas, que es otro bloque de la página.
+ * Colores REALES de la web de Touza (touza-restaurant-website.vercel.app):
+ * fondo casi negro y dorado como color de marca — comprobado con un scrape de
+ * su página (tema oscuro, `primary`/`accent` #D4A574, `background` #0A0A0A,
+ * botón principal con ese mismo dorado y texto casi negro). Fuera de los
+ * tokens de este proyecto (son los colores de OTRO negocio, no los nuestros)
+ * a propósito: la tarjeta tiene que leerse como "esto es Touza", no como una
+ * cuarta sala de Casa Tomás con una etiqueta distinta.
  */
-const normalizeMenuItems = (value: unknown): string[] => {
-  if (Array.isArray(value)) {
-    return value
-      .map((entry) => String(entry).trim())
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return [];
-
-    if (
-      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
-      (trimmed.startsWith("{") && trimmed.endsWith("}"))
-    ) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        return normalizeMenuItems(parsed);
-      } catch {
-        return [trimmed];
-      }
-    }
-
-    return [trimmed];
-  }
-
-  return [];
-};
-
-const parseMenuPayload = (value: unknown): Record<string, unknown> => {
-  if (!value) return {};
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return {};
-    try {
-      const parsed = JSON.parse(trimmed);
-      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-        ? (parsed as Record<string, unknown>)
-        : {};
-    } catch {
-      return {};
-    }
-  }
-
-  if (typeof value === "object" && !Array.isArray(value)) {
-    return value as Record<string, unknown>;
-  }
-
-  return {};
-};
-
-const toTapasDelDia = (row: TapasRow, index: number): TapasDelDia | null => {
-  const parsedDate = parseISO(row.fecha);
-  if (!isValid(parsedDate)) return null;
-
-  const directTapas = normalizeMenuItems(row.tapas);
-  const parsedPayload = parseMenuPayload(row.tapas);
-  const payloadTapas = normalizeMenuItems(
-    parsedPayload.tapas ?? parsedPayload.items ?? parsedPayload.lista ?? parsedPayload.listado
-  );
-
-  const tapas = payloadTapas.length > 0 ? payloadTapas : directTapas;
-  if (tapas.length === 0) return null;
-
-  return {
-    id: row.id ?? `${row.fecha}-${index}`,
-    date: parsedDate,
-    tapas,
-  };
-};
-
-const getIdiomAliases = (language: string): string[] => {
-  if (language === "en") {
-    return ["en", "ingles", "inglés", "english"];
-  }
-  if (language === "fr") {
-    return ["fr", "frances", "francés", "french"];
-  }
-  return ["es", "espanol", "español", "spanish"];
+const TOUZA = {
+  bg: "#0A0A0A",
+  accent: "#D4A574",
+  accentSoft: "rgba(212, 165, 116, 0.16)",
+  texto: "#1A1A1A",
 };
 
 /**
@@ -136,83 +44,21 @@ const sizesGaleria = (nombre: NombreImagen) => {
 };
 
 const EspaciosSection = () => {
-  const { t, dateLocale, language } = useTranslations();
+  const { t } = useTranslations();
   const [selectedEspacio, setSelectedEspacio] = useState<number | null>(null);
   // Galería: solo se montan la diapositiva visible y sus vecinas (y las ya
   // vistas, para no parpadear al volver). Antes, abrirla bajaba las 3–5 fotos.
   const [galleryApi, setGalleryApi] = useState<CarouselApi | null>(null);
   const [gallerySlidesMontadas, setGallerySlidesMontadas] = useState<ReadonlySet<number>>(() => new Set([0, 1]));
-  const [showTodayMenu, setShowTodayMenu] = useState(false);
-  const [showTodayTapas, setShowTodayTapas] = useState(false);
-  const [showPastMenus, setShowPastMenus] = useState(false);
-  const [showPastTapas, setShowPastTapas] = useState(false);
-  const [menusCarouselApi, setMenusCarouselApi] = useState<CarouselApi | null>(null);
-  const [tapasCarouselApi, setTapasCarouselApi] = useState<CarouselApi | null>(null);
-  const [menuSlide, setMenuSlide] = useState(0);
-  const [tapasSlide, setTapasSlide] = useState(0);
-
-  const idiomAliases = useMemo(() => getIdiomAliases(language), [language]);
-
-  const { data: rawMenusDelDia = [] } = useQuery({
-    queryKey: ["menus_diarios", language],
-    queryFn: async () => {
-      // Import perezoso: el SDK de Supabase (~40 KB gzip) no debe entrar en
-      // el chunk que descarga la portada nada más cargar — solo hace falta
-      // al ejecutar esta consulta.
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase
-        .from("menus_diarios")
-        .select("id, fecha, menu, idiom")
-        .in("idiom", idiomAliases)
-        .order("fecha", { ascending: false });
-
-      if (error) throw error;
-      return (data || []) as MenuDiarioRow[];
-    },
-  });
-
-  const menusDelDia = useMemo(
-    () =>
-      rawMenusDelDia
-        .map((row) => parsearMenuDiario(row))
-        .filter((menu): menu is MenuDelDia => menu !== null),
-    [rawMenusDelDia]
-  );
-  const { data: rawTapasSemanales = [] } = useQuery({
-    queryKey: ["tapas", language],
-    queryFn: async () => {
-      // Import perezoso: el SDK de Supabase (~40 KB gzip) no debe entrar en
-      // el chunk que descarga la portada nada más cargar — solo hace falta
-      // al ejecutar esta consulta.
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase
-        .from("tapas")
-        .select("id, fecha, tapas, idiom")
-        .in("idiom", idiomAliases)
-        .order("fecha", { ascending: false });
-
-      if (error) throw error;
-      return (data || []) as TapasRow[];
-    },
-  });
-
-  const tapasSemanales = useMemo(
-    () =>
-      rawTapasSemanales
-        .map((row, index) => toTapasDelDia(row, index))
-        .filter((tapas): tapas is TapasDelDia => Boolean(tapas)),
-    [rawTapasSemanales]
-  );
-
-  const sortedMenus = [...menusDelDia].sort((a, b) => compareDesc(a.date, b.date));
-  const sortedTapas = [...tapasSemanales].sort((a, b) => compareDesc(a.date, b.date));
-  const recentMenus = sortedMenus.slice(0, 3);
-  const recentTapas = sortedTapas.slice(0, 3);
+  // Diapositiva actual de la galería abierta: solo para los puntos y el
+  // contador ("2 / 5") de abajo — la propia `Carousel` ya lleva el estado real.
+  const [gallerySlideActual, setGallerySlideActual] = useState(0);
 
   useEffect(() => {
     if (!galleryApi) return;
     const onSelect = () => {
       const actual = galleryApi.selectedScrollSnap();
+      setGallerySlideActual(actual);
       setGallerySlidesMontadas((prev) =>
         prev.has(actual - 1) && prev.has(actual) && prev.has(actual + 1)
           ? prev
@@ -221,64 +67,26 @@ const EspaciosSection = () => {
     };
     galleryApi.on("select", onSelect);
     galleryApi.on("reInit", onSelect);
+    onSelect();
     return () => {
       galleryApi.off("select", onSelect);
       galleryApi.off("reInit", onSelect);
     };
   }, [galleryApi]);
 
-  useEffect(() => {
-    if (!menusCarouselApi) return;
-    const onSelect = () => setMenuSlide(menusCarouselApi.selectedScrollSnap());
-    menusCarouselApi.on("select", onSelect);
-    menusCarouselApi.on("reInit", onSelect);
-    onSelect();
-    return () => {
-      menusCarouselApi.off("select", onSelect);
-      menusCarouselApi.off("reInit", onSelect);
-    };
-  }, [menusCarouselApi]);
-
-  useEffect(() => {
-    if (!tapasCarouselApi) return;
-    const onSelect = () => setTapasSlide(tapasCarouselApi.selectedScrollSnap());
-    tapasCarouselApi.on("select", onSelect);
-    tapasCarouselApi.on("reInit", onSelect);
-    onSelect();
-    return () => {
-      tapasCarouselApi.off("select", onSelect);
-      tapasCarouselApi.off("reInit", onSelect);
-    };
-  }, [tapasCarouselApi]);
-
-  const today = new Date();
-  const todayDay = today.getDay();
-  const isMenuDayToday = todayDay >= 2 && todayDay <= 4;
-  const isTapasDayToday = todayDay === 4;
-
-  const todayMenuMatch = sortedMenus.find((menu) => isSameDay(menu.date, today));
-  const todayTapasMatch = sortedTapas.find((tapas) => isSameDay(tapas.date, today));
-
-  const todayMenu = todayMenuMatch ?? null;
-  const todayTapas = todayTapasMatch ?? null;
-
-  const menuDaysLabel = `${format(new Date(2025, 0, 21), "EEE", { locale: dateLocale })} - ${format(new Date(2025, 0, 23), "EEE", { locale: dateLocale })}`;
-  const tapasDayLabel = format(new Date(2025, 0, 23), "EEE", { locale: dateLocale });
-
-  const espacios = t.espacios.cards.map((card, index) => ({
+  // Solo las tres salas con fotos — Touza es otro negocio, con su propia
+  // tarjeta más abajo, no una cuarta "sala" de la rejilla.
+  const espacios = t.espacios.cards.slice(0, 3).map((card, index) => ({
     ...card,
-    icon: index === 0 ? Home : index === 1 ? Utensils : index === 2 ? TreePine : Wine,
-    hasGallery: index !== 3,
+    icon: index === 0 ? Home : index === 1 ? Utensils : TreePine,
     images:
       index === 0
         ? (["salon-1", "salon-2", "salon-3", "salon-4", "salon-5"] as NombreImagen[])
         : index === 1
           ? (["comedor-1", "comedor-2", "comedor-3"] as NombreImagen[])
-          : index === 2
-            ? (["vinos-marques", "carne-plato", "pulpo-plato"] as NombreImagen[])
-            : undefined,
-    link: index === 3 ? TOUZA_URL : undefined,
+          : (["vinos-marques", "carne-plato", "pulpo-plato"] as NombreImagen[]),
   }));
+  const touza = t.espacios.cards[3];
 
   return (
     <section id="espacios" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-muted to-background">
@@ -310,7 +118,7 @@ const EspaciosSection = () => {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
           {espacios.map((espacio, index) => {
             const Icon = espacio.icon;
             return (
@@ -332,32 +140,20 @@ const EspaciosSection = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground mb-4">{espacio.description}</p>
-                    {espacio.hasGallery ? (
-                      <Button
-                        variant="default"
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                        onClick={() => {
-                          // Se reinicia en el mismo render que abre el diálogo: con un
-                          // useEffect, el primer render montaría las fotos de la galería anterior.
-                          setGallerySlidesMontadas(new Set([0, 1]));
-                          setSelectedEspacio(index);
-                        }}
-                      >
-                        <Camera className="w-5 h-5 mr-2" />
-                        {t.espacios.galleryButton}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="default"
-                        className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                        asChild
-                      >
-                        <a href={espacio.link || "#"}>
-                          <ExternalLink className="w-5 h-5 mr-2" />
-                          {t.espacios.visitTouza}
-                        </a>
-                      </Button>
-                    )}
+                    <Button
+                      variant="default"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      onClick={() => {
+                        // Se reinicia en el mismo render que abre el diálogo: con un
+                        // useEffect, el primer render montaría las fotos de la galería anterior.
+                        setGallerySlidesMontadas(new Set([0, 1]));
+                        setGallerySlideActual(0);
+                        setSelectedEspacio(index);
+                      }}
+                    >
+                      <Camera className="w-5 h-5 mr-2" />
+                      {t.espacios.galleryButton}
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -365,306 +161,113 @@ const EspaciosSection = () => {
           })}
         </div>
 
+        {/* Touza: OTRO negocio (el cocktail bar del dueño), no una sala más de
+            Casa Tomás — por eso va aparte, bajo la rejilla de fotos, y con los
+            colores reales de su propia web en vez de los tokens de este sitio. */}
         <motion.div
           initial={false}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="mb-12"
         >
-          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-slate-900/20 via-slate-800/15 to-amber-100/25">
-            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.16),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.14),transparent_40%)]" />
-            <CardHeader className="relative pb-3">
-              <div className="absolute right-3 top-3">
-                <Badge variant="secondary" className="text-[11px] sm:text-xs bg-white text-primary border border-border/60 shadow-sm">
-                  {menuDaysLabel}
-                </Badge>
+          <Card
+            className="relative overflow-hidden border-0 shadow-xl"
+            style={{ backgroundColor: TOUZA.bg }}
+          >
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `radial-gradient(circle at 15% 20%, ${TOUZA.accentSoft}, transparent 45%), radial-gradient(circle at 85% 100%, ${TOUZA.accentSoft}, transparent 40%)`,
+              }}
+            />
+            <CardContent className="relative flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:items-center sm:gap-6 sm:p-8 sm:text-left">
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: TOUZA.accentSoft }}
+              >
+                <Wine className="h-7 w-7" style={{ color: TOUZA.accent }} />
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner">
-                    <ChefHat className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base sm:text-lg">{t.espacios.middayMenuTitle}</CardTitle>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{t.espacios.middayMenuDescription}</p>
-                  </div>
-                </div>
+              <div className="flex-1">
+                <h3 className="font-libre-baskerville text-xl font-bold text-white sm:text-2xl">{touza.title}</h3>
+                <p className="mt-1 text-white/70">{touza.description}</p>
               </div>
-            </CardHeader>
-            <CardContent className="relative space-y-4">
-              <div className="flex flex-col gap-3 sm:items-start">
-                <Button
-                  className="w-full h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-accent to-primary/80 text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
-                  onClick={() => setShowTodayMenu(true)}
-                  disabled={!isMenuDayToday}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {isMenuDayToday ? t.espacios.todayMenuCta : t.espacios.menuAvailableDays}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-slate-900/20 via-slate-800/15 to-amber-100/25">
-            <div className="pointer-events-none absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.16),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(14,165,233,0.14),transparent_40%)]" />
-            <CardHeader className="relative pb-3">
-              <div className="absolute right-3 top-3">
-                <Badge variant="secondary" className="text-[11px] sm:text-xs bg-white text-primary border border-border/60 shadow-sm capitalize">
-                  {tapasDayLabel}
-                </Badge>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary shadow-inner">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base sm:text-lg">{t.espacios.tapasTitle}</CardTitle>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{t.espacios.tapasDescription}</p>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="relative space-y-4">
-              <div className="flex flex-col gap-3 sm:items-start">
-                <Button
-                  className="w-full h-auto min-h-11 px-4 py-3 text-sm sm:text-base leading-snug whitespace-normal bg-gradient-to-r from-primary via-primary/80 to-accent text-primary-foreground shadow-xl hover:shadow-2xl hover:scale-[1.01] transition-all"
-                  onClick={() => setShowTodayTapas(true)}
-                  disabled={!isTapasDayToday}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {isTapasDayToday ? t.espacios.todayTapasCta : t.espacios.tapasAvailableDay}
-                </Button>
-              </div>
+              <Button
+                asChild
+                size="lg"
+                className="w-full shrink-0 rounded-full font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
+                style={{ backgroundColor: TOUZA.accent, color: TOUZA.texto }}
+              >
+                <a href={TOUZA_URL} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-5 h-5 mr-2" />
+                  {t.espacios.visitTouza}
+                </a>
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
 
         <Dialog open={selectedEspacio !== null} onOpenChange={() => setSelectedEspacio(null)}>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl overflow-hidden bg-background/95 backdrop-blur-sm">
             <DialogHeader>
-              <DialogTitle>{selectedEspacio !== null ? espacios[selectedEspacio].title : ""}</DialogTitle>
+              <div className="flex items-center justify-between gap-3 pr-6">
+                <DialogTitle>{selectedEspacio !== null ? espacios[selectedEspacio].title : ""}</DialogTitle>
+                {selectedEspacio !== null && (
+                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold tabular-nums text-muted-foreground">
+                    {gallerySlideActual + 1} / {espacios[selectedEspacio].images.length}
+                  </span>
+                )}
+              </div>
               <DialogDescription className="sr-only">
                 Galería de imágenes del espacio seleccionado.
               </DialogDescription>
             </DialogHeader>
             {selectedEspacio !== null && espacios[selectedEspacio].images && (
-              <Carousel className="w-full" setApi={setGalleryApi}>
-                <CarouselContent>
-                  {espacios[selectedEspacio].images.map((image, idx) => (
-                    <CarouselItem key={idx}>
-                      <div className="p-1">
-                        {gallerySlidesMontadas.has(idx) ? (
-                          <ImagenResponsive
-                            nombre={image}
-                            alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
-                            className="w-full h-[250px] md:h-[400px] object-cover rounded-lg"
-                            loading="lazy"
-                            fetchPriority="low"
-                            decoding="async"
-                            sizes={sizesGaleria(image)}
-                          />
-                        ) : (
-                          // Mismo hueco que la foto: el carrusel no cambia de tamaño al montarla.
-                          <div className="w-full h-[250px] md:h-[400px] rounded-lg" aria-hidden="true" />
-                        )}
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden md:flex" />
-                <CarouselNext className="hidden md:flex" />
-              </Carousel>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* El menú de hoy, como una carta impresa sobre la bandeja del diálogo.
-            El ancho es el de una carta (no el de un panel): con fotos, tres
-            columnas de texto obligaban a leer en zigzag. */}
-        <Dialog open={showTodayMenu} onOpenChange={setShowTodayMenu}>
-          <DialogContent className="w-[92vw] sm:max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-border/60 bg-ticket-tray p-3 sm:p-5">
-            <DialogDescription className="sr-only">
-              Menú diario cargado desde base de datos.
-            </DialogDescription>
-            {todayMenu ? (
-              <CartaDelDia
-                menu={todayMenu}
-                titulo={
-                  <DialogTitle className={CLASES_TITULO_CARTA}>{t.espacios.todayMenuTitle}</DialogTitle>
-                }
-                subtitulo={format(todayMenu.date, "EEEE d MMMM", { locale: dateLocale })}
-              />
-            ) : (
-              <div className="rounded-lg border border-ticket-rule/25 bg-ticket-paper px-5 py-6 text-center font-libre-baskerville text-ticket-ink">
-                <DialogTitle className={CLASES_TITULO_CARTA}>{t.espacios.todayMenuTitle}</DialogTitle>
-                <p className="mt-3 text-sm text-ticket-ink-soft">{t.espacios.noMenuToday}</p>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showTodayTapas} onOpenChange={setShowTodayTapas}>
-          <DialogContent className="w-[90vw] sm:max-w-2xl md:max-w-3xl rounded-2xl border border-border/70 bg-gradient-to-b from-background via-muted/40 to-background p-4 sm:p-6">
-            <DialogHeader className="space-y-2 items-center text-center">
-              <DialogTitle className="flex items-center gap-2 text-xl leading-tight text-center">
-                <Clock className="w-5 h-5 text-primary" />
-                {t.espacios.todayTapasTitle}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Tapas del día cargadas desde base de datos.
-              </DialogDescription>
-              {todayTapas && (
-                <p className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
-                  <CalendarDays className="w-4 h-4 text-primary" />
-                  {format(todayTapas.date, "EEEE d MMMM", { locale: dateLocale })}
-                </p>
-              )}
-            </DialogHeader>
-            {todayTapas ? (
-              <div className="space-y-4">
-                <Card className="border border-border/70 bg-background/80 shadow-inner">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h4 className="font-semibold text-primary flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        {t.espacios.menuLabels.tapasOfDay}
-                      </h4>
-                    </div>
-                    <ul className="grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground">
-                      {todayTapas.tapas.map((tapa, i) => (
-                        <li key={i} className="flex gap-2 rounded-lg border border-border/60 bg-muted/30 p-3">
-                          <span className="text-primary">•</span>
-                          <span>{tapa}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-border/70 bg-muted/30 p-6 text-center text-muted-foreground">
-                {t.espacios.noTapasToday}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showPastMenus} onOpenChange={setShowPastMenus}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[88vh] overflow-y-auto p-2 sm:p-6 bg-ticket-tray text-center">
-            <DialogHeader className="items-center text-center">
-              <DialogTitle>{t.espacios.menusDialogTitle}</DialogTitle>
-              <DialogDescription className="sr-only">
-                Historial de menús diarios recientes.
-              </DialogDescription>
-            </DialogHeader>
-            <p className="md:hidden text-xs text-muted-foreground mb-2 px-2 text-center break-words">
-              ← {t.espacios.swipeHint} →
-            </p>
-            <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setMenusCarouselApi}>
-              <CarouselContent className="-ml-2 sm:-ml-5 py-2">
-                {recentMenus.map((menu) => (
-                  <CarouselItem key={menu.id} className="pl-2 sm:pl-5 basis-[88%] sm:basis-[58%] lg:basis-[42%]">
-                    <CartaDelDia
-                      menu={menu}
-                      compacta
-                      // Sin `h-full`: un menú corto no se estira hasta la
-                      // altura del más largo, que dejaba media hoja en blanco.
-                      className="text-left"
-                      titulo={
-                        <h3 className={`${CLASES_TITULO_CARTA} capitalize`}>
-                          {format(menu.date, "EEEE d MMMM", { locale: dateLocale })}
-                        </h3>
-                      }
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Anterior" />
-              <CarouselNext className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Siguiente" />
-            </Carousel>
-            <div className="mt-3 flex justify-center gap-2 sm:hidden">
-              {recentMenus.map((_, idx) => (
-                <button
-                  key={idx}
-                  className={`h-3 w-3 rounded-full transition ${menuSlide === idx ? "bg-primary" : "bg-border/80"}`}
-                  aria-label={`Ir al menú ${idx + 1}`}
-                  onClick={() => menusCarouselApi?.scrollTo(idx)}
-                />
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showPastTapas} onOpenChange={setShowPastTapas}>
-          <DialogContent className="w-[95vw] sm:max-w-4xl p-2 sm:p-6 bg-gradient-to-b from-background via-muted/40 to-background text-center">
-            <DialogHeader className="items-center text-center">
-              <DialogTitle>{t.espacios.tapasDialogTitle}</DialogTitle>
-              <DialogDescription className="sr-only">
-                Historial de tapas recientes.
-              </DialogDescription>
-            </DialogHeader>
-            <p className="md:hidden text-xs text-muted-foreground mb-2 px-2 text-center break-words">
-              ← {t.espacios.swipeHint} →
-            </p>
-            <Carousel className="w-full px-1 sm:px-0" opts={{ align: "center", loop: true, dragFree: true }} setApi={setTapasCarouselApi}>
-              <CarouselContent className="-ml-2 sm:-ml-5 py-2">
-                {recentTapas.map((semana, idx) => (
-                  <CarouselItem key={idx} className="pl-2 sm:pl-5 basis-[85%] sm:basis-[48%] lg:basis-[32%]">
-                    <Card className="relative h-full overflow-hidden border border-border/60 bg-gradient-to-br from-primary/10 via-background to-accent/10 max-w-full mx-auto">
-                      <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.12),transparent_35%)]" />
-                      <div className="relative h-full p-2.5 sm:p-4 flex flex-col gap-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-center sm:text-left">
-                          <div className="flex items-center gap-3 sm:justify-start justify-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 text-primary">
-                              <Clock className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-primary">{t.espacios.tapasTitle}</p>
-                              <p className="font-semibold capitalize leading-tight">
-                                <span className="hidden sm:inline">
-                                  {format(semana.date, "EEEE d MMMM", { locale: dateLocale })}
-                                </span>
-                                <span className="sm:hidden">
-                                  {format(semana.date, "EEE d MMM", { locale: dateLocale })}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant="secondary" className="bg-background/70 text-foreground border border-border/70">
-                            {format(semana.date, "dd MMM", { locale: dateLocale })}
-                          </Badge>
+              <>
+                <Carousel className="w-full" setApi={setGalleryApi}>
+                  <CarouselContent>
+                    {espacios[selectedEspacio].images.map((image, idx) => (
+                      <CarouselItem key={idx}>
+                        <div className="p-1">
+                          {gallerySlidesMontadas.has(idx) ? (
+                            <ImagenResponsive
+                              nombre={image}
+                              alt={`${espacios[selectedEspacio].title} ${idx + 1}`}
+                              className="w-full h-[250px] md:h-[400px] object-cover rounded-xl shadow-lg ring-1 ring-border/60"
+                              loading="lazy"
+                              fetchPriority="low"
+                              decoding="async"
+                              sizes={sizesGaleria(image)}
+                            />
+                          ) : (
+                            // Mismo hueco que la foto: el carrusel no cambia de tamaño al montarla.
+                            <div className="w-full h-[250px] md:h-[400px] rounded-xl" aria-hidden="true" />
+                          )}
                         </div>
-                        <div className="rounded-lg bg-background/60 border border-border/40 p-2.5 sm:p-3">
-                          <h4 className="font-semibold text-primary mb-1 text-sm sm:text-base text-center sm:text-left">{t.espacios.menuLabels.tapasOfDay}</h4>
-                          <ul className="text-xs sm:text-sm text-muted-foreground space-y-0.5 text-center sm:text-left">
-                            {semana.tapas.map((tapa, i) => (
-                              <li key={i} className="flex gap-2 items-start">
-                                <span className="text-primary">•</span>
-                                <span>{tapa}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Anterior" />
-              <CarouselNext className="hidden sm:flex border border-border/70 bg-background/80 text-primary hover:bg-background" aria-label="Siguiente" />
-            </Carousel>
-            <div className="mt-3 flex justify-center gap-2 sm:hidden">
-              {recentTapas.map((_, idx) => (
-                <button
-                  key={idx}
-                  className={`h-3 w-3 rounded-full transition ${tapasSlide === idx ? "bg-primary" : "bg-border/80"}`}
-                  aria-label={`Ir a las tapas ${idx + 1}`}
-                  onClick={() => tapasCarouselApi?.scrollTo(idx)}
-                />
-              ))}
-            </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="hidden md:flex bg-background/90 shadow-md" />
+                  <CarouselNext className="hidden md:flex bg-background/90 shadow-md" />
+                </Carousel>
+                {espacios[selectedEspacio].images.length > 1 && (
+                  <div className="flex justify-center gap-2 pt-1">
+                    {espacios[selectedEspacio].images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        aria-label={`${t.espacios.galleryButton} ${idx + 1}`}
+                        aria-current={gallerySlideActual === idx}
+                        onClick={() => galleryApi?.scrollTo(idx)}
+                        className={`h-2 rounded-full transition-all ${
+                          gallerySlideActual === idx ? "w-6 bg-accent" : "w-2 bg-border hover:bg-accent/50"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </motion.div>
