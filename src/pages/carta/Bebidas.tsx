@@ -18,6 +18,7 @@ const TEXTOS: Record<
     title: string;
     description: (n: number) => string;
     keywords: string[];
+    migaCarta: string;
     miga: string;
     titulo: string;
     detalle: (n: number) => string;
@@ -30,6 +31,7 @@ const TEXTOS: Record<
     title: "Bebidas y refrescos: precios | Casa Tomás Crevillent",
     description: (n) => `Aguas, refrescos, cervezas y tónicas en Casa Tomás (Crevillent, Alicante): ${n} referencias con su precio.`,
     keywords: ["bebidas Casa Tomás", "refrescos Crevillent", "cervezas restaurante Alicante"],
+    migaCarta: "Carta",
     miga: "Bebidas",
     titulo: "Bebidas",
     detalle: (n) => `${n} referencias`,
@@ -41,6 +43,7 @@ const TEXTOS: Record<
     title: "Drinks & Soft Drinks: Prices | Casa Tomás Crevillent",
     description: (n) => `Water, soft drinks, beers and tonics at Casa Tomás (Crevillent, Alicante): ${n} items with their price.`,
     keywords: ["Casa Tomás drinks", "soft drinks Crevillent", "restaurant beers Alicante"],
+    migaCarta: "Menu",
     miga: "Drinks",
     titulo: "Drinks",
     detalle: (n) => `${n} items`,
@@ -52,6 +55,7 @@ const TEXTOS: Record<
     title: "Boissons et rafraîchissements : prix | Casa Tomás Crevillent",
     description: (n) => `Eaux, boissons gazeuses, bières et toniques chez Casa Tomás (Crevillent, Alicante) : ${n} références avec leur prix.`,
     keywords: ["boissons Casa Tomás", "boissons gazeuses Crevillent", "bières restaurant Alicante"],
+    migaCarta: "Carte",
     miga: "Boissons",
     titulo: "Boissons",
     detalle: (n) => `${n} références`,
@@ -95,7 +99,15 @@ const CartaBebidasPagina = () => {
         languageAlternates={alternatesDePagina(RUTA_ES, SITE_URL)}
         keywords={textos.keywords}
       />
-      <JsonLd data={breadcrumbSchema([{ nombre: textos.miga, path: RUTA_ES }], language)} />
+      <JsonLd
+        data={breadcrumbSchema(
+          [
+            { nombre: textos.migaCarta, path: "/carta" },
+            { nombre: textos.miga, path: RUTA_ES },
+          ],
+          language,
+        )}
+      />
       {secciones.length > 0 && (
         <JsonLd
           data={menuPagina(
@@ -111,7 +123,7 @@ const CartaBebidasPagina = () => {
       <CartaPageLayout
         titulo={textos.titulo}
         detalle={textos.detalle(bebidas.length)}
-        migas={[{ nombre: textos.miga }]}
+        migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: textos.miga }]}
       >
         {bebidas.length > 0 ? (
           <CartaBebidas
