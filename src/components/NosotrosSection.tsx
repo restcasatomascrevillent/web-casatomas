@@ -35,7 +35,7 @@ const NosotrosSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="max-w-4xl mx-auto space-y-6"
+            className="max-w-4xl mx-auto space-y-6 text-left"
           >
             {t.nosotros.intro.map((paragraph, index) => (
               <p key={index} className="text-lg text-muted-foreground leading-relaxed">
