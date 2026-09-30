@@ -1,3 +1,4 @@
+import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
 import MenuDietario from "@/components/carta/MenuDietario";
 import { Link } from "react-router-dom";
 import {
@@ -182,6 +183,7 @@ const TarjetaSeccion = ({
  * JSON-LD es un `Menu` de secciones con recuento y URL, sin `MenuItem`.
  */
 const CartaIndice = () => {
+  const { conFiltros, totalCategoria } = useFiltrosCarta();
   const { language } = useTranslations();
   const textos = TEXTOS[language];
   const secciones = [
@@ -227,9 +229,9 @@ const CartaIndice = () => {
               {CATEGORIAS_CARTA.map((categoria) => (
                 <TarjetaSeccion
                   key={categoria.slug}
-                  to={rutaCategoria(categoria.slug, language)}
+                  to={conFiltros(rutaCategoria(categoria.slug, language))}
                   titulo={etiquetaCategoriaIdioma(categoria.clave, language)}
-                  detalle={`${categoria.total} ${textos.plato(categoria.total)}`}
+                  detalle={`${totalCategoria(categoria.clave)} ${textos.plato(totalCategoria(categoria.clave))}`}
                   icono={iconoDeCategoria(categoria.clave)}
                 />
               ))}
@@ -246,13 +248,13 @@ const CartaIndice = () => {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             <TarjetaSeccion
-              to={construirRutaIdioma("/carta/vinos", language)}
+              to={conFiltros(construirRutaIdioma("/carta/vinos", language))}
               titulo={textos.vinosTitulo}
               detalle={textos.vinosDetalle(RESUMEN_VINOS.total)}
               icono={<Wine className="w-6 h-6" />}
             />
             <TarjetaSeccion
-              to={construirRutaIdioma("/carta/bebidas", language)}
+              to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
               titulo={textos.bebidasTitulo}
               detalle={textos.bebidasDetalle(RESUMEN_BEBIDAS.total)}
               icono={<Beer className="w-6 h-6" />}

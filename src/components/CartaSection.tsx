@@ -1,3 +1,4 @@
+import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
 import MenuDietario from "@/components/carta/MenuDietario";
 import { useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -99,18 +100,21 @@ const CLAVES_ENSALADAS = ["ENSALADAS", "SALAZONES"] as const;
 /** Categorías de una sola pestaña, en el orden en que se listan. */
 const CLAVES_SIMPLES = ["ARROCES", "MARISCOS", "PESCADOS", "CARNES", "POSTRES"] as const;
 
-const buscarCategoria = (clave: string): CategoriaCarta | undefined =>
-  CATEGORIAS_CARTA.find((categoria) => categoria.clave === clave);
 
 const CartaSection = () => {
+  const { conFiltros, totalCategoria } = useFiltrosCarta();
+  const buscarCategoria = (clave: string): CategoriaCarta | undefined => {
+    const categoria = CATEGORIAS_CARTA.find(item => item.clave === clave);
+    return categoria ? { ...categoria, total: totalCategoria(clave) } : undefined;
+  };
   const { t, language } = useTranslations();
   const { toast } = useToast();
   const navigate = useNavigate();
   const etiquetas = ETIQUETAS_PUENTE[language];
   const [showAgeDialog, setShowAgeDialog] = useState(false);
 
-  const rutaVinos = construirRutaIdioma("/carta/vinos", language);
-  const rutaBebidas = construirRutaIdioma("/carta/bebidas", language);
+  const rutaVinos = conFiltros(construirRutaIdioma("/carta/vinos", language));
+  const rutaBebidas = conFiltros(construirRutaIdioma("/carta/bebidas", language));
 
   const novedades = buscarCategoria(CATEGORIA_INICIAL);
   // Cada pestaña de un grupo se busca por separado: si a una categoría no le
@@ -205,7 +209,7 @@ const CartaSection = () => {
         <MenuDietario>
         <nav aria-label={etiquetas.nav} className="max-w-2xl mx-auto mb-12">
           {novedades && (
-            <Link to={rutaCategoria(novedades.slug, language)} className={`${filaEnlaceClass} group`}>
+            <Link to={conFiltros(rutaCategoria(novedades.slug, language))} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(novedades.clave, language)}</span>
               <span className={contadorClass}>{novedades.total}</span>
             </Link>
@@ -229,7 +233,7 @@ const CartaSection = () => {
                 </DialogHeader>
                 <div className="flex flex-col gap-2.5 pt-2">
                   {entrantes.map((item) => (
-                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
+                    <Link key={item.clave} to={conFiltros(rutaCategoria(item.categoria.slug, language))} className={opcionClass}>
                       <span>{item.etiqueta}</span>
                       <span className={contadorClass}>{item.categoria.total}</span>
                     </Link>
@@ -257,7 +261,7 @@ const CartaSection = () => {
                 </DialogHeader>
                 <div className="flex flex-col gap-2.5 pt-2">
                   {ensaladas.map((item) => (
-                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
+                    <Link key={item.clave} to={conFiltros(rutaCategoria(item.categoria.slug, language))} className={opcionClass}>
                       <span>{item.etiqueta}</span>
                       <span className={contadorClass}>{item.categoria.total}</span>
                     </Link>
@@ -268,7 +272,7 @@ const CartaSection = () => {
           )}
 
           {simples.map((categoria) => (
-            <Link key={categoria.slug} to={rutaCategoria(categoria.slug, language)} className={`${filaEnlaceClass} group`}>
+            <Link key={categoria.slug} to={conFiltros(rutaCategoria(categoria.slug, language))} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(categoria.clave, language)}</span>
               <span className={contadorClass}>{categoria.total}</span>
             </Link>

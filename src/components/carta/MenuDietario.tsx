@@ -1,11 +1,10 @@
-import { lazy, Suspense, useMemo, type ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
+import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { useTranslations } from '@/i18n/LanguageProvider';
-import { cartaSSG } from '@/lib/carta-ssg';
-import type { PlatoSSG } from '@/lib/carta-ssg-types';
-import { DIETAS, filtrarPlatos, leerFiltros } from '@/lib/filtros-carta';
+import { DIETAS } from '@/lib/filtros-carta';
+import { useFiltrosCarta } from '@/hooks/useFiltrosCarta';
 
-const Resultados = lazy(() => import('./ResultadosDietarios'));
 const COPY = {
   es: {
     title: 'Filtrar platos', labels: ['Celíaco', 'Vegano', 'Vegetariano', 'Sin lactosa'], clear: 'Quitar filtros',
@@ -27,37 +26,49 @@ const COPY = {
   },
 };
 
-export default function MenuDietario({ platos = cartaSSG.platos, children }: { platos?: PlatoSSG[]; children: ReactNode }) {
+
+const RESUMEN = {
+  es: { title: 'Filtros', choose: 'Selecciona tus preferencias y entra en una categoría.' },
+  en: { title: 'Filters', choose: 'Choose your preferences, then open a category.' },
+  fr: { title: 'Filtres', choose: 'Choisissez vos préférences, puis une catégorie.' },
+};
+
+export default function MenuDietario({ compacto = false, children }: { compacto?: boolean; children?: ReactNode }) {
   const { language } = useTranslations();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { filtros, cambiar } = useFiltrosCarta();
   const copy = COPY[language];
-  const filtros = useMemo(() => leerFiltros(location.search), [location.search]);
-  const resultados = useMemo(() => filtrarPlatos(platos, filtros), [platos, filtros]);
-  const cambiar = (next: typeof filtros) => {
-    const params = new URLSearchParams(location.search);
-    if (next.length) params.set('dietas', next.join(',')); else params.delete('dietas');
-    navigate({ pathname: location.pathname, search: params.toString(), hash: location.hash }, { replace: true, preventScrollReset: true });
-  };
+  const resumen = RESUMEN[language];
+  const nombres = DIETAS.filter(dieta => filtros.includes(dieta)).map(dieta => copy.labels[DIETAS.indexOf(dieta)]);
+  const controles = <div className="w-full max-w-2xl">
+    <div role="group" aria-label={copy.title} className="grid grid-cols-4 gap-1 sm:gap-3">
+      {DIETAS.map((dieta, index) => <button key={dieta} type="button" aria-pressed={filtros.includes(dieta)}
+        onClick={() => cambiar(filtros.includes(dieta) ? filtros.filter(x => x !== dieta) : [...filtros, dieta])}
+        className={`min-h-11 min-w-0 whitespace-nowrap border-b-2 px-0.5 py-2 text-[11px] min-[375px]:text-xs sm:text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${filtros.includes(dieta) ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary'}`}>
+        {copy.labels[index]}
+      </button>)}
+    </div>
+    {filtros.length > 0 && <button type="button" onClick={() => cambiar([])} className="min-h-11 text-xs underline underline-offset-4">{copy.clear}</button>}
+    {filtros.length > 0 && <div className="mt-2 space-y-2 text-xs leading-relaxed text-muted-foreground">
+      {(filtros.includes('celiaquia') || filtros.includes('lactosa')) && <p>{copy.note}</p>}
+      {(filtros.includes('vegano') || filtros.includes('vegetariano')) && <p>{copy.plant}</p>}
+    </div>}
+  </div>;
   return <>
-    <fieldset className="mb-7 rounded-2xl border border-border bg-background p-4 sm:p-5">
-      <legend className="px-2 text-sm font-semibold text-primary">{copy.title}</legend>
-      <div className="flex flex-wrap gap-2">
-        {DIETAS.map((dieta, index) => <button key={dieta} type="button" aria-pressed={filtros.includes(dieta)}
-          onClick={() => cambiar(filtros.includes(dieta) ? filtros.filter(x => x !== dieta) : [...filtros, dieta])}
-          className={`min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${filtros.includes(dieta) ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:border-primary'}`}>
-          {filtros.includes(dieta) && <span aria-hidden="true">✓ </span>}{copy.labels[index]}
-        </button>)}
-        {filtros.length > 0 && <button type="button" onClick={() => cambiar([])} className="min-h-11 px-3 text-sm underline underline-offset-4">{copy.clear}</button>}
-      </div>
-      {filtros.length > 0 && <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-        {(filtros.includes('celiaquia') || filtros.includes('lactosa')) && <p>{copy.note}</p>}
-        {(filtros.includes('vegano') || filtros.includes('vegetariano')) && <p>{copy.plant}</p>}
-      </div>}
-    </fieldset>
-    {filtros.length ? <>
-      <p role="status" className="mb-5 text-sm font-medium">{resultados.length} {copy.count}</p>
-      {resultados.length ? <Suspense fallback={<p role="status">{copy.loading}</p>}><Resultados platos={resultados} /></Suspense> : <p className="mb-8 rounded-xl bg-muted p-5 text-muted-foreground">{copy.empty}</p>}
-    </> : children}
+    {compacto ? <div className="sticky top-16 md:top-20 z-30 mb-6 bg-background py-2">
+      <details key={pathname} className="group w-full max-w-2xl">
+        <summary className="flex min-h-11 w-fit max-w-full cursor-pointer list-none items-center gap-2 text-sm font-semibold text-primary [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+          <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="shrink-0">{resumen.title}{filtros.length > 0 ? ` (${filtros.length})` : ''}</span>
+          {nombres.length > 0 && <span className="min-w-0 truncate text-xs font-normal text-muted-foreground">{nombres.join(' · ')}</span>}
+          <ChevronDown className="h-4 w-4 shrink-0 group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="pb-3">{controles}</div>
+      </details>
+    </div> : <div className="mx-auto mb-7 w-full max-w-2xl">
+      {controles}
+      {filtros.length > 0 && <p role="status" className="mt-3 text-xs text-muted-foreground">{resumen.choose}</p>}
+    </div>}
+    {children}
   </>;
 }

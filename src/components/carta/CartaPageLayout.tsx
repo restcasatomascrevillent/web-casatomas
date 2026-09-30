@@ -1,3 +1,4 @@
+import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
 import { Fragment, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -63,6 +64,7 @@ const CartaPageLayout = ({
   children,
 }: CartaPageLayoutProps) => {
   const { language } = useTranslations();
+  const { conFiltros } = useFiltrosCarta();
   // Cada página pasa sus `migas`/`volverA` "en español" (rutas sin prefijo,
   // textos ya en su idioma); aquí se prefija cada URL una sola vez, para que
   // ninguna página tenga que repetir `construirRutaIdioma`.
@@ -106,7 +108,7 @@ const CartaPageLayout = ({
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild className="hover:text-accent">
-                  <Link to={construirRutaIdioma("/", language)}>{INICIO_POR_IDIOMA[language]}</Link>
+                  <Link to={conFiltros(construirRutaIdioma("/", language))}>{INICIO_POR_IDIOMA[language]}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {/* Los separadores van como hermanos, ver nota más abajo. */}
@@ -119,7 +121,7 @@ const CartaPageLayout = ({
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild className="hover:text-accent">
-                      <Link to={construirRutaIdioma(miga.path ?? "/", language)}>{miga.nombre}</Link>
+                      <Link to={conFiltros(construirRutaIdioma(miga.path ?? "/", language))}>{miga.nombre}</Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                 </Fragment>
@@ -147,7 +149,7 @@ const CartaPageLayout = ({
       {volverAResuelto && (
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pb-12">
           <Link
-            to={construirRutaIdioma(volverAResuelto.path, language)}
+            to={conFiltros(construirRutaIdioma(volverAResuelto.path, language))}
             className="inline-flex items-center gap-2 text-accent hover:underline text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
