@@ -156,6 +156,7 @@ export const translations: Translations = {
         previewTitle: "Partager le ticket",
         previewHintMobile: "Maintenez l'image appuyée pour la partager ou l'enregistrer dans votre galerie.",
         previewHintDesktop: "Faites un clic droit sur l'image pour la copier, ou téléchargez-la avec le bouton ci-dessous.",
+        previewShareCta: "Partager l'image",
         previewDownloadCta: "Télécharger l'image",
         summaryTitle: "Ma table chez Casa Tomás",
         summaryTotal: "Total indicatif : {amount}",
