@@ -144,19 +144,24 @@ const Header = () => {
 
           {/* CTA Button Desktop */}
           <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-1 shadow-sm">
-              {languages.map((option) => (
-                <Button
-                  key={option.value}
-                  size="sm"
-                  variant={language === option.value ? "default" : "ghost"}
-                  className="h-8 px-3 rounded-full text-xs font-semibold"
-                  onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
-                >
-                  {option.label}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label={ARIA.cambiarIdioma[language]}>
+                  <Globe2 className="h-5 w-5" />
                 </Button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {languages.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    className={language === option.value ? "font-semibold text-primary" : ""}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
