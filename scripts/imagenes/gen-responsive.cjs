@@ -18,6 +18,7 @@ const JOBS = [
   ['champan', 'src/assets/champan.jpg', [400, 640, 934], 640],
   ['pulpo-plato', 'src/assets/pulpo-plato.jpg', [400, 500], 500],
   ['vinos-marques', 'src/assets/vinos-marqués.jpeg', [300], 300],
+  ['lampara', 'src/assets/lampara.jpg', [480, 840, 1400], 840],
 ];
 (async () => {
   fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true });

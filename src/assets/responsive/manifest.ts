@@ -1,4 +1,4 @@
-// Generado con sharp (scratchpad gen-responsive.cjs). No editar a mano.
+// Generado con sharp (scripts/imagenes/gen-responsive.cjs). No editar a mano.
 // Por foto: dimensiones del original, anchos generados (AVIF + WebP) y ancho del JPG de respaldo.
 const manifest = {
   "salon-1": {
@@ -124,6 +124,16 @@ const manifest = {
       300
     ],
     "fallback": 300
+  },
+  "lampara": {
+    "width": 1500,
+    "height": 2000,
+    "widths": [
+      480,
+      840,
+      1400
+    ],
+    "fallback": 840
   }
 } as const;
 
