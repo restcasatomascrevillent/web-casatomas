@@ -3,7 +3,7 @@ import datos from "virtual:carta-ssg/bebidas";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
-import CartaBebidas from "@/components/carta/CartaBebidas";
+import CartaBebidas, { CATEGORIA_INICIAL } from "@/components/carta/CartaBebidas";
 import { agruparPorCategoria } from "@/lib/carta-ssg";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -77,6 +77,13 @@ const CartaBebidasPagina = () => {
   const url = `${SITE_URL}${construirRutaIdioma(RUTA_ES, language)}`;
   const bebidas = datos.bebidas ?? [];
   const secciones = agruparPorCategoria(bebidas, language);
+  // El desplegable arranca en `CATEGORIA_INICIAL` ("Aguas"): sin esta
+  // segunda clave, esa categoría nacería sin semilla y mostraría el estado
+  // de carga en vez de las bebidas ya traídas en el build.
+  const bebidasCategoriaInicial =
+    CATEGORIA_INICIAL === "TODAS"
+      ? bebidas
+      : bebidas.filter((bebida) => bebida.categoria === CATEGORIA_INICIAL);
 
   return (
     <>
@@ -107,7 +114,10 @@ const CartaBebidasPagina = () => {
         migas={[{ nombre: textos.miga }]}
       >
         {bebidas.length > 0 ? (
-          <CartaBebidas showAddButton initialBebidas={{ TODAS: bebidas }} />
+          <CartaBebidas
+            showAddButton
+            initialBebidas={{ TODAS: bebidas, [CATEGORIA_INICIAL]: bebidasCategoriaInicial }}
+          />
         ) : (
           <p className="text-muted-foreground">{textos.vacia}</p>
         )}
