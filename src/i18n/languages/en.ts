@@ -158,6 +158,8 @@ export const translations: Translations = {
         facebookAria: "Share on Facebook",
         noAppTitle: "Image downloaded",
         noAppDescription: "We couldn't open {app} from the browser: we've downloaded the ticket so you can attach it there.",
+        openedWebTitle: "{app} opened",
+        openedWebDescription: "We've also downloaded the ticket so you can attach it there.",
         summaryTitle: "My table at Casa Tomás",
         summaryTotal: "Approximate total: {amount}",
         summaryPerPerson: "≈ {amount} per person ({n} guests)",

@@ -264,18 +264,23 @@ const PreviewPedido = () => {
   };
 
   /**
-   * Comparte el ticket (sin reparto) por Instagram, WhatsApp o Facebook.
+   * Comparte el ticket (sin reparto) por Instagram, WhatsApp o Facebook, con
+   * tres escalones — el primero que funcione en este navegador gana:
    *
-   * Ninguna red acepta subir una imagen local a partir de una URL, así que la
-   * única vía web para entregarle el fichero a la app instalada es
-   * `navigator.share`: abre el selector del sistema con las apps que aceptan
-   * imágenes (WhatsApp y Facebook entre ellas si están instaladas) — no hay
-   * forma de saltarse ese selector y abrir una app en concreto.
-   *
-   * Instagram es la única excepción: su app lee la imagen del portapapeles si
-   * se abre con el esquema `instagram-stories://share` (el mismo truco que
-   * usan apps como Spotify para "Añadir a tu historia"), así que para esa red
-   * se intenta ANTES que el selector genérico.
+   * 1. Instagram: su app lee la imagen del portapapeles si se abre con el
+   *    esquema `instagram-stories://share` (el mismo truco que usan apps
+   *    como Spotify para "Añadir a tu historia"), así que se intenta ANTES
+   *    que nada para esa red.
+   * 2. `navigator.share` con el fichero: abre el selector del sistema con
+   *    las apps que aceptan imágenes (WhatsApp y Facebook entre ellas si
+   *    están instaladas) — sobre todo en móvil. No hay forma de saltarse
+   *    ese selector y abrir una app en concreto.
+   * 3. Sin selector (sobre todo escritorio): ni WhatsApp Web ni el enlace de
+   *    compartir de Facebook aceptan subir un fichero local desde
+   *    JavaScript, así que se abren con lo que sí aceptan — texto
+   *    (WhatsApp) o una URL (Facebook) — y aparte se descarga la imagen
+   *    para adjuntarla a mano. Instagram no tiene equivalente web: para esa
+   *    red este escalón no existe y cae directo en el aviso de "descargada".
    */
   const compartirTicket = async (plataforma: "instagram" | "whatsapp" | "facebook") => {
     setCompartiendo(plataforma);
@@ -292,11 +297,15 @@ const PreviewPedido = () => {
         archivo = null;
       }
 
-      const avisarSinApp = () => {
+      const descargarImagen = () => {
         const enlace = document.createElement("a");
         enlace.href = dataUrl;
         enlace.download = NOMBRE_ARCHIVO_TICKET;
         enlace.click();
+      };
+
+      const avisarSinApp = () => {
+        descargarImagen();
         toast({
           title: tp.share.noAppTitle,
           description: tp.share.noAppDescription.replace("{app}", NOMBRE_APP[plataforma]),
@@ -306,6 +315,31 @@ const PreviewPedido = () => {
       const compartirConSelectorDelSistema = async () => {
         if (!archivo || !navigator.canShare?.({ files: [archivo] })) return false;
         await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
+        return true;
+      };
+
+      /**
+       * Ni WhatsApp Web ni el enlace de compartir de Facebook aceptan un
+       * fichero local desde JavaScript — como mucho, texto (WhatsApp) o una
+       * URL (Facebook). Sin `navigator.share`, este es su plan real: abrir
+       * esa versión web con lo que sí aceptan, y descargar la imagen aparte
+       * para adjuntarla a mano. Instagram no tiene ningún enlace web
+       * equivalente, así que se queda fuera y cae en `avisarSinApp`.
+       */
+      const abrirVersionWeb = () => {
+        const enlace =
+          plataforma === "whatsapp"
+            ? `https://wa.me/?text=${encodeURIComponent(resumen)}`
+            : plataforma === "facebook"
+              ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlQr)}`
+              : null;
+        if (!enlace) return false;
+        window.open(enlace, "_blank", "noopener,noreferrer");
+        descargarImagen();
+        toast({
+          title: tp.share.openedWebTitle.replace("{app}", NOMBRE_APP[plataforma]),
+          description: tp.share.openedWebDescription,
+        });
         return true;
       };
 
@@ -320,6 +354,7 @@ const PreviewPedido = () => {
       }
 
       if (await compartirConSelectorDelSistema()) return;
+      if (abrirVersionWeb()) return;
       avisarSinApp();
     } catch (error) {
       // El propio selector del sistema cancelado por el visitante no es un error.
