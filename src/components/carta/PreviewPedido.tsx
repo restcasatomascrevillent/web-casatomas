@@ -1,9 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { Bot, Receipt, UtensilsCrossed, X } from "lucide-react";
+import { Bot, Facebook, Instagram, Receipt, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { clavePedido, type LineaPedido } from "@/hooks/usePedido";
 import { useMiMesa } from "@/hooks/useMiMesa";
@@ -17,10 +18,12 @@ import {
   configUnidad,
   construirPreguntaTomy,
   repartoCadaUno,
+  resumenTextoMesa,
   urlCarta,
 } from "@/lib/mi-mesa";
 import { generarMatrizQr } from "@/lib/qr";
 import { cn } from "@/lib/utils";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import TicketMesa from "./TicketMesa";
 
 const AIChatbot = lazy(() => import("../AIChatbot"));
@@ -69,10 +72,12 @@ const PreviewPedido = () => {
   const isMobile = useIsMobile();
   const mesa = useMiMesa();
   const chatbotVisible = useChatbotVisible();
+  const { toast } = useToast();
 
   const [pedido, setPedido] = useState<LineaPedido[]>([]);
   const [abierto, setAbierto] = useState(false);
   const [ocupado, setOcupado] = useState<null | "chat">(null);
+  const [compartiendo, setCompartiendo] = useState<null | "instagram" | "whatsapp" | "facebook">(null);
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
   const [qr, setQr] = useState<boolean[][] | null>(null);
   const [chat, setChat] = useState<{ imagen: string | null; pregunta: string } | null>(null);
@@ -80,6 +85,13 @@ const PreviewPedido = () => {
   const ticketRef = useRef<HTMLDivElement | null>(null);
   const imagenRef = useRef<Imagen | null>(null);
   const enCursoRef = useRef<{ firma: string; promesa: Promise<Imagen> } | null>(null);
+
+  // Copia SIN reparto (ver `ocultarReparto` en `TicketMesa`), capturada aparte
+  // para compartir en redes: cómo se divide la cuenta no es asunto de la foto
+  // que sale de la mesa.
+  const ticketCompartirRef = useRef<HTMLDivElement | null>(null);
+  const imagenCompartirRef = useRef<Imagen | null>(null);
+  const enCursoCompartirRef = useRef<{ firma: string; promesa: Promise<Imagen> } | null>(null);
 
   useEffect(() => {
     const cargar = () => {
@@ -140,32 +152,52 @@ const PreviewPedido = () => {
     };
   }, [abierto, qr, urlQr]);
 
-  const generarImagen = useCallback(async (): Promise<Imagen> => {
-    if (imagenRef.current?.firma === firma) return imagenRef.current;
-    if (enCursoRef.current?.firma === firma) return enCursoRef.current.promesa;
+  /**
+   * Captura `nodo` a PNG y cachea el resultado por `firma`, reutilizando la
+   * promesa si ya hay una captura de esa misma firma en marcha. Compartida por
+   * las dos copias del ticket (la de Tomy y la de compartir): mismo mecanismo,
+   * caché aparte porque son nodos e imágenes distintas.
+   */
+  const capturarTicket = useCallback(
+    (
+      nodoRef: React.MutableRefObject<HTMLDivElement | null>,
+      cacheRef: React.MutableRefObject<Imagen | null>,
+      cursoRef: React.MutableRefObject<{ firma: string; promesa: Promise<Imagen> } | null>,
+    ): Promise<Imagen> => {
+      if (cacheRef.current?.firma === firma) return Promise.resolve(cacheRef.current);
+      if (cursoRef.current?.firma === firma) return cursoRef.current.promesa;
 
-    const promesa = (async () => {
-      if (!qr) {
-        const matriz = await generarMatrizQr(urlQr);
-        flushSync(() => setQr(matriz));
-      }
-      const nodo = ticketRef.current;
-      if (!nodo) throw new Error("Ticket no disponible para captura");
-      await esperarRecursos(nodo);
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(nodo, { pixelRatio: 2, cacheBust: true, backgroundColor: "#fbf8f3" });
-      const imagen = { firma, dataUrl };
-      imagenRef.current = imagen;
-      return imagen;
-    })();
+      const promesa = (async () => {
+        if (!qr) {
+          const matriz = await generarMatrizQr(urlQr);
+          flushSync(() => setQr(matriz));
+        }
+        const nodo = nodoRef.current;
+        if (!nodo) throw new Error("Ticket no disponible para captura");
+        await esperarRecursos(nodo);
+        const { toPng } = await import("html-to-image");
+        const dataUrl = await toPng(nodo, { pixelRatio: 2, cacheBust: true, backgroundColor: "#fbf8f3" });
+        const imagen = { firma, dataUrl };
+        cacheRef.current = imagen;
+        return imagen;
+      })();
 
-    enCursoRef.current = { firma, promesa };
-    try {
-      return await promesa;
-    } finally {
-      if (enCursoRef.current?.promesa === promesa) enCursoRef.current = null;
-    }
-  }, [firma, qr, urlQr]);
+      cursoRef.current = { firma, promesa };
+      return promesa.finally(() => {
+        if (cursoRef.current?.promesa === promesa) cursoRef.current = null;
+      });
+    },
+    [firma, qr, urlQr],
+  );
+
+  const generarImagen = useCallback(
+    () => capturarTicket(ticketRef, imagenRef, enCursoRef),
+    [capturarTicket],
+  );
+  const generarImagenCompartir = useCallback(
+    () => capturarTicket(ticketCompartirRef, imagenCompartirRef, enCursoCompartirRef),
+    [capturarTicket],
+  );
 
   const preguntarATomy = async () => {
     setOcupado("chat");
@@ -179,6 +211,63 @@ const PreviewPedido = () => {
     setOcupado(null);
     // El chat va encima de todo: se cierra el panel y se vuelve a abrir al cerrar el chat.
     setAbierto(false);
+  };
+
+  /**
+   * Comparte el ticket (sin reparto) por Instagram, WhatsApp o Facebook.
+   *
+   * Ninguna red social acepta subir una imagen local a partir de una URL —
+   * solo el propio `navigator.share` (el "compartir" del sistema, en móvil)
+   * puede entregarle un fichero a la app instalada, y ni siquiera él puede
+   * abrir una app en concreto: enseña el selector del sistema con las apps
+   * que aceptan imágenes, entre ellas las tres. Sin `navigator.share` (siempre
+   * en escritorio) cada red sigue el mejor plan posible: WhatsApp Web y
+   * Facebook sí aceptan abrirse con texto o enlace por URL, así que se abren
+   * con el resumen mientras se descarga la imagen para adjuntarla a mano;
+   * Instagram no tiene ni eso, así que solo queda descargarla.
+   */
+  const compartirTicket = async (plataforma: "instagram" | "whatsapp" | "facebook") => {
+    setCompartiendo(plataforma);
+    try {
+      const { dataUrl } = await generarImagenCompartir();
+      const resumen = resumenTextoMesa(lineas, comensales, language, tp.share, urlQr);
+
+      let archivo: File | null = null;
+      try {
+        const respuesta = await fetch(dataUrl);
+        const blob = await respuesta.blob();
+        archivo = new File([blob], "mi-mesa-casa-tomas.png", { type: blob.type || "image/png" });
+      } catch {
+        archivo = null;
+      }
+
+      if (archivo && navigator.canShare?.({ files: [archivo] })) {
+        await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
+        return;
+      }
+
+      const enlace = document.createElement("a");
+      enlace.href = dataUrl;
+      enlace.download = "mi-mesa-casa-tomas.png";
+      enlace.click();
+
+      if (plataforma === "whatsapp") {
+        window.open(`https://wa.me/?text=${encodeURIComponent(resumen)}`, "_blank", "noopener,noreferrer");
+        toast({ title: tp.share.fallbackTitle, description: tp.share.fallbackDescription });
+      } else if (plataforma === "facebook") {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlQr)}`, "_blank", "noopener,noreferrer");
+        toast({ title: tp.share.facebookFallbackTitle, description: tp.share.facebookFallbackDescription });
+      } else {
+        toast({ title: tp.share.instagramFallbackTitle, description: tp.share.instagramFallbackDescription });
+      }
+    } catch (error) {
+      // El propio selector del sistema cancelado por el visitante no es un error.
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error(`No se pudo compartir el ticket por ${plataforma}:`, error);
+      toast({ variant: "destructive", title: tp.share.errorTitle, description: tp.share.error });
+    } finally {
+      setCompartiendo(null);
+    }
   };
 
   const cambiarCantidad = (indice: number, direccion: 1 | -1) => {
@@ -284,6 +373,40 @@ const PreviewPedido = () => {
             }}
           />
         )}
+
+        {!vacia && (
+          <div className="mt-4">
+            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-ticket-ink-soft">
+              {tp.share.cta}
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <BotonCompartir
+                onClick={() => compartirTicket("instagram")}
+                disabled={compartiendo !== null}
+                aria={tp.share.instagramAria}
+                className="bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600 text-white hover:opacity-90"
+              >
+                <Instagram className="h-5 w-5" aria-hidden="true" />
+              </BotonCompartir>
+              <BotonCompartir
+                onClick={() => compartirTicket("whatsapp")}
+                disabled={compartiendo !== null}
+                aria={tp.share.whatsappAria}
+                className="bg-[#25d366] text-white hover:opacity-90"
+              >
+                <WhatsAppIcon className="h-5 w-5" />
+              </BotonCompartir>
+              <BotonCompartir
+                onClick={() => compartirTicket("facebook")}
+                disabled={compartiendo !== null}
+                aria={tp.share.facebookAria}
+                className="bg-[#1877f2] text-white hover:opacity-90"
+              >
+                <Facebook className="h-5 w-5" aria-hidden="true" />
+              </BotonCompartir>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Entrada al chatbot con el ticket adjunto: la única acción que queda
@@ -341,6 +464,22 @@ const PreviewPedido = () => {
             urlQr={urlQr}
             fecha={fecha}
           />
+          {/* Misma copia, sin el reparto: la que capturan los botones de
+              compartir en redes (ver `compartirTicket`). */}
+          <TicketMesa
+            ref={ticketCompartirRef}
+            lineas={lineas}
+            comensales={comensales}
+            modo={cadaUno ? "cadaUno" : "igual"}
+            reparto={reparto}
+            nombres={nombres}
+            idioma={language}
+            t={tp}
+            qr={qr}
+            urlQr={urlQr}
+            fecha={fecha}
+            ocultarReparto
+          />
         </div>
       )}
 
@@ -392,4 +531,28 @@ const BotonMiMesa = ({ onOpen, count, label, aria }: BotonMiMesaProps) => (
       {count}
     </span>
   </Button>
+);
+
+type BotonCompartirProps = {
+  onClick: () => void;
+  disabled: boolean;
+  aria: string;
+  className: string;
+  children: ReactNode;
+};
+
+/** Icono redondo de red social, bajo el ticket. Mismo tamaño para las tres. */
+const BotonCompartir = ({ onClick, disabled, aria, className, children }: BotonCompartirProps) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    aria-label={aria}
+    className={cn(
+      "flex h-11 w-11 items-center justify-center rounded-full shadow-sm transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50",
+      className,
+    )}
+  >
+    {children}
+  </button>
 );

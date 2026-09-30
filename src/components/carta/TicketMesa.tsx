@@ -82,6 +82,13 @@ type TicketMesaProps = {
   fecha: string;
   /** Solo para el ticket en vivo (panel). Omitido en el que se captura como imagen. */
   edicion?: EdicionTicketMesa;
+  /**
+   * Oculta el reparto (total por persona, a partes iguales o "cada uno lo
+   * suyo") sin tocar nada más. Solo lo usa la copia oculta que se captura
+   * para compartir en redes: cómo se divide la cuenta es un asunto entre
+   * los comensales, no algo para publicar con la foto del ticket.
+   */
+  ocultarReparto?: boolean;
 };
 
 /** Línea de "=" o "*", igual que el ticket original — texto de verdad, no un `border`. */
@@ -131,7 +138,7 @@ const BotonPaso = ({
  *     de la imagen capturada.
  */
 const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
-  ({ lineas, comensales, modo, reparto, nombres, idioma, t, qr, urlQr, fecha, edicion }, ref) => {
+  ({ lineas, comensales, modo, reparto, nombres, idioma, t, qr, urlQr, fecha, edicion, ocultarReparto }, ref) => {
     const total = totalMesa(lineas);
     const eur = (v: number) => formatearEuros(v, idioma);
     const comensalesTexto = comensales === 1 ? t.guestsCountOne : t.guestsCount.replace("{n}", String(comensales));
@@ -352,45 +359,46 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
             <span style={{ fontSize: 20, fontWeight: 700 }}>{eur(total)}</span>
           </div>
 
-          {modo === "igual" || comensales === 1 ? (
-            <div style={{ textAlign: "right", fontWeight: 600, marginBottom: 6 }}>
-              {t.perPerson.replace("{amount}", eur(porPersona(total, comensales)))}
-            </div>
-          ) : (
-            <div style={{ marginBottom: 6 }}>
-              <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: TINTA_SUAVE, marginBottom: 4 }}>
-                {t.ticket.perPersonTitle}
+          {!ocultarReparto &&
+            (modo === "igual" || comensales === 1 ? (
+              <div style={{ textAlign: "right", fontWeight: 600, marginBottom: 6 }}>
+                {t.perPerson.replace("{amount}", eur(porPersona(total, comensales)))}
               </div>
-              {reparto.porPersona.map((importe, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 3 }}>
-                  {edicion ? (
-                    <input
-                      type="text"
-                      value={nombres[i] ?? ""}
-                      placeholder={t.personDefault.replace("{n}", String(i + 1))}
-                      onChange={(e) => edicion.onNombreChange(i, e.target.value)}
-                      maxLength={40}
-                      autoComplete="off"
-                      spellCheck={false}
-                      aria-label={t.personNameAria.replace("{n}", String(i + 1))}
-                      className="h-6 min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 text-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      style={{ color: TINTA }}
-                    />
-                  ) : (
-                    <span style={{ overflowWrap: "anywhere" }}>{nombrePersona(nombres, i, t.personDefault)}</span>
-                  )}
-                  <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{eur(importe)}</span>
+            ) : (
+              <div style={{ marginBottom: 6 }}>
+                <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: TINTA_SUAVE, marginBottom: 4 }}>
+                  {t.ticket.perPersonTitle}
                 </div>
-              ))}
-              {reparto.compartido > 0 && (
-                <div style={{ fontSize: 10.5, color: TINTA_SUAVE }}>
-                  {t.sharedLine
-                    .replace("{amount}", eur(reparto.compartido))
-                    .replace("{each}", eur(reparto.compartidoPorPersona))}
-                </div>
-              )}
-            </div>
-          )}
+                {reparto.porPersona.map((importe, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 3 }}>
+                    {edicion ? (
+                      <input
+                        type="text"
+                        value={nombres[i] ?? ""}
+                        placeholder={t.personDefault.replace("{n}", String(i + 1))}
+                        onChange={(e) => edicion.onNombreChange(i, e.target.value)}
+                        maxLength={40}
+                        autoComplete="off"
+                        spellCheck={false}
+                        aria-label={t.personNameAria.replace("{n}", String(i + 1))}
+                        className="h-6 min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 text-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        style={{ color: TINTA }}
+                      />
+                    ) : (
+                      <span style={{ overflowWrap: "anywhere" }}>{nombrePersona(nombres, i, t.personDefault)}</span>
+                    )}
+                    <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{eur(importe)}</span>
+                  </div>
+                ))}
+                {reparto.compartido > 0 && (
+                  <div style={{ fontSize: 10.5, color: TINTA_SUAVE }}>
+                    {t.sharedLine
+                      .replace("{amount}", eur(reparto.compartido))
+                      .replace("{each}", eur(reparto.compartidoPorPersona))}
+                  </div>
+                )}
+              </div>
+            ))}
           <LineaAscii texto={IGUALES} />
         </div>
 
