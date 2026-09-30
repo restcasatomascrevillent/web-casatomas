@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
+import MenuDiarioCards from "@/components/espacios/MenuDiarioCards";
 import novedadesSSG from "virtual:novedades-ssg";
 
 type IconKey = "utensils" | "wine" | "gift" | "calendar" | "star" | "sparkles" | "coffee" | "cake";
@@ -222,6 +223,12 @@ const NovedadesSection = () => {
             {t.novedades.subtitle}
           </motion.p>
         </div>
+
+        {/* El menú de mediodía y las tapas de los jueves: promociones fijas
+            con su propio día, no algo que suba o baje el dueño desde el
+            panel — por eso van aparte de la rejilla de `novedades` de abajo,
+            y solo existen el día que toca (ver `MenuDiarioCards`). */}
+        <MenuDiarioCards />
 
         {isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
