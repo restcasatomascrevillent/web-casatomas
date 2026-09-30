@@ -485,7 +485,7 @@ export const translations = {
       reserveLink: "Reservar mesa",
       websiteLink: "Sitio web",
       contactTitle: "Contacto",
-      rights: "© 2025 Restaurante Casa Tomás. Todos los derechos reservados.",
+      rights: "© 2026 Restaurante Casa Tomás. Todos los derechos reservados.",
       admin: "Administración",
       terms: "Términos y condiciones",
     },
