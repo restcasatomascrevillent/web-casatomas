@@ -1,7 +1,7 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { Bot, Facebook, Instagram, Receipt, UtensilsCrossed, X } from "lucide-react";
+import { Bot, Receipt, Share2, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -24,7 +24,6 @@ import {
 } from "@/lib/mi-mesa";
 import { generarMatrizQr } from "@/lib/qr";
 import { cn } from "@/lib/utils";
-import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import TicketMesa from "./TicketMesa";
 
 const AIChatbot = lazy(() => import("../AIChatbot"));
@@ -32,11 +31,6 @@ const AIChatbot = lazy(() => import("../AIChatbot"));
 type Imagen = { firma: string; dataUrl: string };
 
 const NOMBRE_ARCHIVO_TICKET = "mi-mesa-casa-tomas.png";
-const NOMBRE_APP: Record<"instagram" | "whatsapp" | "facebook", string> = {
-  instagram: "Instagram",
-  whatsapp: "WhatsApp",
-  facebook: "Facebook",
-};
 
 /** Espera a las fuentes y a las imágenes del nodo antes de capturarlo. */
 const esperarRecursos = async (nodo: HTMLElement) => {
@@ -57,34 +51,6 @@ const esperarRecursos = async (nodo: HTMLElement) => {
     ),
   );
 };
-
-/**
- * Intenta abrir una app nativa por su esquema de URL (`instagram-stories://…`)
- * y resuelve `true` si todo apunta a que se abrió, `false` si no.
- *
- * No hay ningún evento de JS para "este enlace no tenía app que lo abriera":
- * el navegador simplemente no hace nada. El truco habitual es este —
- * `visibilitychange` a oculto ANTES de que salte el temporizador significa
- * que el sistema sacó al usuario de la pestaña para abrir la otra app; si
- * pasa el temporizador sin que eso ocurra, se asume que no había app.
- */
-const intentarAbrirApp = (url: string, esperaMs = 1500): Promise<boolean> =>
-  new Promise((resolve) => {
-    let resuelto = false;
-    const terminar = (abierto: boolean) => {
-      if (resuelto) return;
-      resuelto = true;
-      document.removeEventListener("visibilitychange", alOcultarse);
-      clearTimeout(temporizador);
-      resolve(abierto);
-    };
-    const alOcultarse = () => {
-      if (document.hidden) terminar(true);
-    };
-    document.addEventListener("visibilitychange", alOcultarse);
-    const temporizador = setTimeout(() => terminar(false), esperaMs);
-    window.location.href = url;
-  });
 
 /**
  * "Mi mesa" (antes "Mi pedido"): el visitante apunta lo que le apetece de la
@@ -113,12 +79,8 @@ const PreviewPedido = () => {
   const [pedido, setPedido] = useState<LineaPedido[]>([]);
   const [abierto, setAbierto] = useState(false);
   const [ocupado, setOcupado] = useState<null | "chat">(null);
-  const [compartiendo, setCompartiendo] = useState<null | "instagram" | "whatsapp" | "facebook">(null);
-  const [vistaPrevia, setVistaPrevia] = useState<{
-    plataforma: "instagram" | "whatsapp" | "facebook";
-    dataUrl: string;
-    archivo: File | null;
-  } | null>(null);
+  const [compartiendo, setCompartiendo] = useState(false);
+  const [vistaPrevia, setVistaPrevia] = useState<{ dataUrl: string; archivo: File | null } | null>(null);
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
   const [qr, setQr] = useState<boolean[][] | null>(null);
   const [chat, setChat] = useState<{ imagen: string | null; pregunta: string } | null>(null);
@@ -270,32 +232,24 @@ const PreviewPedido = () => {
   };
 
   /**
-   * Comparte el ticket (sin reparto, siempre como IMAGEN — nunca como texto
-   * suelto) por Instagram, WhatsApp o Facebook, con tres escalones — el
-   * primero que funcione en este navegador gana:
+   * Comparte el ticket (sin reparto) como IMAGEN — nunca como texto ni como
+   * enlace suelto. Un único botón, dos escalones:
    *
-   * 1. Instagram: su app lee la imagen del portapapeles si se abre con el
-   *    esquema `instagram-stories://share` (el mismo truco que usan apps
-   *    como Spotify para "Añadir a tu historia"), así que se intenta ANTES
-   *    que nada para esa red.
-   * 2. `navigator.share` con el fichero: abre el selector del sistema con
-   *    las apps que aceptan imágenes (WhatsApp y Facebook entre ellas si
-   *    están instaladas) — sobre todo en móvil. No hay forma de saltarse
-   *    ese selector y abrir una app en concreto.
-   * 3. Sin selector (sobre todo escritorio, o el móvil no lo ofrece): ninguna
-   *    de las tres redes acepta subir un fichero local desde JavaScript —
-   *    WhatsApp Web y el enlace de Facebook, como mucho, aceptan texto o una
-   *    URL, nunca la imagen en sí. En vez de conformarse con eso (que el
-   *    dueño no quiere: la imagen es la que tiene que viajar, no un
-   *    resumen), se enseña la imagen en un diálogo propio para que el
+   * 1. `navigator.share` con el fichero: abre el selector del sistema con
+   *    las apps que aceptan imágenes (WhatsApp, Instagram, Facebook, Mail,
+   *    AirDrop… las que haya instaladas) — el propio sistema operativo
+   *    decide cuáles ofrecer, aquí no se elige una app en concreto.
+   * 2. Si el navegador no puede compartir FICHEROS (`canShare` con `files`
+   *    da `false` — pasa en bastante iOS/Safari, aunque `navigator.share`
+   *    exista para texto o enlaces), NO se cae a compartir un enlace: eso
+   *    mandaría la web, no el ticket, que es justo lo que no se quiere. En
+   *    su lugar se enseña la imagen en un diálogo propio para que el
    *    visitante la comparta o la guarde a su manera — mantener pulsada en
-   *    móvil, clic derecho en escritorio son gestos que entiende CUALQUIER
-   *    navegador, sin depender de ninguna API — con un botón para reintentar
-   *    `navigator.share` desde un toque limpio (a veces el primer intento
-   *    falla por no ir pegado al gesto original) y otro para descargarla.
+   *    móvil, clic derecho en escritorio son gestos nativos que entiende
+   *    cualquier navegador, sin depender de ninguna API.
    */
-  const compartirTicket = async (plataforma: "instagram" | "whatsapp" | "facebook") => {
-    setCompartiendo(plataforma);
+  const compartirTicket = async () => {
+    setCompartiendo(true);
     try {
       const { dataUrl } = await generarImagenCompartir();
       const resumen = resumenTextoMesa(lineas, comensales, language, tp.share, urlQr);
@@ -309,46 +263,23 @@ const PreviewPedido = () => {
         archivo = null;
       }
 
-      const compartirConSelectorDelSistema = async () => {
-        if (!archivo || !navigator.canShare?.({ files: [archivo] })) return false;
-        await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
-        return true;
-      };
-
-      if (plataforma === "instagram" && archivo && navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+      if (archivo && navigator.canShare?.({ files: [archivo] })) {
         try {
-          await navigator.clipboard.write([new ClipboardItem({ [archivo.type]: archivo })]);
-          if (await intentarAbrirApp("instagram-stories://share")) return;
-        } catch {
-          // Portapapeles bloqueado (permiso denegado, contexto no seguro…):
-          // se sigue abajo con el selector genérico.
+          await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
+          return;
+        } catch (error) {
+          // El selector del sistema cancelado por el visitante no es un error.
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          // Cualquier otro fallo: se sigue abajo a la vista previa.
         }
       }
 
-      if (await compartirConSelectorDelSistema()) return;
-      setVistaPrevia({ plataforma, dataUrl, archivo });
+      setVistaPrevia({ dataUrl, archivo });
     } catch (error) {
-      // El propio selector del sistema cancelado por el visitante no es un error.
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      console.error(`No se pudo compartir el ticket por ${plataforma}:`, error);
+      console.error("No se pudo compartir el ticket:", error);
       toast({ variant: "destructive", title: tp.share.errorTitle, description: tp.share.error });
     } finally {
-      setCompartiendo(null);
-    }
-  };
-
-  /** Reintenta `navigator.share` desde el propio diálogo: un toque limpio y reciente, no el de hace un momento que pudo fallar por eso. */
-  const reintentarCompartirImagen = async () => {
-    if (!vistaPrevia) return;
-    try {
-      if (vistaPrevia.archivo && navigator.canShare?.({ files: [vistaPrevia.archivo] })) {
-        await navigator.share({ files: [vistaPrevia.archivo], title: tp.share.summaryTitle });
-      } else {
-        await navigator.share({ title: tp.share.summaryTitle, url: urlQr });
-      }
-      setVistaPrevia(null);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
+      setCompartiendo(false);
     }
   };
 
@@ -468,36 +399,16 @@ const PreviewPedido = () => {
         )}
 
         {!vacia && (
-          <div className="mt-4">
-            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-ticket-ink-soft">
+          <div className="mt-4 flex justify-center">
+            <Button
+              type="button"
+              onClick={compartirTicket}
+              disabled={compartiendo}
+              className="gap-2 rounded-full bg-accent px-5 text-accent-foreground hover:bg-accent/90"
+            >
+              <Share2 className="h-4 w-4" aria-hidden="true" />
               {tp.share.cta}
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <BotonCompartir
-                onClick={() => compartirTicket("instagram")}
-                disabled={compartiendo !== null}
-                aria={tp.share.instagramAria}
-                className="bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600 text-white hover:opacity-90"
-              >
-                <Instagram className="h-5 w-5" aria-hidden="true" />
-              </BotonCompartir>
-              <BotonCompartir
-                onClick={() => compartirTicket("whatsapp")}
-                disabled={compartiendo !== null}
-                aria={tp.share.whatsappAria}
-                className="bg-[#25d366] text-white hover:opacity-90"
-              >
-                <WhatsAppIcon className="h-5 w-5" />
-              </BotonCompartir>
-              <BotonCompartir
-                onClick={() => compartirTicket("facebook")}
-                disabled={compartiendo !== null}
-                aria={tp.share.facebookAria}
-                className="bg-[#1877f2] text-white hover:opacity-90"
-              >
-                <Facebook className="h-5 w-5" aria-hidden="true" />
-              </BotonCompartir>
-            </div>
+            </Button>
           </div>
         )}
       </div>
@@ -576,17 +487,14 @@ const PreviewPedido = () => {
         </div>
       )}
 
-      {/* Sin selector nativo (sobre todo escritorio): la imagen en un diálogo
-          propio, no un resumen de texto — mantener pulsada / clic derecho
-          son gestos que entiende cualquier navegador sin depender de
-          ninguna API, y "Compartir imagen" reintenta `navigator.share` con
-          un toque limpio y recién hecho. */}
+      {/* Cuando el navegador no puede compartir el FICHERO (pasa en bastante
+          iOS/Safari): la imagen en un diálogo propio, nunca un enlace —
+          mantener pulsada / clic derecho son gestos nativos que entiende
+          cualquier navegador, sin depender de ninguna API. */}
       <Dialog open={vistaPrevia !== null} onOpenChange={(open) => !open && setVistaPrevia(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>
-              {vistaPrevia && tp.share.previewTitle.replace("{app}", NOMBRE_APP[vistaPrevia.plataforma])}
-            </DialogTitle>
+            <DialogTitle>{tp.share.previewTitle}</DialogTitle>
             <DialogDescription>
               {isMobile ? tp.share.previewHintMobile : tp.share.previewHintDesktop}
             </DialogDescription>
@@ -598,16 +506,9 @@ const PreviewPedido = () => {
               className="w-full rounded-lg border border-border"
             />
           )}
-          <div className="flex gap-2">
-            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-              <Button type="button" className="flex-1" onClick={reintentarCompartirImagen}>
-                {tp.share.previewShareCta}
-              </Button>
-            )}
-            <Button type="button" variant="outline" className="flex-1" onClick={descargarVistaPrevia}>
-              {tp.share.previewDownloadCta}
-            </Button>
-          </div>
+          <Button type="button" variant="outline" onClick={descargarVistaPrevia}>
+            {tp.share.previewDownloadCta}
+          </Button>
         </DialogContent>
       </Dialog>
 
@@ -661,26 +562,3 @@ const BotonMiMesa = ({ onOpen, count, label, aria }: BotonMiMesaProps) => (
   </Button>
 );
 
-type BotonCompartirProps = {
-  onClick: () => void;
-  disabled: boolean;
-  aria: string;
-  className: string;
-  children: ReactNode;
-};
-
-/** Icono redondo de red social, bajo el ticket. Mismo tamaño para las tres. */
-const BotonCompartir = ({ onClick, disabled, aria, className, children }: BotonCompartirProps) => (
-  <button
-    type="button"
-    onClick={onClick}
-    disabled={disabled}
-    aria-label={aria}
-    className={cn(
-      "flex h-11 w-11 items-center justify-center rounded-full shadow-sm transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50",
-      className,
-    )}
-  >
-    {children}
-  </button>
-);
