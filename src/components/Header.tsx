@@ -97,7 +97,7 @@ const Header = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="relative flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <motion.button
             onClick={() => {
@@ -125,9 +125,10 @@ const Header = () => {
             />
           </motion.button>
 
-          {/* Desktop Navigation: centrada respecto a la página entera, no al
-              espacio libre entre logo y CTA (que son de ancho distinto). */}
-          <nav className="hidden lg:flex items-center gap-6 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          {/* Desktop Navigation: con justify-between en la fila, el hueco al
+              logo y el hueco al icono del planeta quedan siempre iguales,
+              sin importar que el bloque de la derecha sea más ancho. */}
+          <nav className="hidden lg:flex items-center gap-6">
             {navItems.map((item) => (
               <NavLink
                 key={item.id}
