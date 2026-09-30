@@ -44,7 +44,6 @@ export const translations: Translations = {
       add: "Ajouter",
       addAria: "Ajouter {name} à Ma table",
       addMoreAria: "Ajouter encore {name} à Ma table (vous en avez {qty})",
-      inOrder: "{qty} sur votre table",
       viewPhoto: "Voir la photo",
       hidePhoto: "Masquer la photo",
       viewInfo: "Voir les ingrédients et allergènes",
