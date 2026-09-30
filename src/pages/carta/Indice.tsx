@@ -12,9 +12,9 @@ import {
   Soup,
   Sparkles,
   UtensilsCrossed,
-  Wheat,
   Wine,
 } from "lucide-react";
+import PaellaIcon from "@/components/icons/PaellaIcon";
 import { Card } from "@/components/ui/card";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
@@ -144,7 +144,7 @@ const ICONO_POR_CATEGORIA: Record<string, React.ReactNode> = {
   MARISCOS: <Shell className="w-6 h-6" />,
   PESCADOS: <Fish className="w-6 h-6" />,
   CARNES: <Beef className="w-6 h-6" />,
-  ARROCES: <Wheat className="w-6 h-6" />,
+  ARROCES: <PaellaIcon className="w-6 h-6" />,
   POSTRES: <Cake className="w-6 h-6" />,
 };
 
