@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ImagenResponsive from "@/components/ImagenResponsive";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -74,14 +75,33 @@ const CartaPageLayout = ({
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Mismo degradado que la sección de carta de la portada
-          (`CartaSection`). La banda oscura de `PoliticaPrivacidad` no sirve
-          aquí: esa página no monta el `Header`, y los enlaces del menú son
-          `text-foreground/80` — sobre `bg-dark-slate` quedaban invisibles
-          (contraste 1:1, comprobado en el navegador).
+      {/* Mismo degradado de base que la sección de carta de la portada
+          (`CartaSection`), con la foto de la lámpara difuminada detrás. La
+          banda oscura de `PoliticaPrivacidad` no sirve aquí: esa página no
+          monta el `Header`, y los enlaces del menú son `text-foreground/80`
+          — sobre `bg-dark-slate` quedaban invisibles (contraste 1:1,
+          comprobado en el navegador).
           `pt-24` deja hueco a la cabecera fija (h-16 en móvil, h-20 en md). */}
-      <div className="bg-gradient-to-b from-background to-muted pt-24 md:pt-28 pb-10 px-4 md:px-8 lg:px-16">
-        <div className="max-w-7xl mx-auto animate-fade-up">
+      <div className="relative overflow-hidden bg-muted pt-24 md:pt-28 pb-10 px-4 md:px-8 lg:px-16">
+        {/* La foto solo ocupa un panel pegado a la izquierda a partir de
+            `md` (con su propio degradado hacia `bg-muted` en el borde
+            derecho): a todo lo ancho de la banda, la lámpara —centrada en
+            la foto original— saldría en mitad de la banda, no "a la
+            izquierda". En móvil sí ocupa toda la anchura: no hay sitio para
+            un panel más pequeño y un recorte a toda anchura ya se ve bien. */}
+        <div className="absolute inset-y-0 left-0 w-full md:w-[300px] lg:w-[420px] xl:w-[560px] overflow-hidden">
+          <ImagenResponsive
+            nombre="lampara"
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            sizes="(min-width: 1280px) 560px, (min-width: 1024px) 420px, (min-width: 768px) 300px, 100vw"
+            className="absolute inset-0 w-full h-full object-cover object-[50%_38%] md:object-[50%_30%]"
+          />
+          <div className="hidden md:block absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-transparent to-muted" />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/55 to-muted/95" />
+        <div className="relative max-w-7xl mx-auto animate-fade-up">
           <Breadcrumb className="mb-5">
             <BreadcrumbList>
               <BreadcrumbItem>
