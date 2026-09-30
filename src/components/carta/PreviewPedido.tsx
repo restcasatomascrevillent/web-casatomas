@@ -30,7 +30,7 @@ const AIChatbot = lazy(() => import("../AIChatbot"));
 
 type Imagen = { firma: string; dataUrl: string };
 
-const NOMBRE_ARCHIVO_TICKET = "mi-mesa-casa-tomas.png";
+const NOMBRE_ARCHIVO_TICKET = "mi-mesa-casa-tomas.jpg";
 
 /** Espera a las fuentes y a las imágenes del nodo antes de capturarlo. */
 const esperarRecursos = async (nodo: HTMLElement) => {
@@ -178,8 +178,12 @@ const PreviewPedido = () => {
         const nodo = nodoRef.current;
         if (!nodo) throw new Error("Ticket no disponible para captura");
         await esperarRecursos(nodo);
-        const { toPng } = await import("html-to-image");
-        const dataUrl = await toPng(nodo, { pixelRatio: 2, cacheBust: true, backgroundColor: "#fbf8f3" });
+        // JPEG, no PNG: un ticket con QR a resolución x2 en PNG (sin pérdida)
+        // pesa varias veces más que el mismo JPG — y `navigator.share`/
+        // `canShare` con ficheros son bastante más quisquillosos con el
+        // tamaño de lo que dicen documentar, sobre todo en iOS.
+        const { toJpeg } = await import("html-to-image");
+        const dataUrl = await toJpeg(nodo, { pixelRatio: 2, cacheBust: true, backgroundColor: "#fbf8f3", quality: 0.92 });
         const imagen = { firma, dataUrl };
         cacheRef.current = imagen;
         return imagen;
@@ -258,7 +262,7 @@ const PreviewPedido = () => {
       try {
         const respuesta = await fetch(dataUrl);
         const blob = await respuesta.blob();
-        archivo = new File([blob], NOMBRE_ARCHIVO_TICKET, { type: blob.type || "image/png" });
+        archivo = new File([blob], NOMBRE_ARCHIVO_TICKET, { type: blob.type || "image/jpeg" });
       } catch {
         archivo = null;
       }
@@ -280,6 +284,24 @@ const PreviewPedido = () => {
       toast({ variant: "destructive", title: tp.share.errorTitle, description: tp.share.error });
     } finally {
       setCompartiendo(false);
+    }
+  };
+
+  /**
+   * Reintenta `navigator.share` con el FICHERO desde el propio diálogo — con
+   * un toque limpio y recién hecho, no el de hace un momento. Si sigue sin
+   * poder compartir ficheros, NO cae a compartir el enlace: eso mandaría la
+   * web en vez del ticket. Se queda callado y el visitante sigue teniendo
+   * mantener pulsada / clic derecho sobre la imagen, que no depende de esta
+   * API para nada.
+   */
+  const reintentarCompartirImagen = async () => {
+    if (!vistaPrevia?.archivo || !navigator.canShare?.({ files: [vistaPrevia.archivo] })) return;
+    try {
+      await navigator.share({ files: [vistaPrevia.archivo], title: tp.share.summaryTitle });
+      setVistaPrevia(null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
     }
   };
 
@@ -506,9 +528,16 @@ const PreviewPedido = () => {
               className="w-full rounded-lg border border-border"
             />
           )}
-          <Button type="button" variant="outline" onClick={descargarVistaPrevia}>
-            {tp.share.previewDownloadCta}
-          </Button>
+          <div className="flex gap-2">
+            {vistaPrevia?.archivo && typeof navigator !== "undefined" && navigator.canShare?.({ files: [vistaPrevia.archivo] }) && (
+              <Button type="button" className="flex-1" onClick={reintentarCompartirImagen}>
+                {tp.share.previewShareCta}
+              </Button>
+            )}
+            <Button type="button" variant="outline" className="flex-1" onClick={descargarVistaPrevia}>
+              {tp.share.previewDownloadCta}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
