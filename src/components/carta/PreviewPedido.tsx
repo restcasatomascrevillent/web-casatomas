@@ -234,6 +234,21 @@ const PreviewPedido = () => {
     [capturarTicket],
   );
 
+  // Pre-generar la imagen de compartir en cuanto se abre el ticket, no al
+  // pulsar un icono de red: `html-to-image` puede tardar varios cientos de
+  // ms, y esperar a que termine DESPUÉS del toque es lo que hacía que
+  // WhatsApp/Instagram/Facebook dejaran de verlo como un gesto reciente del
+  // usuario y bloquearan `navigator.share`/el portapapeles en silencio (sin
+  // ningún error visible). Con la imagen ya en caché, `compartirTicket` la
+  // reutiliza al instante y el share sigue pegado al toque original.
+  useEffect(() => {
+    if (!abierto || lineas.length === 0) return;
+    void generarImagenCompartir().catch(() => {
+      // Sin ruido aquí: si de verdad falla, `compartirTicket` lo reintenta
+      // y ahí sí avisa al visitante.
+    });
+  }, [abierto, lineas.length, generarImagenCompartir]);
+
   const preguntarATomy = async () => {
     setOcupado("chat");
     let imagen: string | null = null;
