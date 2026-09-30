@@ -325,7 +325,7 @@ export const translations: Translations = {
         thanks: "Thank you for choosing Casa Tomás.",
         issuedLabel: "Request logged",
       },
-      stepOne: "Step 1: Choose date, room, and party size",
+      stepOne: "Step 1: Choose date and party size",
       dateLabel: "Date *",
       datePlaceholder: "Select a date",
       roomLabel: "Preferred room *",
