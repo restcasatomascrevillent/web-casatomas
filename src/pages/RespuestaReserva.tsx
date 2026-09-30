@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, CheckCircle2, Clock, Loader2, MapPin, Phone, Users, AlertTriangle, Info, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Loader2, Phone, Users, AlertTriangle, Info, XCircle } from "lucide-react";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { LOGO_HEIGHT, LOGO_WIDTH, logoSmall } from "@/assets/logo";
@@ -223,7 +223,7 @@ function Contenido({
           <Dato icono={CalendarDays} etiqueta="Fecha" valor={formatearFecha(d.fecha)} />
           <Dato icono={Clock} etiqueta="Hora" valor={d.hora} />
           <Dato icono={Users} etiqueta="Comensales" valor={String(d.comensales)} />
-          {d.espacio ? <Dato icono={MapPin} etiqueta="Espacio" valor={d.espacio} /> : null}
+          {/* Sin "Espacio": en Casa Tomás la sala es interna y la decide el equipo, aunque llegue en `d.espacio`. */}
         </dl>
       ) : null}
 

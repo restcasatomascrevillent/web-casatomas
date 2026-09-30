@@ -96,7 +96,7 @@ const CartaPageLayout = ({
             aria-hidden="true"
             decoding="async"
             sizes="(min-width: 1280px) 560px, (min-width: 1024px) 420px, (min-width: 768px) 300px, 100vw"
-            className="absolute inset-0 w-full h-full object-cover object-[50%_38%] md:object-[50%_30%]"
+            className="absolute inset-0 w-full h-full object-cover object-[50%_32%] md:object-[50%_30%]"
           />
           <div className="hidden md:block absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-transparent to-muted" />
         </div>

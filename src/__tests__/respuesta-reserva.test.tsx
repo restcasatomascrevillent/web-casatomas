@@ -199,6 +199,18 @@ describe("<RespuestaReserva />", () => {
     expect(fetchMock.mock.calls[1][0]).toBe(ENLACE_EJECUTAR_URL);
   });
 
+  it("no enseña la sala aunque el servidor la mande: en Casa Tomás la decide el equipo", async () => {
+    // DETALLES trae `espacio: "Salón"` a propósito: un servidor antiguo, o un
+    // enlace ya enviado, puede seguir mandándolo y la página no debe pintarlo.
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(respuesta())));
+    await pintar();
+
+    expect(await screen.findByRole("heading", { name: "Confirma tu reserva" })).toBeInTheDocument();
+    expect(screen.getByText("Comensales")).toBeInTheDocument();
+    expect(screen.queryByText("Espacio")).toBeNull();
+    expect(screen.queryByText("Salón")).toBeNull();
+  });
+
   it("enlace no válido sin datos personales", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(respuesta({ ok: false, estado: "invalido", detalles: null }))));
     await pintar();
