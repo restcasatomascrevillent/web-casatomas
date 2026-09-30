@@ -27,16 +27,17 @@ import BackToTopButton from "./BackToTopButton";
 const CATEGORIAS = CATEGORIAS_BEBIDAS.map((categoria) => categoria.clave);
 
 /** Determinista (mismo valor en el prerenderizado y al hidratar). */
-const CATEGORIA_INICIAL =
+export const CATEGORIA_INICIAL =
   CATEGORIAS.find((categoria) => categoria === "Aguas") ?? CATEGORIAS[0] ?? "TODAS";
 
 interface CartaBebidasProps {
   showAddButton: boolean;
   /**
-   * Bebidas de la categoría inicial ("TODAS") descargadas en build
-   * (`virtual:carta-ssg/bebidas`). Evitan el parpadeo de carga al entrar a
-   * `/carta/bebidas` y son lo que ve el buscador antes de que llegue el
-   * refresco de Supabase — mismo patrón que `initialVinos` en `CartaVinos`.
+   * Bebidas ya descargadas en build (`virtual:carta-ssg/bebidas`), agrupadas
+   * al menos bajo "TODAS" y `CATEGORIA_INICIAL`. Evitan el parpadeo de carga
+   * al entrar a `/carta/bebidas` y son lo que ve el buscador antes de que
+   * llegue el refresco de Supabase — mismo patrón que `initialVinos` en
+   * `CartaVinos`.
    */
   initialBebidas?: Record<string, Bebida[]>;
 }
@@ -66,13 +67,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
   // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
   // va con retraso, para no recalcular y re-animar en cada pulsación.
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
-  // Con semilla del build (`/carta/bebidas`) se arranca en "TODAS" para
-  // enseñarlas todas de golpe, igual que `CartaVinos` arranca en "Todos":
-  // sin semilla (el desplegable de la portada, antes de tener página propia)
-  // se mantiene el comportamiento previo de abrir por la primera categoría.
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    initialBebidas ? "TODAS" : CATEGORIA_INICIAL,
-  );
+  const [selectedCategory, setSelectedCategory] = useState<string>(CATEGORIA_INICIAL);
   const [bebidasByCategory, setBebidasByCategory] = useState<Record<string, Bebida[]>>(
     () => initialBebidas ?? {},
   );
