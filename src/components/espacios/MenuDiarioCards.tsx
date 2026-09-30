@@ -184,7 +184,7 @@ const MenuDiarioCards = () => {
 
   return (
     <>
-      <div className="space-y-6 mb-12">
+      <div className="mt-8 md:mt-12 space-y-6 mb-12">
         {isMenuDayToday && (
           <Card className="overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-background via-muted/40 to-background">
             <CardContent className="flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:items-center sm:gap-6 sm:p-8 sm:text-left">
@@ -308,3 +308,4 @@ const MenuDiarioCards = () => {
 };
 
 export default MenuDiarioCards;
+
