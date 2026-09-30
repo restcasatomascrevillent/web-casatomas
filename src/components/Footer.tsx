@@ -69,14 +69,18 @@ const Footer = () => {
             </ul>
             <div className="flex gap-4 mt-4">
               <a
-                href="#" /* TODO: añadir URL real */
+                href="https://www.instagram.com/casatomascrevillent/?hl=es"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="text-stone hover:text-accent transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="#" /* TODO: añadir URL real */
+                href="https://www.facebook.com/barracasatomas/?locale=es_ES"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Facebook"
                 className="text-stone hover:text-accent transition-colors"
               >
