@@ -13,9 +13,9 @@ const photos: NombreImagen[][] = [
 ];
 
 const copy = {
-  es: { names: ["Salón", "Comedor", "Terraza"], eyebrow: "Casa Tomás · Crevillent", title: "Nuestros espacios", subtitle: "Un entorno para cada ocasión", view: "Ver todas las fotos", pending: "Fotografías próximamente", previous: "Foto anterior", next: "Foto siguiente", close: "Cerrar galería", expand: "Ampliar fotografía", photo: "Fotografía", gallery: "Galería de", swipe: "Desliza para explorar" },
-  en: { names: ["Lounge", "Dining room", "Terrace"], eyebrow: "Casa Tomás · Crevillent", title: "Our spaces", subtitle: "A setting for every occasion", view: "View all photos", pending: "Photographs coming soon", previous: "Previous photo", next: "Next photo", close: "Close gallery", expand: "Enlarge photo", photo: "Photo", gallery: "Gallery of", swipe: "Swipe to explore" },
-  fr: { names: ["Salon", "Salle à manger", "Terrasse"], eyebrow: "Casa Tomás · Crevillent", title: "Nos espaces", subtitle: "Un cadre pour chaque occasion", view: "Voir toutes les photos", pending: "Photographies à venir", previous: "Photo précédente", next: "Photo suivante", close: "Fermer la galerie", expand: "Agrandir la photo", photo: "Photographie", gallery: "Galerie de", swipe: "Faites glisser pour découvrir" },
+  es: { names: ["Salón", "Comedor", "Terraza"], title: "Nuestros espacios", subtitle: "Un entorno para cada ocasión", view: "Ver todas las fotos", pending: "Fotografías próximamente", previous: "Foto anterior", next: "Foto siguiente", close: "Cerrar galería", expand: "Ampliar fotografía", photo: "Fotografía", gallery: "Galería de", swipe: "Desliza para explorar" },
+  en: { names: ["Lounge", "Dining room", "Terrace"], title: "Our spaces", subtitle: "A setting for every occasion", view: "View all photos", pending: "Photographs coming soon", previous: "Previous photo", next: "Next photo", close: "Close gallery", expand: "Enlarge photo", photo: "Photo", gallery: "Gallery of", swipe: "Swipe to explore" },
+  fr: { names: ["Salon", "Salle à manger", "Terrasse"], title: "Nos espaces", subtitle: "Un cadre pour chaque occasion", view: "Voir toutes les photos", pending: "Photographies à venir", previous: "Photo précédente", next: "Photo suivante", close: "Fermer la galerie", expand: "Agrandir la photo", photo: "Photographie", gallery: "Galerie de", swipe: "Faites glisser pour découvrir" },
 };
 
 export default function EspaciosGallery({ portalContainer }: { portalContainer?: HTMLElement } = {}) {
@@ -26,8 +26,9 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
   const [opened, setOpened] = useState(false);
   const [start, setStart] = useState(0);
   const opener = useRef<HTMLButtonElement | null>(null);
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const swiped = useRef(false);
+  const mainViewport = useRef<HTMLDivElement | null>(null);
+  const mainIndex = useRef(0);
+  const scrollFrame = useRef<number | null>(null);
   const images = photos[space];
   const [viewport, api] = useEmblaCarousel({ startIndex: start, loop: false });
   const [viewed, setViewed] = useState<Set<number>>(new Set([0, 1]));
@@ -46,6 +47,7 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
     const select = () => {
       const index = api.selectedScrollSnap();
       setCurrent(index);
+      mainIndex.current = index;
       setViewed((previous) => new Set([...previous, index - 1, index, index + 1]));
     };
     select();
@@ -55,23 +57,55 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
   }, [api]);
 
   const open = (index: number, trigger: HTMLButtonElement) => {
+    if (scrollFrame.current !== null) {
+      cancelAnimationFrame(scrollFrame.current);
+      scrollFrame.current = null;
+    }
     opener.current = trigger;
     setStart(index);
     setCurrent(index);
+    mainIndex.current = index;
     setViewed(new Set([index - 1, index, index + 1]));
     setOpened(true);
   };
   const move = useCallback((direction: number) => {
     if (api) api.scrollTo(api.selectedScrollSnap() + direction, reducedMotion);
   }, [api, reducedMotion]);
-  const selectSpace = (index: number) => { setSpace(index); setCurrent(0); };
+  const selectSpace = (index: number) => { setSpace(index); setCurrent(0); mainIndex.current = 0; };
+  const scrollToPhoto = (index: number) => {
+    const node = mainViewport.current;
+    if (!node) return;
+    node.scrollTo({ left: node.clientWidth * index, behavior: reducedMotion ? "auto" : "smooth" });
+  };
+  const onPhotoScroll = () => {
+    if (opened || scrollFrame.current !== null) return;
+    scrollFrame.current = requestAnimationFrame(() => {
+      scrollFrame.current = null;
+      const node = mainViewport.current;
+      if (!node || !node.clientWidth) return;
+      const index = Math.max(0, Math.min(images.length - 1, Math.round(node.scrollLeft / node.clientWidth)));
+      mainIndex.current = index;
+      setCurrent((previous) => previous === index ? previous : index);
+    });
+  };
+  useEffect(() => {
+    const node = mainViewport.current;
+    if (!node || opened) return;
+    const align = () => node.scrollTo({ left: mainIndex.current * node.clientWidth, behavior: "auto" });
+    align();
+    const observer = new ResizeObserver(align);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [space, opened]);
+  useEffect(() => () => {
+    if (scrollFrame.current !== null) cancelAnimationFrame(scrollFrame.current);
+  }, []);
   const name = labels.names[space];
 
   return (
     <div className="ct-spaces">
       <header className="ct-heading">
-        <p className="ct-eyebrow">{labels.eyebrow}</p>
-        <h2>{labels.title}</h2>
+        <h2 className="text-4xl md:text-5xl font-bold text-primary mb-4">{labels.title}</h2>
         <p>{labels.subtitle}</p>
       </header>
       <div className="ct-tabs" aria-label={labels.title}>
@@ -80,26 +114,18 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
       {images.length > 0 ? (
         <>
           <div className="ct-mosaic">
-            <button type="button" className="ct-main-photo" aria-label={`${labels.expand}: ${name}, ${current + 1}`} onClick={(event) => {
-              if (swiped.current) { swiped.current = false; return; }
-              open(current, event.currentTarget);
-            }} onTouchStart={(event) => {
-              swiped.current = false;
-              touchStart.current = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
-            }} onTouchEnd={(event) => {
-              if (!touchStart.current) return;
-              const dx = event.changedTouches[0].clientX - touchStart.current.x;
-              const dy = event.changedTouches[0].clientY - touchStart.current.y;
-              if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-                swiped.current = true;
-                setCurrent((index) => Math.max(0, Math.min(images.length - 1, index + (dx < 0 ? 1 : -1))));
-              }
-              touchStart.current = null;
-            }} onTouchCancel={() => { touchStart.current = null; }}>
-              <ImagenResponsive nombre={images[current]} alt={`${name} — ${labels.photo.toLowerCase()} ${current + 1}`} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 760px" loading="lazy" decoding="async" />
-              <span className="ct-expand"><Expand size={18} aria-hidden="true" /></span>
-              <span className="ct-photo-label">{name}<span>{String(current + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
-            </button>
+            <div className="ct-main-viewport" ref={mainViewport} key={space} onScroll={onPhotoScroll} role="region" aria-label={labels.gallery + " " + name}>
+              {images.map((photo, index) => (
+                <button type="button" className="ct-main-photo" key={photo}
+                  tabIndex={index === current ? 0 : -1}
+                  aria-label={`${labels.expand}: ${name}, ${index + 1}`}
+                  onClick={(event) => open(index, event.currentTarget)}>
+                  <ImagenResponsive nombre={photo} alt={`${name} — ${labels.photo.toLowerCase()} ${index + 1}`} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 820px" loading="lazy" decoding="async" draggable={false} />
+                  <span className="ct-expand"><Expand size={18} aria-hidden="true" /></span>
+                  <span className="ct-photo-label">{name}<span>{String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
+                </button>
+              ))}
+            </div>
             <div className="ct-side-photos">
               {[1, 2].map((offset) => {
                 const index = (current + offset) % images.length;
@@ -113,9 +139,9 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
           <div className="ct-caption">
             <p>{t.espacios.cards[space].description}</p>
             <div className="ct-navigation">
-              <button type="button" className="ct-round" aria-label={labels.previous} disabled={current === 0} onClick={() => setCurrent(current - 1)}><ArrowLeft size={18} aria-hidden="true" /></button>
+              <button type="button" className="ct-round" aria-label={labels.previous} disabled={current === 0} onClick={() => scrollToPhoto(current - 1)}><ArrowLeft size={18} aria-hidden="true" /></button>
               <span className="ct-count" aria-live="polite">{current + 1} / {images.length}</span>
-              <button type="button" className="ct-round" aria-label={labels.next} disabled={current === images.length - 1} onClick={() => setCurrent(current + 1)}><ArrowRight size={18} aria-hidden="true" /></button>
+              <button type="button" className="ct-round" aria-label={labels.next} disabled={current === images.length - 1} onClick={() => scrollToPhoto(current + 1)}><ArrowRight size={18} aria-hidden="true" /></button>
               <button type="button" className="ct-view-all" onClick={(event) => open(current, event.currentTarget)}>{labels.view} <ArrowUpRight size={17} aria-hidden="true" /></button>
             </div>
           </div>
@@ -131,12 +157,18 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
       <Dialog.Root open={opened} onOpenChange={setOpened}>
         <Dialog.Portal container={portalContainer}>
           <Dialog.Overlay className="ct-viewer-overlay" />
-          <Dialog.Content className="ct-viewer" onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }} onKeyDown={(event) => {
+          <Dialog.Content className="ct-viewer" onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const target = opener.current?.classList.contains("ct-main-photo")
+              ? mainViewport.current?.querySelectorAll<HTMLButtonElement>(".ct-main-photo")[mainIndex.current]
+              : opener.current;
+            target?.focus({ preventScroll: true });
+          }} onKeyDown={(event) => {
             if (event.key === "ArrowLeft") { event.preventDefault(); move(-1); }
             if (event.key === "ArrowRight") { event.preventDefault(); move(1); }
           }}>
             <header className="ct-viewer-header">
-              <div><p>{labels.eyebrow}</p><Dialog.Title>{name}</Dialog.Title></div>
+              <Dialog.Title>{name}</Dialog.Title>
               <Dialog.Close className="ct-round" aria-label={labels.close}><X size={22} aria-hidden="true" /></Dialog.Close>
             </header>
             <Dialog.Description className="ct-sr-only">{labels.gallery} {name}. {labels.swipe}.</Dialog.Description>

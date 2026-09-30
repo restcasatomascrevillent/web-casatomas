@@ -30,10 +30,10 @@ const EspaciosSection = () => {
   const { t } = useTranslations();
   const touza = t.espacios.cards[3];
   return (
-    <section id="espacios" className="py-20 px-0 md:px-8 lg:px-16 bg-background">
+    <section id="espacios" className="ct-spaces-section py-20 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         <EspaciosGallery />
-        <div className="mt-8 px-4 md:px-0">
+        <div className="mt-10 md:mt-12">
         {/* Touza: OTRO negocio (el cocktail bar del dueño), no una sala más de
             Casa Tomás — por eso va aparte, bajo la rejilla de fotos, y con los
             colores reales de su propia web en vez de los tokens de este sitio. */}
@@ -42,7 +42,6 @@ const EspaciosSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           viewport={{ once: true }}
-          className="mb-12"
         >
           <Card
             className="relative overflow-hidden border-0 shadow-xl"
