@@ -97,7 +97,7 @@ const Header = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="relative flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <motion.button
             onClick={() => {
@@ -125,8 +125,9 @@ const Header = () => {
             />
           </motion.button>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
+          {/* Desktop Navigation: centrada respecto a la página entera, no al
+              espacio libre entre logo y CTA (que son de ancho distinto). */}
+          <nav className="hidden lg:flex items-center gap-6 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             {navItems.map((item) => (
               <NavLink
                 key={item.id}
@@ -144,19 +145,24 @@ const Header = () => {
 
           {/* CTA Button Desktop */}
           <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-1 shadow-sm">
-              {languages.map((option) => (
-                <Button
-                  key={option.value}
-                  size="sm"
-                  variant={language === option.value ? "default" : "ghost"}
-                  className="h-8 px-3 rounded-full text-xs font-semibold"
-                  onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
-                >
-                  {option.label}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label={ARIA.cambiarIdioma[language]}>
+                  <Globe2 className="h-5 w-5" />
                 </Button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {languages.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    className={language === option.value ? "font-semibold text-primary" : ""}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
