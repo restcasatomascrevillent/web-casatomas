@@ -224,12 +224,6 @@ const NovedadesSection = () => {
           </motion.p>
         </div>
 
-        {/* El menú de mediodía y las tapas de los jueves: promociones fijas
-            con su propio día, no algo que suba o baje el dueño desde el
-            panel — por eso van aparte de la rejilla de `novedades` de abajo,
-            y solo existen el día que toca (ver `MenuDiarioCards`). */}
-        <MenuDiarioCards />
-
         {isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[1, 2, 3].map((i) => (
@@ -266,6 +260,13 @@ const NovedadesSection = () => {
             </div>
           )}
         </AnimatePresence>
+
+        {/* El menú de mediodía y las tapas de los jueves: promociones fijas
+            con su propio día, no algo que suba o baje el dueño desde el
+            panel — por eso van aparte de la rejilla de `novedades` de arriba,
+            debajo del todo, y solo existen el día que toca (ver
+            `MenuDiarioCards`). */}
+        <MenuDiarioCards />
       </motion.div>
     </section>
   );
