@@ -3,13 +3,12 @@ import { format, isSameDay, isValid, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { ChefHat, Clock, Sparkles } from "lucide-react";
 
-import ImagenResponsive from "@/components/ImagenResponsive";
 import CartaDelDia, { CLASES_TITULO_CARTA } from "@/components/espacios/CartaDelDia";
 import { parsearMenuDiario, type MenuDelDia, type MenuDiarioRow } from "@/lib/menu-dia";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface TapasRow {
@@ -106,21 +105,19 @@ const getIdiomAliases = (language: string): string[] => {
   return ["es", "espanol", "español", "spanish"];
 };
 
-/** Ancho con el que se pinta la foto de cada tarjeta — mismo criterio que las de Novedades. */
-const SIZES_TARJETA = "(min-width: 768px) 33vw, calc(100vw - 32px)";
-
 /**
  * Las dos promociones fijas del restaurante, con día y hora propios: el menú
- * de mediodía (martes a jueves) y las tapas de los jueves. Viven en
- * "Novedades" — más su sitio natural que "Nuestros espacios", que va de fotos
- * del local — con el mismo lenguaje visual que las tarjetas de esa sección
- * (foto arriba, insignia con el icono, título y descripción) para que no
- * desentonen, más un botón propio para abrir el menú/las tapas de hoy.
+ * de mediodía (martes a jueves) y las tapas de los jueves. Viven bajo la
+ * rejilla de "Novedades" — más su sitio natural que "Nuestros espacios", que
+ * va de fotos del local — como una franja horizontal ancha (icono, título y
+ * descripción, botón), el mismo patrón que la tarjeta de Touza en Espacios,
+ * para que destaquen como algo aparte de las tarjetas normales de encima.
  *
  * Cada tarjeta solo existe el día que toca: fuera de esos días no hay nada
  * que pulsar (antes se veía igual pero deshabilitada, con un texto tipo
  * "Vuelve el jueves" — confuso el resto de la semana, cuando ni siquiera hay
- * tapas que mostrar).
+ * tapas que mostrar). Los jueves, cuando coinciden las dos, van una debajo de
+ * la otra — nunca en la misma fila: cada una es una franja a todo lo ancho.
  */
 const MenuDiarioCards = () => {
   const { t, dateLocale, language } = useTranslations();
@@ -187,79 +184,59 @@ const MenuDiarioCards = () => {
 
   return (
     <>
-      <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-10">
+      <div className="space-y-6 mb-12">
         {isMenuDayToday && (
-          <div className="w-full sm:w-[22rem]">
-            <Card className="h-full overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
-              <div className="relative h-44 overflow-hidden">
-                <ImagenResponsive
-                  nombre="carne-plato"
-                  alt=""
-                  sizes={SIZES_TARJETA}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  fetchPriority="low"
-                  decoding="async"
-                />
+          <Card className="overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-background via-muted/40 to-background">
+            <CardContent className="flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:items-center sm:gap-6 sm:p-8 sm:text-left">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent/15">
+                <ChefHat className="h-7 w-7 text-accent" />
               </div>
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="p-3 bg-accent/10 rounded-lg">
-                    <ChefHat className="w-6 h-6 text-accent" />
-                  </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <h3 className="font-libre-baskerville text-xl font-bold text-primary sm:text-2xl">
+                    {t.espacios.middayMenuTitle}
+                  </h3>
                   <Badge className="bg-accent hover:bg-accent/90">{menuDaysLabel}</Badge>
                 </div>
-                <CardTitle className="text-xl leading-snug">{t.espacios.middayMenuTitle}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm leading-relaxed">{t.espacios.middayMenuDescription}</p>
-                <Button
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-all"
-                  onClick={() => setShowTodayMenu(true)}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {t.espacios.todayMenuCta}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                <p className="mt-1 text-muted-foreground">{t.espacios.middayMenuDescription}</p>
+              </div>
+              <Button
+                size="lg"
+                className="w-full shrink-0 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
+                onClick={() => setShowTodayMenu(true)}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {t.espacios.todayMenuCta}
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {isTapasDayToday && (
-          <div className="w-full sm:w-[22rem]">
-            <Card className="h-full overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
-              <div className="relative h-44 overflow-hidden">
-                <ImagenResponsive
-                  nombre="pulpo-plato"
-                  alt=""
-                  sizes={SIZES_TARJETA}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  fetchPriority="low"
-                  decoding="async"
-                />
+          <Card className="overflow-hidden border border-border/60 shadow-lg bg-gradient-to-br from-background via-muted/40 to-background">
+            <CardContent className="flex flex-col items-center gap-5 p-6 text-center sm:flex-row sm:items-center sm:gap-6 sm:p-8 sm:text-left">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-accent/15">
+                <Clock className="h-7 w-7 text-accent" />
               </div>
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="p-3 bg-accent/10 rounded-lg">
-                    <Clock className="w-6 h-6 text-accent" />
-                  </div>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <h3 className="font-libre-baskerville text-xl font-bold text-primary sm:text-2xl">
+                    {t.espacios.tapasTitle}
+                  </h3>
                   <Badge className="bg-accent hover:bg-accent/90 capitalize">{tapasDayLabel}</Badge>
                 </div>
-                <CardTitle className="text-xl leading-snug">{t.espacios.tapasTitle}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm leading-relaxed">{t.espacios.tapasDescription}</p>
-                <Button
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-all"
-                  onClick={() => setShowTodayTapas(true)}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {t.espacios.todayTapasCta}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                <p className="mt-1 text-muted-foreground">{t.espacios.tapasDescription}</p>
+              </div>
+              <Button
+                size="lg"
+                className="w-full shrink-0 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
+                onClick={() => setShowTodayTapas(true)}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {t.espacios.todayTapasCta}
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </div>
 
