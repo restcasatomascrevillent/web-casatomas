@@ -55,6 +55,7 @@ const CAMPOS_SALIDA = {
     'precio_eur', 'unidad',
     'imagen_url', 'imagen_posicion_y', 'expanded',
     'ingredientes',
+    'etiquetas_dieteticas',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
     'alergenos_en', 'alergenos_fr',
     'traducciones',
@@ -231,3 +232,4 @@ export const CARTA_SSG_VACIA = {
 };
 export const VINOS_SSG_VACIOS = { generadoEn: '', vinos: [] };
 export const BEBIDAS_SSG_VACIAS = { generadoEn: '', bebidas: [] };
+

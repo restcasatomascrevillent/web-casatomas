@@ -1,3 +1,4 @@
+import MenuDietario from "@/components/carta/MenuDietario";
 import { Link } from "react-router-dom";
 import {
   Beef,
@@ -220,6 +221,7 @@ const CartaIndice = () => {
             {textos.platosResumen(TOTAL_PLATOS, CATEGORIAS_CARTA.length)}
           </p>
 
+          <MenuDietario>
           {CATEGORIAS_CARTA.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {CATEGORIAS_CARTA.map((categoria) => (
@@ -235,6 +237,7 @@ const CartaIndice = () => {
           ) : (
             <p className="text-muted-foreground">{textos.vaciaPlatos}</p>
           )}
+          </MenuDietario>
         </section>
 
         <section aria-labelledby="bodega" className="mt-14 animate-fade-up">
@@ -262,3 +265,4 @@ const CartaIndice = () => {
 };
 
 export default CartaIndice;
+

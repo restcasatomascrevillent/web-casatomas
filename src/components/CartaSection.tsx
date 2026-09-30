@@ -1,3 +1,4 @@
+import MenuDietario from "@/components/carta/MenuDietario";
 import { useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -201,6 +202,7 @@ const CartaSection = () => {
             encontrarlos: `/carta` y el `sitemap.xml` ya enlazan a cada
             categoría por su cuenta, esta lista no es su única puerta de
             entrada. */}
+        <MenuDietario>
         <nav aria-label={etiquetas.nav} className="max-w-2xl mx-auto mb-12">
           {novedades && (
             <Link to={rutaCategoria(novedades.slug, language)} className={`${filaEnlaceClass} group`}>
@@ -272,6 +274,7 @@ const CartaSection = () => {
             </Link>
           ))}
         </nav>
+        </MenuDietario>
 
         <div className="grid grid-cols-2 gap-3 w-full max-w-2xl mx-auto">
           {/* La carta de vinos ya no se despliega aquí: tiene su propia

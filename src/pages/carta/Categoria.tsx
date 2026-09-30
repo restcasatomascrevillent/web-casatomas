@@ -1,4 +1,5 @@
-import { Link, useParams } from "react-router-dom";
+import MenuDietario from "@/components/carta/MenuDietario";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
@@ -85,6 +86,7 @@ const TEXTOS: Record<
  * componente solo ve ese caso si alguien navega a él dentro de la SPA.
  */
 const CartaCategoria = () => {
+  const { search } = useLocation();
   const { language, t } = useTranslations();
   const textos = TEXTOS[language];
   // El pedido (y con él el botón flotante del ticket y la entrada al chatbot)
@@ -106,7 +108,7 @@ const CartaCategoria = () => {
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {CATEGORIAS_CARTA.map((otra) => (
               <li key={otra.slug}>
-                <Link to={rutaCategoria(otra.slug, language)} className="text-accent hover:underline">
+                <Link to={rutaCategoria(otra.slug, language) + search} className="text-accent hover:underline">
                   {etiquetaCategoriaIdioma(otra.clave, language)}
                 </Link>
               </li>
@@ -169,6 +171,7 @@ const CartaCategoria = () => {
         detalle={`${platos.length} ${textos.plato(platos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
+        <MenuDietario platos={platos}>
         {platosTraducidos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">
             {platosTraducidos.map((plato, indice) => (
@@ -195,13 +198,15 @@ const CartaCategoria = () => {
           <p className="text-muted-foreground">{textos.vacia}</p>
         )}
 
+        </MenuDietario>
+
         <nav aria-label={textos.otrasSecciones} className="mt-14">
           <h2 className="text-xl font-bold text-primary mb-4">{textos.otrasSecciones}</h2>
           <ul className="flex flex-wrap gap-2">
             {CATEGORIAS_CARTA.filter((otra) => otra.slug !== categoria.slug).map((otra) => (
               <li key={otra.slug}>
                 <Link
-                  to={rutaCategoria(otra.slug, language)}
+                  to={rutaCategoria(otra.slug, language) + search}
                   className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
                   {etiquetaCategoriaIdioma(otra.clave, language)}
@@ -233,3 +238,4 @@ const CartaCategoria = () => {
 };
 
 export default CartaCategoria;
+

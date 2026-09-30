@@ -21,6 +21,8 @@ export interface PlatoSSG {
   imagen_posicion_y?: number;
   expanded?: boolean;
   ingredientes?: string[] | string;
+  /** Solo etiquetas validadas por el restaurante. */
+  etiquetas_dieteticas?: string[] | string;
   alergenos_oficiales?: string[] | string;
   alergenos_inferidos?: string[] | string;
   alergenos_notas?: string;
@@ -102,3 +104,4 @@ export interface BebidasSSG {
   generadoEn: string;
   bebidas: BebidaSSG[];
 }
+
