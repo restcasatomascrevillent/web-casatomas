@@ -30,6 +30,13 @@ const AIChatbot = lazy(() => import("../AIChatbot"));
 
 type Imagen = { firma: string; dataUrl: string };
 
+const NOMBRE_ARCHIVO_TICKET = "mi-mesa-casa-tomas.png";
+const NOMBRE_APP: Record<"instagram" | "whatsapp" | "facebook", string> = {
+  instagram: "Instagram",
+  whatsapp: "WhatsApp",
+  facebook: "Facebook",
+};
+
 /** Espera a las fuentes y a las imágenes del nodo antes de capturarlo. */
 const esperarRecursos = async (nodo: HTMLElement) => {
   try {
@@ -49,6 +56,34 @@ const esperarRecursos = async (nodo: HTMLElement) => {
     ),
   );
 };
+
+/**
+ * Intenta abrir una app nativa por su esquema de URL (`instagram-stories://…`)
+ * y resuelve `true` si todo apunta a que se abrió, `false` si no.
+ *
+ * No hay ningún evento de JS para "este enlace no tenía app que lo abriera":
+ * el navegador simplemente no hace nada. El truco habitual es este —
+ * `visibilitychange` a oculto ANTES de que salte el temporizador significa
+ * que el sistema sacó al usuario de la pestaña para abrir la otra app; si
+ * pasa el temporizador sin que eso ocurra, se asume que no había app.
+ */
+const intentarAbrirApp = (url: string, esperaMs = 1500): Promise<boolean> =>
+  new Promise((resolve) => {
+    let resuelto = false;
+    const terminar = (abierto: boolean) => {
+      if (resuelto) return;
+      resuelto = true;
+      document.removeEventListener("visibilitychange", alOcultarse);
+      clearTimeout(temporizador);
+      resolve(abierto);
+    };
+    const alOcultarse = () => {
+      if (document.hidden) terminar(true);
+    };
+    document.addEventListener("visibilitychange", alOcultarse);
+    const temporizador = setTimeout(() => terminar(false), esperaMs);
+    window.location.href = url;
+  });
 
 /**
  * "Mi mesa" (antes "Mi pedido"): el visitante apunta lo que le apetece de la
@@ -216,15 +251,16 @@ const PreviewPedido = () => {
   /**
    * Comparte el ticket (sin reparto) por Instagram, WhatsApp o Facebook.
    *
-   * Ninguna red social acepta subir una imagen local a partir de una URL —
-   * solo el propio `navigator.share` (el "compartir" del sistema, en móvil)
-   * puede entregarle un fichero a la app instalada, y ni siquiera él puede
-   * abrir una app en concreto: enseña el selector del sistema con las apps
-   * que aceptan imágenes, entre ellas las tres. Sin `navigator.share` (siempre
-   * en escritorio) cada red sigue el mejor plan posible: WhatsApp Web y
-   * Facebook sí aceptan abrirse con texto o enlace por URL, así que se abren
-   * con el resumen mientras se descarga la imagen para adjuntarla a mano;
-   * Instagram no tiene ni eso, así que solo queda descargarla.
+   * Ninguna red acepta subir una imagen local a partir de una URL, así que la
+   * única vía web para entregarle el fichero a la app instalada es
+   * `navigator.share`: abre el selector del sistema con las apps que aceptan
+   * imágenes (WhatsApp y Facebook entre ellas si están instaladas) — no hay
+   * forma de saltarse ese selector y abrir una app en concreto.
+   *
+   * Instagram es la única excepción: su app lee la imagen del portapapeles si
+   * se abre con el esquema `instagram-stories://share` (el mismo truco que
+   * usan apps como Spotify para "Añadir a tu historia"), así que para esa red
+   * se intenta ANTES que el selector genérico.
    */
   const compartirTicket = async (plataforma: "instagram" | "whatsapp" | "facebook") => {
     setCompartiendo(plataforma);
@@ -236,30 +272,40 @@ const PreviewPedido = () => {
       try {
         const respuesta = await fetch(dataUrl);
         const blob = await respuesta.blob();
-        archivo = new File([blob], "mi-mesa-casa-tomas.png", { type: blob.type || "image/png" });
+        archivo = new File([blob], NOMBRE_ARCHIVO_TICKET, { type: blob.type || "image/png" });
       } catch {
         archivo = null;
       }
 
-      if (archivo && navigator.canShare?.({ files: [archivo] })) {
+      const avisarSinApp = () => {
+        const enlace = document.createElement("a");
+        enlace.href = dataUrl;
+        enlace.download = NOMBRE_ARCHIVO_TICKET;
+        enlace.click();
+        toast({
+          title: tp.share.noAppTitle,
+          description: tp.share.noAppDescription.replace("{app}", NOMBRE_APP[plataforma]),
+        });
+      };
+
+      const compartirConSelectorDelSistema = async () => {
+        if (!archivo || !navigator.canShare?.({ files: [archivo] })) return false;
         await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
-        return;
+        return true;
+      };
+
+      if (plataforma === "instagram" && archivo && navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ [archivo.type]: archivo })]);
+          if (await intentarAbrirApp("instagram-stories://share")) return;
+        } catch {
+          // Portapapeles bloqueado (permiso denegado, contexto no seguro…):
+          // se sigue abajo con el selector genérico.
+        }
       }
 
-      const enlace = document.createElement("a");
-      enlace.href = dataUrl;
-      enlace.download = "mi-mesa-casa-tomas.png";
-      enlace.click();
-
-      if (plataforma === "whatsapp") {
-        window.open(`https://wa.me/?text=${encodeURIComponent(resumen)}`, "_blank", "noopener,noreferrer");
-        toast({ title: tp.share.fallbackTitle, description: tp.share.fallbackDescription });
-      } else if (plataforma === "facebook") {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlQr)}`, "_blank", "noopener,noreferrer");
-        toast({ title: tp.share.facebookFallbackTitle, description: tp.share.facebookFallbackDescription });
-      } else {
-        toast({ title: tp.share.instagramFallbackTitle, description: tp.share.instagramFallbackDescription });
-      }
+      if (await compartirConSelectorDelSistema()) return;
+      avisarSinApp();
     } catch (error) {
       // El propio selector del sistema cancelado por el visitante no es un error.
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -312,7 +358,10 @@ const PreviewPedido = () => {
           </div>
           <div className="min-w-0">
             <SheetTitle className="text-sm font-semibold leading-tight text-ticket-ink">{tp.title}</SheetTitle>
-            <SheetDescription className="text-xs leading-tight text-ticket-ink-soft line-clamp-2">{tp.subtitle}</SheetDescription>
+            {/* Sin mostrarlo (ya no hace falta con el ticket a la vista), pero
+                presente para quien navega con lector de pantalla: Radix pide
+                una descripción para el diálogo. */}
+            <SheetDescription className="sr-only">{tp.subtitle}</SheetDescription>
           </div>
         </div>
         <Button
