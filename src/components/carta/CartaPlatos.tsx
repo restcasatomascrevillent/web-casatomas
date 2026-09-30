@@ -632,8 +632,8 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <CardTitle
-                            className={`leading-tight whitespace-normal break-words ${
-                              expanded ? "text-lg" : "text-base"
+                            className={`leading-tight whitespace-normal break-words line-clamp-2 ${
+                              expanded ? "text-lg" : "text-base min-h-12"
                             }`}
                           >
                             {item.displayNombre}
