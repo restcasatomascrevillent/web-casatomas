@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import { Bot, Facebook, Instagram, Receipt, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
@@ -113,6 +114,11 @@ const PreviewPedido = () => {
   const [abierto, setAbierto] = useState(false);
   const [ocupado, setOcupado] = useState<null | "chat">(null);
   const [compartiendo, setCompartiendo] = useState<null | "instagram" | "whatsapp" | "facebook">(null);
+  const [vistaPrevia, setVistaPrevia] = useState<{
+    plataforma: "instagram" | "whatsapp" | "facebook";
+    dataUrl: string;
+    archivo: File | null;
+  } | null>(null);
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
   const [qr, setQr] = useState<boolean[][] | null>(null);
   const [chat, setChat] = useState<{ imagen: string | null; pregunta: string } | null>(null);
@@ -264,8 +270,9 @@ const PreviewPedido = () => {
   };
 
   /**
-   * Comparte el ticket (sin reparto) por Instagram, WhatsApp o Facebook, con
-   * tres escalones — el primero que funcione en este navegador gana:
+   * Comparte el ticket (sin reparto, siempre como IMAGEN — nunca como texto
+   * suelto) por Instagram, WhatsApp o Facebook, con tres escalones — el
+   * primero que funcione en este navegador gana:
    *
    * 1. Instagram: su app lee la imagen del portapapeles si se abre con el
    *    esquema `instagram-stories://share` (el mismo truco que usan apps
@@ -275,12 +282,17 @@ const PreviewPedido = () => {
    *    las apps que aceptan imágenes (WhatsApp y Facebook entre ellas si
    *    están instaladas) — sobre todo en móvil. No hay forma de saltarse
    *    ese selector y abrir una app en concreto.
-   * 3. Sin selector (sobre todo escritorio): ni WhatsApp Web ni el enlace de
-   *    compartir de Facebook aceptan subir un fichero local desde
-   *    JavaScript, así que se abren con lo que sí aceptan — texto
-   *    (WhatsApp) o una URL (Facebook) — y aparte se descarga la imagen
-   *    para adjuntarla a mano. Instagram no tiene equivalente web: para esa
-   *    red este escalón no existe y cae directo en el aviso de "descargada".
+   * 3. Sin selector (sobre todo escritorio, o el móvil no lo ofrece): ninguna
+   *    de las tres redes acepta subir un fichero local desde JavaScript —
+   *    WhatsApp Web y el enlace de Facebook, como mucho, aceptan texto o una
+   *    URL, nunca la imagen en sí. En vez de conformarse con eso (que el
+   *    dueño no quiere: la imagen es la que tiene que viajar, no un
+   *    resumen), se enseña la imagen en un diálogo propio para que el
+   *    visitante la comparta o la guarde a su manera — mantener pulsada en
+   *    móvil, clic derecho en escritorio son gestos que entiende CUALQUIER
+   *    navegador, sin depender de ninguna API — con un botón para reintentar
+   *    `navigator.share` desde un toque limpio (a veces el primer intento
+   *    falla por no ir pegado al gesto original) y otro para descargarla.
    */
   const compartirTicket = async (plataforma: "instagram" | "whatsapp" | "facebook") => {
     setCompartiendo(plataforma);
@@ -297,49 +309,9 @@ const PreviewPedido = () => {
         archivo = null;
       }
 
-      const descargarImagen = () => {
-        const enlace = document.createElement("a");
-        enlace.href = dataUrl;
-        enlace.download = NOMBRE_ARCHIVO_TICKET;
-        enlace.click();
-      };
-
-      const avisarSinApp = () => {
-        descargarImagen();
-        toast({
-          title: tp.share.noAppTitle,
-          description: tp.share.noAppDescription.replace("{app}", NOMBRE_APP[plataforma]),
-        });
-      };
-
       const compartirConSelectorDelSistema = async () => {
         if (!archivo || !navigator.canShare?.({ files: [archivo] })) return false;
         await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
-        return true;
-      };
-
-      /**
-       * Ni WhatsApp Web ni el enlace de compartir de Facebook aceptan un
-       * fichero local desde JavaScript — como mucho, texto (WhatsApp) o una
-       * URL (Facebook). Sin `navigator.share`, este es su plan real: abrir
-       * esa versión web con lo que sí aceptan, y descargar la imagen aparte
-       * para adjuntarla a mano. Instagram no tiene ningún enlace web
-       * equivalente, así que se queda fuera y cae en `avisarSinApp`.
-       */
-      const abrirVersionWeb = () => {
-        const enlace =
-          plataforma === "whatsapp"
-            ? `https://wa.me/?text=${encodeURIComponent(resumen)}`
-            : plataforma === "facebook"
-              ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlQr)}`
-              : null;
-        if (!enlace) return false;
-        window.open(enlace, "_blank", "noopener,noreferrer");
-        descargarImagen();
-        toast({
-          title: tp.share.openedWebTitle.replace("{app}", NOMBRE_APP[plataforma]),
-          description: tp.share.openedWebDescription,
-        });
         return true;
       };
 
@@ -354,8 +326,7 @@ const PreviewPedido = () => {
       }
 
       if (await compartirConSelectorDelSistema()) return;
-      if (abrirVersionWeb()) return;
-      avisarSinApp();
+      setVistaPrevia({ plataforma, dataUrl, archivo });
     } catch (error) {
       // El propio selector del sistema cancelado por el visitante no es un error.
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -364,6 +335,29 @@ const PreviewPedido = () => {
     } finally {
       setCompartiendo(null);
     }
+  };
+
+  /** Reintenta `navigator.share` desde el propio diálogo: un toque limpio y reciente, no el de hace un momento que pudo fallar por eso. */
+  const reintentarCompartirImagen = async () => {
+    if (!vistaPrevia) return;
+    try {
+      if (vistaPrevia.archivo && navigator.canShare?.({ files: [vistaPrevia.archivo] })) {
+        await navigator.share({ files: [vistaPrevia.archivo], title: tp.share.summaryTitle });
+      } else {
+        await navigator.share({ title: tp.share.summaryTitle, url: urlQr });
+      }
+      setVistaPrevia(null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+  };
+
+  const descargarVistaPrevia = () => {
+    if (!vistaPrevia) return;
+    const enlace = document.createElement("a");
+    enlace.href = vistaPrevia.dataUrl;
+    enlace.download = NOMBRE_ARCHIVO_TICKET;
+    enlace.click();
   };
 
   const cambiarCantidad = (indice: number, direccion: 1 | -1) => {
@@ -581,6 +575,41 @@ const PreviewPedido = () => {
           />
         </div>
       )}
+
+      {/* Sin selector nativo (sobre todo escritorio): la imagen en un diálogo
+          propio, no un resumen de texto — mantener pulsada / clic derecho
+          son gestos que entiende cualquier navegador sin depender de
+          ninguna API, y "Compartir imagen" reintenta `navigator.share` con
+          un toque limpio y recién hecho. */}
+      <Dialog open={vistaPrevia !== null} onOpenChange={(open) => !open && setVistaPrevia(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {vistaPrevia && tp.share.previewTitle.replace("{app}", NOMBRE_APP[vistaPrevia.plataforma])}
+            </DialogTitle>
+            <DialogDescription>
+              {isMobile ? tp.share.previewHintMobile : tp.share.previewHintDesktop}
+            </DialogDescription>
+          </DialogHeader>
+          {vistaPrevia && (
+            <img
+              src={vistaPrevia.dataUrl}
+              alt={tp.share.summaryTitle}
+              className="w-full rounded-lg border border-border"
+            />
+          )}
+          <div className="flex gap-2">
+            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+              <Button type="button" className="flex-1" onClick={reintentarCompartirImagen}>
+                {tp.share.previewShareCta}
+              </Button>
+            )}
+            <Button type="button" variant="outline" className="flex-1" onClick={descargarVistaPrevia}>
+              {tp.share.previewDownloadCta}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {chatbotVisible && chat && (
         <Suspense fallback={null}>
