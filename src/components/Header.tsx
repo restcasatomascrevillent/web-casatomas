@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,12 +53,61 @@ const Header = () => {
     return () => window.clearTimeout(timer);
   }, [location.hash]);
 
+  // Corrección en marcha (si la hay) de una llamada anterior a
+  // `scrollToSection`: se cancela al empezar una nueva, para que dos clics
+  // seguidos no acaben tirando cada uno hacia su sección a la vez.
+  const detenerCorreccionRef = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => () => detenerCorreccionRef.current?.(), []);
+
+  /**
+   * Lleva la vista hasta `sectionId` y la mantiene ahí mientras la página
+   * siga cambiando de alto.
+   *
+   * Las secciones de la portada se cargan en diferido (`idleImport`, ver
+   * `lib/lazyIdle.ts`): el esqueleto de `Suspense` nace con el mismo `id`,
+   * así que el primer `scrollIntoView` ya encuentra dónde ir, pero en
+   * cuanto cada sección resuelve sustituye su esqueleto (bajito) por el
+   * contenido real (mucho más alto), lo que empuja hacia abajo todo lo que
+   * hay debajo — si eso pasa justo después de llegar, el ancla se queda
+   * desalineada. Se nota sobre todo en Chrome (Windows y Android):
+   * `requestIdleCallback` puede tardar bastante si el hilo principal está
+   * ocupado (p. ej. con la propia animación de abrir el menú), así que las
+   * secciones no siempre han cargado ya cuando se pulsa un enlace.
+   *
+   * Se corrige con un `ResizeObserver` sobre `<body>` durante unos segundos
+   * — sin volver a animar el scroll, para no repetirlo cada vez — y se para
+   * en cuanto el visitante toca la rueda o la pantalla: seguir tirando de
+   * la vista por encima de lo que esté haciendo sería peor que dejar el
+   * desajuste.
+   */
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
-    }
+    const elemento = document.getElementById(sectionId);
+    if (!elemento) return;
+
+    detenerCorreccionRef.current?.();
+    setIsMobileMenuOpen(false);
+
+    let primeraVez = true;
+    const alinear = () => {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: primeraVez ? "smooth" : "auto" });
+      primeraVez = false;
+    };
+
+    const observador = new ResizeObserver(alinear);
+    observador.observe(document.body);
+
+    const detener = () => {
+      observador.disconnect();
+      window.clearTimeout(limite);
+      window.removeEventListener("wheel", detener);
+      window.removeEventListener("touchmove", detener);
+      if (detenerCorreccionRef.current === detener) detenerCorreccionRef.current = undefined;
+    };
+    const limite = window.setTimeout(detener, 5000);
+    window.addEventListener("wheel", detener, { passive: true, once: true });
+    window.addEventListener("touchmove", detener, { passive: true, once: true });
+    detenerCorreccionRef.current = detener;
   };
 
   const handleNavClick = (sectionId: string) => {
@@ -125,7 +174,9 @@ const Header = () => {
             />
           </motion.button>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation: con justify-between en la fila, el hueco al
+              logo y el hueco al icono del planeta quedan siempre iguales,
+              sin importar que el bloque de la derecha sea más ancho. */}
           <nav className="hidden lg:flex items-center gap-6">
             {navItems.map((item) => (
               <NavLink
@@ -144,19 +195,24 @@ const Header = () => {
 
           {/* CTA Button Desktop */}
           <div className="hidden lg:flex items-center gap-4">
-            <div className="flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-1 shadow-sm">
-              {languages.map((option) => (
-                <Button
-                  key={option.value}
-                  size="sm"
-                  variant={language === option.value ? "default" : "ghost"}
-                  className="h-8 px-3 rounded-full text-xs font-semibold"
-                  onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
-                >
-                  {option.label}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label={ARIA.cambiarIdioma[language]}>
+                  <Globe2 className="h-5 w-5" />
                 </Button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                {languages.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    className={language === option.value ? "font-semibold text-primary" : ""}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"

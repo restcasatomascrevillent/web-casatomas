@@ -21,9 +21,9 @@ const TEXTOS: Record<
     title: string;
     description: (n: number) => string;
     keywords: string[];
+    migaCarta: string;
     miga: string;
     titulo: string;
-    subtitulo: string;
     detalle: (n: number) => string;
     alertTitle: string;
     alertBody: string;
@@ -36,9 +36,9 @@ const TEXTOS: Record<
     title: "Carta de vinos y precios | Casa Tomás Crevillent",
     description: (n) => `Bodega de Casa Tomás en Crevillent (Alicante): ${n} referencias con su denominación de origen y su precio. Tintos, blancos, cavas y generosos.`,
     keywords: ["carta de vinos Crevillent", "bodega restaurante Alicante", "vinos Casa Tomás", "denominación de origen"],
+    migaCarta: "Carta",
     miga: "Vinos",
     titulo: "Carta de vinos",
-    subtitulo: "Nuestra bodega, con la denominación de origen y el precio de cada referencia. Busca, filtra por región y añade a Mi mesa.",
     detalle: (n) => `${n} referencias`,
     alertTitle: "Solo para mayores de 18 años",
     alertBody: "La venta y el suministro de bebidas alcohólicas a menores de 18 años está prohibido. Disfrútalo con moderación.",
@@ -50,9 +50,9 @@ const TEXTOS: Record<
     title: "Wine List & Prices | Casa Tomás Crevillent",
     description: (n) => `Casa Tomás wine cellar in Crevillent (Alicante): ${n} wines with their designation of origin and price. Reds, whites, cava and fortified wines.`,
     keywords: ["wine list Crevillent", "restaurant wine cellar Alicante", "Casa Tomás wines", "designation of origin"],
+    migaCarta: "Menu",
     miga: "Wines",
     titulo: "Wine list",
-    subtitulo: "Our cellar, with the designation of origin and price of every wine. Search, filter by region and add to My table.",
     detalle: (n) => `${n} wines`,
     alertTitle: "18+ only",
     alertBody: "The sale and serving of alcoholic drinks to anyone under 18 is prohibited. Please enjoy responsibly.",
@@ -64,9 +64,9 @@ const TEXTOS: Record<
     title: "Carte des vins et prix | Casa Tomás Crevillent",
     description: (n) => `Cave à vins de Casa Tomás à Crevillent (Alicante) : ${n} références avec leur appellation d'origine et leur prix. Rouges, blancs, cavas et vins doux.`,
     keywords: ["carte des vins Crevillent", "cave à vins restaurant Alicante", "vins Casa Tomás", "appellation d'origine"],
+    migaCarta: "Carte",
     miga: "Vins",
     titulo: "Carte des vins",
-    subtitulo: "Notre cave, avec l'appellation d'origine et le prix de chaque référence. Recherchez, filtrez par région et ajoutez à Ma table.",
     detalle: (n) => `${n} références`,
     alertTitle: "Réservé aux plus de 18 ans",
     alertBody: "La vente et le service de boissons alcoolisées aux mineurs de moins de 18 ans sont interdits. À consommer avec modération.",
@@ -129,7 +129,10 @@ const CartaVinosPagina = () => {
       />
       <JsonLd
         data={breadcrumbSchema(
-          [{ nombre: textos.miga, path: RUTA_ES }],
+          [
+            { nombre: textos.migaCarta, path: "/carta" },
+            { nombre: textos.miga, path: RUTA_ES },
+          ],
           language,
         )}
       />
@@ -147,9 +150,8 @@ const CartaVinosPagina = () => {
 
       <CartaPageLayout
         titulo={textos.titulo}
-        subtitulo={textos.subtitulo}
         detalle={textos.detalle(vinos.length)}
-        migas={[{ nombre: textos.miga }]}
+        migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: textos.miga }]}
       >
         <Alert className="mb-10 border-accent/40 bg-accent/5">
           <AlertCircle className="h-5 w-5 text-accent" />

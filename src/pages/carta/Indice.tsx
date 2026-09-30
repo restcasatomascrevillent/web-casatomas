@@ -1,5 +1,20 @@
 import { Link } from "react-router-dom";
-import { Beer, UtensilsCrossed, Wine } from "lucide-react";
+import {
+  Beef,
+  Beer,
+  Cake,
+  Cookie,
+  Fish,
+  Ham,
+  Salad,
+  Shell,
+  Snowflake,
+  Soup,
+  Sparkles,
+  UtensilsCrossed,
+  Wine,
+} from "lucide-react";
+import PaellaIcon from "@/components/icons/PaellaIcon";
 import { Card } from "@/components/ui/card";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
@@ -29,7 +44,6 @@ const TEXTOS: Record<
     keywords: string[];
     miga: string;
     titulo: string;
-    subtitulo: string;
     platosTitulo: string;
     platosResumen: (platos: number, categorias: number) => string;
     vaciaPlatos: string;
@@ -51,8 +65,6 @@ const TEXTOS: Record<
     keywords: ["carta Casa Tomás", "menú restaurante Crevillent", "precios restaurante Crevillent", "carta de vinos Crevillent"],
     miga: "Carta",
     titulo: "Nuestra carta",
-    subtitulo:
-      "Cocina tradicional alicantina en Crevillent. Todos los precios y los alérgenos de cada plato, actualizados desde la carta del restaurante.",
     platosTitulo: "Platos",
     platosResumen: (p, c) => `${plural(p, "plato", "platos")} en ${plural(c, "categoría", "categorías")}.`,
     vaciaPlatos: "La carta de platos no está disponible en este momento.",
@@ -73,8 +85,6 @@ const TEXTOS: Record<
     keywords: ["Casa Tomás menu", "restaurant menu Crevillent", "restaurant prices Crevillent", "wine list Crevillent"],
     miga: "Menu",
     titulo: "Our menu",
-    subtitulo:
-      "Traditional cooking from Alicante, in Crevillent. Prices and allergens for every dish, kept up to date from the restaurant's own menu.",
     platosTitulo: "Dishes",
     platosResumen: (p, c) => `${p} ${p === 1 ? "dish" : "dishes"} across ${c} ${c === 1 ? "category" : "categories"}.`,
     vaciaPlatos: "The food menu isn't available right now.",
@@ -95,8 +105,6 @@ const TEXTOS: Record<
     keywords: ["carte Casa Tomás", "menu restaurant Crevillent", "prix restaurant Crevillent", "carte des vins Crevillent"],
     miga: "Carte",
     titulo: "Notre carte",
-    subtitulo:
-      "Cuisine traditionnelle d'Alicante, à Crevillent. Prix et allergènes de chaque plat, mis à jour depuis la carte du restaurant.",
     platosTitulo: "Plats",
     platosResumen: (p, c) => `${p} ${p === 1 ? "plat" : "plats"} dans ${c} ${c === 1 ? "catégorie" : "catégories"}.`,
     vaciaPlatos: "La carte des plats n'est pas disponible pour le moment.",
@@ -111,6 +119,30 @@ const TEXTOS: Record<
     categoria: (n) => (n === 1 ? "catégorie" : "catégories"),
   },
 };
+
+/**
+ * Un icono por categoría de platos, para que las tarjetas de "Platos" no
+ * repitan todas el mismo cubierto genérico. Las claves son las de
+ * `CATEGORIAS_PLATOS` (`@/lib/carta-ssg`) — una categoría nueva creada desde
+ * el panel de administración, que no esté aquí, cae en ese mismo cubierto
+ * genérico en vez de quedarse sin icono.
+ */
+const ICONO_POR_CATEGORIA: Record<string, React.ReactNode> = {
+  "NOVEDADES DEL DÍA": <Sparkles className="w-6 h-6" />,
+  SNACK: <Cookie className="w-6 h-6" />,
+  "ENTRANTES FRÍOS": <Snowflake className="w-6 h-6" />,
+  "ENTRANTES CALIENTES": <Soup className="w-6 h-6" />,
+  ENSALADAS: <Salad className="w-6 h-6" />,
+  SALAZONES: <Ham className="w-6 h-6" />,
+  MARISCOS: <Shell className="w-6 h-6" />,
+  PESCADOS: <Fish className="w-6 h-6" />,
+  CARNES: <Beef className="w-6 h-6" />,
+  ARROCES: <PaellaIcon className="w-6 h-6" />,
+  POSTRES: <Cake className="w-6 h-6" />,
+};
+
+const iconoDeCategoria = (clave: string) =>
+  ICONO_POR_CATEGORIA[clave] ?? <UtensilsCrossed className="w-6 h-6" />;
 
 /**
  * Tarjeta-enlace de una sección de la carta.
@@ -176,7 +208,6 @@ const CartaIndice = () => {
 
       <CartaPageLayout
         titulo={textos.titulo}
-        subtitulo={textos.subtitulo}
         detalle={textos.referencia(TOTAL_CARTA)}
         migas={[{ nombre: textos.miga }]}
         volverA={{ texto: textos.volverA, path: "/" }}
@@ -197,7 +228,7 @@ const CartaIndice = () => {
                   to={rutaCategoria(categoria.slug, language)}
                   titulo={etiquetaCategoriaIdioma(categoria.clave, language)}
                   detalle={`${categoria.total} ${textos.plato(categoria.total)}`}
-                  icono={<UtensilsCrossed className="w-6 h-6" />}
+                  icono={iconoDeCategoria(categoria.clave)}
                 />
               ))}
             </div>

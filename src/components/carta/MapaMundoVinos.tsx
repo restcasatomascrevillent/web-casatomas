@@ -365,16 +365,6 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     map.current?.resize();
   }, [selectedRegion]);
 
-  const selectedUniqueDO = selectedRegion
-    ? Array.from(
-        new Set(
-          selectedRegion.vinos
-            .map((v) => v.denominacion_origen)
-            .filter((v): v is string => Boolean(v && v.trim()))
-        )
-      )
-    : [];
-
   const sortedSelectedVinos = selectedRegion
     ? selectedRegion.vinos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
     : [];
@@ -423,12 +413,6 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                   <p className="font-semibold text-foreground mb-1">{t.map.aboutDO ?? "Sobre esta D.O."}</p>
                   <p className="leading-snug">{getRegionInsight(selectedRegion.region, selectedRegion.category || "otro", selectedRegion.vinos)}</p>
                 </div>
-                {selectedUniqueDO.length > 0 && (
-                  <div className="text-sm text-muted-foreground max-w-sm">
-                    <p className="font-semibold text-foreground mb-1">{t.vinos.doLabel}:</p>
-                    <p className="leading-snug">{selectedUniqueDO.join(" · ")}</p>
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

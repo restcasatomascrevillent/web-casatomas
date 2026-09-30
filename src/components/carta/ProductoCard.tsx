@@ -14,6 +14,7 @@ import {
 import { resolverImagen } from "@/lib/carta-ssg";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import type { Translations } from "@/i18n/languages/es";
 
 interface ProductoCardProps {
   /** Ya resuelto al idioma activo (`resolveTranslatedItem`/`agruparPorCategoria`, NO el plato crudo). */
@@ -40,6 +41,60 @@ const formatearCantidad = (cantidad: number, unidad?: string) => {
 };
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
+
+type PiePlatoProps = {
+  precio: number;
+  unidad?: string;
+  cantidadEnPedido: number;
+  nombre: string;
+  onAnadir?: () => void;
+  t: Translations["platos"];
+};
+
+/**
+ * Precio + botón "Añadir", igual en las dos caras de la tarjeta.
+ *
+ * La cantidad ya en la mesa se ve como una insignia SOBRE el botón, no como
+ * texto en la fila: con precio, "N en tu mesa" y el botón a la vez, la fila
+ * no cabía en tarjetas estrechas y `flex-wrap` partía el pie en dos líneas
+ * — la tarjeta crecía justo al añadir algo. La insignia va en posición
+ * absoluta (no ocupa hueco en el flujo), así que el pie cabe siempre en una
+ * sola línea, en cualquier ancho; la cantidad se sigue anunciando por voz en
+ * el `aria-label` del botón.
+ */
+const PiePlato = ({ precio, unidad, cantidadEnPedido, nombre, onAnadir, t }: PiePlatoProps) => (
+  <CardFooter className="flex items-center justify-between gap-3 border-t bg-muted/30 mt-auto flex-shrink-0 px-5 py-3">
+    <span className="font-bold text-accent text-xl">
+      {precio}€{unidad && <span className="text-sm font-normal text-muted-foreground"> / {unidad}</span>}
+    </span>
+    {onAnadir && (
+      <div className="relative shrink-0">
+        <Button
+          type="button"
+          size="sm"
+          onClick={onAnadir}
+          aria-label={
+            cantidadEnPedido > 0
+              ? t.addMoreAria.replace("{name}", nombre).replace("{qty}", formatearCantidad(cantidadEnPedido, unidad))
+              : t.addAria.replace("{name}", nombre)
+          }
+          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+        >
+          <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
+          {t.add}
+        </Button>
+        {cantidadEnPedido > 0 && (
+          <span
+            aria-hidden="true"
+            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center whitespace-nowrap rounded-full bg-foreground px-1 text-[10px] font-bold leading-none text-background shadow ring-2 ring-background"
+          >
+            {formatearCantidad(cantidadEnPedido, unidad)}
+          </span>
+        )}
+      </div>
+    )}
+  </CardFooter>
+);
 
 /**
  * Tarjeta de plato para las páginas de carta.
@@ -146,7 +201,7 @@ const ProductoCard = ({
 
             <CardHeader className="pb-2 px-5 pt-4 flex-shrink-0">
               <div className="flex items-start justify-between gap-3">
-                <CardTitle className="flex-1 min-w-0 text-base md:text-lg leading-tight whitespace-normal break-words">
+                <CardTitle className="flex-1 min-w-0 text-base md:text-lg leading-tight whitespace-normal break-words line-clamp-2 min-h-12">
                   {plato.displayNombre}
                 </CardTitle>
                 <div className="flex items-center gap-2 shrink-0">
@@ -175,39 +230,14 @@ const ProductoCard = ({
               )}
             </CardHeader>
 
-            <CardFooter className="flex flex-wrap justify-between items-center gap-x-3 gap-y-2 border-t bg-muted/30 mt-auto flex-shrink-0 px-5 py-3">
-              <span className="font-bold text-accent text-xl">
-                {plato.precio_eur}€
-                {plato.unidad && (
-                  <span className="text-sm font-normal text-muted-foreground"> / {plato.unidad}</span>
-                )}
-              </span>
-              {onAnadir && (
-                <div className="flex items-center gap-2">
-                  {cantidadEnPedido > 0 && (
-                    <span className="text-xs font-semibold text-accent whitespace-nowrap" aria-hidden="true">
-                      {t.platos.inOrder.replace("{qty}", formatearCantidad(cantidadEnPedido, plato.unidad))}
-                    </span>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={onAnadir}
-                    aria-label={
-                      cantidadEnPedido > 0
-                        ? t.platos.addMoreAria
-                            .replace("{name}", plato.displayNombre)
-                            .replace("{qty}", formatearCantidad(cantidadEnPedido, plato.unidad))
-                        : t.platos.addAria.replace("{name}", plato.displayNombre)
-                    }
-                    className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                  >
-                    <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
-                    {t.platos.add}
-                  </Button>
-                </div>
-              )}
-            </CardFooter>
+            <PiePlato
+              precio={plato.precio_eur}
+              unidad={plato.unidad}
+              cantidadEnPedido={cantidadEnPedido}
+              nombre={plato.displayNombre}
+              onAnadir={onAnadir}
+              t={t.platos}
+            />
           </Card>
         </div>
 
@@ -290,39 +320,14 @@ const ProductoCard = ({
               )}
             </CardContent>
 
-            <CardFooter className="flex flex-wrap justify-between items-center gap-x-3 gap-y-2 border-t bg-muted/30 mt-auto flex-shrink-0 px-5 py-3">
-              <span className="font-bold text-accent text-xl">
-                {plato.precio_eur}€
-                {plato.unidad && (
-                  <span className="text-sm font-normal text-muted-foreground"> / {plato.unidad}</span>
-                )}
-              </span>
-              {onAnadir && (
-                <div className="flex items-center gap-2">
-                  {cantidadEnPedido > 0 && (
-                    <span className="text-xs font-semibold text-accent whitespace-nowrap" aria-hidden="true">
-                      {t.platos.inOrder.replace("{qty}", formatearCantidad(cantidadEnPedido, plato.unidad))}
-                    </span>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={onAnadir}
-                    aria-label={
-                      cantidadEnPedido > 0
-                        ? t.platos.addMoreAria
-                            .replace("{name}", plato.displayNombre)
-                            .replace("{qty}", formatearCantidad(cantidadEnPedido, plato.unidad))
-                        : t.platos.addAria.replace("{name}", plato.displayNombre)
-                    }
-                    className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                  >
-                    <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
-                    {t.platos.add}
-                  </Button>
-                </div>
-              )}
-            </CardFooter>
+            <PiePlato
+              precio={plato.precio_eur}
+              unidad={plato.unidad}
+              cantidadEnPedido={cantidadEnPedido}
+              nombre={plato.displayNombre}
+              onAnadir={onAnadir}
+              t={t.platos}
+            />
           </Card>
         </div>
       </div>
