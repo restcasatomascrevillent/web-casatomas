@@ -124,7 +124,12 @@ const ProductoCard = ({
   mostrarFoto = true,
 }: ProductoCardProps) => {
   const { language, t } = useTranslations();
-  const [expandedEstado, setExpanded] = useState(false);
+  // "Foto expandida en carta web" (adminpanelct, `expanded` en Platos/Vinos):
+  // arranca desplegada si así se marcó en el panel — mismo criterio que
+  // `CartaPlatos.tsx`/`CartaVinos.tsx`, que ya lo respetaban; a esta tarjeta
+  // (la de las páginas /carta/:categoria) se le había quedado siempre en
+  // `false` pasara lo que pasara en el panel.
+  const [expandedEstado, setExpanded] = useState(() => Boolean(plato.expanded));
   // Con las fotos apagadas la tarjeta nunca se despliega: no hay ojo que pulsar.
   const expanded = mostrarFoto && expandedEstado;
   const [infoOpen, setInfoOpen] = useState(false);
