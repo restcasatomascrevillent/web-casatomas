@@ -215,7 +215,7 @@ const ProductoCard = ({
 
             <CardHeader className="pb-2 px-5 pt-4 flex-shrink-0">
               <div className="flex items-start justify-between gap-3">
-                <CardTitle className="flex-1 min-w-0 text-base md:text-lg leading-tight whitespace-normal break-words line-clamp-2 min-h-12">
+                <CardTitle className="flex-1 min-w-0 text-base md:text-lg leading-tight whitespace-normal break-words min-h-12">
                   {plato.displayNombre}
                 </CardTitle>
                 <div className="flex items-center gap-2 shrink-0">
