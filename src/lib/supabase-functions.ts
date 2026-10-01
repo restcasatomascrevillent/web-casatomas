@@ -32,6 +32,13 @@ export const RESERVAS_WEB_DISPONIBILIDAD_URL = `${FUNCTIONS_BASE_URL}/reservas-w
 export const RESERVAS_WEB_CREAR_URL = `${FUNCTIONS_BASE_URL}/reservas-web/crear`;
 /** `POST` JSON `{ mensaje, idiom, id }` → `{ success, respuesta, codigo? }`. */
 export const CHAT_WEB_URL = `${FUNCTIONS_BASE_URL}/chat-web`;
+/**
+ * `POST` → `{ url }` (sesión de Stripe Checkout) en éxito; 422/502/503 con
+ * `motivo` + `mensaje` en rechazo. El webhook que confirma el pago
+ * (`stripe-webhook-cheques-regalo`) lo llama Stripe directamente, nunca el
+ * navegador, así que no tiene URL aquí.
+ */
+export const CHEQUES_REGALO_CREAR_URL = `${FUNCTIONS_BASE_URL}/cheques-regalo-web/crear`;
 
 /**
  * Cabeceras de una llamada POST JSON a una Edge Function.
