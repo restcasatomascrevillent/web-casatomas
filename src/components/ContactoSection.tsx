@@ -2,16 +2,73 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Phone, Mail, Gift } from "lucide-react";
-import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MapPin, Phone, Mail, Gift, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
+import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
+
+interface DatosComprador {
+  nombre: string;
+  email: string;
+  telefono: string;
+  destinatario: string;
+  mensaje: string;
+  fechaEntrega: string;
+}
+
+const DATOS_COMPRADOR_VACIOS: DatosComprador = {
+  nombre: "",
+  email: "",
+  telefono: "",
+  destinatario: "",
+  mensaje: "",
+  fechaEntrega: "",
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ContactoSection = () => {
   const { t } = useTranslations();
   const [giftAmount, setGiftAmount] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [datos, setDatos] = useState<DatosComprador>(DATOS_COMPRADOR_VACIOS);
+  const [enviando, setEnviando] = useState(false);
   const { toast } = useToast();
+
+  // Vuelta desde Stripe Checkout: `cheques-regalo-web` añade `#contacto` al
+  // redirigir, así que esto se lee una vez montada la página con esa sección
+  // ya a la vista. Se limpia la query de la URL para que un refresco no
+  // repita el toast.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const resultado = params.get("cheque_regalo");
+    if (!resultado) return;
+
+    if (resultado === "exito") {
+      toast({ title: t.contacto.toasts.giftSuccessTitle, description: t.contacto.toasts.giftSuccessDescription });
+    } else if (resultado === "cancelado") {
+      toast({ title: t.contacto.toasts.giftCancelTitle, description: t.contacto.toasts.giftCancelDescription });
+    }
+
+    params.delete("cheque_regalo");
+    params.delete("session_id");
+    const query = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    // Solo debe correr al montar: es una lectura puntual de la URL con la que llegó la página.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGiftPurchase = () => {
     if (!giftAmount || parseFloat(giftAmount) <= 0) {
@@ -22,11 +79,54 @@ const ContactoSection = () => {
       });
       return;
     }
-    
-    toast({
-      title: t.contacto.toasts.giftTitle,
-      description: t.contacto.toasts.giftDescription.replace("{amount}", giftAmount),
-    });
+    setDatos(DATOS_COMPRADOR_VACIOS);
+    setDialogOpen(true);
+  };
+
+  const handleConfirmarCompra = async () => {
+    const nombre = datos.nombre.trim();
+    const email = datos.email.trim();
+
+    if (!nombre) {
+      toast({ title: t.contacto.toasts.giftMissingName, variant: "destructive" });
+      return;
+    }
+    if (!EMAIL_RE.test(email)) {
+      toast({ title: t.contacto.toasts.giftInvalidEmail, variant: "destructive" });
+      return;
+    }
+
+    setEnviando(true);
+    try {
+      const response = await fetch(CHEQUES_REGALO_CREAR_URL, {
+        method: "POST",
+        headers: functionHeaders(),
+        body: JSON.stringify({
+          importe_eur: parseFloat(giftAmount),
+          comprador_nombre: nombre,
+          comprador_email: email,
+          comprador_telefono: datos.telefono.trim() || undefined,
+          destinatario_nombre: datos.destinatario.trim() || undefined,
+          mensaje: datos.mensaje.trim() || undefined,
+          fecha_entrega_deseada: datos.fechaEntrega || undefined,
+        }),
+      });
+      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string } | null;
+
+      if (!response.ok || !cuerpo?.url) {
+        throw new Error(cuerpo?.mensaje);
+      }
+
+      // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
+      window.location.href = cuerpo.url;
+    } catch {
+      toast({
+        title: t.contacto.toasts.giftPaymentErrorTitle,
+        description: t.contacto.toasts.giftPaymentErrorDescription,
+        variant: "destructive",
+      });
+      setEnviando(false);
+    }
   };
 
   return (
@@ -191,6 +291,101 @@ const ContactoSection = () => {
           </motion.div>
         </div>
       </motion.div>
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => !enviando && setDialogOpen(open)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.contacto.giftDialogTitle}</DialogTitle>
+            <DialogDescription>{t.contacto.giftDialogDescription}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm font-medium text-accent">
+              {t.contacto.giftFormAmountSummary.replace("{amount}", giftAmount)}
+            </p>
+
+            <div className="space-y-2">
+              <Label htmlFor="gift-buyer-name">{t.contacto.giftFormBuyerName}</Label>
+              <Input
+                id="gift-buyer-name"
+                value={datos.nombre}
+                onChange={(e) => setDatos((prev) => ({ ...prev, nombre: e.target.value }))}
+                maxLength={200}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gift-buyer-email">{t.contacto.giftFormBuyerEmail}</Label>
+              <Input
+                id="gift-buyer-email"
+                type="email"
+                value={datos.email}
+                onChange={(e) => setDatos((prev) => ({ ...prev, email: e.target.value }))}
+                maxLength={320}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gift-buyer-phone">{t.contacto.giftFormBuyerPhone}</Label>
+              <Input
+                id="gift-buyer-phone"
+                type="tel"
+                value={datos.telefono}
+                onChange={(e) => setDatos((prev) => ({ ...prev, telefono: e.target.value }))}
+                maxLength={40}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gift-recipient-name">{t.contacto.giftFormRecipientName}</Label>
+              <Input
+                id="gift-recipient-name"
+                value={datos.destinatario}
+                onChange={(e) => setDatos((prev) => ({ ...prev, destinatario: e.target.value }))}
+                maxLength={200}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gift-message">{t.contacto.giftFormMessage}</Label>
+              <Textarea
+                id="gift-message"
+                value={datos.mensaje}
+                onChange={(e) => setDatos((prev) => ({ ...prev, mensaje: e.target.value }))}
+                placeholder={t.contacto.giftFormMessagePlaceholder}
+                maxLength={500}
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gift-delivery-date">{t.contacto.giftFormDeliveryDate}</Label>
+              <Input
+                id="gift-delivery-date"
+                type="date"
+                value={datos.fechaEntrega}
+                onChange={(e) => setDatos((prev) => ({ ...prev, fechaEntrega: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={enviando}>
+              {t.contacto.giftFormCancel}
+            </Button>
+            <Button
+              className="bg-accent hover:bg-accent/90"
+              onClick={handleConfirmarCompra}
+              disabled={enviando}
+            >
+              {enviando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {enviando ? t.contacto.giftFormSubmitting : t.contacto.giftFormSubmit}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

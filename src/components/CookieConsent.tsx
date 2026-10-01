@@ -30,8 +30,10 @@ const CookieConsent = () => {
       {showBanner && (
         <div
           /* En móvil se ancla por encima de la barra fija de CTA (MobileReserveCTA)
-             para no tapar "Llamar" / "Reservar mesa". */
-          className="fixed bottom-[4.5rem] lg:bottom-0 left-0 right-0 z-50 p-2 md:p-6"
+             para no tapar "Llamar" / "Reservar mesa". Sin relleno abajo (`pb-0`):
+             la tarjeta queda pegada a ese borde, sin el hueco que dejaba `p-2`/`p-6`
+             a los cuatro lados. */
+          className="fixed bottom-[4.5rem] lg:bottom-0 left-0 right-0 z-50 pt-2 px-2 pb-0 md:pt-6 md:px-6 md:pb-0"
         >
           <Card className="max-w-4xl mx-auto p-3 md:p-6 shadow-2xl border-2 border-primary/20 bg-background">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
