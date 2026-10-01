@@ -32,6 +32,30 @@ type Imagen = { firma: string; dataUrl: string };
 
 const NOMBRE_ARCHIVO_TICKET = "mi-mesa-casa-tomas.jpg";
 
+/**
+ * Convierte un `data:` URL en `File`, decodificando el base64 a mano
+ * (`atob`) en vez de `fetch(dataUrl)`. `fetch` sobre un `data:` URL es una
+ * petición más, sujeta al `connect-src` de la Content-Security-Policy del
+ * sitio — que no incluye el esquema `data:` — así que en navegadores que la
+ * apliquen ahí (Safari es el más estricto) la promesa nunca resuelve ni
+ * rechaza con un error claro: `archivo` se quedaba siempre `null` y el
+ * botón de compartir no podía aparecer nunca, sin ningún aviso de por qué.
+ * Decodificar a mano no es una petición de red, así que no depende de la
+ * CSP para nada — funciona igual en todos los navegadores.
+ */
+const dataUrlAFichero = (dataUrl: string, nombre: string): File | null => {
+  try {
+    const [cabecera, base64] = dataUrl.split(",");
+    const tipo = /data:(.*?);base64/.exec(cabecera)?.[1] || "image/jpeg";
+    const binario = atob(base64);
+    const bytes = new Uint8Array(binario.length);
+    for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+    return new File([bytes], nombre, { type: tipo });
+  } catch {
+    return null;
+  }
+};
+
 /** Espera a las fuentes y a las imágenes del nodo antes de capturarlo. */
 const esperarRecursos = async (nodo: HTMLElement) => {
   try {
@@ -259,15 +283,7 @@ const PreviewPedido = () => {
     try {
       const { dataUrl } = await generarImagenCompartir();
       const resumen = resumenTextoMesa(lineas, comensales, language, tp.share, urlQr);
-
-      let archivo: File | null = null;
-      try {
-        const respuesta = await fetch(dataUrl);
-        const blob = await respuesta.blob();
-        archivo = new File([blob], NOMBRE_ARCHIVO_TICKET, { type: blob.type || "image/jpeg" });
-      } catch {
-        archivo = null;
-      }
+      const archivo = dataUrlAFichero(dataUrl, NOMBRE_ARCHIVO_TICKET);
 
       if (archivo && typeof navigator.share === "function") {
         try {
