@@ -7,7 +7,7 @@ import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS } from "@/lib/carta-ssg";
+import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS, platosParaJsonLd } from "@/lib/carta-ssg";
 import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import { idleImport } from "@/lib/lazyIdle";
@@ -65,7 +65,7 @@ const Index = () => {
   // (`virtual:carta-ssg`), no del scrape congelado de casatomas.buenacarta.com
   // de noviembre de 2025 que se estaba publicando a Google con 129 precios.
   const schema = useMemo(() => {
-    const secciones = agruparPorCategoria(cartaSSG.platos, language, CATEGORIAS_PLATOS);
+    const secciones = agruparPorCategoria(platosParaJsonLd(cartaSSG.platos), language, CATEGORIAS_PLATOS);
     return restaurantSchema({
       lang: language,
       // `url` es obligatorio aquí: sin ella, Google no tiene un enlace real

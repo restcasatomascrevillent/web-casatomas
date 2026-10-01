@@ -20,6 +20,8 @@ const MODULOS = {
     generadoEn: carta.generadoEn,
     platos: carta.platos,
     resumen: carta.resumen,
+    // Interruptor «Fotos de platos en Casa Tomás» (ver `leerMostrarFotosPlatos`).
+    config: carta.config ?? { mostrarFotosPlatos: true },
   }),
   "virtual:carta-ssg/vinos": (carta: CartaDescargada) => ({
     generadoEn: carta.generadoEn,
@@ -41,6 +43,7 @@ interface CartaDescargada {
   vinos?: unknown[];
   bebidas?: unknown[];
   resumen: unknown;
+  config?: { mostrarFotosPlatos: boolean };
 }
 
 type VirtualId = keyof typeof MODULOS;

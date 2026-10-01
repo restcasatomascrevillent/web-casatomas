@@ -174,6 +174,48 @@ async function descargarTabla(baseUrl, key, tabla) {
 }
 
 /**
+ * Interruptor «Fotos de platos en Casa Tomás» del panel (Gestor Web → Carta).
+ *
+ * Vive en `configuracion_web.mostrar_fotos_platos_casa_tomas` (fila única,
+ * legible con la anon key; migración 20261001113700 de adminpanelct). Se lee
+ * en build para que el HTML (botón de la foto, JSON-LD) salga ya con el valor
+ * bueno, y el navegador lo vuelve a leer al cargar la página
+ * (`useMostrarFotosPlatos`): así el interruptor se nota sin esperar a un
+ * deploy (hoy `rebuild-webs` no llega a lanzarlos).
+ *
+ * FALLA ABIERTO: cualquier problema leyéndolo (tabla aún sin crear → 404
+ * PGRST205, red, fila ausente, valor raro) deja las fotos VISIBLES, que es lo
+ * de siempre. Solo un `false` explícito las oculta. Al contrario que la carta,
+ * esto nunca rompe el build: no poder leer un ajuste cosmético no justifica
+ * dejar de desplegar.
+ *
+ * @returns {Promise<boolean>}
+ */
+export async function leerMostrarFotosPlatos(baseUrl, key) {
+  const url = `${baseUrl}/rest/v1/configuracion_web?select=mostrar_fotos_platos_casa_tomas&id=eq.true&limit=1`;
+  try {
+    const respuesta = await fetch(url, {
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' },
+    });
+    if (!respuesta.ok) {
+      console.warn(
+        `[carta-ssg] No se pudo leer configuracion_web (HTTP ${respuesta.status}); ` +
+        'se publican las fotos de los platos (comportamiento por defecto).',
+      );
+      return true;
+    }
+    const filas = await respuesta.json();
+    return !(Array.isArray(filas) && filas[0]?.mostrar_fotos_platos_casa_tomas === false);
+  } catch (causa) {
+    console.warn(
+      `[carta-ssg] No se pudo leer configuracion_web (${causa?.message ?? causa}); ` +
+      'se publican las fotos de los platos (comportamiento por defecto).',
+    );
+    return true;
+  }
+}
+
+/**
  * Recuento por categoría, en el orden en que llegaron las filas.
  *
  * Es lo único que la portada y `/carta` necesitan saber de vinos y bebidas, así
@@ -196,7 +238,7 @@ function resumirPorCategoria(filas) {
 
 /**
  * @param {{ url?: string, key?: string }} config
- * @returns {Promise<{generadoEn: string, platos: object[], vinos: object[], bebidas: object[], resumen: object}>}
+ * @returns {Promise<{generadoEn: string, platos: object[], vinos: object[], bebidas: object[], resumen: object, config: {mostrarFotosPlatos: boolean}}>}
  */
 export async function fetchCartaSSG({ url, key }) {
   if (!url || !key) {
@@ -207,18 +249,23 @@ export async function fetchCartaSSG({ url, key }) {
   }
 
   const baseUrl = url.replace(/\/+$/, '');
-  const [platos, vinos, bebidas] = await Promise.all([
+  const [platos, vinos, bebidas, mostrarFotosPlatos] = await Promise.all([
     descargarTabla(baseUrl, key, 'Platos'),
     descargarTabla(baseUrl, key, 'Vinos'),
     descargarTabla(baseUrl, key, 'Bebidas'),
+    leerMostrarFotosPlatos(baseUrl, key),
   ]);
 
   return {
     generadoEn: new Date().toISOString(),
+    // `imagen_url` se conserva aunque las fotos estén apagadas: si el dueño
+    // las vuelve a encender, el navegador las enseña sin esperar a un deploy.
+    // El JSON-LD sí las omite (`platosParaJsonLd` en src/lib/carta-ssg.ts).
     platos,
     vinos,
     bebidas,
     resumen: { vinos: resumirPorCategoria(vinos), bebidas: resumirPorCategoria(bebidas) },
+    config: { mostrarFotosPlatos },
   };
 }
 
@@ -229,6 +276,7 @@ export const CARTA_SSG_VACIA = {
   generadoEn: '',
   platos: [],
   resumen: { vinos: RESUMEN_VACIO, bebidas: RESUMEN_VACIO },
+  config: { mostrarFotosPlatos: true },
 };
 export const VINOS_SSG_VACIOS = { generadoEn: '', vinos: [] };
 export const BEBIDAS_SSG_VACIAS = { generadoEn: '', bebidas: [] };

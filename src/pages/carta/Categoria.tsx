@@ -13,7 +13,8 @@ import {
   platosDeCategoria,
   rutaCategoria,
 } from "@/lib/carta-rutas";
-import { agruparPorCategoria } from "@/lib/carta-ssg";
+import { agruparPorCategoria, platosParaJsonLd } from "@/lib/carta-ssg";
+import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { usePedido } from "@/hooks/usePedido";
@@ -97,6 +98,9 @@ const CartaCategoria = () => {
   const { toast } = useToast();
   const { categoria: slug } = useParams<{ categoria: string }>();
   const categoria = categoriaPorSlug(slug);
+  // Interruptor «Fotos de platos en Casa Tomás»: valor del build y relectura
+  // en el navegador (ver el hook). Antes del `return` temprano: es un hook.
+  const mostrarFotos = useMostrarFotosPlatos();
 
   if (!categoria) {
     return (
@@ -159,7 +163,8 @@ const CartaCategoria = () => {
       {secciones.length > 0 && (
         <JsonLd
           data={menuPagina(
-            menuSchema(secciones, language, SUPABASE_URL, {
+            // Sin fotos si el panel las apagó (valor del build, ver `platosParaJsonLd`).
+            menuSchema(agruparPorCategoria(platosParaJsonLd(platos), language), language, SUPABASE_URL, {
               id: `${url}#menu`,
               nombre: `${etiqueta} — Casa Tomás`,
               url,
@@ -183,6 +188,7 @@ const CartaCategoria = () => {
                 categoria={etiqueta}
                 prioridad={indice < 3}
                 cantidadEnPedido={cantidadDe(plato)}
+                mostrarFoto={mostrarFotos}
                 onAnadir={() => {
                   // Mismo nombre y categoría que guarda `CartaPlatos` desde la
                   // portada: el nombre ya traducido, la categoría cruda (es la
