@@ -516,7 +516,12 @@ const PreviewPedido = () => {
           mantener pulsada / clic derecho son gestos nativos que entiende
           cualquier navegador, sin depender de ninguna API. */}
       <Dialog open={vistaPrevia !== null} onOpenChange={(open) => !open && setVistaPrevia(null)}>
-        <DialogContent className="flex max-h-[85dvh] max-w-sm flex-col overflow-y-auto">
+        {/* La "X" la pone `DialogContent` en `absolute`, posicionada respecto
+            a ESTE elemento — por eso aquí no lleva `overflow-y-auto` (se
+            iría de la vista al hacer scroll). Solo scrollea el envoltorio
+            de la imagen de abajo: la X, el título y los botones se quedan
+            siempre a la vista, el ticket es lo único que puede ser largo. */}
+        <DialogContent className="flex max-h-[85dvh] max-w-sm flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>{tp.share.previewTitle}</DialogTitle>
             <DialogDescription>
@@ -524,11 +529,13 @@ const PreviewPedido = () => {
             </DialogDescription>
           </DialogHeader>
           {vistaPrevia && (
-            <img
-              src={vistaPrevia.dataUrl}
-              alt={tp.share.summaryTitle}
-              className="w-full flex-shrink-0 rounded-lg border border-border"
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <img
+                src={vistaPrevia.dataUrl}
+                alt={tp.share.summaryTitle}
+                className="w-full rounded-lg border border-border"
+              />
+            </div>
           )}
           <div className="flex shrink-0 gap-2">
             {vistaPrevia?.archivo && typeof navigator !== "undefined" && typeof navigator.share === "function" && (
