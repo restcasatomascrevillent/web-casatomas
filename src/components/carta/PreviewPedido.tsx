@@ -19,7 +19,6 @@ import {
   configUnidad,
   construirPreguntaTomy,
   repartoCadaUno,
-  resumenTextoMesa,
   urlCarta,
 } from "@/lib/mi-mesa";
 import { generarMatrizQr } from "@/lib/qr";
@@ -282,12 +281,14 @@ const PreviewPedido = () => {
     setCompartiendo(true);
     try {
       const { dataUrl } = await generarImagenCompartir();
-      const resumen = resumenTextoMesa(lineas, comensales, language, tp.share, urlQr);
       const archivo = dataUrlAFichero(dataUrl, NOMBRE_ARCHIVO_TICKET);
 
       if (archivo && typeof navigator.share === "function") {
         try {
-          await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
+          // Sin `title` ni `text`: solo la imagen. Muchas apps (WhatsApp
+          // entre ellas) usan esos campos como pie de foto, y aquí no se
+          // quiere ningún texto acompañando al ticket.
+          await navigator.share({ files: [archivo] });
           return;
         } catch (error) {
           // El selector del sistema cancelado por el visitante no es un error.
@@ -316,7 +317,7 @@ const PreviewPedido = () => {
   const reintentarCompartirImagen = async () => {
     if (!vistaPrevia?.archivo) return;
     try {
-      await navigator.share({ files: [vistaPrevia.archivo], title: tp.share.summaryTitle });
+      await navigator.share({ files: [vistaPrevia.archivo] });
       setVistaPrevia(null);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
