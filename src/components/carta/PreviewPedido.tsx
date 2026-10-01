@@ -239,18 +239,20 @@ const PreviewPedido = () => {
    * Comparte el ticket (sin reparto) como IMAGEN — nunca como texto ni como
    * enlace suelto. Un único botón, dos escalones:
    *
-   * 1. `navigator.share` con el fichero: abre el selector del sistema con
-   *    las apps que aceptan imágenes (WhatsApp, Instagram, Facebook, Mail,
-   *    AirDrop… las que haya instaladas) — el propio sistema operativo
-   *    decide cuáles ofrecer, aquí no se elige una app en concreto.
-   * 2. Si el navegador no puede compartir FICHEROS (`canShare` con `files`
-   *    da `false` — pasa en bastante iOS/Safari, aunque `navigator.share`
-   *    exista para texto o enlaces), NO se cae a compartir un enlace: eso
-   *    mandaría la web, no el ticket, que es justo lo que no se quiere. En
-   *    su lugar se enseña la imagen en un diálogo propio para que el
-   *    visitante la comparta o la guarde a su manera — mantener pulsada en
-   *    móvil, clic derecho en escritorio son gestos nativos que entiende
-   *    cualquier navegador, sin depender de ninguna API.
+   * 1. `navigator.share` con el fichero directamente: abre el selector del
+   *    sistema con las apps que aceptan imágenes (WhatsApp, Instagram,
+   *    Facebook, Mail, AirDrop… las que haya instaladas) — el propio
+   *    sistema operativo decide cuáles ofrecer, aquí no se elige una app en
+   *    concreto. Sin pasar antes por `canShare`: en la práctica es más
+   *    estricto de lo que documenta (sobre todo en iOS, con falsos
+   *    negativos para ficheros que `share()` sí acepta), así que mejor
+   *    dejar que el propio `share()` sea quien decida.
+   * 2. Si `navigator.share` ni existe ni admite el fichero (lanza), NO se
+   *    cae a compartir un enlace: eso mandaría la web, no el ticket, justo
+   *    lo que no se quiere. En su lugar se enseña la imagen en un diálogo
+   *    propio para que el visitante la comparta o la guarde a su manera —
+   *    mantener pulsada en móvil, clic derecho en escritorio son gestos
+   *    nativos que entiende cualquier navegador, sin depender de esta API.
    */
   const compartirTicket = async () => {
     setCompartiendo(true);
@@ -267,14 +269,14 @@ const PreviewPedido = () => {
         archivo = null;
       }
 
-      if (archivo && navigator.canShare?.({ files: [archivo] })) {
+      if (archivo && typeof navigator.share === "function") {
         try {
           await navigator.share({ files: [archivo], title: tp.share.summaryTitle, text: resumen });
           return;
         } catch (error) {
           // El selector del sistema cancelado por el visitante no es un error.
           if (error instanceof DOMException && error.name === "AbortError") return;
-          // Cualquier otro fallo: se sigue abajo a la vista previa.
+          // Cualquier otro fallo (no admite el fichero, etc.): se sigue abajo a la vista previa.
         }
       }
 
@@ -290,13 +292,13 @@ const PreviewPedido = () => {
   /**
    * Reintenta `navigator.share` con el FICHERO desde el propio diálogo — con
    * un toque limpio y recién hecho, no el de hace un momento. Si sigue sin
-   * poder compartir ficheros, NO cae a compartir el enlace: eso mandaría la
-   * web en vez del ticket. Se queda callado y el visitante sigue teniendo
+   * admitir el fichero, NO cae a compartir el enlace: eso mandaría la web
+   * en vez del ticket. Se queda callado y el visitante sigue teniendo
    * mantener pulsada / clic derecho sobre la imagen, que no depende de esta
    * API para nada.
    */
   const reintentarCompartirImagen = async () => {
-    if (!vistaPrevia?.archivo || !navigator.canShare?.({ files: [vistaPrevia.archivo] })) return;
+    if (!vistaPrevia?.archivo) return;
     try {
       await navigator.share({ files: [vistaPrevia.archivo], title: tp.share.summaryTitle });
       setVistaPrevia(null);
@@ -514,7 +516,7 @@ const PreviewPedido = () => {
           mantener pulsada / clic derecho son gestos nativos que entiende
           cualquier navegador, sin depender de ninguna API. */}
       <Dialog open={vistaPrevia !== null} onOpenChange={(open) => !open && setVistaPrevia(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="flex max-h-[85dvh] max-w-sm flex-col overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{tp.share.previewTitle}</DialogTitle>
             <DialogDescription>
@@ -525,11 +527,11 @@ const PreviewPedido = () => {
             <img
               src={vistaPrevia.dataUrl}
               alt={tp.share.summaryTitle}
-              className="w-full rounded-lg border border-border"
+              className="w-full flex-shrink-0 rounded-lg border border-border"
             />
           )}
-          <div className="flex gap-2">
-            {vistaPrevia?.archivo && typeof navigator !== "undefined" && navigator.canShare?.({ files: [vistaPrevia.archivo] }) && (
+          <div className="flex shrink-0 gap-2">
+            {vistaPrevia?.archivo && typeof navigator !== "undefined" && typeof navigator.share === "function" && (
               <Button type="button" className="flex-1" onClick={reintentarCompartirImagen}>
                 {tp.share.previewShareCta}
               </Button>
