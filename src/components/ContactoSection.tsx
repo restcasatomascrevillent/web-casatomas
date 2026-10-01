@@ -294,13 +294,17 @@ const ContactoSection = () => {
       </motion.div>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => !enviando && setDialogOpen(open)}>
-        <DialogContent className="w-[92vw] sm:max-w-md max-h-[88vh] overflow-y-auto rounded-2xl">
-          <DialogHeader className="text-left">
+        {/* La "X" la pone `DialogContent` en `absolute`: cabecera y pie se
+            quedan fijos (`shrink-0`) y solo scrollea el bloque de campos de
+            en medio — así el botón de pago está siempre a la vista en
+            móvil, sin tener que buscarlo haciendo scroll hasta el final. */}
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0">
+          <DialogHeader className="shrink-0 border-b border-border/60 p-5 pb-4 text-left sm:p-6 sm:pb-4">
             <DialogTitle className="pr-8">{t.contacto.giftDialogTitle}</DialogTitle>
             <DialogDescription>{t.contacto.giftDialogDescription}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
             <p className="text-sm font-medium text-accent">
               {t.contacto.giftFormAmountSummary.replace("{amount}", giftAmount)}
             </p>
@@ -381,7 +385,7 @@ const ContactoSection = () => {
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="shrink-0 gap-2 border-t border-border/60 p-5 pt-4 sm:gap-2 sm:p-6 sm:pt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={enviando}>
               {t.contacto.giftFormCancel}
             </Button>
