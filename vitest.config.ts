@@ -6,6 +6,7 @@ import {
   VINOS_SSG_VACIOS,
   BEBIDAS_SSG_VACIAS,
 } from "./scripts/carta-ssg.mjs";
+import { NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 
 /**
  * Los `virtual:carta-ssg*` los sirve el plugin `carta-ssg` de `vite.config.ts`
@@ -16,6 +17,8 @@ const VACIOS: Record<string, unknown> = {
   "virtual:carta-ssg": CARTA_SSG_VACIA,
   "virtual:carta-ssg/vinos": VINOS_SSG_VACIOS,
   "virtual:carta-ssg/bebidas": BEBIDAS_SSG_VACIAS,
+  // Sin esto ningún test podía importar NovedadesSection (ni nada que la use).
+  "virtual:novedades-ssg": NOVEDADES_SSG_VACIA,
 };
 
 const cartaSsgStub = (): Plugin => ({
