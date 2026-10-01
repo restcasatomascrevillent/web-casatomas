@@ -19,6 +19,32 @@ import type { Language } from "@/i18n/types";
 
 export const cartaSSG = carta;
 
+/**
+ * Interruptor «Fotos de platos en Casa Tomás» del panel, tal y como estaba al
+ * construir. Falla abierto: solo un `false` explícito oculta las fotos.
+ *
+ * Es el valor del HTML prerenderizado y la semilla de `useMostrarFotosPlatos`,
+ * que lo vuelve a leer en el navegador al cargar la página (el cambio se nota
+ * sin esperar a un deploy). Para el JSON-LD manda este valor del build.
+ */
+export const MOSTRAR_FOTOS_PLATOS = cartaSSG.config?.mostrarFotosPlatos !== false;
+
+/**
+ * Los platos tal y como deben ir al JSON-LD (`Menu` de schema.org): con las
+ * fotos apagadas, sin `imagen_url` ni encuadre. Los datos estructurados deben
+ * describir lo que la página enseña; anunciar a Google una foto que el dueño
+ * ha quitado de la web sería contenido marcado que no está a la vista (y la
+ * imagen podría acabar en un resultado enriquecido). Solo platos: vinos y
+ * bebidas no dependen de este interruptor.
+ */
+export function platosParaJsonLd<T extends { imagen_url?: string; imagen_posicion_y?: number }>(
+  platos: T[],
+  mostrarFotos: boolean = MOSTRAR_FOTOS_PLATOS,
+): T[] {
+  if (mostrarFotos) return platos;
+  return platos.map(({ imagen_url: _imagen, imagen_posicion_y: _encuadre, ...resto }) => resto as T);
+}
+
 /** Categoría que `CartaPlatos` selecciona al montarse (`CartaPlatos.tsx`). */
 export const CATEGORIA_INICIAL = "NOVEDADES DEL DÍA";
 

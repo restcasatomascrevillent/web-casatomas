@@ -21,6 +21,8 @@ export interface PlatoSSG {
   imagen_posicion_y?: number;
   expanded?: boolean;
   ingredientes?: string[] | string;
+  /** Solo etiquetas validadas por el restaurante. */
+  etiquetas_dieteticas?: string[] | string;
   alergenos_oficiales?: string[] | string;
   alergenos_inferidos?: string[] | string;
   alergenos_notas?: string;
@@ -91,6 +93,19 @@ export interface CartaSSG {
    * portada y `/carta` puedan mostrar "185 referencias" sin descargarlas.
    */
   resumen: { vinos: ResumenCarta; bebidas: ResumenCarta };
+  /**
+   * Ajustes del panel leídos en build (`configuracion_web`). Opcional: si falta
+   * (snapshot viejo, tests) vale lo de siempre, fotos visibles.
+   */
+  config?: {
+    /**
+     * false = el panel apagó «Fotos de platos en Casa Tomás» (al construir).
+     * La tarjeta no ofrece el botón de foto ni el hueco de «sin foto», y el
+     * JSON-LD omite las fotos. `imagen_url` se conserva en los platos para que
+     * el navegador pueda volver a enseñarlas si se encienden sin redeploy.
+     */
+    mostrarFotosPlatos: boolean;
+  };
 }
 
 export interface VinosSSG {
@@ -102,3 +117,4 @@ export interface BebidasSSG {
   generadoEn: string;
   bebidas: BebidaSSG[];
 }
+

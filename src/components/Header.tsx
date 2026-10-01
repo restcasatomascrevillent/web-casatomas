@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
@@ -38,7 +37,8 @@ const Header = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -88,12 +88,21 @@ const Header = () => {
     setIsMobileMenuOpen(false);
 
     let primeraVez = true;
+    let ultimoTop: number | undefined;
     const alinear = () => {
       const el = document.getElementById(sectionId);
-      if (el) el.scrollIntoView({ behavior: primeraVez ? "smooth" : "auto" });
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      // ResizeObserver fires once on observe. Do not interrupt the first
+      // smooth scroll unless the destination actually moved during loading.
+      if (ultimoTop !== undefined && Math.abs(top - ultimoTop) < 1) return;
+      ultimoTop = top;
+      const smooth = primeraVez && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ behavior: smooth ? "smooth" : "instant" });
       primeraVez = false;
     };
 
+    alinear();
     const observador = new ResizeObserver(alinear);
     observador.observe(document.body);
 
@@ -131,24 +140,18 @@ const Header = () => {
     { id: "contacto", label: t.header.nav.contacto },
   ];
 
-  // `initial={false}`: sin esto, Framer Motion deja el header prerenderizado
-  // con `transform: translateY(-100px)` (fuera de pantalla) hasta que el JS
-  // hidrata y lo anima — en una conexión lenta, la web tarda segundos en
-  // mostrar el logo y el menú.
   return (
-    <motion.header
-      initial={false}
-      animate={{ y: 0 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    <header
+      className={`site-header fixed top-0 left-0 right-0 z-50 transition-colors duration-200 ${
         isScrolled
-          ? "bg-background/95 backdrop-blur-md shadow-lg border-b border-border"
+          ? "bg-background lg:bg-background/95 lg:backdrop-blur-md shadow-sm border-b border-border"
           : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <motion.button
+          <button
             onClick={() => {
               if (location.pathname !== home) {
                 navigate(home);
@@ -157,8 +160,6 @@ const Header = () => {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             className="flex items-center gap-2 cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             <img
               src={logoSmall.src}
@@ -172,7 +173,7 @@ const Header = () => {
               height={LOGO_HEIGHT}
               decoding="async"
             />
-          </motion.button>
+          </button>
 
           {/* Desktop Navigation: con justify-between en la fila, el hueco al
               logo y el hueco al icono del planeta quedan siempre iguales,
@@ -257,22 +258,15 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
+      <>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
+          <div
             className="lg:hidden bg-background border-t border-border"
           >
             <nav className="flex flex-col p-4 space-y-2">
-              {navItems.map((item, index) => (
-                <motion.div
+              {navItems.map((item) => (
+                <div
                   key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
                 >
                   <button
                     onClick={() => handleNavClick(item.id)}
@@ -280,12 +274,9 @@ const Header = () => {
                   >
                     {item.label}
                   </button>
-                </motion.div>
+                </div>
               ))}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: navItems.length * 0.1 }}
+              <div
                 className="pt-2"
               >
                 <Button
@@ -298,13 +289,14 @@ const Header = () => {
                 >
                   {t.header.cta}
                 </Button>
-              </motion.div>
+              </div>
             </nav>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
-    </motion.header>
+      </>
+    </header>
   );
 };
 
 export default Header;
+

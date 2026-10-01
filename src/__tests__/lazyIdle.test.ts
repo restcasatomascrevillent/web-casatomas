@@ -1,15 +1,9 @@
-/**
- * `idleImport` sin `requestIdleCallback` (jsdom no lo implementa, igual que
- * Safari/iOS en la vida real — nunca lo ha soportado). El bug: el fallback
- * disparaba un `setTimeout` fijo de 200 ms, así que en iOS las seis
- * secciones de la portada empezaban a descargarse a la vez justo cuando el
- * hero (el LCP) podía seguir cargando. Ahora espera al evento `load`.
- */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { idleImport } from "@/lib/lazyIdle";
 
 describe("idleImport", () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     Object.defineProperty(document, "readyState", { value: "complete", configurable: true });
   });
@@ -64,4 +58,30 @@ describe("idleImport", () => {
     await expect(promesa).resolves.toBe("modulo");
     expect(cargar).toHaveBeenCalledTimes(1);
   });
+  it("hydrates after the deadline even if a slow resource never fires load", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("requestIdleCallback", undefined);
+    Object.defineProperty(document, "readyState", { value: "loading", configurable: true });
+    const cargar = vi.fn().mockResolvedValue("ready");
+    const pending = idleImport(cargar, 100)();
+    await vi.advanceTimersByTimeAsync(100);
+    await expect(pending).resolves.toBe("ready");
+    window.dispatchEvent(new Event("load"));
+    await vi.runAllTimersAsync();
+    expect(cargar).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancels the deadline after load so the section is imported only once", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("requestIdleCallback", undefined);
+    Object.defineProperty(document, "readyState", { value: "loading", configurable: true });
+    const cargar = vi.fn().mockResolvedValue("ready");
+    const pending = idleImport(cargar, 100)();
+    window.dispatchEvent(new Event("load"));
+    await vi.runAllTimersAsync();
+    await expect(pending).resolves.toBe("ready");
+    expect(cargar).toHaveBeenCalledTimes(1);
+  });
+
 });
+

@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
+import MenuDietario from "@/components/carta/MenuDietario";
+import { useState, type MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Wine, Beer, AlertCircle } from "lucide-react";
@@ -99,18 +100,21 @@ const CLAVES_ENSALADAS = ["ENSALADAS", "SALAZONES"] as const;
 /** Categorías de una sola pestaña, en el orden en que se listan. */
 const CLAVES_SIMPLES = ["ARROCES", "MARISCOS", "PESCADOS", "CARNES", "POSTRES"] as const;
 
-const buscarCategoria = (clave: string): CategoriaCarta | undefined =>
-  CATEGORIAS_CARTA.find((categoria) => categoria.clave === clave);
 
 const CartaSection = () => {
+  const { conFiltros, totalCategoria } = useFiltrosCarta();
+  const buscarCategoria = (clave: string): CategoriaCarta | undefined => {
+    const categoria = CATEGORIAS_CARTA.find(item => item.clave === clave);
+    return categoria ? { ...categoria, total: totalCategoria(clave) } : undefined;
+  };
   const { t, language } = useTranslations();
   const { toast } = useToast();
   const navigate = useNavigate();
   const etiquetas = ETIQUETAS_PUENTE[language];
   const [showAgeDialog, setShowAgeDialog] = useState(false);
 
-  const rutaVinos = construirRutaIdioma("/carta/vinos", language);
-  const rutaBebidas = construirRutaIdioma("/carta/bebidas", language);
+  const rutaVinos = conFiltros(construirRutaIdioma("/carta/vinos", language));
+  const rutaBebidas = conFiltros(construirRutaIdioma("/carta/bebidas", language));
 
   const novedades = buscarCategoria(CATEGORIA_INICIAL);
   // Cada pestaña de un grupo se busca por separado: si a una categoría no le
@@ -168,19 +172,6 @@ const CartaSection = () => {
     }
   };
 
-  // Precarga en segundo plano, sin bloquear nada: el SDK de Supabase se
-  // importa de forma perezosa en cada página de categoría para no entrar en
-  // la carga inicial, pero así ya está en caché del navegador cuando el
-  // visitante entre en cualquiera de ellas.
-  useEffect(() => {
-    const idle = "requestIdleCallback" in window ? window.requestIdleCallback : (cb: () => void) => setTimeout(cb, 1500);
-    const cancelIdle = "cancelIdleCallback" in window ? window.cancelIdleCallback : clearTimeout;
-    const id = idle(() => {
-      import("@/integrations/supabase/client");
-    });
-    return () => cancelIdle(id as number);
-  }, []);
-
   const filaClass = "py-4 border-b border-border/70 last:border-b-0";
   const filaEnlaceClass = `${filaClass} flex items-baseline justify-between gap-4`;
   const filaBotonClass = `${filaClass} flex items-center justify-between gap-4 w-full text-left`;
@@ -192,11 +183,7 @@ const CartaSection = () => {
 
   return (
     <section id="carta" className="py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-b from-background to-muted">
-      <motion.div
-        initial={false}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
+      <div
         className="max-w-7xl mx-auto"
       >
         {/* Sin subtítulo: el título y la línea bajo él ya bastan para
@@ -219,9 +206,10 @@ const CartaSection = () => {
             encontrarlos: `/carta` y el `sitemap.xml` ya enlazan a cada
             categoría por su cuenta, esta lista no es su única puerta de
             entrada. */}
+        <MenuDietario>
         <nav aria-label={etiquetas.nav} className="max-w-2xl mx-auto mb-12">
           {novedades && (
-            <Link to={rutaCategoria(novedades.slug, language)} className={`${filaEnlaceClass} group`}>
+            <Link to={conFiltros(rutaCategoria(novedades.slug, language))} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(novedades.clave, language)}</span>
               <span className={contadorClass}>{novedades.total}</span>
             </Link>
@@ -245,7 +233,7 @@ const CartaSection = () => {
                 </DialogHeader>
                 <div className="flex flex-col gap-2.5 pt-2">
                   {entrantes.map((item) => (
-                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
+                    <Link key={item.clave} to={conFiltros(rutaCategoria(item.categoria.slug, language))} className={opcionClass}>
                       <span>{item.etiqueta}</span>
                       <span className={contadorClass}>{item.categoria.total}</span>
                     </Link>
@@ -273,7 +261,7 @@ const CartaSection = () => {
                 </DialogHeader>
                 <div className="flex flex-col gap-2.5 pt-2">
                   {ensaladas.map((item) => (
-                    <Link key={item.clave} to={rutaCategoria(item.categoria.slug, language)} className={opcionClass}>
+                    <Link key={item.clave} to={conFiltros(rutaCategoria(item.categoria.slug, language))} className={opcionClass}>
                       <span>{item.etiqueta}</span>
                       <span className={contadorClass}>{item.categoria.total}</span>
                     </Link>
@@ -284,12 +272,13 @@ const CartaSection = () => {
           )}
 
           {simples.map((categoria) => (
-            <Link key={categoria.slug} to={rutaCategoria(categoria.slug, language)} className={`${filaEnlaceClass} group`}>
+            <Link key={categoria.slug} to={conFiltros(rutaCategoria(categoria.slug, language))} className={`${filaEnlaceClass} group`}>
               <span className={nombreClass}>{etiquetaCategoriaIdioma(categoria.clave, language)}</span>
               <span className={contadorClass}>{categoria.total}</span>
             </Link>
           ))}
         </nav>
+        </MenuDietario>
 
         <div className="grid grid-cols-2 gap-3 w-full max-w-2xl mx-auto">
           {/* La carta de vinos ya no se despliega aquí: tiene su propia
@@ -341,7 +330,7 @@ const CartaSection = () => {
         {/* El botón flotante del ticket ya no se monta aquí: lo pone
             `FloatingActions` (en el `Layout`) para todo el sitio, también en
             `/carta/:categoria`, `/carta/vinos` y `/carta/bebidas`. */}
-      </motion.div>
+      </div>
 
       {/* Verificación de edad antes de entrar a "Carta de vinos": solo se
           cierra pulsando uno de los dos botones (sin clic fuera, sin Escape,
@@ -374,3 +363,4 @@ const CartaSection = () => {
 };
 
 export default CartaSection;
+

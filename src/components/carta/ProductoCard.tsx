@@ -31,6 +31,12 @@ interface ProductoCardProps {
   cantidadEnPedido?: number;
   /** Sin él, la tarjeta no muestra el botón "Añadir" (solo lectura). */
   onAnadir?: () => void;
+  /**
+   * Interruptor «Fotos de platos en Casa Tomás» del panel. `false`: la tarjeta
+   * no ofrece el ojo ni pinta foto ni hueco de «sin foto» — queda nombre,
+   * categoría, alérgenos y precio, como si la foto no existiera.
+   */
+  mostrarFoto?: boolean;
 }
 
 /** "2", "2 kg", "200 g": mismo criterio de unidades que el ticket. */
@@ -115,11 +121,14 @@ const ProductoCard = ({
   prioridad = false,
   cantidadEnPedido = 0,
   onAnadir,
+  mostrarFoto = true,
 }: ProductoCardProps) => {
   const { language, t } = useTranslations();
-  const [expanded, setExpanded] = useState(false);
+  const [expandedEstado, setExpanded] = useState(false);
+  // Con las fotos apagadas la tarjeta nunca se despliega: no hay ojo que pulsar.
+  const expanded = mostrarFoto && expandedEstado;
   const [infoOpen, setInfoOpen] = useState(false);
-  const imagen = resolverImagen(plato.imagen_url, SUPABASE_URL);
+  const imagen = mostrarFoto ? resolverImagen(plato.imagen_url, SUPABASE_URL) : null;
   // Mismo vocabulario que la portada (`@/lib/alergenos`): las formas del panel
   // (`frutos_cascara`) y las de la BD (`frutos de cáscara`) son un solo token.
   const datos = datosAlergenos(plato);
@@ -205,14 +214,16 @@ const ProductoCard = ({
                   {plato.displayNombre}
                 </CardTitle>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setExpanded((valor) => !valor)}
-                    aria-label={`${expanded ? t.platos.hidePhoto : t.platos.viewPhoto} — ${plato.displayNombre}`}
-                    className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                  >
-                    {expanded ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
-                  </button>
+                  {mostrarFoto && (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((valor) => !valor)}
+                      aria-label={`${expanded ? t.platos.hidePhoto : t.platos.viewPhoto} — ${plato.displayNombre}`}
+                      className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                    >
+                      {expanded ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setInfoOpen((valor) => !valor)}

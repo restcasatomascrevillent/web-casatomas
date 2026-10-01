@@ -1,3 +1,6 @@
+import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
+import { filtrarPlatos } from "@/lib/filtros-carta";
+import MenuDietario from "@/components/carta/MenuDietario";
 import { Link, useParams } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
@@ -10,7 +13,8 @@ import {
   platosDeCategoria,
   rutaCategoria,
 } from "@/lib/carta-rutas";
-import { agruparPorCategoria } from "@/lib/carta-ssg";
+import { agruparPorCategoria, platosParaJsonLd } from "@/lib/carta-ssg";
+import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { usePedido } from "@/hooks/usePedido";
@@ -85,6 +89,7 @@ const TEXTOS: Record<
  * componente solo ve ese caso si alguien navega a él dentro de la SPA.
  */
 const CartaCategoria = () => {
+  const { filtros, conFiltros, totalCategoria } = useFiltrosCarta();
   const { language, t } = useTranslations();
   const textos = TEXTOS[language];
   // El pedido (y con él el botón flotante del ticket y la entrada al chatbot)
@@ -93,6 +98,9 @@ const CartaCategoria = () => {
   const { toast } = useToast();
   const { categoria: slug } = useParams<{ categoria: string }>();
   const categoria = categoriaPorSlug(slug);
+  // Interruptor «Fotos de platos en Casa Tomás»: valor del build y relectura
+  // en el navegador (ver el hook). Antes del `return` temprano: es un hook.
+  const mostrarFotos = useMostrarFotosPlatos();
 
   if (!categoria) {
     return (
@@ -106,7 +114,7 @@ const CartaCategoria = () => {
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {CATEGORIAS_CARTA.map((otra) => (
               <li key={otra.slug}>
-                <Link to={rutaCategoria(otra.slug, language)} className="text-accent hover:underline">
+                <Link to={conFiltros(rutaCategoria(otra.slug, language))} className="text-accent hover:underline">
                   {etiquetaCategoriaIdioma(otra.clave, language)}
                 </Link>
               </li>
@@ -127,7 +135,7 @@ const CartaCategoria = () => {
   // tiene como mucho UNA entrada, así que sus `items` ya traducidos sirven
   // también para pintar la rejilla — no hace falta resolver dos veces.
   const secciones = agruparPorCategoria(platos, language);
-  const platosTraducidos = secciones[0]?.items ?? [];
+  const platosTraducidos = filtrarPlatos(secciones[0]?.items ?? [], filtros);
 
   return (
     <>
@@ -155,7 +163,8 @@ const CartaCategoria = () => {
       {secciones.length > 0 && (
         <JsonLd
           data={menuPagina(
-            menuSchema(secciones, language, SUPABASE_URL, {
+            // Sin fotos si el panel las apagó (valor del build, ver `platosParaJsonLd`).
+            menuSchema(agruparPorCategoria(platosParaJsonLd(platos), language), language, SUPABASE_URL, {
               id: `${url}#menu`,
               nombre: `${etiqueta} — Casa Tomás`,
               url,
@@ -166,9 +175,10 @@ const CartaCategoria = () => {
 
       <CartaPageLayout
         titulo={etiqueta}
-        detalle={`${platos.length} ${textos.plato(platos.length)}`}
+        detalle={`${platosTraducidos.length} ${textos.plato(platosTraducidos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
+        <MenuDietario compacto />
         {platosTraducidos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">
             {platosTraducidos.map((plato, indice) => (
@@ -178,6 +188,7 @@ const CartaCategoria = () => {
                 categoria={etiqueta}
                 prioridad={indice < 3}
                 cantidadEnPedido={cantidadDe(plato)}
+                mostrarFoto={mostrarFotos}
                 onAnadir={() => {
                   // Mismo nombre y categoría que guarda `CartaPlatos` desde la
                   // portada: el nombre ya traducido, la categoría cruda (es la
@@ -192,8 +203,13 @@ const CartaCategoria = () => {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground">{textos.vacia}</p>
+          <p className="text-muted-foreground">{filtros.length ? ({
+            es: "No hay platos con información suficiente para estos filtros en esta categoría. Puedes modificarlos arriba o consultar al personal.",
+            en: "No dishes have enough information for these filters in this category. Change the filters above or ask our staff.",
+            fr: "Aucun plat suffisamment renseigné ne correspond à ces filtres dans cette catégorie. Modifiez les filtres ci-dessus ou demandez au personnel.",
+          }[language]) : textos.vacia}</p>
         )}
+
 
         <nav aria-label={textos.otrasSecciones} className="mt-14">
           <h2 className="text-xl font-bold text-primary mb-4">{textos.otrasSecciones}</h2>
@@ -201,17 +217,17 @@ const CartaCategoria = () => {
             {CATEGORIAS_CARTA.filter((otra) => otra.slug !== categoria.slug).map((otra) => (
               <li key={otra.slug}>
                 <Link
-                  to={rutaCategoria(otra.slug, language)}
+                  to={conFiltros(rutaCategoria(otra.slug, language))}
                   className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
                   {etiquetaCategoriaIdioma(otra.clave, language)}
-                  <span className="ml-2 text-xs text-accent font-semibold">{otra.total}</span>
+                  <span className="ml-2 text-xs text-accent font-semibold">{totalCategoria(otra.clave)}</span>
                 </Link>
               </li>
             ))}
             <li>
               <Link
-                to={construirRutaIdioma("/carta/vinos", language)}
+                to={conFiltros(construirRutaIdioma("/carta/vinos", language))}
                 className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
                 {textos.vinos}
@@ -219,7 +235,7 @@ const CartaCategoria = () => {
             </li>
             <li>
               <Link
-                to={construirRutaIdioma("/carta/bebidas", language)}
+                to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
                 className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
                 {textos.bebidas}
@@ -233,3 +249,4 @@ const CartaCategoria = () => {
 };
 
 export default CartaCategoria;
+

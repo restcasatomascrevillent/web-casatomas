@@ -400,7 +400,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         </DialogContent>
       </Dialog>
 
-      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-8 rounded-2xl shadow-xl">
+      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-4 sm:p-8 rounded-2xl shadow-xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-6 pb-6 border-b border-border/30">
@@ -492,17 +492,17 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
               size="lg"
               onClick={checkAvailability}
               disabled={!form.watch("fecha") || !form.watch("numero_comensales") || isCheckingAvailability}
-              className="w-full h-auto py-4 bg-secondary text-foreground hover:bg-secondary/80 rounded-full text-base font-semibold shadow-sm transition-all"
+              className="w-full min-w-0 h-auto min-h-12 gap-2 whitespace-normal px-4 py-4 sm:px-8 bg-secondary text-foreground hover:bg-secondary/80 rounded-full text-base font-semibold shadow-sm transition-all"
             >
               {isCheckingAvailability ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 shrink-0 animate-spin" />
-                  <span className="text-center leading-snug">{t.reservationForm.checkingAvailability}</span>
+                  <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
+                  <span className="min-w-0 break-words text-center leading-snug">{t.reservationForm.checkingAvailability}</span>
                 </>
               ) : (
                 <>
-                  <Search className="mr-2 h-5 w-5 shrink-0" />
-                  <span className="text-center leading-snug">{t.reservationForm.checkAvailability}</span>
+                  <Search className="h-5 w-5 shrink-0" />
+                  <span className="min-w-0 break-words text-center leading-snug">{t.reservationForm.checkAvailability}</span>
                 </>
               )}
             </Button>

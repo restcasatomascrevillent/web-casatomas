@@ -465,7 +465,7 @@ export const translations: Translations = {
       reserveLink: "Book a Table",
       websiteLink: "Website",
       contactTitle: "Contact",
-      rights: "© 2025 Casa Tomás Restaurant. All rights reserved.",
+      rights: "© 2026 Casa Tomás Restaurant. All rights reserved.",
       admin: "Admin",
       terms: "Terms & Conditions",
     },

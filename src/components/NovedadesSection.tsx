@@ -110,9 +110,17 @@ const NovedadesSection = () => {
     },
     // Datos del build (ver `NOVEDADES_SSG` arriba): con esto, `isLoading` ya
     // es `false` en el primer render — SSG y primer pintado en el navegador
-    // — en vez de esperar a este `queryFn`. Sigue refrescando en segundo
-    // plano igual que antes (`staleTime` de 5 min en `App.tsx`).
+    // — en vez de esperar a este `queryFn`.
     initialData: NOVEDADES_SSG,
+    // Sin esto React Query da `initialData` por recién descargado: con el
+    // `staleTime` de 5 min de `App.tsx` (y sin refetch al enfocar) el
+    // navegador NO volvía a pedir las novedades al cargar la página, así que
+    // la web enseñaba la foto del último build. Una novedad creada o una
+    // traducción corregida en el panel no aparecía en ningún idioma hasta el
+    // siguiente deploy (y guardar novedades no dispara ninguno). Fechándolo
+    // con la hora del build, en producción siempre está caducado y se
+    // refresca al montar; el primer pintado sigue siendo el del SSG.
+    initialDataUpdatedAt: Date.parse(novedadesSSG.generadoEn) || 0,
   });
 
   const novedades = useMemo(() => data ?? [], [data]);

@@ -176,15 +176,15 @@ export const translations = {
       subtitle: "Un entorno para cada ocasión",
       cards: [
         {
-          title: "Sala principal",
+          title: "Salón",
           description: "Amplia y acogedora, ideal para reuniones familiares y eventos especiales",
         },
         {
-          title: "Comedor privado",
+          title: "Comedor",
           description: "Una sala íntima para comidas de negocios o celebraciones privadas",
         },
         {
-          title: "Terraza exterior",
+          title: "Terraza",
           description: "Disfruta de nuestra cocina al aire libre con un ambiente relajado",
         },
         {
@@ -485,7 +485,7 @@ export const translations = {
       reserveLink: "Reservar mesa",
       websiteLink: "Sitio web",
       contactTitle: "Contacto",
-      rights: "© 2025 Restaurante Casa Tomás. Todos los derechos reservados.",
+      rights: "© 2026 Restaurante Casa Tomás. Todos los derechos reservados.",
       admin: "Administración",
       terms: "Términos y condiciones",
     },
@@ -602,3 +602,4 @@ const pack: LanguagePack = {
 };
 
 export default pack;
+
