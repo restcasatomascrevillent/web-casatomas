@@ -251,6 +251,7 @@ const ContactoSection = () => {
                     </label>
                     <Input
                       type="number"
+                      inputMode="decimal"
                       placeholder={t.contacto.giftPlaceholder}
                       value={giftAmount}
                       onChange={(e) => setGiftAmount(e.target.value)}
@@ -293,9 +294,9 @@ const ContactoSection = () => {
       </motion.div>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => !enviando && setDialogOpen(open)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t.contacto.giftDialogTitle}</DialogTitle>
+        <DialogContent className="w-[92vw] sm:max-w-md max-h-[88vh] overflow-y-auto rounded-2xl">
+          <DialogHeader className="text-left">
+            <DialogTitle className="pr-8">{t.contacto.giftDialogTitle}</DialogTitle>
             <DialogDescription>{t.contacto.giftDialogDescription}</DialogDescription>
           </DialogHeader>
 
@@ -310,6 +311,8 @@ const ContactoSection = () => {
                 id="gift-buyer-name"
                 value={datos.nombre}
                 onChange={(e) => setDatos((prev) => ({ ...prev, nombre: e.target.value }))}
+                placeholder={t.contacto.giftFormBuyerNamePlaceholder}
+                autoComplete="name"
                 maxLength={200}
                 required
               />
@@ -320,8 +323,11 @@ const ContactoSection = () => {
               <Input
                 id="gift-buyer-email"
                 type="email"
+                inputMode="email"
                 value={datos.email}
                 onChange={(e) => setDatos((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder={t.contacto.giftFormBuyerEmailPlaceholder}
+                autoComplete="email"
                 maxLength={320}
                 required
               />
@@ -332,8 +338,11 @@ const ContactoSection = () => {
               <Input
                 id="gift-buyer-phone"
                 type="tel"
+                inputMode="tel"
                 value={datos.telefono}
                 onChange={(e) => setDatos((prev) => ({ ...prev, telefono: e.target.value }))}
+                placeholder={t.contacto.giftFormBuyerPhonePlaceholder}
+                autoComplete="tel"
                 maxLength={40}
               />
             </div>
@@ -344,6 +353,7 @@ const ContactoSection = () => {
                 id="gift-recipient-name"
                 value={datos.destinatario}
                 onChange={(e) => setDatos((prev) => ({ ...prev, destinatario: e.target.value }))}
+                placeholder={t.contacto.giftFormRecipientNamePlaceholder}
                 maxLength={200}
               />
             </div>
