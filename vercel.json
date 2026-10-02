@@ -5,6 +5,19 @@
   "redirects": [
     { "source": "/touza-cocktail", "destination": "https://touza-restaurant-website.vercel.app", "permanent": false }
   ],
+  "images": {
+    "sizes": [640, 768, 1024],
+    "qualities": [75],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 2592000,
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "jeamoczmbfsnwkfjxcyo.supabase.co",
+        "pathname": "^/storage/v1/object/public/.*$"
+      }
+    ]
+  },
   "headers": [
     {
       "source": "/(.*)",

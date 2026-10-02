@@ -142,3 +142,29 @@ export function resolverImagen(valor: string | undefined, supabaseUrl?: string):
   if (trimmed.includes("/")) return `${base}/storage/v1/object/public/${trimmed.replace(/^\/+/, "")}`;
   return null;
 }
+
+/** Host real de Supabase Storage, confirmado contra la base de datos — ver `vercel.json` → `images.remotePatterns`. */
+const SUPABASE_STORAGE_HOST = "jeamoczmbfsnwkfjxcyo.supabase.co";
+
+/**
+ * El panel sube las fotos de platos/vinos tal cual salen del móvil, sin
+ * redimensionar ni comprimir — de media medio MB y hasta 3 MB cada una
+ * (comprobado en Supabase Storage) para un hueco de card de 192 px de
+ * alto. Supabase Storage no transforma imágenes en el plan gratuito del
+ * proyecto, así que el redimensionado pasa por el optimizador de Vercel
+ * (`images` en `vercel.json`), que sirve AVIF/WebP ya al tamaño real.
+ * Solo envuelve fotos del propio Supabase Storage: cualquier otra URL se
+ * deja tal cual para no arriesgar un 400 del optimizador con un host que
+ * no está en su lista permitida.
+ */
+export function imagenOptimizada(url: string | null, ancho: number): string | null {
+  if (!url) return null;
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    return url;
+  }
+  if (host !== SUPABASE_STORAGE_HOST) return url;
+  return `/_vercel/image?url=${encodeURIComponent(url)}&w=${ancho}&q=75`;
+}
