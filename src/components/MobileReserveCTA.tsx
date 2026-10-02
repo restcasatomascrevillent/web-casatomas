@@ -121,23 +121,29 @@ const MobileReserveCTA = () => {
         }`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
+        {/* `min-w-0` + `whitespace-normal`: en un móvil estrecho de verdad
+            (320px, el iPhone SE de 1.ª gen sigue vivo) "Reservar mesa" con
+            icono no cabe en su mitad del `flex-1` — por defecto un hijo
+            flex no encoge por debajo del ancho de su contenido
+            (`min-width: auto`), así que el texto se salía del borde
+            derecho de la pantalla en vez de partirse en dos líneas. */}
         <div className="flex gap-2 px-3 py-3">
           <Button
             asChild
             size="lg"
-            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full shadow-lg"
+            className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal rounded-full bg-primary py-2 font-semibold text-primary-foreground shadow-lg hover:bg-primary/90"
           >
             <a href={PHONE_HREF} aria-label="Llamar a Casa Tomás">
-              <Phone className="w-5 h-5 mr-2" />
+              <Phone className="w-5 h-5 mr-2 shrink-0" />
               {t.mobileCta.call}
             </a>
           </Button>
           <Button
             size="lg"
-            className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full shadow-lg"
+            className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal rounded-full bg-accent py-2 font-semibold text-accent-foreground shadow-lg hover:bg-accent/90"
             onClick={() => navigate("/reservas")}
           >
-            <Calendar className="w-5 h-5 mr-2" />
+            <Calendar className="w-5 h-5 mr-2 shrink-0" />
             {t.mobileCta.reserve}
           </Button>
         </div>

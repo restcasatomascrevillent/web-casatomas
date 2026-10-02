@@ -45,6 +45,12 @@ const ContactoSection = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [datos, setDatos] = useState<DatosComprador>(DATOS_COMPRADOR_VACIOS);
   const [enviando, setEnviando] = useState(false);
+  // Error del formulario DENTRO del diálogo, no un toast: el toast es
+  // `fixed top-0` a todo el ancho en móvil (por encima del diálogo, que es
+  // `z-50`), así que tapaba la cabecera y la "X" de cerrar justo cuando el
+  // visitante más necesitaba verlas. Un error de esta fila es siempre
+  // visible sin hacer scroll (va pegado a la cabecera fija).
+  const [errorFormulario, setErrorFormulario] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Vuelta desde Stripe Checkout: `cheques-regalo-web` añade `#contacto` al
@@ -80,6 +86,7 @@ const ContactoSection = () => {
       return;
     }
     setDatos(DATOS_COMPRADOR_VACIOS);
+    setErrorFormulario(null);
     setDialogOpen(true);
   };
 
@@ -88,14 +95,15 @@ const ContactoSection = () => {
     const email = datos.email.trim();
 
     if (!nombre) {
-      toast({ title: t.contacto.toasts.giftMissingName, variant: "destructive" });
+      setErrorFormulario(t.contacto.toasts.giftMissingName);
       return;
     }
     if (!EMAIL_RE.test(email)) {
-      toast({ title: t.contacto.toasts.giftInvalidEmail, variant: "destructive" });
+      setErrorFormulario(t.contacto.toasts.giftInvalidEmail);
       return;
     }
 
+    setErrorFormulario(null);
     setEnviando(true);
     try {
       const response = await fetch(CHEQUES_REGALO_CREAR_URL, {
@@ -120,11 +128,7 @@ const ContactoSection = () => {
       // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
       window.location.href = cuerpo.url;
     } catch {
-      toast({
-        title: t.contacto.toasts.giftPaymentErrorTitle,
-        description: t.contacto.toasts.giftPaymentErrorDescription,
-        variant: "destructive",
-      });
+      setErrorFormulario(`${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
       setEnviando(false);
     }
   };
@@ -308,6 +312,12 @@ const ContactoSection = () => {
             <p className="text-sm font-medium text-accent">
               {t.contacto.giftFormAmountSummary.replace("{amount}", giftAmount)}
             </p>
+
+            {errorFormulario && (
+              <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {errorFormulario}
+              </p>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="gift-buyer-name">{t.contacto.giftFormBuyerName}</Label>
