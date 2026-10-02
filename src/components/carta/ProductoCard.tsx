@@ -11,7 +11,7 @@ import {
   etiquetaAlergeno,
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
-import { resolverImagen } from "@/lib/carta-ssg";
+import { imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { Translations } from "@/i18n/languages/es";
@@ -192,7 +192,7 @@ const ProductoCard = ({
                   >
                     <div className="relative h-48 overflow-hidden">
                       <img
-                        src={imagen}
+                        src={imagenOptimizada(imagen, 768)}
                         alt={plato.displayNombre}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         style={encuadre}

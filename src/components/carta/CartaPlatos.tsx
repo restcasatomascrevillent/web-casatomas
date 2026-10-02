@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { imagenOptimizada } from "@/lib/carta-ssg";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -600,7 +601,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                           <div className="relative h-48 overflow-hidden">
                             {hasVisibleImage ? (
                               <img
-                                src={imageUrl || undefined}
+                                src={imagenOptimizada(imageUrl, 768) || undefined}
                                 alt={item.displayNombre}
                                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                                 style={imageStyle}
