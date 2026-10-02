@@ -33,6 +33,7 @@ const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
+import { openCookiePreferences, useMapsConsent } from "@/lib/cookie-consent";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import BackToTopButton from "./BackToTopButton";
@@ -125,6 +126,9 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   const PAGE_SIZE = 24;
   const { toast } = useToast();
   const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
+  // El mapa es Mapbox (tercero): solo se monta con el consentimiento real del
+  // visitante, no basta con que haya token — ver `src/lib/cookie-consent.ts`.
+  const mapsConsent = useMapsConsent();
 
   const fetchVinosByCategory = useCallback(
     async (category: string, append = false) => {
@@ -466,11 +470,25 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
         </div>
       )}
 
-      {/* Mapa Mundial de vinos */}
+      {/* Mapa Mundial de vinos: Mapbox es un tercero (tiles + telemetría de
+          uso a events.mapbox.com), así que solo se monta con el
+          consentimiento real del visitante — sin él, un aviso explica por
+          qué no está y deja abrir las preferencias ahí mismo, en vez de
+          dejar el hueco en blanco como si faltara. */}
       {isAdult !== false && MAPBOX_TOKEN && !mapLoading && (
-        <Suspense fallback={null}>
-          <MapaMundoVinos vinos={mapVinos} />
-        </Suspense>
+        mapsConsent ? (
+          <Suspense fallback={null}>
+            <MapaMundoVinos vinos={mapVinos} />
+          </Suspense>
+        ) : (
+          <div className="mb-8 flex flex-col items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 py-10 px-4 text-center">
+            <MapPin className="w-8 h-8 text-muted-foreground" aria-hidden="true" />
+            <p className="max-w-sm text-sm text-muted-foreground">{t.cookie.mapsDisabledNotice}</p>
+            <Button type="button" variant="outline" size="sm" onClick={openCookiePreferences}>
+              {t.cookie.mapsEnableCta}
+            </Button>
+          </div>
+        )
       )}
 
       {isAdult !== false && (

@@ -105,9 +105,60 @@ const PoliticaPrivacidad = () => {
                     </div>
                 </section>
 
-                {/* 5. Derechos RGPD */}
+                {/* 5. Cookies */}
                 <section>
-                    <h2 className="text-xl font-bold mb-3 text-accent">5. Sus derechos</h2>
+                    <h2 className="text-xl font-bold mb-3 text-accent">5. Cookies</h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Usamos cookies y almacenamiento local propios, todos necesarios para que la web funcione, y una cookie de terceros que solo se activa si la acepta en el aviso de cookies o en "Configurar cookies" (pie de página).
+                    </p>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                        {[
+                            {
+                                nombre: "cookie_consent / cookieConsent",
+                                tipo: "Propia · Necesaria",
+                                duracion: "1 año",
+                                fin: "Guarda su elección sobre cookies para no volver a preguntarle en cada visita.",
+                            },
+                            {
+                                nombre: "language",
+                                tipo: "Propia · Necesaria",
+                                duracion: "Sin caducidad (hasta que borre los datos del navegador)",
+                                fin: "Recuerda el idioma elegido (español, inglés o francés).",
+                            },
+                            {
+                                nombre: "edad_vinos_confirmada",
+                                tipo: "Propia · Necesaria",
+                                duracion: "Sesión del navegador",
+                                fin: "Recuerda que confirmó ser mayor de edad para ver la carta de vinos, mientras dure la visita.",
+                            },
+                            {
+                                nombre: "user_session_id, pedidos, mi_mesa",
+                                tipo: "Propia · Necesaria",
+                                duracion: "Sesión del navegador",
+                                fin: "Guardan el pedido y los ajustes de \"Mi mesa\" mientras lo está preparando, sin enviarlo a nuestros servidores hasta que lo comparte.",
+                            },
+                            {
+                                nombre: "Mapbox (mapbox.com, events.mapbox.com)",
+                                tipo: "Tercero · Opcional, requiere su consentimiento",
+                                duracion: "Según la política de Mapbox",
+                                fin: "Carga el mapa interactivo de la carta de vinos y envía datos de uso anónimos a Mapbox. Sin su consentimiento, el mapa no se carga.",
+                            },
+                        ].map((item) => (
+                            <div key={item.nombre} className="rounded-lg border border-border p-4">
+                                <p className="font-semibold text-sm text-foreground">{item.nombre}</p>
+                                <p className="text-xs text-accent mt-0.5">{item.tipo} · {item.duracion}</p>
+                                <p className="text-sm text-muted-foreground mt-1">{item.fin}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-4">
+                        Puede cambiar su elección sobre la cookie opcional de Mapbox en cualquier momento desde "Configurar cookies", al pie de cualquier página, o borrando las cookies de este sitio desde los ajustes de su navegador.
+                    </p>
+                </section>
+
+                {/* 6. Derechos RGPD */}
+                <section>
+                    <h2 className="text-xl font-bold mb-3 text-accent">6. Sus derechos</h2>
                     <p className="text-sm text-muted-foreground mb-4">
                         Conforme al RGPD y la Ley Orgánica 3/2018 (LOPD-GDD), puede ejercer los siguientes derechos:
                     </p>
@@ -141,9 +192,9 @@ const PoliticaPrivacidad = () => {
                     </p>
                 </section>
 
-                {/* 6. Transferencias internacionales */}
+                {/* 7. Transferencias internacionales */}
                 <section>
-                    <h2 className="text-xl font-bold mb-3 text-accent">6. Proveedores de servicio y transferencias</h2>
+                    <h2 className="text-xl font-bold mb-3 text-accent">7. Proveedores de servicio y transferencias</h2>
                     <p className="text-sm text-muted-foreground mb-3">
                         Para prestar el servicio utilizamos los siguientes proveedores, que actúan como encargados del tratamiento y que cuentan con garantías adecuadas de protección de datos:
                     </p>
@@ -152,12 +203,13 @@ const PoliticaPrivacidad = () => {
                         <p><strong className="text-foreground">Vapi (asistente de voz IA):</strong> Procesamiento de llamadas telefónicas. <a href="https://vapi.ai/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
                         <p><strong className="text-foreground">OpenAI (modelo de lenguaje):</strong> Interpretación de las solicitudes verbales del usuario. <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
                         <p><strong className="text-foreground">Vercel (alojamiento web):</strong> Infraestructura de la aplicación. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
+                        <p><strong className="text-foreground">Mapbox (mapa interactivo de vinos):</strong> Solo si acepta la cookie opcional del mapa. <a href="https://www.mapbox.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
                     </div>
                 </section>
 
-                {/* 7. Contacto */}
+                {/* 8. Contacto */}
                 <section className="rounded-lg bg-muted/40 border border-border p-6">
-                    <h2 className="text-xl font-bold mb-2 text-accent">7. Contacto</h2>
+                    <h2 className="text-xl font-bold mb-2 text-accent">8. Contacto</h2>
                     <p className="text-sm text-muted-foreground">
                         Para cualquier consulta sobre privacidad o protección de datos, puede dirigirse a:
                     </p>

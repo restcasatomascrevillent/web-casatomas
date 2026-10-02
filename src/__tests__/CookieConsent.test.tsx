@@ -2,10 +2,15 @@
  * Tests for CookieConsent component
  *
  * Covers:
- * - Banner is shown when no consent is stored in localStorage
- * - Banner is hidden when consent is already stored
- * - Accept button stores "accepted" and hides the banner
- * - Reject button stores "rejected" and hides the banner
+ * - Banner is shown when no consent is stored
+ * - Banner is hidden when consent is already stored (new format and the
+ *   legacy plain-string format, migrated transparently)
+ * - "Aceptar todas" / "Rechazar" store a real preference and hide the banner
+ * - "Configurar" opens a preferences dialog with a real, working toggle for
+ *   the only optional cookie (the Mapbox map) and a disabled always-on
+ *   toggle for necessary cookies
+ * - The preferences dialog can be reopened later via the shared
+ *   `openCookiePreferences()` call (what the footer link uses)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -14,6 +19,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import CookieConsent from "@/components/CookieConsent";
+import { openCookiePreferences } from "@/lib/cookie-consent";
+
+const readStoredConsent = () => {
+  const raw = localStorage.getItem("cookieConsent");
+  return raw ? JSON.parse(raw) : null;
+};
 
 // Silence framer-motion animation warnings in jsdom
 beforeEach(() => {
@@ -23,6 +34,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
+  document.cookie = "cookie_consent=; Max-Age=0; Path=/";
 });
 
 function renderConsent() {
@@ -36,66 +48,110 @@ function renderConsent() {
 }
 
 describe("CookieConsent", () => {
-  it("shows the banner when localStorage has no cookieConsent entry", async () => {
+  it("shows the banner when there is no stored consent", async () => {
     renderConsent();
-    // The banner title is translated — look for the Cookie icon or any text from the component
-    // LanguageProvider may show a loading spinner briefly, so we wait.
     await waitFor(() => {
-      // The component renders a Card with a title (t.cookie.title) and two buttons
       const buttons = screen.getAllByRole("button");
-      expect(buttons.length).toBeGreaterThanOrEqual(2);
+      expect(buttons.length).toBeGreaterThanOrEqual(3); // Rechazar / Configurar / Aceptar todas
     });
   });
 
-  it("does NOT show the banner when cookieConsent is already set", async () => {
+  it("does NOT show the banner when cookieConsent is already set (current format)", async () => {
+    localStorage.setItem("cookieConsent", JSON.stringify({ maps: true, ts: new Date().toISOString() }));
+    renderConsent();
+
+    await waitFor(() => {
+      expect(screen.queryAllByRole("button").length).toBe(0);
+    });
+  });
+
+  it("migrates the old plain-string format ('accepted'/'rejected') without re-asking", async () => {
     localStorage.setItem("cookieConsent", "accepted");
     renderConsent();
 
-    // Wait a tick for the LanguageProvider to resolve, then check the DOM
     await waitFor(() => {
-      // If there are no buttons the banner is not shown (only CookieConsent renders buttons)
-      const buttons = screen.queryAllByRole("button");
-      expect(buttons.length).toBe(0);
+      expect(screen.queryAllByRole("button").length).toBe(0);
     });
   });
 
-  it("hides the banner and stores 'accepted' when the accept button is clicked", async () => {
+  it("hides the banner and stores maps:true when 'Aceptar todas' is clicked", async () => {
     const user = userEvent.setup();
     renderConsent();
 
-    // Wait for the banner to appear — buttons must be present
     await waitFor(() => {
-      expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3);
     });
 
-    // The accept button is the second button (after reject)
     const buttons = screen.getAllByRole("button");
-    const acceptButton = buttons[buttons.length - 1]; // Accept is last (right side)
-    await user.click(acceptButton);
+    await user.click(buttons[buttons.length - 1]); // Aceptar todas: el último, a la derecha
 
-    expect(localStorage.getItem("cookieConsent")).toBe("accepted");
+    expect(readStoredConsent()).toMatchObject({ maps: true });
+    // Respaldada también en una cookie real, no solo en localStorage.
+    expect(document.cookie).toContain("cookie_consent=");
 
     await waitFor(() => {
       expect(screen.queryAllByRole("button").length).toBe(0);
     });
   });
 
-  it("hides the banner and stores 'rejected' when the reject button is clicked", async () => {
+  it("hides the banner and stores maps:false when 'Rechazar' is clicked", async () => {
     const user = userEvent.setup();
     renderConsent();
 
     await waitFor(() => {
-      expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3);
     });
 
     const buttons = screen.getAllByRole("button");
-    const rejectButton = buttons[0]; // Reject is first (left side)
-    await user.click(rejectButton);
+    await user.click(buttons[0]); // Rechazar: el primero, a la izquierda
 
-    expect(localStorage.getItem("cookieConsent")).toBe("rejected");
+    expect(readStoredConsent()).toMatchObject({ maps: false });
 
     await waitFor(() => {
       expect(screen.queryAllByRole("button").length).toBe(0);
     });
+  });
+
+  it("'Configurar' opens a real preferences dialog: necessary is locked on, maps is a working toggle", async () => {
+    const user = userEvent.setup();
+    renderConsent();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3);
+    });
+
+    const buttons = screen.getAllByRole("button");
+    await user.click(buttons[1]); // Configurar: el del medio
+
+    const switches = await screen.findAllByRole("switch");
+    expect(switches).toHaveLength(2);
+    expect(switches[0]).toBeChecked();
+    expect(switches[0]).toBeDisabled(); // Necesarias: siempre activas, no se puede apagar
+    expect(switches[1]).not.toBeChecked(); // Mapa: no preseleccionado (opt-in real, no casilla premarcada)
+
+    await user.click(switches[1]);
+    expect(switches[1]).toBeChecked();
+
+    await user.click(screen.getByRole("button", { name: /guardar preferencias/i }));
+
+    expect(readStoredConsent()).toMatchObject({ maps: true });
+    await waitFor(() => {
+      expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    });
+  });
+
+  it("reopens the preferences dialog on openCookiePreferences(), even after consent was already given", async () => {
+    localStorage.setItem("cookieConsent", JSON.stringify({ maps: true, ts: new Date().toISOString() }));
+    renderConsent();
+
+    // Sin el aviso inicial (ya hay consentimiento guardado).
+    await waitFor(() => {
+      expect(screen.queryAllByRole("button").length).toBe(0);
+    });
+
+    openCookiePreferences(); // lo mismo que dispara el enlace "Configurar cookies" del footer
+
+    const switches = await screen.findAllByRole("switch");
+    expect(switches[1]).toBeChecked(); // refleja la elección ya guardada (maps:true), no se resetea
   });
 });
