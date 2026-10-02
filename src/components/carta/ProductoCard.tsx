@@ -172,6 +172,12 @@ const ProductoCard = ({
                 compositor (sin recalcular layout de por medio); el hueco de la
                 tarjeta aparece de golpe en vez de crecer suave, pero ya no
                 hay tirón. */}
+            {/* `exit` con su propia duración, más corta que la de entrada: el
+                alto en layout de este bloque no se anima (es `scaleY`, no
+                `height`), así que mientras dura la salida la tarjeta se
+                queda a tamaño completo con la foto ya encogida/desvanecida
+                dentro — cuanto más larga la salida, más se nota ese hueco
+                quieto antes del cierre de golpe al desmontar. */}
             <AnimatePresence initial={false}>
               {expanded &&
                 (imagen ? (
@@ -179,7 +185,7 @@ const ProductoCard = ({
                     key="foto"
                     initial={{ scaleY: 0, opacity: 0 }}
                     animate={{ scaleY: 1, opacity: 1 }}
-                    exit={{ scaleY: 0, opacity: 0 }}
+                    exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.12, ease: "easeInOut" } }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                     style={{ transformOrigin: "top" }}
                     className="overflow-hidden bg-muted flex-shrink-0"
@@ -207,7 +213,7 @@ const ProductoCard = ({
                     key="sin-foto"
                     initial={{ scaleY: 0, opacity: 0 }}
                     animate={{ scaleY: 1, opacity: 1 }}
-                    exit={{ scaleY: 0, opacity: 0 }}
+                    exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.12, ease: "easeInOut" } }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                     style={{ transformOrigin: "top" }}
                     className="overflow-hidden flex-shrink-0"
