@@ -1,6 +1,9 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+// `npm:` y no esm.sh: el build de esm.sh mete el polyfill de Node de
+// deno.land/std, que llenaba los logs de "Deno.core.runMicrotasks() is not
+// supported" cada vez que el worker se apagaba.
+import Stripe from "npm:stripe@23.0.0";
 
 /**
  * Webhook de Stripe para los cheques regalo: confirma el pago, genera el
@@ -9,31 +12,64 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
  * firma la petición con `STRIPE_WEBHOOK_SECRET`, nunca manda el apikey de
  * Supabase, así que `verify_jwt` tiene que estar desactivado aquí.
  *
- * Idempotente a propósito: Stripe reintenta un webhook si no responde 200 a
- * tiempo, y puede mandar el mismo `checkout.session.completed` más de una
- * vez. Si la fila ya está "pagado" no se genera un segundo código ni se
- * manda un segundo email.
+ * Eventos que el endpoint tiene que tener suscritos en Stripe:
+ * - `checkout.session.completed`: pago hecho → código + email. Con un método
+ *   que confirma más tarde (adeudo SEPA) llega con `payment_status: "unpaid"`
+ *   y todavía no se entrega nada: la fila sigue "pendiente".
+ * - `checkout.session.async_payment_succeeded`: ese pago diferido se cobró →
+ *   código + email.
+ * - `checkout.session.async_payment_failed`: ese pago diferido falló → la fila
+ *   pasa a "cancelado".
+ * - `checkout.session.expired`: el comprador no llegó a pagar → la fila
+ *   "pendiente" pasa a "cancelado" en vez de quedarse colgada.
+ * - `charge.refunded`: reembolso TOTAL → el cheque pasa a "cancelado" y deja
+ *   de valer.
+ *
+ * Idempotente a propósito: Stripe reintenta un webhook si no responde 2xx, y
+ * puede mandar el mismo evento más de una vez (incluso a la vez). Nunca se
+ * genera un segundo código para el mismo cheque.
+ *
+ * Responde 500 cuando reintentar puede arreglar el fallo (base de datos que no
+ * responde, email que no sale): Stripe vuelve a mandar el evento en vez de
+ * darlo por entregado con el cliente cobrado y sin su código. Lo que un
+ * reintento no arregla (sesión sin cheque, cheque inexistente) se registra en
+ * el log y se responde 200.
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Casa Tomás <onboarding@resend.dev>";
 
+// Sin cliente de Stripe ni `STRIPE_SECRET_KEY`: todo lo que hace falta viene
+// en el propio evento, y verificar la firma solo necesita el secreto del
+// webhook. Menos claves cargadas, menos que perder.
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16", httpClient: Stripe.createFetchHttpClient() });
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+interface ChequeParaEmail {
+  id: string;
+  comprador_email: string;
+  comprador_nombre: string;
+  destinatario_nombre: string | null;
+  mensaje: string | null;
+  fecha_entrega_deseada: string | null;
+  importe_eur: number;
+  codigo: string;
+}
 
 function generarCodigo(): string {
   // Sin 0/O/1/I: se lee en voz alta por teléfono y por WhatsApp sin
   // confusiones. 8 caracteres de un alfabeto de 32 ⇒ más que de sobra para
   // que un cheque regalo no choque con otro por azar.
+  // `crypto.getRandomValues` y no `Math.random()`: el código vale dinero y no
+  // puede ser predecible. 32 divide exacto a 256, así que `byte % 32` no
+  // favorece a ninguna letra.
   const ALFABETO = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   let codigo = "";
-  for (let i = 0; i < 8; i++) codigo += ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
+  for (const byte of crypto.getRandomValues(new Uint8Array(8))) codigo += ALFABETO[byte % ALFABETO.length];
   return `CT-${codigo}`;
 }
 
@@ -43,26 +79,28 @@ function formatearFecha(iso: string | null): string {
   return `${dia}/${mes}/${anio}`;
 }
 
-async function enviarEmailCheque(fila: {
-  comprador_email: string;
-  comprador_nombre: string;
-  destinatario_nombre: string | null;
-  mensaje: string | null;
-  fecha_entrega_deseada: string | null;
-  importe_eur: number;
-  codigo: string;
-}): Promise<boolean> {
+/** El nombre y el mensaje los escribe el comprador y van dentro del HTML del email. */
+function escaparHtml(texto: string): string {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+async function enviarEmailCheque(fila: ChequeParaEmail): Promise<boolean> {
   if (!resend) {
     console.warn("[stripe-webhook-cheques-regalo] RESEND_API_KEY no configurada: email no enviado.");
     return false;
   }
 
-  const paraQuien = fila.destinatario_nombre ? `para <strong>${fila.destinatario_nombre}</strong>` : "";
+  const paraQuien = fila.destinatario_nombre ? `para <strong>${escaparHtml(fila.destinatario_nombre)}</strong>` : "";
   const entrega = fila.fecha_entrega_deseada
     ? `<p>Entrega deseada: <strong>${formatearFecha(fila.fecha_entrega_deseada)}</strong></p>`
     : "";
   const mensajePersonal = fila.mensaje
-    ? `<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #b08968;color:#444;">${fila.mensaje}</blockquote>`
+    ? `<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #b08968;color:#444;">${escaparHtml(fila.mensaje)}</blockquote>`
     : "";
 
   try {
@@ -72,7 +110,7 @@ async function enviarEmailCheque(fila: {
       subject: "Tu cheque regalo de Casa Tomás ya está listo",
       html: `
         <div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;">
-          <h2 style="color:#5c3d2e;">¡Gracias, ${fila.comprador_nombre}!</h2>
+          <h2 style="color:#5c3d2e;">¡Gracias, ${escaparHtml(fila.comprador_nombre)}!</h2>
           <p>Tu cheque regalo de <strong>${fila.importe_eur}€</strong> ${paraQuien} ya está pagado.</p>
           ${entrega}
           ${mensajePersonal}
@@ -90,8 +128,30 @@ async function enviarEmailCheque(fila: {
   }
 }
 
+/**
+ * Lanza si el email no sale, para que Stripe reintente: el reintento encuentra
+ * el cheque ya "pagado" sin `email_enviado_en` y lo reenvía con el MISMO código.
+ */
+async function enviarYMarcarEmail(fila: ChequeParaEmail): Promise<void> {
+  if (!(await enviarEmailCheque(fila))) throw new Error(`email del cheque ${fila.id} no enviado`);
+
+  const { error } = await supabase
+    .from("cheques_regalo")
+    .update({ email_enviado_en: new Date().toISOString() })
+    .eq("id", fila.id);
+  // Sin `throw`: el email ya salió, y un reintento lo mandaría otra vez.
+  if (error) console.error("[stripe-webhook-cheques-regalo] no se pudo guardar email_enviado_en:", error);
+}
+
+function chequeIdDeSesion(session: Stripe.Checkout.Session): string | null {
+  return session.client_reference_id || session.metadata?.cheque_regalo_id || null;
+}
+
 async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise<void> {
-  const chequeId = session.client_reference_id || session.metadata?.cheque_regalo_id;
+  // Pago diferido todavía sin cobrar: el código se da con `async_payment_succeeded`.
+  if (session.payment_status === "unpaid") return;
+
+  const chequeId = chequeIdDeSesion(session);
   if (!chequeId) {
     console.error("[stripe-webhook-cheques-regalo] sesión sin cheque_regalo_id:", session.id);
     return;
@@ -101,38 +161,88 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
     .from("cheques_regalo")
     .select("*")
     .eq("id", chequeId)
-    .single();
-  if (errorLectura || !fila) {
-    console.error("[stripe-webhook-cheques-regalo] no se encontró el cheque:", chequeId, errorLectura);
+    .maybeSingle();
+  if (errorLectura) throw new Error(`no se pudo leer el cheque ${chequeId}: ${errorLectura.message}`);
+  if (!fila) {
+    console.error("[stripe-webhook-cheques-regalo] no se encontró el cheque:", chequeId);
     return;
   }
-  if (fila.estado === "pagado") return; // Idempotencia: reintento de Stripe.
 
-  let codigo = "";
-  let guardado = false;
-  for (let intento = 0; intento < 5 && !guardado; intento++) {
-    codigo = generarCodigo();
-    const { error } = await supabase
-      .from("cheques_regalo")
-      .update({
-        estado: "pagado",
-        codigo,
-        stripe_payment_intent_id:
-          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
-      })
-      .eq("id", chequeId)
-      .eq("estado", "pendiente"); // también evita una carrera si dos eventos llegan a la vez
-    if (!error) guardado = true;
-    else if (!`${error.message}`.includes("duplicate")) {
-      console.error("[stripe-webhook-cheques-regalo] update falló:", error);
-      break;
-    }
+  if (fila.estado === "pagado") {
+    // Reintento de Stripe. Si lo que falló la otra vez fue el email, se
+    // reenvía con el código ya guardado; si salió, no queda nada por hacer.
+    if (fila.codigo && !fila.email_enviado_en) await enviarYMarcarEmail({ ...fila, codigo: fila.codigo });
+    return;
   }
-  if (!guardado) return;
+  if (fila.estado !== "pendiente") {
+    console.error(
+      `[stripe-webhook-cheques-regalo] pago recibido para el cheque ${chequeId} en estado "${fila.estado}": revisar a mano en Stripe.`,
+    );
+    return;
+  }
 
-  const emailOk = await enviarEmailCheque({ ...fila, codigo });
-  if (emailOk) {
-    await supabase.from("cheques_regalo").update({ email_enviado_en: new Date().toISOString() }).eq("id", chequeId);
+  const paymentIntentId =
+    typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
+
+  let codigo: string | null = null;
+  for (let intento = 0; intento < 5 && !codigo; intento++) {
+    const candidato = generarCodigo();
+    const { data: actualizadas, error } = await supabase
+      .from("cheques_regalo")
+      .update({ estado: "pagado", codigo: candidato, stripe_payment_intent_id: paymentIntentId })
+      .eq("id", chequeId)
+      .eq("estado", "pendiente") // también evita una carrera si dos eventos llegan a la vez
+      .select("id");
+    if (error) {
+      if (error.code === "23505") continue; // código ya usado por otro cheque (UNIQUE): se prueba otro
+      throw new Error(`no se pudo marcar pagado el cheque ${chequeId}: ${error.message}`);
+    }
+    // 0 filas: otra entrega del mismo evento ganó la carrera y ya se encarga
+    // del código y del email. Antes esto contaba como éxito y salía un segundo
+    // email con un código que no estaba en la base.
+    if (!actualizadas?.length) return;
+    codigo = candidato;
+  }
+  if (!codigo) throw new Error(`5 códigos repetidos seguidos para el cheque ${chequeId}`);
+
+  await enviarYMarcarEmail({ ...fila, codigo });
+}
+
+/** Sesión caducada sin pagar, o pago diferido que al final falló. */
+async function cancelarChequePendiente(session: Stripe.Checkout.Session): Promise<void> {
+  const chequeId = chequeIdDeSesion(session);
+  if (!chequeId) return;
+
+  const { error } = await supabase
+    .from("cheques_regalo")
+    .update({ estado: "cancelado" })
+    .eq("id", chequeId)
+    .eq("estado", "pendiente");
+  if (error) throw new Error(`no se pudo cancelar el cheque ${chequeId}: ${error.message}`);
+}
+
+async function procesarReembolso(charge: Stripe.Charge): Promise<void> {
+  const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentIntentId) return;
+
+  // Solo un reembolso TOTAL anula el cheque. Con uno parcial el cheque sigue
+  // valiendo lo que se pagó: qué hacer con la diferencia lo decide el
+  // restaurante a mano.
+  if (!charge.refunded) {
+    console.warn("[stripe-webhook-cheques-regalo] reembolso parcial, el cheque sigue vigente:", paymentIntentId);
+    return;
+  }
+
+  const { data: anulados, error } = await supabase
+    .from("cheques_regalo")
+    .update({ estado: "cancelado" })
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .eq("estado", "pagado")
+    .select("id, usado");
+  if (error) throw new Error(`no se pudo anular el cheque del pago ${paymentIntentId}: ${error.message}`);
+
+  for (const cheque of anulados ?? []) {
+    if (cheque.usado) console.warn("[stripe-webhook-cheques-regalo] reembolsado un cheque que ya se había canjeado:", cheque.id);
   }
 }
 
@@ -143,14 +253,32 @@ Deno.serve(async (req) => {
   let evento: Stripe.Event;
   try {
     if (!firma || !STRIPE_WEBHOOK_SECRET) throw new Error("falta firma o STRIPE_WEBHOOK_SECRET");
-    evento = await stripe.webhooks.constructEventAsync(cuerpo, firma, STRIPE_WEBHOOK_SECRET, undefined, cryptoProvider);
+    evento = await Stripe.webhooks.constructEventAsync(cuerpo, firma, STRIPE_WEBHOOK_SECRET, undefined, cryptoProvider);
   } catch (error) {
     console.error("[stripe-webhook-cheques-regalo] firma inválida:", error);
     return new Response(JSON.stringify({ error: "firma inválida" }), { status: 400 });
   }
 
-  if (evento.type === "checkout.session.completed") {
-    await procesarPagoCompletado(evento.data.object as Stripe.Checkout.Session);
+  try {
+    switch (evento.type) {
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded":
+        await procesarPagoCompletado(evento.data.object as Stripe.Checkout.Session);
+        break;
+      case "checkout.session.expired":
+      case "checkout.session.async_payment_failed":
+        await cancelarChequePendiente(evento.data.object as Stripe.Checkout.Session);
+        break;
+      case "charge.refunded":
+        await procesarReembolso(evento.data.object as Stripe.Charge);
+        break;
+    }
+  } catch (error) {
+    console.error(`[stripe-webhook-cheques-regalo] ${evento.type} falló, Stripe lo reintentará:`, error);
+    return new Response(JSON.stringify({ error: "no procesado" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   return new Response(JSON.stringify({ received: true }), {

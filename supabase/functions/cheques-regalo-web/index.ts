@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+// `npm:` y no esm.sh: ver el comentario en `stripe-webhook-cheques-regalo`.
+import Stripe from "npm:stripe@23.0.0";
 
 /**
  * Venta de cheques regalo desde casa-tomas-story: crea la fila "pendiente" en
@@ -16,6 +17,8 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Mejor una clave restringida (`rk_…`) que la secreta (`sk_…`): aquí solo se
+// crean sesiones de Checkout, así que basta con "Checkout Sessions: escritura".
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const CHEQUES_REGALO_ALLOWED_ORIGIN = Deno.env.get("CHEQUES_REGALO_ALLOWED_ORIGIN") || "*";
 // Para construir `success_url`/`cancel_url`. Si no se define, se usa el
@@ -25,7 +28,7 @@ const SITE_URL_FALLBACK = Deno.env.get("CHEQUES_REGALO_SITE_URL") || "https://re
 
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const stripe = STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16", httpClient: Stripe.createFetchHttpClient() })
+  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-09-30.endive", httpClient: Stripe.createFetchHttpClient() })
   : null;
 
 const corsHeaders = {
@@ -119,9 +122,14 @@ async function handleCrear(req: Request): Promise<Response> {
   const siteUrl = origin.replace(/\/+$/, "");
 
   try {
+    // Sin `payment_method_types`: Stripe enseña los métodos activados en el
+    // Dashboard (tarjeta, Apple Pay, Google Pay…) que encajen con cada
+    // comprador. Si se activa alguno que confirma más tarde (adeudo SEPA), el
+    // webhook ya espera a `async_payment_succeeded` antes de dar el código.
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
+      // Etiqueta fija para filtrar en el Dashboard las sesiones de este flujo.
+      integration_identifier: "cheques_regalo_web_qzmhtkvb",
       customer_email: compradorEmail,
       client_reference_id: fila.id,
       line_items: [
