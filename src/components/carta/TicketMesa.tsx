@@ -168,7 +168,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
           {/* Sin srcset: html-to-image lo vacía y captura `src` a pixelRatio 2. */}
           <img
             src={logoTicket}
-            alt=""
+            alt={NEGOCIO.nombre}
             width={LOGO_WIDTH}
             height={LOGO_HEIGHT}
             style={{ height: 88, width: "auto", margin: "0 auto", display: "block" }}
