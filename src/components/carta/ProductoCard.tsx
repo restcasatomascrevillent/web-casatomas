@@ -164,16 +164,24 @@ const ProductoCard = ({
         } ${infoOpen ? "[transform:rotateY(180deg)]" : ""}`}
       >
         <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
-          <Card className="font-libre-baskerville flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+          <Card className="font-libre-baskerville flex flex-col overflow-hidden transition duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+            {/* `scaleY` en vez de `height: "auto"`: animar `height` fuerza un
+                reflow en cada fotograma (la propiedad afecta al layout), y con
+                varias decenas de platos en la página el tirón se notaba al
+                abrir la foto en móvil. `scaleY` + `opacity` las anima el
+                compositor (sin recalcular layout de por medio); el hueco de la
+                tarjeta aparece de golpe en vez de crecer suave, pero ya no
+                hay tirón. */}
             <AnimatePresence initial={false}>
               {expanded &&
                 (imagen ? (
                   <motion.div
                     key="foto"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    exit={{ scaleY: 0, opacity: 0 }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
+                    style={{ transformOrigin: "top" }}
                     className="overflow-hidden bg-muted flex-shrink-0"
                   >
                     <div className="relative h-48 overflow-hidden">
@@ -197,10 +205,11 @@ const ProductoCard = ({
                 ) : (
                   <motion.div
                     key="sin-foto"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ scaleY: 0, opacity: 0 }}
+                    animate={{ scaleY: 1, opacity: 1 }}
+                    exit={{ scaleY: 0, opacity: 0 }}
                     transition={{ duration: 0.25, ease: "easeInOut" }}
+                    style={{ transformOrigin: "top" }}
                     className="overflow-hidden flex-shrink-0"
                   >
                     <div className="relative h-20 bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
