@@ -5,6 +5,7 @@ import { TelLink } from "@/components/TelLink";
 import { Button } from "@/components/ui/button";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
+import { openCookiePreferences } from "@/lib/cookie-consent";
 
 const Footer = () => {
   const { t, language } = useTranslations();
@@ -102,6 +103,13 @@ const Footer = () => {
             >
               {t.footer.terms}
             </Link>
+            <button
+              type="button"
+              onClick={openCookiePreferences}
+              className="text-xs text-stone hover:text-accent transition-colors"
+            >
+              {t.footer.cookieSettings}
+            </button>
           </div>
         </div>
       </div>

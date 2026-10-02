@@ -1,28 +1,64 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Cookie } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { getStoredConsent, saveConsent, OPEN_PREFERENCES_EVENT } from "@/lib/cookie-consent";
 
 const CookieConsent = () => {
   const { t } = useTranslations();
   const [showBanner, setShowBanner] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [mapsDraft, setMapsDraft] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem("cookieConsent");
-    if (!consent) {
-      setShowBanner(true);
-    }
+    setShowBanner(getStoredConsent() === null);
   }, []);
 
-  const handleAccept = () => {
-    localStorage.setItem("cookieConsent", "accepted");
+  // El enlace "Configurar cookies" del footer vive fuera de este componente
+  // (puede pulsarse mucho después de que el aviso ya se cerrara), así que
+  // reabre el diálogo por evento en vez de por una prop que no podría pasarle.
+  useEffect(() => {
+    const abrir = () => {
+      setMapsDraft(getStoredConsent()?.maps === true);
+      setShowPreferences(true);
+      setShowBanner(false);
+    };
+    window.addEventListener(OPEN_PREFERENCES_EVENT, abrir);
+    return () => window.removeEventListener(OPEN_PREFERENCES_EVENT, abrir);
+  }, []);
+
+  const acceptAll = () => {
+    saveConsent(true);
     setShowBanner(false);
+    setShowPreferences(false);
   };
 
-  const handleReject = () => {
-    localStorage.setItem("cookieConsent", "rejected");
+  const rejectAll = () => {
+    saveConsent(false);
     setShowBanner(false);
+    setShowPreferences(false);
+  };
+
+  const openPreferences = () => {
+    setMapsDraft(getStoredConsent()?.maps === true);
+    setShowBanner(false);
+    setShowPreferences(true);
+  };
+
+  const savePreferences = () => {
+    saveConsent(mapsDraft);
+    setShowPreferences(false);
+  };
+
+  // Si cierra el diálogo (X, Escape, clic fuera) sin guardar y todavía no hay
+  // ninguna elección almacenada, el aviso vuelve — cerrar sin elegir nada no
+  // puede dejar la web sin aviso NI con una preferencia guardada.
+  const onPreferencesOpenChange = (open: boolean) => {
+    setShowPreferences(open);
+    if (!open && getStoredConsent() === null) setShowBanner(true);
   };
 
   return (
@@ -53,20 +89,14 @@ const CookieConsent = () => {
                   .
                 </p>
               </div>
-              <div className="flex flex-row gap-2 w-full md:w-auto">
-                <Button
-                  onClick={handleReject}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 md:flex-none"
-                >
+              <div className="flex flex-row flex-wrap gap-2 w-full md:w-auto">
+                <Button onClick={rejectAll} variant="outline" size="sm" className="flex-1 md:flex-none">
                   {t.cookie.reject}
                 </Button>
-                <Button
-                  onClick={handleAccept}
-                  size="sm"
-                  className="flex-1 md:flex-none"
-                >
+                <Button onClick={openPreferences} variant="outline" size="sm" className="flex-1 md:flex-none">
+                  {t.cookie.configure}
+                </Button>
+                <Button onClick={acceptAll} size="sm" className="flex-1 md:flex-none">
                   {t.cookie.accept}
                 </Button>
               </div>
@@ -74,9 +104,44 @@ const CookieConsent = () => {
           </Card>
         </div>
       )}
+
+      <Dialog open={showPreferences} onOpenChange={onPreferencesOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.cookie.dialogTitle}</DialogTitle>
+            <DialogDescription>{t.cookie.dialogDescription}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold">{t.cookie.necessaryTitle}</p>
+                <p className="text-xs text-muted-foreground">{t.cookie.necessaryDescription}</p>
+              </div>
+              <Switch checked disabled aria-label={t.cookie.necessaryTitle} />
+            </div>
+
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold">{t.cookie.mapsTitle}</p>
+                <p className="text-xs text-muted-foreground">{t.cookie.mapsDescription}</p>
+              </div>
+              <Switch checked={mapsDraft} onCheckedChange={setMapsDraft} aria-label={t.cookie.mapsTitle} />
+            </div>
+          </div>
+
+          <DialogFooter className="flex-row gap-2 sm:justify-between">
+            <Button onClick={rejectAll} variant="outline" size="sm" className="flex-1 sm:flex-none">
+              {t.cookie.reject}
+            </Button>
+            <Button onClick={savePreferences} size="sm" className="flex-1 sm:flex-none">
+              {t.cookie.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
 
 export default CookieConsent;
-
