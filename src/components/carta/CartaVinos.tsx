@@ -609,14 +609,20 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                         expanded || infoOpen ? "h-full" : "h-auto"
                       } ${expanded ? "card--expanded" : "card--collapsed"}`}
                     >
+                      {/* `scaleY` en vez de `height: "auto"`: animar `height`
+                          fuerza un reflow en cada fotograma, y con muchas
+                          tarjetas en la página el tirón se notaba al abrir la
+                          foto en móvil. `scaleY` + `opacity` las anima el
+                          compositor, sin layout de por medio. */}
                       <AnimatePresence initial={false}>
                         {expanded && (
                           <motion.div
                             key={`image-${cardKey}`}
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
+                            initial={{ scaleY: 0, opacity: 0 }}
+                            animate={{ scaleY: 1, opacity: 1 }}
+                            exit={{ scaleY: 0, opacity: 0 }}
                             transition={{ duration: 0.25, ease: "easeInOut" }}
+                            style={{ transformOrigin: "top" }}
                             className="overflow-hidden bg-muted flex-shrink-0"
                           >
                             <div className="relative h-48 overflow-hidden">
@@ -694,10 +700,12 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                         {expanded && (
                           <motion.div
                             key={`content-${cardKey}`}
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
+                            initial={{ scaleY: 0, opacity: 0 }}
+                            animate={{ scaleY: 1, opacity: 1 }}
+                            exit={{ scaleY: 0, opacity: 0 }}
                             transition={{ duration: 0.22, ease: "easeInOut" }}
+                            style={{ transformOrigin: "top" }}
+                            className="overflow-hidden"
                           >
                             <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
                               {originLabel && (
