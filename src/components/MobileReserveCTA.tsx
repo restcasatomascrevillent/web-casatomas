@@ -121,29 +121,31 @@ const MobileReserveCTA = () => {
         }`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {/* `min-w-0` + `whitespace-normal`: en un móvil estrecho de verdad
-            (320px, el iPhone SE de 1.ª gen sigue vivo) "Reservar mesa" con
-            icono no cabe en su mitad del `flex-1` — por defecto un hijo
-            flex no encoge por debajo del ancho de su contenido
-            (`min-width: auto`), así que el texto se salía del borde
-            derecho de la pantalla en vez de partirse en dos líneas. */}
+        {/* Siempre en una sola línea (`whitespace-nowrap`, alto fijo `h-11`
+            que coincide con `MOBILE_CTA_HEIGHT`). Para que "Reservar mesa"
+            con icono quepa en su mitad del `flex-1` incluso a 320px (el
+            iPhone SE de 1.ª gen sigue vivo), el `px-8` de `size="lg"` se
+            reduce a `px-2` hasta `sm` y el texto baja a 13px por debajo de
+            360px;
+            `min-w-0` deja que el hijo flex encoja por debajo del ancho de
+            su contenido (`min-width: auto` por defecto). */}
         <div className="flex gap-2 px-3 py-3">
           <Button
             asChild
             size="lg"
-            className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal rounded-full bg-primary py-2 font-semibold text-primary-foreground shadow-lg hover:bg-primary/90"
+            className="h-11 min-w-0 flex-1 rounded-full bg-primary px-2 text-[13px] font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 min-[360px]:text-sm sm:px-8"
           >
             <a href={PHONE_HREF} aria-label="Llamar a Casa Tomás">
-              <Phone className="w-5 h-5 mr-2 shrink-0" />
+              <Phone className="w-5 h-5" />
               {t.mobileCta.call}
             </a>
           </Button>
           <Button
             size="lg"
-            className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal rounded-full bg-accent py-2 font-semibold text-accent-foreground shadow-lg hover:bg-accent/90"
+            className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2 text-[13px] font-semibold text-accent-foreground shadow-lg hover:bg-accent/90 min-[360px]:text-sm sm:px-8"
             onClick={() => navigate("/reservas")}
           >
-            <Calendar className="w-5 h-5 mr-2 shrink-0" />
+            <Calendar className="w-5 h-5" />
             {t.mobileCta.reserve}
           </Button>
         </div>
