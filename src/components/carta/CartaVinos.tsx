@@ -613,14 +613,18 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                           fuerza un reflow en cada fotograma, y con muchas
                           tarjetas en la página el tirón se notaba al abrir la
                           foto en móvil. `scaleY` + `opacity` las anima el
-                          compositor, sin layout de por medio. */}
+                          compositor, sin layout de por medio — pero el alto
+                          real de la tarjeta no se achica con la foto: `exit`
+                          lleva su propia duración, más corta, para que no se
+                          note la tarjeta quieta a tamaño completo mientras la
+                          foto ya se encogió antes del cierre de golpe. */}
                       <AnimatePresence initial={false}>
                         {expanded && (
                           <motion.div
                             key={`image-${cardKey}`}
                             initial={{ scaleY: 0, opacity: 0 }}
                             animate={{ scaleY: 1, opacity: 1 }}
-                            exit={{ scaleY: 0, opacity: 0 }}
+                            exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.12, ease: "easeInOut" } }}
                             transition={{ duration: 0.25, ease: "easeInOut" }}
                             style={{ transformOrigin: "top" }}
                             className="overflow-hidden bg-muted flex-shrink-0"
@@ -702,7 +706,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                             key={`content-${cardKey}`}
                             initial={{ scaleY: 0, opacity: 0 }}
                             animate={{ scaleY: 1, opacity: 1 }}
-                            exit={{ scaleY: 0, opacity: 0 }}
+                            exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.11, ease: "easeInOut" } }}
                             transition={{ duration: 0.22, ease: "easeInOut" }}
                             style={{ transformOrigin: "top" }}
                             className="overflow-hidden"
