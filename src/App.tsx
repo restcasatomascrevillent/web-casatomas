@@ -136,9 +136,12 @@ const cartaChildren = (lang: Language): RouteRecord[] => [
 
 /**
  * Condiciones de reserva y de la newsletter: en las TRES ramas, a diferencia
- * de la política de privacidad, porque las enlazan las casillas del
- * formulario de reserva, que vive en la portada de los tres idiomas. Fábrica
- * por la misma razón que `buildCatchAllRoute` (un objeto por rama).
+ * de la política de privacidad, porque las enlaza el pie de página de cada
+ * idioma. Las casillas del formulario de reserva también las enlazan, pero el
+ * formulario solo existe en `/reservas` (rama española; los botones
+ * «Reservar» de `/en` y `/fr` llevan ahí), así que hoy abren siempre
+ * `/condiciones`. Fábrica por la misma razón que `buildCatchAllRoute` (un
+ * objeto por rama).
  */
 const buildCondicionesRoute = (): RouteRecord => ({
   path: "condiciones",

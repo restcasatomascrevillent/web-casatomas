@@ -19,9 +19,13 @@ type Seccion = { readonly title: string; readonly paragraphs: readonly string[] 
  * visual que `PoliticaPrivacidad` y, como ella, `noindex`.
  *
  * A diferencia de la política (solo en español), esta página existe en las
- * tres ramas (`/condiciones`, `/en/condiciones`, `/fr/condiciones`) porque la
- * enlaza el formulario de reserva, que está en la portada de los tres
- * idiomas: quien reserva en inglés debe poder leer en inglés lo que acepta.
+ * tres ramas (`/condiciones`, `/en/condiciones`, `/fr/condiciones`): el pie de
+ * página de cada idioma enlaza a la suya. El formulario de reserva, en cambio,
+ * solo existe en `/reservas` (rama española; los botones «Reservar» de `/en`
+ * y `/fr` llevan ahí), así que hoy sus casillas siempre abren `/condiciones`.
+ * Ya construye el enlace con el idioma activo (`construirRutaIdioma`), de modo
+ * que cuando existan `/en/reservas` y `/fr/reservas` apuntará a su rama sin
+ * tocar nada.
  */
 const Condiciones = () => {
   const { t, language } = useTranslations();

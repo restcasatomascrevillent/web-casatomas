@@ -83,7 +83,7 @@ const conTelefono = (texto: string) => texto.replace("{phone}", PHONE_DISPLAY);
 
 /**
  * Enlace de las casillas legales. Se abre en pestaña nueva a propósito: el
- * formulario vive en la portada, y navegar en la misma pestaña desmontaría
+ * formulario vive en `/reservas`, y navegar en la misma pestaña desmontaría
  * el formulario y se perdería todo lo que el visitante ya ha rellenado.
  * Al ser un `<a>`, pulsarlo dentro del `<label>` NO marca la casilla (el
  * enlace es el destino de la activación, no la etiqueta).
