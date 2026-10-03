@@ -54,7 +54,7 @@ const PoliticaPrivacidad = () => {
                         <li>Dirección de correo electrónico (opcional)</li>
                         <li>Fecha, hora y número de comensales de la reserva</li>
                         <li>Peticiones especiales o notas adicionales (si las indica)</li>
-                        <li>Si se suscribe a la newsletter: su consentimiento y la fecha en que lo dio</li>
+                        <li>Si se suscribe a la newsletter: su consentimiento, la fecha en que lo dio y la fecha en que confirmó su email</li>
                     </ul>
                     <p className="text-sm text-muted-foreground mt-4">
                         <strong className="text-foreground">Asistente telefónico:</strong> Cuando llama a nuestro número, su llamada puede ser atendida por un asistente de voz automatizado. En ese caso, el número de teléfono desde el que llama se registra automáticamente para vincular su reserva. La llamada puede ser grabada por razones de calidad y seguridad; en tal caso, le informaremos al inicio de la llamada.
@@ -84,7 +84,7 @@ const PoliticaPrivacidad = () => {
                             {
                                 fin: "Newsletter (novedades y ofertas)",
                                 base: "Consentimiento (Art. 6.1.a RGPD)",
-                                desc: "Envío ocasional de novedades, eventos, menús especiales y ofertas de Casa Tomás a su email, usando el nombre y el email de la reserva. Solo si marca la casilla específica de la newsletter al reservar: es independiente de la aceptación de las condiciones de reserva, está desmarcada por defecto y no es necesaria para reservar. Puede retirar su consentimiento y darse de baja en cualquier momento, sin coste, desde el enlace incluido en cada email; la baja es inmediata.",
+                                desc: "Envío ocasional de novedades, eventos, menús especiales y ofertas de Casa Tomás a su email, usando el nombre y el email de la reserva. Solo si marca la casilla específica de la newsletter al reservar: es independiente de la aceptación de las condiciones de reserva, está desmarcada por defecto y no es necesaria para reservar. Marcar la casilla no le suscribe todavía: le damos de alta solo cuando confirma su reserva desde el enlace del email que le enviamos (doble verificación), lo que acredita que el email es suyo; si la reserva se confirma por otra vía (por ejemplo, por teléfono) o se cancela antes, no le suscribimos. Puede retirar su consentimiento y darse de baja en cualquier momento, sin coste, desde el enlace incluido en cada email; la baja es inmediata.",
                                 enlace: {
                                     texto: "Ver las condiciones de la newsletter",
                                     href: `${CONDICIONES_PATH}#${ANCLA_CONDICIONES_NEWSLETTER}`,
@@ -121,7 +121,7 @@ const PoliticaPrivacidad = () => {
                             <strong className="text-foreground">Registros de llamadas:</strong> Los registros generados por el asistente telefónico (número llamante, duración, resumen) se eliminan automáticamente a los <strong>3 meses</strong>.
                         </p>
                         <p>
-                            <strong className="text-foreground">Newsletter:</strong> Mientras no retire su consentimiento. Al darse de baja dejamos de enviarle la newsletter de inmediato; podemos conservar la constancia de su consentimiento y de su baja durante el tiempo necesario para acreditarlos ante posibles reclamaciones.
+                            <strong className="text-foreground">Newsletter:</strong> Mientras no retire su consentimiento. Al darse de baja dejamos de enviarle la newsletter de inmediato; podemos conservar la constancia de su consentimiento, de la confirmación de su email y de su baja durante el tiempo necesario para acreditarlos ante posibles reclamaciones.
                         </p>
                         <p>
                             <strong className="text-foreground">Cookies:</strong> Consulte nuestra política de cookies para los plazos específicos de cada cookie.
