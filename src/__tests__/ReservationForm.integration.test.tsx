@@ -35,6 +35,11 @@ import { PHONE_DISPLAY } from "@/components/TelLink";
 // Sonner toaster must be in the tree for toasts to render
 import { Toaster } from "sonner";
 
+// Los flujos completos (calendario + disponibilidad + rellenar + dos casillas)
+// rondan los 2-3 s en solitario; con la suite entera en paralelo alguno pasaba
+// de los 5 s por defecto y fallaba por tiempo, no por comportamiento.
+vi.setConfig({ testTimeout: 15_000 });
+
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
   // El checkbox de consentimiento del newsletter monta un Checkbox de Radix,
@@ -683,6 +688,11 @@ async function comprobarDisponibilidad(user: ReturnType<typeof userEvent.setup>)
   await user.click(screen.getByRole("button", { name: /comprobar disponibilidad/i }));
 }
 
+/** Casilla obligatoria de condiciones de reserva + política de privacidad. */
+const casillaCondiciones = () => screen.getByRole("checkbox", { name: /acepto las condiciones de reserva/i });
+/** Casilla opcional de la newsletter. */
+const casillaNewsletter = () => screen.getByRole("checkbox", { name: /newsletter de casa tom/i });
+
 /** Rellena el formulario entero y lo envia. */
 async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
   await comprobarDisponibilidad(user);
@@ -693,6 +703,8 @@ async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
   await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
   await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+  // Obligatoria: sin aceptar las condiciones el formulario no se envía.
+  await user.click(casillaCondiciones());
 
   await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
 }
@@ -1213,6 +1225,7 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
     await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
     await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
     await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+    await user.click(casillaCondiciones());
     await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
 
     await screen.findByText(EXITO.successTitle);
@@ -1227,57 +1240,160 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
 });
 
 // ---------------------------------------------------------------------------
-// Casilla de consentimiento del newsletter: desmarcada por defecto (RGPD
-// exige opt-in explícito, nunca una casilla premarcada), y su valor viaja
-// tal cual a `/crear` en `consentimiento_newsletter`.
+// Casillas legales del formulario.
+//
+// - Condiciones de reserva + política de privacidad: OBLIGATORIA. Sin ella no
+//   se envía nada; viaja a `/crear` como `acepta_condiciones: true`.
+// - Newsletter: OPCIONAL, separada y desmarcada por defecto (RGPD/LSSI exigen
+//   un consentimiento libre y específico, nunca premarcado ni agrupado con
+//   las condiciones). Viaja tal cual en `consentimiento_newsletter`.
 // ---------------------------------------------------------------------------
 
-describe("ReservationForm — consentimiento del newsletter", () => {
-  it("la casilla empieza desmarcada", async () => {
+/** Cuerpo JSON de la llamada a `/crear`, o `undefined` si no la hubo. */
+function cuerpoCrear(): Record<string, unknown> | undefined {
+  const llamada = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
+  return llamada ? JSON.parse(String(llamada[1]?.body)) : undefined;
+}
+
+/** Hasta el paso 3 relleno, SIN tocar ninguna de las dos casillas. */
+async function rellenarSinCasillas(user: ReturnType<typeof userEvent.setup>) {
+  await comprobarDisponibilidad(user);
+  await user.click(await screen.findByRole("button", { name: "13:00" }));
+  await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
+  await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
+  await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+}
+
+describe("ReservationForm — aceptación de las condiciones de reserva", () => {
+  it("la casilla existe, es obligatoria y empieza desmarcada", async () => {
     renderForm();
     await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
 
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
+    const casilla = casillaCondiciones();
+    expect(casilla).not.toBeChecked();
+    expect(casilla).toHaveAttribute("aria-required", "true");
   });
 
-  it("sin marcarla, se envia consentimiento_newsletter:false", async () => {
-    mockReservas(
-      () => new Response(JSON.stringify({ ok: true, reserva_id: "r-5", estado: "pendiente" }), { status: 201 }),
-    );
+  it("enlaza a las condiciones de reserva y a la política de privacidad en pestaña nueva", async () => {
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    const condiciones = screen.getByRole("link", { name: /condiciones de reserva/i });
+    expect(condiciones).toHaveAttribute("href", "/condiciones#reservas");
+    expect(condiciones).toHaveAttribute("target", "_blank");
+    expect(condiciones).toHaveAttribute("rel", expect.stringContaining("noopener"));
+
+    const privacidad = screen.getByRole("link", { name: /política de privacidad/i });
+    expect(privacidad).toHaveAttribute("href", "/politica-privacidad");
+    expect(privacidad).toHaveAttribute("target", "_blank");
+  });
+
+  it("sin aceptarlas NO se envía la reserva y se avisa con un error asociado a la casilla", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await rellenarSinCasillas(user);
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    const error = await screen.findByText(esPack.translations.validation.termsRequired);
+    const casilla = casillaCondiciones();
+    expect(casilla).toHaveAttribute("aria-invalid", "true");
+    expect(casilla.getAttribute("aria-describedby")).toContain(error.id);
+    expect(cuerpoCrear()).toBeUndefined();
+    expect(screen.queryByText(EXITO.successTitle)).toBeNull();
+  });
+
+  it("al aceptarlas se envía acepta_condiciones:true", async () => {
+    mockReservas(creada);
 
     const user = userEvent.setup();
     renderForm();
     await enviarReserva(user);
 
-    await screen.findByText(/reserva confirmada/i);
+    await screen.findByText(EXITO.successTitle);
+    expect(cuerpoCrear()?.acepta_condiciones).toBe(true);
+  });
+});
 
-    const llamadaCrear = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
-    const cuerpo = JSON.parse(String(llamadaCrear?.[1]?.body));
-    expect(cuerpo.consentimiento_newsletter).toBe(false);
+describe("ReservationForm — consentimiento de la newsletter", () => {
+  it("es una casilla distinta de la de condiciones, opcional y desmarcada", async () => {
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    expect(casillaNewsletter()).not.toBe(casillaCondiciones());
+    expect(casillaNewsletter()).not.toBeChecked();
+    expect(casillaNewsletter()).not.toHaveAttribute("aria-required");
   });
 
-  it("al marcarla, se envia consentimiento_newsletter:true", async () => {
-    mockReservas(
-      () => new Response(JSON.stringify({ ok: true, reserva_id: "r-6", estado: "pendiente" }), { status: 201 }),
-    );
+  it("junto a la casilla hay un enlace a las condiciones de la newsletter, que no la marca", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    const enlace = screen.getByRole("link", { name: /condiciones de la newsletter/i });
+    expect(enlace).toHaveAttribute("href", "/condiciones#newsletter");
+    expect(enlace).toHaveAttribute("target", "_blank");
+    // "Junto a la casilla": dentro del mismo recuadro que el checkbox.
+    expect(casillaNewsletter().closest("div.rounded-xl")).toContainElement(enlace);
+
+    await user.click(enlace);
+    expect(casillaNewsletter()).not.toBeChecked();
+  });
+
+  it("sin marcarla, se envia consentimiento_newsletter:false (y la reserva sale igual)", async () => {
+    mockReservas(creada);
 
     const user = userEvent.setup();
     renderForm();
-    await comprobarDisponibilidad(user);
+    await enviarReserva(user);
 
-    const hora = await screen.findByRole("button", { name: "13:00" });
-    await user.click(hora);
-    await user.click(screen.getByRole("checkbox"));
+    await screen.findByText(EXITO.successTitle);
+    const cuerpo = cuerpoCrear();
+    expect(cuerpo?.consentimiento_newsletter).toBe(false);
+    expect(cuerpo?.acepta_condiciones).toBe(true);
+  });
 
-    await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
-    await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
-    await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+  it("al marcarla, se envia consentimiento_newsletter:true", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await rellenarSinCasillas(user);
+    await user.click(casillaNewsletter());
+    await user.click(casillaCondiciones());
     await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
 
-    await screen.findByText(/reserva confirmada/i);
+    await screen.findByText(EXITO.successTitle);
+    const cuerpo = cuerpoCrear();
+    expect(cuerpo?.consentimiento_newsletter).toBe(true);
+    expect(cuerpo?.acepta_condiciones).toBe(true);
+  });
 
-    const llamadaCrear = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
-    const cuerpo = JSON.parse(String(llamadaCrear?.[1]?.body));
-    expect(cuerpo.consentimiento_newsletter).toBe(true);
+  it("marcar la newsletter no basta para reservar: las condiciones siguen siendo obligatorias", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await rellenarSinCasillas(user);
+    await user.click(casillaNewsletter());
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    await screen.findByText(esPack.translations.validation.termsRequired);
+    expect(cuerpoCrear()).toBeUndefined();
+  });
+});
+
+describe("casillas legales en es/en/fr", () => {
+  it("los tres idiomas traen los textos de las casillas y el error, sin vacíos", () => {
+    for (const pack of [esPack, enPack, frPack]) {
+      const f = pack.translations.reservationForm;
+      for (const texto of [f.termsLabel, f.termsLink, f.privacyLink, f.newTabHint, f.newsletterLabel, f.newsletterTermsLink]) {
+        expect(texto.trim()).not.toBe("");
+      }
+      expect(f.termsLabel).toContain("{terms}");
+      expect(f.termsLabel).toContain("{privacy}");
+      expect(pack.translations.validation.termsRequired.trim()).not.toBe("");
+    }
   });
 });
