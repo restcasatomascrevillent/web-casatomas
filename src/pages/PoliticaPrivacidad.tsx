@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
+import { ANCLA_CONDICIONES_NEWSLETTER, CONDICIONES_PATH } from "@/lib/condiciones";
 
 const PoliticaPrivacidad = () => {
     return (
@@ -23,7 +24,7 @@ const PoliticaPrivacidad = () => {
                         Volver al inicio
                     </Link>
                     <h1 className="text-3xl md:text-4xl font-bold">Política de Privacidad</h1>
-                    <p className="text-stone mt-2 text-sm">Última actualización: febrero de 2026</p>
+                    <p className="text-stone mt-2 text-sm">Última actualización: octubre de 2026</p>
                 </div>
             </div>
 
@@ -53,6 +54,7 @@ const PoliticaPrivacidad = () => {
                         <li>Dirección de correo electrónico (opcional)</li>
                         <li>Fecha, hora y número de comensales de la reserva</li>
                         <li>Peticiones especiales o notas adicionales (si las indica)</li>
+                        <li>Si se suscribe a la newsletter: su consentimiento y la fecha en que lo dio</li>
                     </ul>
                     <p className="text-sm text-muted-foreground mt-4">
                         <strong className="text-foreground">Asistente telefónico:</strong> Cuando llama a nuestro número, su llamada puede ser atendida por un asistente de voz automatizado. En ese caso, el número de teléfono desde el que llama se registra automáticamente para vincular su reserva. La llamada puede ser grabada por razones de calidad y seguridad; en tal caso, le informaremos al inicio de la llamada.
@@ -82,13 +84,27 @@ const PoliticaPrivacidad = () => {
                             {
                                 fin: "Newsletter (novedades y ofertas)",
                                 base: "Consentimiento (Art. 6.1.a RGPD)",
-                                desc: "Solo si marca la casilla de consentimiento explícita al reservar. Puede retirar su consentimiento y darse de baja en cualquier momento desde el enlace incluido en cada email.",
+                                desc: "Envío ocasional de novedades, eventos, menús especiales y ofertas de Casa Tomás a su email, usando el nombre y el email de la reserva. Solo si marca la casilla específica de la newsletter al reservar: es independiente de la aceptación de las condiciones de reserva, está desmarcada por defecto y no es necesaria para reservar. Puede retirar su consentimiento y darse de baja en cualquier momento, sin coste, desde el enlace incluido en cada email; la baja es inmediata.",
+                                enlace: {
+                                    texto: "Ver las condiciones de la newsletter",
+                                    href: `${CONDICIONES_PATH}#${ANCLA_CONDICIONES_NEWSLETTER}`,
+                                },
                             },
                         ].map((item) => (
                             <div key={item.fin} className="rounded-lg border border-border p-4">
                                 <p className="font-semibold text-sm">{item.fin}</p>
                                 <p className="text-xs text-accent mt-0.5">{item.base}</p>
-                                <p className="text-sm text-muted-foreground mt-1">{item.desc}</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {item.desc}
+                                    {item.enlace && (
+                                        <>
+                                            {" "}
+                                            <Link to={item.enlace.href} className="text-accent hover:underline">
+                                                {item.enlace.texto}
+                                            </Link>
+                                        </>
+                                    )}
+                                </p>
                             </div>
                         ))}
                     </div>
@@ -103,6 +119,9 @@ const PoliticaPrivacidad = () => {
                         </p>
                         <p>
                             <strong className="text-foreground">Registros de llamadas:</strong> Los registros generados por el asistente telefónico (número llamante, duración, resumen) se eliminan automáticamente a los <strong>3 meses</strong>.
+                        </p>
+                        <p>
+                            <strong className="text-foreground">Newsletter:</strong> Mientras no retire su consentimiento. Al darse de baja dejamos de enviarle la newsletter de inmediato; podemos conservar la constancia de su consentimiento y de su baja durante el tiempo necesario para acreditarlos ante posibles reclamaciones.
                         </p>
                         <p>
                             <strong className="text-foreground">Cookies:</strong> Consulte nuestra política de cookies para los plazos específicos de cada cookie.
@@ -208,6 +227,7 @@ const PoliticaPrivacidad = () => {
                         <p><strong className="text-foreground">Vapi (asistente de voz IA):</strong> Procesamiento de llamadas telefónicas. <a href="https://vapi.ai/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
                         <p><strong className="text-foreground">OpenAI (modelo de lenguaje):</strong> Interpretación de las solicitudes verbales del usuario. <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
                         <p><strong className="text-foreground">Vercel (alojamiento web):</strong> Infraestructura de la aplicación. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
+                        <p><strong className="text-foreground">Proveedor de envío de correo electrónico:</strong> Envío de los emails de la reserva y, si se ha suscrito, de la newsletter. Actúa solo por cuenta de Casa Tomás y siguiendo sus instrucciones.</p>
                         <p><strong className="text-foreground">Mapbox (mapa interactivo de vinos):</strong> Solo si acepta la cookie opcional del mapa. <a href="https://www.mapbox.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Política de privacidad</a></p>
                     </div>
                 </section>
@@ -236,6 +256,8 @@ const PoliticaPrivacidad = () => {
                     <Link to="/" className="hover:text-accent transition-colors">Inicio</Link>
                     {" · "}
                     <Link to="/politica-privacidad" className="hover:text-accent transition-colors">Política de Privacidad</Link>
+                    {" · "}
+                    <Link to={CONDICIONES_PATH} className="hover:text-accent transition-colors">Condiciones de reserva y newsletter</Link>
                 </p>
             </footer>
         </div>
