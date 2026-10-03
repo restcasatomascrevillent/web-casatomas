@@ -63,6 +63,17 @@ describe("Compra guiada del cheque", () => {
     const body=JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
     expect(body.solicita_factura).toBe(false); expect(body.datos_factura).toBeUndefined();
   });
+  it("mantiene el campo montado y el foco al continuar", () => {
+    render(<ContactoSection />);
+    fireEvent.click(screen.getByRole("button", { name: "100€" }));
+    fireEvent.click(screen.getByRole("button", { name: c.giftButton }));
+    const input = screen.getByLabelText(c.giftFormBuyerName);
+    input.focus();
+    fireEvent.change(input, { target: { value: "Ana" } });
+    continuar();
+    expect(screen.getByLabelText(c.giftFormBuyerEmail)).toBe(input);
+    expect(screen.getByLabelText(c.giftFormBuyerEmail)).toHaveFocus();
+  });
   it("ajusta el diálogo al espacio visible cuando se abre el teclado", async () => {
     const viewport = new EventTarget() as EventTarget & { height: number; offsetTop: number };
     viewport.height = 760; viewport.offsetTop = 0;

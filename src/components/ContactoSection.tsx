@@ -128,10 +128,10 @@ const ContactoSection = () => {
           fecha_entrega_deseada: datos.fechaEntrega || undefined,
         }),
       });
-      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; factura_solicitada?: boolean } | null;
+      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; message?: string; factura_solicitada?: boolean } | null;
 
       if (!response.ok || !cuerpo?.url) {
-        throw new Error(cuerpo?.mensaje);
+        throw new Error(cuerpo?.mensaje || cuerpo?.message || `No se pudo abrir el pago (HTTP ${response.status}).`);
       }
 
       if (datos.solicitaFactura && cuerpo.factura_solicitada !== true) {

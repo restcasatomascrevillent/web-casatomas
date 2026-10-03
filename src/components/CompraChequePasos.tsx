@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,12 +53,14 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
   ];
   const field = fields[Math.min(step, fields.length - 1)];
   const final = field.type === "summary";
+  useLayoutEffect(() => {
+    if (open && step > 0) body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")?.focus({ preventScroll: true });
+  }, [open, step]);
   const value = field.key in datos ? String(datos[field.key as keyof DatosComprador]) : "";
   function next() {
     if (field.required && !value.trim()) { setError(field.key === "nombre" ? c.toasts.giftMissingName : field.key.startsWith("factura") ? c.giftInvoiceMissingData : copy.required); return; }
     if (field.key === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email.trim())) { setError(c.toasts.giftInvalidEmail); return; }
     setError(null);
-    (document.activeElement as HTMLElement | null)?.blur();
     if (final) void confirmar(); else setStep(s => s + 1);
   }
   function change(value: string) { setDatos(d => ({ ...d, [field.key]: value })); setError(null); }
@@ -88,7 +90,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
               <div><dt className="text-muted-foreground">{copy.invoice}</dt><dd>{datos.solicitaFactura ? c.giftInvoiceRequest : copy.no}</dd></div>
             </dl> : <div className="space-y-3">
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
-              {field.type === "textarea" ? <Textarea key={field.key} id={"gift-step-" + field.key} className="text-base min-h-24 rounded-xl" rows={3} value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} /> :
+              {field.type === "textarea" ? <Textarea id={"gift-step-" + field.key} className="text-base min-h-24 rounded-xl" rows={3} value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} /> :
                 <Input key={field.key} id={"gift-step-" + field.key} className="h-14 text-base rounded-xl" type={field.type} inputMode={field.type === "email" ? "email" : field.type === "tel" ? "tel" : undefined} enterKeyHint="next" value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} />}
               {!field.required && <p className="text-xs text-center text-muted-foreground">{copy.optional}</p>}
             </div>}
@@ -97,7 +99,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
         </div>
         <div className="shrink-0 flex items-center gap-3 border-t bg-background p-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
           <Button type="button" variant="outline" className="h-12" disabled={enviando} onClick={() => { setError(null); if (step) setStep(s => s - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
-          <Button type="submit" className="h-12 flex-1 bg-accent hover:bg-accent/90 whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
+          <Button type="submit" onMouseDown={e => e.preventDefault()} className="h-12 flex-1 bg-accent hover:bg-accent/90 whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
         </div>
       </form>
     </DialogContent>
