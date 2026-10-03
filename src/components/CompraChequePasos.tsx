@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetSt
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { flushSync } from "react-dom";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Check, FileText, Loader2 } from "lucide-react";
@@ -54,20 +55,25 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
   const field = fields[Math.min(step, fields.length - 1)];
   const final = field.type === "summary";
   useLayoutEffect(() => {
-    if (open && step > 0) body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")?.focus({ preventScroll: true });
+    if (open && step > 0) body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input:not([hidden]), textarea:not([hidden])")?.focus({ preventScroll: true });
   }, [open, step]);
   const value = field.key in datos ? String(datos[field.key as keyof DatosComprador]) : "";
   function next() {
     if (field.required && !value.trim()) { setError(field.key === "nombre" ? c.toasts.giftMissingName : field.key.startsWith("factura") ? c.giftInvoiceMissingData : copy.required); return; }
     if (field.key === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email.trim())) { setError(c.toasts.giftInvalidEmail); return; }
     setError(null);
-    if (final) void confirmar(); else setStep(s => s + 1);
+    if (final) void confirmar(); else goTo(step + 1);
+  }
+  function goTo(nextStep: number) {
+    // iOS requires focus during the tap itself, rather than a later effect.
+    flushSync(() => setStep(nextStep));
+    body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input:not([hidden]), textarea:not([hidden])")?.focus({ preventScroll: true });
   }
   function change(value: string) { setDatos(d => ({ ...d, [field.key]: value })); setError(null); }
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent onOpenAutoFocus={e => e.preventDefault()}
       style={viewport ? { top: viewport.top + viewport.height / 2, height: Math.min(560, viewport.height - 24), maxHeight: viewport.height - 24 } : undefined}
-      className="flex w-[calc(100%-1.5rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
+      className="flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
       <DialogHeader className="shrink-0 border-b p-4 text-left bg-accent/5">
         <DialogTitle className="pr-10 text-base">{c.giftDialogTitle}</DialogTitle>
         <DialogDescription className="sr-only">{c.giftDialogDescription}</DialogDescription>
@@ -75,8 +81,8 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
         <div className="h-1 rounded-full bg-accent/10 overflow-hidden"><div className="h-full bg-accent transition-all" style={{ width: ((step + 1) / fields.length * 100) + "%" }} /></div>
       </DialogHeader>
       <form className="flex min-h-0 flex-1 flex-col" onSubmit={e => { e.preventDefault(); next(); }} noValidate>
-        <div ref={body} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 flex flex-col" aria-live="polite">
-          <div className="space-y-4 w-full my-auto">
+        <div ref={body} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
+          <div className="space-y-3 w-full min-w-0 my-auto">
             <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>
             {field.type === "choice" ? <div className="space-y-3">
               <p className="text-sm text-center text-muted-foreground">{c.giftInvoiceDescription}</p>
@@ -90,16 +96,26 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
               <div><dt className="text-muted-foreground">{copy.invoice}</dt><dd>{datos.solicitaFactura ? c.giftInvoiceRequest : copy.no}</dd></div>
             </dl> : <div className="space-y-3">
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
-              {field.type === "textarea" ? <Textarea id={"gift-step-" + field.key} className="text-base min-h-24 rounded-xl" rows={3} value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} /> :
-                <Input id={"gift-step-" + field.key} className="h-14 text-base rounded-xl" type={field.type} inputMode={field.type === "email" ? "email" : field.type === "tel" ? "tel" : undefined} enterKeyHint="next" value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} />}
+              <Textarea style={field.type === "date" ? { display: "none" } : undefined} hidden={field.type === "date"} id={field.type === "date" ? undefined : "gift-step-" + field.key}
+                className={`block w-full min-w-0 max-w-full resize-none text-[16px] leading-6 rounded-xl ${field.type === "textarea" ? "min-h-20 max-h-32" : "min-h-14 h-14"}`}
+                rows={field.type === "textarea" ? 3 : 1} value={value} maxLength={field.max}
+                inputMode={field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text"}
+                enterKeyHint={field.type === "textarea" ? "enter" : "next"} autoComplete={field.complete}
+                placeholder={field.placeholder} disabled={enviando}
+                onKeyDown={e => { if (e.key === "Enter" && field.type !== "textarea") { e.preventDefault(); next(); } }}
+                onChange={e => change(field.type === "textarea" ? e.target.value : e.target.value.replace(/[\r\n]/g, ""))} />
+              <Input style={field.type !== "date" ? { display: "none" } : undefined} hidden={field.type !== "date"} id={field.type === "date" ? "gift-step-" + field.key : undefined}
+                className="h-14 w-full min-w-0 max-w-full text-[16px] rounded-xl appearance-none" type="date"
+                value={field.type === "date" ? value : ""} disabled={enviando} onChange={e => change(e.target.value)} />
               {!field.required && <p className="text-xs text-center text-muted-foreground">{copy.optional}</p>}
             </div>}
-            {error && <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+
           </div>
         </div>
+        {error && <p role="alert" className="shrink-0 max-h-24 overflow-y-auto border-t bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</p>}
         <div className="shrink-0 flex items-center gap-3 border-t bg-background p-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
-          <Button type="button" variant="outline" className="h-12" disabled={enviando} onClick={() => { setError(null); if (step) setStep(s => s - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
-          <Button type="submit" onMouseDown={e => e.preventDefault()} className="h-12 flex-1 bg-accent hover:bg-accent/90 whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
+          <Button type="button" onPointerDown={e => e.preventDefault()} variant="outline" className="h-12" disabled={enviando} onClick={() => { setError(null); if (step) goTo(step - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
+          <Button type="submit" onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()} className="h-12 flex-1 bg-accent hover:bg-accent/90 whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
         </div>
       </form>
     </DialogContent>

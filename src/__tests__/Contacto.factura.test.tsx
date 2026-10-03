@@ -74,6 +74,23 @@ describe("Compra guiada del cheque", () => {
     expect(screen.getByLabelText(c.giftFormBuyerEmail)).toBe(input);
     expect(screen.getByLabelText(c.giftFormBuyerEmail)).toHaveFocus();
   });
+  it("conserva el mismo campo al pasar al mensaje y evita perder foco con el toque", () => {
+    render(<ContactoSection />);
+    fireEvent.click(screen.getByRole("button", { name: "100€" }));
+    fireEvent.click(screen.getByRole("button", { name: c.giftButton }));
+    const field = screen.getByLabelText(c.giftFormBuyerName);
+    fireEvent.change(field, { target: { value: "Ana" } }); continuar();
+    fireEvent.change(screen.getByLabelText(c.giftFormBuyerEmail), { target: { value: "ana@example.com" } }); continuar();
+    continuar();
+    const next = screen.getByRole("button", { name: "Continuar" });
+    expect(fireEvent.pointerDown(next, { pointerType: "touch" })).toBe(false);
+    continuar();
+    expect(screen.getByLabelText(c.giftFormMessage)).toBe(field);
+    expect(field).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    expect(screen.getByLabelText(c.giftFormRecipientName)).toBe(field);
+    expect(field).toHaveFocus();
+  });
   it("ajusta el diálogo al espacio visible cuando se abre el teclado", async () => {
     const viewport = new EventTarget() as EventTarget & { height: number; offsetTop: number };
     viewport.height = 760; viewport.offsetTop = 0;
