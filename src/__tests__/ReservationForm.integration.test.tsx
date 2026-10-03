@@ -1396,4 +1396,21 @@ describe("casillas legales en es/en/fr", () => {
       expect(pack.translations.validation.termsRequired.trim()).not.toBe("");
     }
   });
+
+  // Doble opt-in: el backend solo da de alta en la newsletter cuando el
+  // cliente confirma la reserva desde el enlace del email (no al marcar la
+  // casilla). La casilla y las condiciones tienen que decirlo en cada idioma.
+  it("la casilla y las condiciones de la newsletter avisan de que el alta llega al confirmar desde el email", () => {
+    const esperado = [
+      { pack: esPack, casilla: /cuando confirme mi reserva desde el correo/i, condiciones: /confirmes tu reserva desde el enlace del email/i, constancia: /fecha en que confirmaste tu email/i },
+      { pack: enPack, casilla: /once I confirm my booking from the email/i, condiciones: /confirm your booking using the link in the email/i, constancia: /date on which you confirmed your email/i },
+      { pack: frPack, casilla: /lorsque je confirmerai ma réservation depuis l'email/i, condiciones: /confirmé votre réservation grâce au lien de l'email/i, constancia: /date à laquelle vous avez confirmé votre adresse email/i },
+    ];
+    for (const { pack, casilla, condiciones, constancia } of esperado) {
+      expect(pack.translations.reservationForm.newsletterLabel).toMatch(casilla);
+      const parrafos = pack.translations.conditionsPage.newsletterSections.flatMap((s) => s.paragraphs).join("\n");
+      expect(parrafos).toMatch(condiciones);
+      expect(parrafos).toMatch(constancia);
+    }
+  });
 });

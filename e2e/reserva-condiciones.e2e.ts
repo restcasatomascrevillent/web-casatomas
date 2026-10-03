@@ -27,6 +27,18 @@ const IDIOMAS: ReadonlyArray<{ codigo: "es" | "en" | "fr"; prefijo: string; t: T
   { codigo: "fr", prefijo: "/fr", t: fr as unknown as T },
 ];
 
+/**
+ * Doble opt-in: la sección #newsletter debe explicar que el alta llega solo al
+ * confirmar la reserva desde el enlace del email. Texto escrito a mano (no se
+ * deriva de los diccionarios) para que el test falle si alguien lo borra.
+ * Sin apóstrofos: React los escapa (`&#x27;`) en el HTML del SSG.
+ */
+const CONFIRMACION_EMAIL: Record<"es" | "en" | "fr", { titulo: string; frase: RegExp }> = {
+  es: { titulo: "Cuándo empiezas a recibirla", frase: /confirmes tu reserva desde el enlace del email/ },
+  en: { titulo: "When you start receiving it", frase: /confirm your booking using the link in the email/ },
+  fr: { titulo: "Quand vous commencez à la recevoir", frase: /confirmé votre réservation grâce au lien de l/ },
+};
+
 const escapar = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -317,6 +329,13 @@ test.describe("página /condiciones", () => {
       expect(html).toContain('id="reservas"');
       expect(html).toContain('id="newsletter"');
       expect(html).toContain(t.conditionsPage.title);
+
+      // La sección de la newsletter (ya en el HTML, sin JS) explica la
+      // confirmación por email.
+      const inicio = html.indexOf('id="newsletter"');
+      const seccion = html.slice(inicio, html.indexOf("</section>", inicio));
+      expect(seccion).toContain(CONFIRMACION_EMAIL[codigo].titulo);
+      expect(seccion).toMatch(CONFIRMACION_EMAIL[codigo].frase);
     });
 
     test(`${codigo}: tras hidratar sigue con noindex`, async ({ page, backend }) => {
@@ -324,6 +343,14 @@ test.describe("página /condiciones", () => {
       await expect(page.getByRole("heading", { level: 1, name: t.conditionsPage.title })).toBeVisible();
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
       expect(backend.crear).toEqual([]);
+    });
+
+    test(`${codigo}: la sección #newsletter avisa de que el alta llega al confirmar la reserva desde el email`, async ({ page }) => {
+      await page.goto(`${prefijo}/condiciones#newsletter`);
+      await esperarHidratacion(page);
+      const seccion = page.locator("section#newsletter");
+      await expect(seccion.getByRole("heading", { level: 3, name: CONFIRMACION_EMAIL[codigo].titulo })).toBeVisible();
+      await expect(seccion).toContainText(CONFIRMACION_EMAIL[codigo].frase);
     });
   }
 
