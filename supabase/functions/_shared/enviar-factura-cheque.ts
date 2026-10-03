@@ -17,7 +17,9 @@ export async function enviarFacturaCheque(db: SupabaseClient, chequeId: string):
       from: Deno.env.get("RESEND_FROM_EMAIL") || "Casa Tomás <onboarding@resend.dev>",
       to: [factura.cliente.email],
       subject: "Factura " + factura.numero + " · Cheque regalo Casa Tomás",
-      text: "Gracias por tu compra. Adjuntamos la factura de tu cheque regalo de Casa Tomás.",
+      text: typeof factura.emisor.email_mensaje === "string" && factura.emisor.email_mensaje.trim()
+        ? factura.emisor.email_mensaje.trim()
+        : "Gracias por tu compra. Adjuntamos la factura de tu cheque regalo de Casa Tomás.",
       attachments: [{ filename: "Factura-" + factura.numero + ".pdf", content }],
     }),
   });

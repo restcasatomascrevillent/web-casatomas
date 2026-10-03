@@ -5,7 +5,7 @@ export interface FacturaCheque {
   id: string;
   numero: string;
   emitida_en: string;
-  emisor: { emisor_nombre: string; emisor_nif: string; emisor_direccion: string; logo_data: string; pie: string };
+  emisor: { email_mensaje?: string; emisor_nombre: string; emisor_nif: string; emisor_direccion: string; logo_data: string; pie: string };
   cliente: { nombre: string; nif: string; direccion: string; email: string };
   importe_eur: number;
   iva_porcentaje: number;
