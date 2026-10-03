@@ -354,7 +354,7 @@ export const translations = {
       termsLink: "condiciones de reserva",
       privacyLink: "política de privacidad",
       newTabHint: "(se abre en una pestaña nueva)",
-      newsletterLabel: "Quiero recibir la newsletter de Casa Tomás (novedades, eventos y ofertas). Puedo darme de baja en cualquier momento.",
+      newsletterLabel: "Quiero recibir la newsletter de Casa Tomás (novedades, eventos y ofertas). Me apuntaréis cuando confirme mi reserva desde el correo que me enviaréis. Puedo darme de baja en cualquier momento.",
       newsletterTermsLink: "Ver condiciones de la newsletter",
       submit: "Reservar ahora",
       submitting: "Reservando...",
@@ -631,7 +631,7 @@ export const translations = {
           title: "7. Tus datos personales",
           paragraphs: [
             "Los datos que nos das al reservar (nombre, teléfono, email y los detalles de la reserva) los usamos para gestionar tu reserva, tal como se explica en nuestra {privacy}.",
-            "La newsletter es independiente de la reserva: solo la recibirás si la pides marcando su casilla, no es necesaria para reservar y puedes darte de baja en cualquier momento desde el enlace de cada email.",
+            "La newsletter es independiente de la reserva: solo la recibirás si la pides marcando su casilla y después confirmas tu reserva desde el enlace del email que te enviamos. No es necesaria para reservar y puedes darte de baja en cualquier momento desde el enlace de cada email.",
           ],
         },
       ],
@@ -645,43 +645,50 @@ export const translations = {
           ],
         },
         {
-          title: "2. Con qué frecuencia",
+          title: "2. Cuándo empiezas a recibirla",
+          paragraphs: [
+            "Marcar la casilla todavía no te apunta. Te apuntamos solo después de que confirmes tu reserva desde el enlace del email que te enviamos: así comprobamos que el email es tuyo.",
+            "Si la reserva se confirma por otra vía (por ejemplo, por teléfono) o se cancela antes de que la confirmes desde ese email, no te apuntamos a la newsletter.",
+          ],
+        },
+        {
+          title: "3. Con qué frecuencia",
           paragraphs: [
             "Los envíos son ocasionales: no nos comprometemos a una frecuencia fija y solo te escribiremos cuando tengamos algo que contarte.",
           ],
         },
         {
-          title: "3. Qué datos usamos y para qué",
+          title: "4. Qué datos usamos y para qué",
           paragraphs: [
             "Usamos el email y el nombre que indicaste en tu reserva con la única finalidad de enviarte la newsletter.",
           ],
         },
         {
-          title: "4. Base legal: tu consentimiento",
+          title: "5. Base legal: tu consentimiento",
           paragraphs: [
             "La base legal es tu consentimiento. Es voluntario y no es necesario para reservar: si no marcas la casilla, tu reserva se tramita exactamente igual.",
           ],
         },
         {
-          title: "5. Baja",
+          title: "6. Baja",
           paragraphs: [
             "Puedes darte de baja en cualquier momento y sin ningún coste desde el enlace que incluye cada email. La baja es inmediata y no afecta a tus reservas.",
           ],
         },
         {
-          title: "6. Constancia del consentimiento",
+          title: "7. Constancia del consentimiento",
           paragraphs: [
-            "Guardamos la fecha en que diste tu consentimiento como prueba de que nos lo diste.",
+            "Guardamos la fecha en que diste tu consentimiento (al marcar la casilla) y la fecha en que confirmaste tu email desde el enlace de tu reserva, como prueba de ambos.",
           ],
         },
         {
-          title: "7. Destinatarios",
+          title: "8. Destinatarios",
           paragraphs: [
             "No cedemos tus datos a terceros. Para hacer los envíos usamos un proveedor de envío de correo electrónico que actúa como encargado del tratamiento: trata los datos solo por cuenta de Casa Tomás y siguiendo sus instrucciones.",
           ],
         },
         {
-          title: "8. Tus derechos",
+          title: "9. Tus derechos",
           paragraphs: [
             "Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad, o reclamar ante la autoridad de control, tal como se explica en nuestra {privacy}.",
           ],

@@ -339,7 +339,7 @@ export const translations: Translations = {
       termsLink: "booking conditions",
       privacyLink: "privacy policy",
       newTabHint: "(opens in a new tab)",
-      newsletterLabel: "I'd like to receive the Casa Tomás newsletter (news, events and offers). I can unsubscribe at any time.",
+      newsletterLabel: "I'd like to receive the Casa Tomás newsletter (news, events and offers). You'll sign me up once I confirm my booking from the email you send me. I can unsubscribe at any time.",
       newsletterTermsLink: "See newsletter terms",
       submit: "Book now",
       submitting: "Booking...",
@@ -612,7 +612,7 @@ export const translations: Translations = {
           title: "7. Your personal data",
           paragraphs: [
             "The details you give us when booking (name, phone, email and booking details) are used to manage your booking, as explained in our {privacy}.",
-            "The newsletter is separate from your booking: you'll only receive it if you ask for it by ticking its box, it is not required to book, and you can unsubscribe at any time using the link in every email.",
+            "The newsletter is separate from your booking: you'll only receive it if you ask for it by ticking its box and then confirm your booking using the link in the email we send you. It is not required to book, and you can unsubscribe at any time using the link in every email.",
           ],
         },
       ],
@@ -626,43 +626,50 @@ export const translations: Translations = {
           ],
         },
         {
-          title: "2. How often",
+          title: "2. When you start receiving it",
+          paragraphs: [
+            "Ticking the box doesn't sign you up yet. We only sign you up after you confirm your booking using the link in the email we send you: that way we can check the email address is yours.",
+            "If your booking is confirmed some other way (for example, by phone) or is cancelled before you confirm it from that email, we won't sign you up to the newsletter.",
+          ],
+        },
+        {
+          title: "3. How often",
           paragraphs: [
             "Mailings are occasional: we don't commit to a fixed frequency and will only write when we have something to tell you.",
           ],
         },
         {
-          title: "3. What data we use and why",
+          title: "4. What data we use and why",
           paragraphs: [
             "We use the email address and name you gave in your booking for the sole purpose of sending you the newsletter.",
           ],
         },
         {
-          title: "4. Legal basis: your consent",
+          title: "5. Legal basis: your consent",
           paragraphs: [
             "The legal basis is your consent. It is voluntary and not required to book: if you don't tick the box, your booking is handled exactly the same way.",
           ],
         },
         {
-          title: "5. Unsubscribing",
+          title: "6. Unsubscribing",
           paragraphs: [
             "You can unsubscribe at any time, free of charge, using the link included in every email. Unsubscribing takes effect immediately and doesn't affect your bookings.",
           ],
         },
         {
-          title: "6. Record of consent",
+          title: "7. Record of consent",
           paragraphs: [
-            "We keep the date on which you gave your consent as proof that you gave it.",
+            "We keep the date on which you gave your consent (by ticking the box) and the date on which you confirmed your email address using the link for your booking, as proof of both.",
           ],
         },
         {
-          title: "7. Recipients",
+          title: "8. Recipients",
           paragraphs: [
             "We do not share your data with third parties. To send the emails we use an email delivery provider acting as data processor: it handles the data only on behalf of Casa Tomás and following its instructions.",
           ],
         },
         {
-          title: "8. Your rights",
+          title: "9. Your rights",
           paragraphs: [
             "You can exercise your rights of access, rectification, erasure, objection, restriction and portability, or lodge a complaint with the supervisory authority, as explained in our {privacy}.",
           ],

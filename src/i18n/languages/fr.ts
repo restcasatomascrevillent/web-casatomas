@@ -339,7 +339,7 @@ export const translations: Translations = {
       termsLink: "conditions de réservation",
       privacyLink: "politique de confidentialité",
       newTabHint: "(s'ouvre dans un nouvel onglet)",
-      newsletterLabel: "Je souhaite recevoir la newsletter de Casa Tomás (actualités, événements et offres). Je peux me désabonner à tout moment.",
+      newsletterLabel: "Je souhaite recevoir la newsletter de Casa Tomás (actualités, événements et offres). Vous m'inscrirez lorsque je confirmerai ma réservation depuis l'email que vous m'enverrez. Je peux me désabonner à tout moment.",
       newsletterTermsLink: "Voir les conditions de la newsletter",
       submit: "Réserver",
       submitting: "Réservation en cours...",
@@ -612,7 +612,7 @@ export const translations: Translations = {
           title: "7. Vos données personnelles",
           paragraphs: [
             "Les données que vous nous communiquez en réservant (nom, téléphone, email et détails de la réservation) servent à gérer votre réservation, comme expliqué dans notre {privacy}.",
-            "La newsletter est indépendante de la réservation : vous ne la recevrez que si vous la demandez en cochant sa case, elle n'est pas nécessaire pour réserver et vous pouvez vous désabonner à tout moment grâce au lien présent dans chaque email.",
+            "La newsletter est indépendante de la réservation : vous ne la recevrez que si vous la demandez en cochant sa case et confirmez ensuite votre réservation grâce au lien de l'email que nous vous envoyons. Elle n'est pas nécessaire pour réserver et vous pouvez vous désabonner à tout moment grâce au lien présent dans chaque email.",
           ],
         },
       ],
@@ -626,43 +626,50 @@ export const translations: Translations = {
           ],
         },
         {
-          title: "2. À quelle fréquence",
+          title: "2. Quand vous commencez à la recevoir",
+          paragraphs: [
+            "Cocher la case ne vous inscrit pas encore. Nous ne vous inscrivons qu'après que vous avez confirmé votre réservation grâce au lien de l'email que nous vous envoyons : nous vérifions ainsi que l'adresse email est bien la vôtre.",
+            "Si la réservation est confirmée par un autre moyen (par exemple, par téléphone) ou annulée avant que vous ne la confirmiez depuis cet email, nous ne vous inscrivons pas à la newsletter.",
+          ],
+        },
+        {
+          title: "3. À quelle fréquence",
           paragraphs: [
             "Les envois sont occasionnels : nous ne nous engageons pas sur une fréquence fixe et ne vous écrirons que lorsque nous aurons quelque chose à vous raconter.",
           ],
         },
         {
-          title: "3. Quelles données et pourquoi",
+          title: "4. Quelles données et pourquoi",
           paragraphs: [
             "Nous utilisons l'email et le nom indiqués dans votre réservation dans le seul but de vous envoyer la newsletter.",
           ],
         },
         {
-          title: "4. Base légale : votre consentement",
+          title: "5. Base légale : votre consentement",
           paragraphs: [
             "La base légale est votre consentement. Il est volontaire et n'est pas nécessaire pour réserver : si vous ne cochez pas la case, votre réservation est traitée exactement de la même façon.",
           ],
         },
         {
-          title: "5. Désabonnement",
+          title: "6. Désabonnement",
           paragraphs: [
             "Vous pouvez vous désabonner à tout moment et sans frais grâce au lien présent dans chaque email. Le désabonnement est immédiat et n'affecte pas vos réservations.",
           ],
         },
         {
-          title: "6. Preuve du consentement",
+          title: "7. Preuve du consentement",
           paragraphs: [
-            "Nous conservons la date à laquelle vous avez donné votre consentement, comme preuve que vous l'avez donné.",
+            "Nous conservons la date à laquelle vous avez donné votre consentement (en cochant la case) et la date à laquelle vous avez confirmé votre adresse email grâce au lien de votre réservation, comme preuve des deux.",
           ],
         },
         {
-          title: "7. Destinataires",
+          title: "8. Destinataires",
           paragraphs: [
             "Nous ne cédons pas vos données à des tiers. Pour les envois, nous utilisons un prestataire d'envoi d'emails qui agit en tant que sous-traitant : il traite les données uniquement pour le compte de Casa Tomás et selon ses instructions.",
           ],
         },
         {
-          title: "8. Vos droits",
+          title: "9. Vos droits",
           paragraphs: [
             "Vous pouvez exercer vos droits d'accès, de rectification, d'effacement, d'opposition, de limitation et de portabilité, ou introduire une réclamation auprès de l'autorité de contrôle, comme expliqué dans notre {privacy}.",
           ],
