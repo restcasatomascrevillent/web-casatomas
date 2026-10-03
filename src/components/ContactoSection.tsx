@@ -2,24 +2,15 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { MapPin, Phone, Mail, Gift, Loader2 } from "lucide-react";
+import { CompraChequePasos } from "@/components/CompraChequePasos";
+import { MapPin, Phone, Mail, Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
-interface DatosComprador {
+export interface DatosComprador {
   nombre: string;
   email: string;
   telefono: string;
@@ -319,133 +310,9 @@ const ContactoSection = () => {
         </div>
       </motion.div>
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => !enviando && setDialogOpen(open)}>
-        {/* La "X" la pone `DialogContent` en `absolute`: cabecera y pie se
-            quedan fijos (`shrink-0`) y solo scrollea el bloque de campos de
-            en medio — así el botón de pago está siempre a la vista en
-            móvil, sin tener que buscarlo haciendo scroll hasta el final. */}
-        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0">
-          <DialogHeader className="shrink-0 border-b border-border/60 p-5 pb-4 text-left sm:p-6 sm:pb-4">
-            <DialogTitle className="pr-8">{t.contacto.giftDialogTitle}</DialogTitle>
-            <DialogDescription>{t.contacto.giftDialogDescription}</DialogDescription>
-          </DialogHeader>
-
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
-            <p className="text-sm font-medium text-accent">
-              {t.contacto.giftFormAmountSummary.replace("{amount}", giftAmount)}
-            </p>
-
-            {errorFormulario && (
-              <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {errorFormulario}
-              </p>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-buyer-name">{t.contacto.giftFormBuyerName}</Label>
-              <Input
-                id="gift-buyer-name"
-                value={datos.nombre}
-                onChange={(e) => setDatos((prev) => ({ ...prev, nombre: e.target.value }))}
-                placeholder={t.contacto.giftFormBuyerNamePlaceholder}
-                autoComplete="name"
-                maxLength={200}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-buyer-email">{t.contacto.giftFormBuyerEmail}</Label>
-              <Input
-                id="gift-buyer-email"
-                type="email"
-                inputMode="email"
-                value={datos.email}
-                onChange={(e) => setDatos((prev) => ({ ...prev, email: e.target.value }))}
-                placeholder={t.contacto.giftFormBuyerEmailPlaceholder}
-                autoComplete="email"
-                maxLength={320}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-buyer-phone">{t.contacto.giftFormBuyerPhone}</Label>
-              <Input
-                id="gift-buyer-phone"
-                type="tel"
-                inputMode="tel"
-                value={datos.telefono}
-                onChange={(e) => setDatos((prev) => ({ ...prev, telefono: e.target.value }))}
-                placeholder={t.contacto.giftFormBuyerPhonePlaceholder}
-                autoComplete="tel"
-                maxLength={40}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-recipient-name">{t.contacto.giftFormRecipientName}</Label>
-              <Input
-                id="gift-recipient-name"
-                value={datos.destinatario}
-                onChange={(e) => setDatos((prev) => ({ ...prev, destinatario: e.target.value }))}
-                placeholder={t.contacto.giftFormRecipientNamePlaceholder}
-                maxLength={200}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-message">{t.contacto.giftFormMessage}</Label>
-              <Textarea
-                id="gift-message"
-                value={datos.mensaje}
-                onChange={(e) => setDatos((prev) => ({ ...prev, mensaje: e.target.value }))}
-                placeholder={t.contacto.giftFormMessagePlaceholder}
-                maxLength={500}
-                rows={3}
-              />
-            </div>
-
-            <fieldset disabled={enviando} className="space-y-3 rounded-xl border border-border p-4">
-              <label htmlFor="gift-invoice" className="flex items-start gap-3 cursor-pointer text-sm font-medium">
-                <input id="gift-invoice" type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
-                  checked={datos.solicitaFactura} onChange={e => setDatos(prev => ({ ...prev, solicitaFactura: e.target.checked, facturaNombre: prev.facturaNombre || prev.nombre }))} />
-                {t.contacto.giftInvoiceRequest}
-              </label>
-              {datos.solicitaFactura && <div className="space-y-3">
-                <p className="text-xs text-muted-foreground">{t.contacto.giftInvoiceDescription}</p>
-                <div className="space-y-2"><Label htmlFor="gift-invoice-name">{t.contacto.giftInvoiceName}</Label><Input id="gift-invoice-name" required maxLength={200} value={datos.facturaNombre} onChange={e => setDatos(prev => ({ ...prev, facturaNombre: e.target.value }))} /></div>
-                <div className="space-y-2"><Label htmlFor="gift-invoice-nif">{t.contacto.giftInvoiceTaxId}</Label><Input id="gift-invoice-nif" required maxLength={30} value={datos.facturaNif} onChange={e => setDatos(prev => ({ ...prev, facturaNif: e.target.value }))} /></div>
-                <div className="space-y-2"><Label htmlFor="gift-invoice-address">{t.contacto.giftInvoiceAddress}</Label><Textarea id="gift-invoice-address" required maxLength={300} autoComplete="street-address" value={datos.facturaDireccion} onChange={e => setDatos(prev => ({ ...prev, facturaDireccion: e.target.value }))} /></div>
-              </div>}
-            </fieldset>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-delivery-date">{t.contacto.giftFormDeliveryDate}</Label>
-              <Input
-                id="gift-delivery-date"
-                type="date"
-                value={datos.fechaEntrega}
-                onChange={(e) => setDatos((prev) => ({ ...prev, fechaEntrega: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="shrink-0 gap-2 border-t border-border/60 p-5 pt-4 sm:gap-2 sm:p-6 sm:pt-4">
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={enviando}>
-              {t.contacto.giftFormCancel}
-            </Button>
-            <Button
-              className="bg-accent hover:bg-accent/90"
-              onClick={handleConfirmarCompra}
-              disabled={enviando}
-            >
-              {enviando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {enviando ? t.contacto.giftFormSubmitting : t.contacto.giftFormSubmit}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CompraChequePasos open={dialogOpen} onOpenChange={open => !enviando && setDialogOpen(open)}
+        datos={datos} setDatos={setDatos} importe={giftAmount} enviando={enviando}
+        error={errorFormulario} setError={setErrorFormulario} confirmar={handleConfirmarCompra} />
     </section>
   );
 };
