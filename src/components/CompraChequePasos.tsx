@@ -91,7 +91,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
             </dl> : <div className="space-y-3">
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
               {field.type === "textarea" ? <Textarea id={"gift-step-" + field.key} className="text-base min-h-24 rounded-xl" rows={3} value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} /> :
-                <Input key={field.key} id={"gift-step-" + field.key} className="h-14 text-base rounded-xl" type={field.type} inputMode={field.type === "email" ? "email" : field.type === "tel" ? "tel" : undefined} enterKeyHint="next" value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} />}
+                <Input id={"gift-step-" + field.key} className="h-14 text-base rounded-xl" type={field.type} inputMode={field.type === "email" ? "email" : field.type === "tel" ? "tel" : undefined} enterKeyHint="next" value={value} maxLength={field.max} autoComplete={field.complete} placeholder={field.placeholder} disabled={enviando} onChange={e => change(e.target.value)} />}
               {!field.required && <p className="text-xs text-center text-muted-foreground">{copy.optional}</p>}
             </div>}
             {error && <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
