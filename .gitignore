@@ -26,3 +26,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# E2E (Playwright): build de prueba y resultados
+dist-e2e
+test-results
+playwright-report
+blob-report
