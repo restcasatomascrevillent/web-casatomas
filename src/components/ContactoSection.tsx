@@ -26,6 +26,10 @@ interface DatosComprador {
   destinatario: string;
   mensaje: string;
   fechaEntrega: string;
+  solicitaFactura: boolean;
+  facturaNombre: string;
+  facturaNif: string;
+  facturaDireccion: string;
 }
 
 const DATOS_COMPRADOR_VACIOS: DatosComprador = {
@@ -35,6 +39,10 @@ const DATOS_COMPRADOR_VACIOS: DatosComprador = {
   destinatario: "",
   mensaje: "",
   fechaEntrega: "",
+  solicitaFactura: false,
+  facturaNombre: "",
+  facturaNif: "",
+  facturaDireccion: "",
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,6 +111,10 @@ const ContactoSection = () => {
       return;
     }
 
+    if (datos.solicitaFactura && (!datos.facturaNombre.trim() || !datos.facturaNif.trim() || !datos.facturaDireccion.trim())) {
+      setErrorFormulario(t.contacto.giftInvoiceMissingData);
+      return;
+    }
     setErrorFormulario(null);
     setEnviando(true);
     try {
@@ -111,6 +123,12 @@ const ContactoSection = () => {
         headers: functionHeaders(),
         body: JSON.stringify({
           importe_eur: parseFloat(giftAmount),
+          solicita_factura: datos.solicitaFactura,
+          datos_factura: datos.solicitaFactura ? {
+            nombre: datos.facturaNombre.trim(),
+            nif: datos.facturaNif.trim(),
+            direccion: datos.facturaDireccion.trim(),
+          } : undefined,
           comprador_nombre: nombre,
           comprador_email: email,
           comprador_telefono: datos.telefono.trim() || undefined,
@@ -119,16 +137,20 @@ const ContactoSection = () => {
           fecha_entrega_deseada: datos.fechaEntrega || undefined,
         }),
       });
-      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string } | null;
+      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; factura_solicitada?: boolean } | null;
 
       if (!response.ok || !cuerpo?.url) {
         throw new Error(cuerpo?.mensaje);
       }
 
+      if (datos.solicitaFactura && cuerpo.factura_solicitada !== true) {
+        throw new Error(t.contacto.giftInvoiceNotReady);
+      }
+
       // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
       window.location.href = cuerpo.url;
-    } catch {
-      setErrorFormulario(`${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
+    } catch (error) {
+      setErrorFormulario(error instanceof Error && error.message ? error.message : `${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
       setEnviando(false);
     }
   };
@@ -384,6 +406,20 @@ const ContactoSection = () => {
               />
             </div>
 
+            <fieldset disabled={enviando} className="space-y-3 rounded-xl border border-border p-4">
+              <label htmlFor="gift-invoice" className="flex items-start gap-3 cursor-pointer text-sm font-medium">
+                <input id="gift-invoice" type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
+                  checked={datos.solicitaFactura} onChange={e => setDatos(prev => ({ ...prev, solicitaFactura: e.target.checked, facturaNombre: prev.facturaNombre || prev.nombre }))} />
+                {t.contacto.giftInvoiceRequest}
+              </label>
+              {datos.solicitaFactura && <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">{t.contacto.giftInvoiceDescription}</p>
+                <div className="space-y-2"><Label htmlFor="gift-invoice-name">{t.contacto.giftInvoiceName}</Label><Input id="gift-invoice-name" required maxLength={200} value={datos.facturaNombre} onChange={e => setDatos(prev => ({ ...prev, facturaNombre: e.target.value }))} /></div>
+                <div className="space-y-2"><Label htmlFor="gift-invoice-nif">{t.contacto.giftInvoiceTaxId}</Label><Input id="gift-invoice-nif" required maxLength={30} value={datos.facturaNif} onChange={e => setDatos(prev => ({ ...prev, facturaNif: e.target.value }))} /></div>
+                <div className="space-y-2"><Label htmlFor="gift-invoice-address">{t.contacto.giftInvoiceAddress}</Label><Textarea id="gift-invoice-address" required maxLength={300} autoComplete="street-address" value={datos.facturaDireccion} onChange={e => setDatos(prev => ({ ...prev, facturaDireccion: e.target.value }))} /></div>
+              </div>}
+            </fieldset>
+
             <div className="space-y-2">
               <Label htmlFor="gift-delivery-date">{t.contacto.giftFormDeliveryDate}</Label>
               <Input
@@ -415,3 +451,4 @@ const ContactoSection = () => {
 };
 
 export default ContactoSection;
+

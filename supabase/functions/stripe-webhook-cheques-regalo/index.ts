@@ -4,6 +4,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 // deno.land/std, que llenaba los logs de "Deno.core.runMicrotasks() is not
 // supported" cada vez que el worker se apagaba.
 import Stripe from "npm:stripe@23.0.0";
+import { enviarFacturaCheque } from "../_shared/enviar-factura-cheque.ts";
 
 /**
  * Webhook de Stripe para los cheques regalo: confirma el pago, genera el
@@ -149,7 +150,7 @@ function chequeIdDeSesion(session: Stripe.Checkout.Session): string | null {
 
 async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise<void> {
   // Pago diferido todavía sin cobrar: el código se da con `async_payment_succeeded`.
-  if (session.payment_status === "unpaid") return;
+  if (session.payment_status !== "paid") return;
 
   const chequeId = chequeIdDeSesion(session);
   if (!chequeId) {
@@ -168,10 +169,16 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
     return;
   }
 
+  if ((fila.stripe_session_id && fila.stripe_session_id !== session.id)
+    || session.currency !== "eur" || session.amount_total !== Math.round(Number(fila.importe_eur) * 100)) {
+    throw new Error(`La sesión de Stripe no coincide con el cheque ${chequeId}`);
+  }
+
   if (fila.estado === "pagado") {
     // Reintento de Stripe. Si lo que falló la otra vez fue el email, se
     // reenvía con el código ya guardado; si salió, no queda nada por hacer.
     if (fila.codigo && !fila.email_enviado_en) await enviarYMarcarEmail({ ...fila, codigo: fila.codigo });
+    await enviarFacturaCheque(supabase, chequeId);
     return;
   }
   if (fila.estado !== "pendiente") {
@@ -206,6 +213,7 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
   if (!codigo) throw new Error(`5 códigos repetidos seguidos para el cheque ${chequeId}`);
 
   await enviarYMarcarEmail({ ...fila, codigo });
+  await enviarFacturaCheque(supabase, chequeId);
 }
 
 /** Sesión caducada sin pagar, o pago diferido que al final falló. */
@@ -286,3 +294,4 @@ Deno.serve(async (req) => {
     headers: { "Content-Type": "application/json" },
   });
 });
+
