@@ -134,6 +134,17 @@ const cartaChildren = (lang: Language): RouteRecord[] => [
   },
 ];
 
+/**
+ * Condiciones de reserva y de la newsletter: en las TRES ramas, a diferencia
+ * de la política de privacidad, porque las enlazan las casillas del
+ * formulario de reserva, que vive en la portada de los tres idiomas. Fábrica
+ * por la misma razón que `buildCatchAllRoute` (un objeto por rama).
+ */
+const buildCondicionesRoute = (): RouteRecord => ({
+  path: "condiciones",
+  lazy: lazyRoute(() => import("./pages/Condiciones")),
+});
+
 // Ruta compartida por las tres ramas: sin ella, un enlace roto a
 // `/en/lo-que-sea` se quedaría sin coincidir en vez de caer en NotFound.
 // FÁBRICA, no un objeto compartido: react-router asigna a cada ruta un id
@@ -164,6 +175,7 @@ export const routes: RouteRecord[] = [
         path: "politica-privacidad",
         lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
       },
+      buildCondicionesRoute(),
       // Páginas de los enlaces de los correos (Supabase sirve el HTML de sus
       // funciones como text/plain, así que las sirve la web). `noindex`, solo
       // en español como los correos, y el SSG prerenderiza un cascarón vacío:
@@ -179,6 +191,6 @@ export const routes: RouteRecord[] = [
       buildCatchAllRoute(),
     ],
   },
-  { path: "/en", element: <Layout lang="en" />, children: [...cartaChildren("en"), buildCatchAllRoute()] },
-  { path: "/fr", element: <Layout lang="fr" />, children: [...cartaChildren("fr"), buildCatchAllRoute()] },
+  { path: "/en", element: <Layout lang="en" />, children: [...cartaChildren("en"), buildCondicionesRoute(), buildCatchAllRoute()] },
+  { path: "/fr", element: <Layout lang="fr" />, children: [...cartaChildren("fr"), buildCondicionesRoute(), buildCatchAllRoute()] },
 ];

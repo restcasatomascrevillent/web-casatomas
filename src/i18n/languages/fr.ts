@@ -335,7 +335,12 @@ export const translations: Translations = {
       emailPlaceholder: "vous@email.com",
       notesLabel: "Demandes particulières",
       notesPlaceholder: "Allergies, préférences, occasion...",
-      newsletterLabel: "Je souhaite recevoir par email les actualités et offres de Casa Tomás. Je pourrai me désabonner à tout moment.",
+      termsLabel: "J'ai lu et j'accepte les {terms} et la {privacy} *",
+      termsLink: "conditions de réservation",
+      privacyLink: "politique de confidentialité",
+      newTabHint: "(s'ouvre dans un nouvel onglet)",
+      newsletterLabel: "Je souhaite recevoir la newsletter de Casa Tomás (actualités, événements et offres). Je peux me désabonner à tout moment.",
+      newsletterTermsLink: "Voir les conditions de la newsletter",
       submit: "Réserver",
       submitting: "Réservation en cours...",
       footer: "Réservation en ligne rapide et sécurisée",
@@ -492,7 +497,8 @@ export const translations: Translations = {
       contactTitle: "Contact",
       rights: "© 2026 Casa Tomás Restaurant. Tous droits réservés.",
       admin: "Administration",
-      terms: "Conditions générales",
+      terms: "Politique de confidentialité",
+      bookingTerms: "Conditions de réservation et newsletter",
       cookieSettings: "Configurer les cookies",
     },
     cookie: {
@@ -549,6 +555,125 @@ export const translations: Translations = {
         TODAS: "Toutes",
       },
     },
+    /*
+     * Página /condiciones (reserva + newsletter). En los párrafos, `{phone}` y
+     * `{privacy}` se pintan como enlaces (teléfono y política de privacidad).
+     */
+    conditionsPage: {
+      seoTitle: "Conditions de réservation et newsletter | Casa Tomás Restaurant",
+      seoDescription: "Conditions de réservation et de la newsletter de Casa Tomás Restaurant (Crevillent, Alicante) : confirmation, ponctualité, annulations, groupes, envois, désabonnement et données personnelles.",
+      back: "Retour à l'accueil",
+      title: "Conditions de réservation et newsletter",
+      updated: "Dernière mise à jour : octobre 2026",
+      intro: "Vous trouverez sur cette page les conditions des réservations au Restaurante Casa Tomás et celles de sa newsletter.",
+      tocLabel: "Sur cette page",
+      bookingHeading: "Conditions de réservation",
+      bookingIntro: "Elles s'appliquent aux réservations faites sur ce site ou par téléphone. En envoyant une demande de réservation, vous déclarez les avoir lues et acceptées.",
+      bookingSections: [
+        {
+          title: "1. Votre réservation est en attente jusqu'à notre confirmation",
+          paragraphs: [
+            "L'envoi du formulaire est une demande de réservation, pas une réservation confirmée. Votre réservation n'est confirmée qu'à réception de l'email de confirmation du restaurant ; jusque-là, Casa Tomás ne peut pas vous garantir la table.",
+            "Si vous ne recevez pas l'email, vérifiez vos courriers indésirables ou appelez-nous au {phone}.",
+          ],
+        },
+        {
+          title: "2. Ponctualité",
+          paragraphs: [
+            "Nous gardons votre table pendant 15 minutes après l'heure réservée. Passé ce délai sans nouvelles de votre part, la table peut être libérée et attribuée à d'autres clients.",
+            "Si vous avez du retard, appelez-nous au {phone} et nous ferons notre possible pour vous la garder.",
+          ],
+        },
+        {
+          title: "3. Annulations et modifications",
+          paragraphs: [
+            "Si vous ne pouvez pas venir ou souhaitez changer la date, l'heure ou le nombre de convives, prévenez-nous le plus tôt possible : via le lien de l'email de votre réservation ou en nous appelant au {phone}. Nous pourrons ainsi proposer la table à d'autres personnes.",
+          ],
+        },
+        {
+          title: "4. Grands groupes",
+          paragraphs: [
+            "Les réservations pour des groupes de plus de 12 personnes ne se font pas sur le site : le restaurant les gère directement. Appelez-nous au {phone} et nous l'organisons avec vous, y compris les conditions particulières que le groupe pourrait nécessiter.",
+          ],
+        },
+        {
+          title: "5. Table et espace",
+          paragraphs: [
+            "La réservation vous garantit une place pour le nombre de convives indiqué, pas une table ni un espace précis du restaurant. Si vous avez une préférence, indiquez-la dans « Demandes particulières » et nous ferons notre possible pour la respecter, mais la répartition des tables est décidée par le restaurant.",
+          ],
+        },
+        {
+          title: "6. Absences sans prévenir",
+          paragraphs: [
+            "Quand une réservation n'est pas honorée sans avoir été annulée, la table reste vide et d'autres personnes n'ont pas de place. Des absences répétées sans prévenir peuvent empêcher de nouvelles réservations.",
+          ],
+        },
+        {
+          title: "7. Vos données personnelles",
+          paragraphs: [
+            "Les données que vous nous communiquez en réservant (nom, téléphone, email et détails de la réservation) servent à gérer votre réservation, comme expliqué dans notre {privacy}.",
+            "La newsletter est indépendante de la réservation : vous ne la recevrez que si vous la demandez en cochant sa case, elle n'est pas nécessaire pour réserver et vous pouvez vous désabonner à tout moment grâce au lien présent dans chaque email.",
+          ],
+        },
+      ],
+      newsletterHeading: "Conditions de la newsletter",
+      newsletterIntro: "Elles ne s'appliquent que si, en réservant, vous cochez la case pour recevoir la newsletter de Casa Tomás.",
+      newsletterSections: [
+        {
+          title: "1. Ce que vous recevrez",
+          paragraphs: [
+            "Des emails avec les actualités, événements, menus spéciaux et offres de Casa Tomás.",
+          ],
+        },
+        {
+          title: "2. À quelle fréquence",
+          paragraphs: [
+            "Les envois sont occasionnels : nous ne nous engageons pas sur une fréquence fixe et ne vous écrirons que lorsque nous aurons quelque chose à vous raconter.",
+          ],
+        },
+        {
+          title: "3. Quelles données et pourquoi",
+          paragraphs: [
+            "Nous utilisons l'email et le nom indiqués dans votre réservation dans le seul but de vous envoyer la newsletter.",
+          ],
+        },
+        {
+          title: "4. Base légale : votre consentement",
+          paragraphs: [
+            "La base légale est votre consentement. Il est volontaire et n'est pas nécessaire pour réserver : si vous ne cochez pas la case, votre réservation est traitée exactement de la même façon.",
+          ],
+        },
+        {
+          title: "5. Désabonnement",
+          paragraphs: [
+            "Vous pouvez vous désabonner à tout moment et sans frais grâce au lien présent dans chaque email. Le désabonnement est immédiat et n'affecte pas vos réservations.",
+          ],
+        },
+        {
+          title: "6. Preuve du consentement",
+          paragraphs: [
+            "Nous conservons la date à laquelle vous avez donné votre consentement, comme preuve que vous l'avez donné.",
+          ],
+        },
+        {
+          title: "7. Destinataires",
+          paragraphs: [
+            "Nous ne cédons pas vos données à des tiers. Pour les envois, nous utilisons un prestataire d'envoi d'emails qui agit en tant que sous-traitant : il traite les données uniquement pour le compte de Casa Tomás et selon ses instructions.",
+          ],
+        },
+        {
+          title: "8. Vos droits",
+          paragraphs: [
+            "Vous pouvez exercer vos droits d'accès, de rectification, d'effacement, d'opposition, de limitation et de portabilité, ou introduire une réclamation auprès de l'autorité de contrôle, comme expliqué dans notre {privacy}.",
+          ],
+        },
+      ],
+      privacyLink: "politique de confidentialité (en espagnol)",
+      contactTitle: "Contact",
+      contactIntro: "Pour toute question sur votre réservation :",
+      homeLink: "Accueil",
+      privacyFooterLink: "Politique de confidentialité",
+    },
     validation: {
       nameMin: "Le nom doit comporter au moins 2 caractères",
       nameMax: "Le nom ne peut pas dépasser 100 caractères",
@@ -560,6 +685,7 @@ export const translations: Translations = {
       guestsMax: "Maximum 20 convives",
       roomRequired: "Veuillez choisir une salle",
       notesMax: "Les notes ne peuvent pas dépasser 500 caractères",
+      termsRequired: "Pour réserver, vous devez accepter les conditions de réservation et la politique de confidentialité",
     },
     notFound: {
       title: "404",

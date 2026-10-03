@@ -335,7 +335,12 @@ export const translations: Translations = {
       emailPlaceholder: "you@email.com",
       notesLabel: "Special requests",
       notesPlaceholder: "Allergies, preferences, occasion...",
-      newsletterLabel: "I'd like to receive Casa Tomás news and offers by email. I can unsubscribe at any time.",
+      termsLabel: "I have read and accept the {terms} and the {privacy} *",
+      termsLink: "booking conditions",
+      privacyLink: "privacy policy",
+      newTabHint: "(opens in a new tab)",
+      newsletterLabel: "I'd like to receive the Casa Tomás newsletter (news, events and offers). I can unsubscribe at any time.",
+      newsletterTermsLink: "See newsletter terms",
       submit: "Book now",
       submitting: "Booking...",
       footer: "Secure, fast online reservations",
@@ -492,7 +497,8 @@ export const translations: Translations = {
       contactTitle: "Contact",
       rights: "© 2026 Casa Tomás Restaurant. All rights reserved.",
       admin: "Admin",
-      terms: "Terms & Conditions",
+      terms: "Privacy policy",
+      bookingTerms: "Booking and newsletter terms",
       cookieSettings: "Cookie settings",
     },
     cookie: {
@@ -549,6 +555,125 @@ export const translations: Translations = {
         TODAS: "All",
       },
     },
+    /*
+     * Página /condiciones (reserva + newsletter). En los párrafos, `{phone}` y
+     * `{privacy}` se pintan como enlaces (teléfono y política de privacidad).
+     */
+    conditionsPage: {
+      seoTitle: "Booking and newsletter terms | Casa Tomás Restaurant",
+      seoDescription: "Booking and newsletter terms at Casa Tomás Restaurant (Crevillent, Alicante): confirmation, punctuality, cancellations, groups, mailings, unsubscribing and personal data.",
+      back: "Back to home",
+      title: "Booking and newsletter terms",
+      updated: "Last updated: October 2026",
+      intro: "This page sets out the conditions for bookings at Restaurante Casa Tomás and for its newsletter.",
+      tocLabel: "On this page",
+      bookingHeading: "Booking conditions",
+      bookingIntro: "They apply to bookings made on this website or by phone. By sending a booking request you confirm that you have read and accepted them.",
+      bookingSections: [
+        {
+          title: "1. Your booking is pending until we confirm it",
+          paragraphs: [
+            "Sending the form is a booking request, not a confirmed booking. Your booking is only confirmed once you receive the confirmation email from the restaurant; until then Casa Tomás cannot guarantee your table.",
+            "If the email doesn't arrive, check your spam folder or call us on {phone}.",
+          ],
+        },
+        {
+          title: "2. Punctuality",
+          paragraphs: [
+            "We hold your table for 15 minutes after the booked time. After that, if we haven't heard from you, the table may be released and given to other guests.",
+            "If you're running late, call us on {phone} and we'll do our best to keep it for you.",
+          ],
+        },
+        {
+          title: "3. Cancellations and changes",
+          paragraphs: [
+            "If you can't come or need to change the date, time or number of guests, let us know as early as possible: through the link in your booking email or by calling us on {phone}. That way we can offer the table to someone else.",
+          ],
+        },
+        {
+          title: "4. Large groups",
+          paragraphs: [
+            "Bookings for groups of more than 12 people cannot be made on the website: the restaurant handles them directly. Call us on {phone} and we will arrange it with you, including any specific conditions the group may need.",
+          ],
+        },
+        {
+          title: "5. Table and area",
+          paragraphs: [
+            "Your booking guarantees seating for the number of guests indicated, not a specific table or area of the restaurant. If you have a preference, mention it under \"Special requests\" and we will do our best to accommodate it, but table allocation is decided by the restaurant.",
+          ],
+        },
+        {
+          title: "6. No-shows",
+          paragraphs: [
+            "When a booking isn't honoured and hasn't been cancelled, the table stays empty and other people miss out. Repeated no-shows may prevent you from making future bookings.",
+          ],
+        },
+        {
+          title: "7. Your personal data",
+          paragraphs: [
+            "The details you give us when booking (name, phone, email and booking details) are used to manage your booking, as explained in our {privacy}.",
+            "The newsletter is separate from your booking: you'll only receive it if you ask for it by ticking its box, it is not required to book, and you can unsubscribe at any time using the link in every email.",
+          ],
+        },
+      ],
+      newsletterHeading: "Newsletter terms",
+      newsletterIntro: "They only apply if, when booking, you tick the box to receive the Casa Tomás newsletter.",
+      newsletterSections: [
+        {
+          title: "1. What you'll receive",
+          paragraphs: [
+            "Emails with news, events, special menus and offers from Casa Tomás.",
+          ],
+        },
+        {
+          title: "2. How often",
+          paragraphs: [
+            "Mailings are occasional: we don't commit to a fixed frequency and will only write when we have something to tell you.",
+          ],
+        },
+        {
+          title: "3. What data we use and why",
+          paragraphs: [
+            "We use the email address and name you gave in your booking for the sole purpose of sending you the newsletter.",
+          ],
+        },
+        {
+          title: "4. Legal basis: your consent",
+          paragraphs: [
+            "The legal basis is your consent. It is voluntary and not required to book: if you don't tick the box, your booking is handled exactly the same way.",
+          ],
+        },
+        {
+          title: "5. Unsubscribing",
+          paragraphs: [
+            "You can unsubscribe at any time, free of charge, using the link included in every email. Unsubscribing takes effect immediately and doesn't affect your bookings.",
+          ],
+        },
+        {
+          title: "6. Record of consent",
+          paragraphs: [
+            "We keep the date on which you gave your consent as proof that you gave it.",
+          ],
+        },
+        {
+          title: "7. Recipients",
+          paragraphs: [
+            "We do not share your data with third parties. To send the emails we use an email delivery provider acting as data processor: it handles the data only on behalf of Casa Tomás and following its instructions.",
+          ],
+        },
+        {
+          title: "8. Your rights",
+          paragraphs: [
+            "You can exercise your rights of access, rectification, erasure, objection, restriction and portability, or lodge a complaint with the supervisory authority, as explained in our {privacy}.",
+          ],
+        },
+      ],
+      privacyLink: "privacy policy (in Spanish)",
+      contactTitle: "Contact",
+      contactIntro: "For any questions about your booking:",
+      homeLink: "Home",
+      privacyFooterLink: "Privacy policy",
+    },
     validation: {
       nameMin: "Name must be at least 2 characters",
       nameMax: "Name cannot exceed 100 characters",
@@ -560,6 +685,7 @@ export const translations: Translations = {
       guestsMax: "Maximum 20 guests",
       roomRequired: "Select a room",
       notesMax: "Notes cannot exceed 500 characters",
+      termsRequired: "To book, you need to accept the booking conditions and the privacy policy",
     },
     notFound: {
       title: "404",
