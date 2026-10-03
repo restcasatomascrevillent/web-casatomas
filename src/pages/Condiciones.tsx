@@ -33,11 +33,31 @@ const Condiciones = () => {
   // nueva. El salto nativo del navegador al ancla se pierde al hidratar (aquí
   // no está el Header, que es quien lo resuelve en la portada), así que se
   // repite tras montar.
+  //
+  // Ese salto nativo es SUAVE (`scroll-behavior: smooth` en index.css) y, con
+  // la máquina ocupada, sigue en marcha cuando llega el nuestro: Chrome suma
+  // lo que le quedaba y la vista acaba pasada, con el título de la sección
+  // fuera de pantalla por arriba (visto en los E2E: 6 de cada 72 cargas con
+  // 6 pestañas a la vez). Por eso se vuelve a alinear al terminar cada
+  // desplazamiento (`scrollend`) y una vez más pasado ~1 s (Safari sin
+  // `scrollend`), durante un rato corto y solo si el visitante no ha tocado
+  // la página.
   useEffect(() => {
     const id = hash.replace("#", "");
     if (!id) return;
-    const temporizador = window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "instant" }), 0);
-    return () => window.clearTimeout(temporizador);
+    const alinear = () => document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+    const temporizadores = [window.setTimeout(alinear, 0), window.setTimeout(alinear, 1000)];
+    const fin = window.setTimeout(() => detener(), 2000);
+    const interacciones = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+    function detener() {
+      temporizadores.forEach((t) => window.clearTimeout(t));
+      window.clearTimeout(fin);
+      window.removeEventListener("scrollend", alinear);
+      interacciones.forEach((evento) => window.removeEventListener(evento, detener));
+    }
+    window.addEventListener("scrollend", alinear);
+    interacciones.forEach((evento) => window.addEventListener(evento, detener, { passive: true }));
+    return detener;
   }, [hash]);
 
   /** Sustituye `{phone}` por el teléfono pulsable y `{privacy}` por el enlace a la política. */
