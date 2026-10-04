@@ -172,7 +172,11 @@ export const routes: RouteRecord[] = [
       // Google) y la política es contenido legal `noindex`, sin traducción
       // en la base de datos. Nada les impide sumarse más adelante — solo
       // haría falta añadirlas a `cartaChildren` y escribirles título/
-      // descripción por idioma, igual que aquí.
+      // descripción por idioma, igual que aquí. El selector de idioma manda
+      // las rutas solo-es a la portada del otro idioma
+      // (`existeEnTodosLosIdiomas` en `i18n/routing.ts`; un test compara esa
+      // lista con este árbol, así que si una ruta pasa a las tres ramas, el
+      // test avisa de que hay que actualizarla).
       { path: "reservas", lazy: lazyRoute(() => import("./pages/Reservas")) },
       {
         path: "politica-privacidad",
