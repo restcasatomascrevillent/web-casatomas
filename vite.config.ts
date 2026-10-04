@@ -5,7 +5,7 @@ import { rm } from "fs/promises";
 import { fetchCartaSSG, CARTA_SSG_VACIA } from "./scripts/carta-ssg.mjs";
 import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
-import { verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
+import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
 
 /**
  * Un `fetch` a Supabase, TRES módulos virtuales.
@@ -193,7 +193,11 @@ export default defineConfig(({ mode, command }) => {
         // publicarían (/.vite/manifest.json, /.vite/ssr-manifest.json).
         await rm(path.join(path.resolve(dir), ".vite"), { recursive: true, force: true });
         // Un solo `<html` por página y con el `lang` de su idioma; si no, el build falla.
-        const paginas = await verificarHtmlPrerenderizado(path.resolve(dir));
+        // Los `.html` de `public/` (p. ej. la verificación de Search Console) se
+        // copian tal cual, no los prerenderiza nadie: quedan fuera de la comprobación.
+        const paginas = await verificarHtmlPrerenderizado(path.resolve(dir), {
+          ignorar: await htmlDePublic(path.resolve(__dirname, "public")),
+        });
         // eslint-disable-next-line no-console
         console.log(`[verificar-html] ${paginas} páginas: un solo <html> y lang correcto`);
         const rutas = await generarSitemapYRobots(dir, siteUrl);
