@@ -318,7 +318,14 @@ export function interpretarRechazoReserva(
   const mensajeServidor =
     typeof objeto?.mensaje === "string" && objeto.mensaje.trim() ? objeto.mensaje.trim() : null;
 
-  const salida = (motivo && SALIDA_POR_MOTIVO[motivo]) || salidaPorEstado(status);
+  // Los 422 de comensales y de fecha (`numero_comensales_fuera_de_rango`,
+  // `fecha_pasada`, `fecha_demasiado_lejana`) no traen `motivo`, sino `error`:
+  // sin mirarlo caían en "revisa el formulario" en vez de "elige otra fecha".
+  const codigoError = typeof objeto?.error === "string" && objeto.error ? objeto.error : null;
+  const salida =
+    (motivo && SALIDA_POR_MOTIVO[motivo]) ||
+    (codigoError && SALIDA_POR_MOTIVO[codigoError]) ||
+    salidaPorEstado(status);
 
   // Sin red: el ÚNICO caso en que la culpa no es nuestra. Con `status === 0`
   // no hay cuerpo del servidor, así que no hay `mensaje` que priorizar.

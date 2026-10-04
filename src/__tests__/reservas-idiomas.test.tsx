@@ -330,6 +330,32 @@ describe("rechazos de reservas-web — texto por motivo", () => {
     expect(interpretarRechazoReserva(400, cuerpo, es.reservationForm.rejection).mensaje).toBe(cuerpo.mensaje);
   });
 
+  it("los 422 de fecha (con `error`, sin `motivo`) proponen elegir otra fecha, y el de comensales ajustarlos, en los tres idiomas", () => {
+    // Cuerpos tal cual los devuelve reservas-web/crear (index.ts, handleCrear).
+    const pasada = { ok: false, error: "fecha_pasada", mensaje: "La fecha seleccionada ya ha pasado." };
+    const lejana = {
+      ok: false,
+      error: "fecha_demasiado_lejana",
+      mensaje: "Solo se pueden reservar fechas con un máximo de 60 días de antelación.",
+      dias_max: 60,
+    };
+    const rango = {
+      ok: false,
+      error: "numero_comensales_fuera_de_rango",
+      mensaje: "Las reservas web son para un mínimo de 1 y un máximo de 12 personas.",
+      min: 1,
+      max: 12,
+    };
+    for (const idioma of [es, en, fr]) {
+      const textos = idioma.reservationForm.rejection;
+      expect(interpretarRechazoReserva(422, pasada, textos).salida).toBe(textos.exits.otherDate);
+      expect(interpretarRechazoReserva(422, lejana, textos).salida).toBe(textos.exits.otherDate);
+      expect(interpretarRechazoReserva(422, rango, textos).salida).toBe(textos.exits.guests);
+      // Un 422 sin código reconocible sigue pidiendo revisar el formulario.
+      expect(interpretarRechazoReserva(422, { ok: false, error: "otro_codigo" }, textos).salida).toBe(textos.exits.checkForm);
+    }
+  });
+
   it("si el cuerpo no trae la cifra que pide el texto, no se inventa: vale el mensaje del servidor", () => {
     const sinCifras = interpretarRechazoReserva(
       422,
