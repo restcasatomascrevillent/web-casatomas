@@ -571,9 +571,11 @@ export const translations: Translations = {
       bookingIntro: "They apply to bookings made on this website or by phone. By sending a booking request you confirm that you have read and accepted them.",
       bookingSections: [
         {
-          title: "1. Your booking is pending until we confirm it",
+          title: "1. How your booking is confirmed",
           paragraphs: [
-            "Sending the form is a booking request, not a confirmed booking. Your booking is only confirmed once you receive the confirmation email from the restaurant; until then Casa Tomás cannot guarantee your table.",
+            "Sending the form is a booking request, not a confirmed booking: it stays pending while the restaurant reviews it, and until it is confirmed Casa Tomás cannot guarantee your table.",
+            "Once we've reviewed it, we'll send you an email with the booking proposal. Your booking is confirmed when you click the button to confirm it in that email and then confirm on the page that opens; you'll then receive a confirmation email.",
+            "If we suggest a different time from the one you asked for, you can accept it from that same email, and your booking is confirmed, or decline it, and your booking is cancelled.",
             "If the email doesn't arrive, check your spam folder or call us on {phone}.",
           ],
         },

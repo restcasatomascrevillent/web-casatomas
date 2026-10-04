@@ -590,9 +590,11 @@ export const translations = {
       bookingIntro: "Se aplican a las reservas tanto desde esta web como por teléfono. Al enviar una solicitud de reserva declaras haberlas leído y aceptado.",
       bookingSections: [
         {
-          title: "1. Tu reserva queda pendiente hasta que la confirmemos",
+          title: "1. Cómo se confirma tu reserva",
           paragraphs: [
-            "Enviar el formulario es una solicitud de reserva, no una reserva confirmada. La reserva solo queda confirmada cuando recibes el email de confirmación del restaurante; hasta ese momento Casa Tomás no puede garantizarte la mesa.",
+            "Enviar el formulario es una solicitud de reserva, no una reserva confirmada: queda pendiente mientras el restaurante la revisa, y hasta que se confirme Casa Tomás no puede garantizarte la mesa.",
+            "Cuando la hayamos revisado, te enviaremos un email con la propuesta de reserva. La reserva queda confirmada cuando pulsas en ese email el botón para confirmarla y lo confirmas en la página que se abre; después recibirás un email de confirmación.",
+            "Si te proponemos una hora distinta de la que pediste, desde ese mismo email puedes aceptarla, y la reserva queda confirmada, o rechazarla, y la reserva queda cancelada.",
             "Si no te llega el correo, revisa la carpeta de spam o llámanos al {phone}.",
           ],
         },

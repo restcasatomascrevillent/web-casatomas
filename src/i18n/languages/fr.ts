@@ -571,9 +571,11 @@ export const translations: Translations = {
       bookingIntro: "Elles s'appliquent aux réservations faites sur ce site ou par téléphone. En envoyant une demande de réservation, vous déclarez les avoir lues et acceptées.",
       bookingSections: [
         {
-          title: "1. Votre réservation est en attente jusqu'à notre confirmation",
+          title: "1. Comment votre réservation est confirmée",
           paragraphs: [
-            "L'envoi du formulaire est une demande de réservation, pas une réservation confirmée. Votre réservation n'est confirmée qu'à réception de l'email de confirmation du restaurant ; jusque-là, Casa Tomás ne peut pas vous garantir la table.",
+            "L'envoi du formulaire est une demande de réservation, pas une réservation confirmée : elle reste en attente pendant que le restaurant l'examine et, tant qu'elle n'est pas confirmée, Casa Tomás ne peut pas vous garantir la table.",
+            "Après l'avoir examinée, nous vous enverrons un email avec la proposition de réservation. Votre réservation est confirmée lorsque vous cliquez sur le bouton de confirmation de cet email, puis confirmez sur la page qui s'ouvre ; vous recevrez ensuite un email de confirmation.",
+            "Si nous vous proposons un horaire différent de celui que vous aviez demandé, vous pouvez l'accepter depuis ce même email, et votre réservation est confirmée, ou le refuser, et votre réservation est annulée.",
             "Si vous ne recevez pas l'email, vérifiez vos courriers indésirables ou appelez-nous au {phone}.",
           ],
         },
