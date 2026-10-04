@@ -711,6 +711,11 @@ export const translations = {
       homeLink: "Inicio",
       privacyFooterLink: "Política de privacidad",
     },
+    /* Etiquetas ARIA de los botones del calendario (react-day-picker las trae en inglés). */
+    calendar: {
+      previousMonth: "Mes anterior",
+      nextMonth: "Mes siguiente",
+    },
     validation: {
       nameMin: "El nombre debe tener al menos 2 caracteres",
       nameMax: "El nombre no puede superar los 100 caracteres",
