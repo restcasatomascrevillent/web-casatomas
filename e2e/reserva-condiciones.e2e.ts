@@ -283,6 +283,23 @@ test.describe("formulario de reserva (/reservas)", () => {
   });
 });
 
+test.describe("selector de idioma en /reservas (solo existe en español)", () => {
+  const ETIQUETAS = { en: "English", fr: "Français" } as const;
+  for (const { codigo, prefijo, t } of IDIOMAS.filter((i) => i.codigo !== "es")) {
+    test(`cambiar a ${codigo} lleva a la portada ${prefijo}, no a un 404 en ${prefijo}/reservas`, async ({ page }) => {
+      await abrirFormulario(page);
+      await page.getByRole("button", { name: "Cambiar idioma" }).filter({ visible: true }).click();
+      await page.getByRole("menuitem", { name: ETIQUETAS[codigo as "en" | "fr"] }).click();
+
+      await expect.poll(() => new URL(page.url()).pathname).toBe(prefijo);
+      await expect(page.locator("html")).toHaveAttribute("lang", codigo);
+      await expect(page.getByRole("heading", { level: 1, name: t.notFound.title })).toHaveCount(0);
+      // Y sigue habiendo cómo reservar: el botón del header vuelve a /reservas.
+      await expect(page.getByRole("button", { name: t.header.cta, exact: true }).filter({ visible: true }).first()).toBeVisible();
+    });
+  }
+});
+
 for (const { codigo, prefijo, t } of IDIOMAS.filter((i) => i.codigo !== "es")) {
   test.describe(`condiciones en ${codigo} (${prefijo}/condiciones)`, () => {
     test("el pie de página enlaza a las condiciones en su idioma", async ({ page }) => {

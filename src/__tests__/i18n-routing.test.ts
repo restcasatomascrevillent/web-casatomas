@@ -6,9 +6,12 @@
  * que no hace falta montar ningún componente ni un Router.
  */
 import { describe, expect, it } from "vitest";
+import type { RouteRecord } from "vite-react-ssg";
+import { routes } from "@/App";
 import {
   alternatesDePagina,
   construirRutaIdioma,
+  existeEnTodosLosIdiomas,
   idiomaDeRuta,
   quitarPrefijoIdioma,
   rutaEquivalente,
@@ -79,6 +82,59 @@ describe("rutaEquivalente — lo que usa el selector de idioma del header", () =
   it("la portada de un idioma a otro es la portada del otro, no la raíz cruda", () => {
     expect(rutaEquivalente("/en", "fr")).toBe("/fr");
     expect(rutaEquivalente("/", "en")).toBe("/en");
+  });
+
+  it("las condiciones existen en los tres idiomas: va a su equivalente", () => {
+    expect(rutaEquivalente("/condiciones", "en")).toBe("/en/condiciones");
+    expect(rutaEquivalente("/fr/condiciones", "es")).toBe("/condiciones");
+  });
+
+  it("una página que solo existe en español lleva a la portada del idioma destino, no a un 404", () => {
+    for (const rutaSoloEs of ["/reservas", "/politica-privacidad", "/reserva/respuesta", "/newsletter/baja", "/404"]) {
+      expect(rutaEquivalente(rutaSoloEs, "en")).toBe("/en");
+      expect(rutaEquivalente(rutaSoloEs, "fr")).toBe("/fr");
+    }
+  });
+
+  it("elegir el mismo idioma en una página solo-es no la abandona", () => {
+    expect(rutaEquivalente("/reservas", "es")).toBe("/reservas");
+  });
+
+  it("desde un 404 de /en o /fr lleva a la portada del destino", () => {
+    expect(rutaEquivalente("/en/no-existe", "es")).toBe("/");
+    expect(rutaEquivalente("/en/reservas", "fr")).toBe("/fr");
+  });
+
+  it("una página solo-es con barra final también va a la portada del destino", () => {
+    expect(rutaEquivalente("/reservas/", "en")).toBe("/en");
+  });
+});
+
+/** Rutas de una rama de `App.tsx`, como rutas en español sin prefijo (`:param` -> `x`). */
+function rutasDeRama(rama: string): string[] {
+  const nodo = routes.find((r: RouteRecord) => r.path === rama);
+  if (!nodo?.children) throw new Error(`rama ${rama} no encontrada en App.tsx`);
+  return nodo.children
+    .filter((hijo) => hijo.path !== "*")
+    .map((hijo) => (hijo.index ? "/" : `/${hijo.path!.replace(/:[^/]+/g, "x")}`));
+}
+
+describe("existeEnTodosLosIdiomas — espejo de las rutas reales de App.tsx", () => {
+  it("toda ruta montada bajo /en y /fr existe en todos los idiomas", () => {
+    for (const rama of ["/en", "/fr"]) {
+      for (const ruta of rutasDeRama(rama)) expect(existeEnTodosLosIdiomas(ruta), `${rama}${ruta}`).toBe(true);
+    }
+  });
+
+  it("toda ruta que solo está en la rama española NO cuenta como multiidioma", () => {
+    const enIngles = new Set(rutasDeRama("/en"));
+    const soloEs = rutasDeRama("/").filter((ruta) => !enIngles.has(ruta));
+    expect(soloEs).toEqual(expect.arrayContaining(["/reservas", "/politica-privacidad"]));
+    for (const ruta of soloEs) expect(existeEnTodosLosIdiomas(ruta), ruta).toBe(false);
+  });
+
+  it("/en y /fr montan exactamente las mismas rutas", () => {
+    expect(rutasDeRama("/fr")).toEqual(rutasDeRama("/en"));
   });
 });
 
