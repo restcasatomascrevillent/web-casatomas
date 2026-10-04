@@ -31,6 +31,7 @@ vi.setConfig({ testTimeout: 20_000 });
 
 type Cuerpo = Record<string, unknown>;
 interface Contrato {
+  _LEEME: string[];
   version: number;
   endpoint: string;
   tipos: Record<string, "string" | "number" | "boolean">;
@@ -178,6 +179,14 @@ describe("contrato reservas-web/crear — el fixture", () => {
   it("apunta a la acción de la Edge Function que usa el formulario", () => {
     expect(CONTRATO.endpoint).toBe("POST /functions/v1/reservas-web/crear");
     expect(RESERVAS_WEB_CREAR_URL.endsWith("/functions/v1/reservas-web/crear")).toBe(true);
+  });
+
+  it("el _LEEME señala la copia del otro repo donde vivirá tras fusionar (adminpanelct)", () => {
+    const leeme = CONTRATO._LEEME.join(" ");
+    expect(leeme).toContain("adminpanelct/supabase/functions/reservas-web/__tests__/contrato/reserva-web-crear.contrato.json");
+    expect(leeme).toContain("src/__tests__/contratos/reserva-web-crear.contrato.json");
+    // Nunca el nombre del worktree temporal: tras fusionar ya no existe.
+    expect(leeme).not.toContain("adminpanelct-integracion");
   });
 
   it("cada caso tiene exactamente los campos de `tipos` y con esos tipos", () => {
