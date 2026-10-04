@@ -271,6 +271,10 @@ describe("rechazos de reservas-web — texto por motivo", () => {
     "no_disponible", "grupo_grande", "reserva_hoy", "corte_horario", "max_reservas_telefono",
     "max_reservas_email", "sin_disponibilidad", "numero_comensales_fuera_de_rango", "fecha_pasada",
     "fecha_demasiado_lejana",
+    // 400 de la reservas-web nueva si `acepta_condiciones` no llega a `true`
+    // (trae `error` + `mensaje` en español). El formulario no deja enviarlo
+    // sin la casilla, pero si llegara no debe salir en español en /en y /fr.
+    "condiciones_no_aceptadas",
   ];
 
   it("en y francés traducen todos los motivos; el español no sustituye nada (manda el servidor)", () => {
@@ -307,6 +311,23 @@ describe("rechazos de reservas-web — texto por motivo", () => {
     );
     expect(lejana.mensaje).toContain("60");
     expect(lejana.mensaje).not.toContain("{days}");
+  });
+
+  it("el 400 `condiciones_no_aceptadas` (con `error` y `mensaje` en español) se traduce y pide revisar el formulario", () => {
+    const cuerpo = {
+      ok: false,
+      error: "condiciones_no_aceptadas",
+      mensaje: "Para enviar la reserva tienes que aceptar la política de privacidad y las condiciones de la reserva.",
+    };
+    for (const idioma of [en, fr]) {
+      const textos = idioma.reservationForm.rejection;
+      const rechazo = interpretarRechazoReserva(400, cuerpo, textos);
+      expect(rechazo.mensaje).toBe(textos.reasons.condiciones_no_aceptadas);
+      expect(rechazo.mensaje).not.toMatch(/tienes que aceptar/);
+      expect(rechazo.salida).toBe(textos.exits.checkForm);
+    }
+    // En español se enseña el del servidor, tal cual.
+    expect(interpretarRechazoReserva(400, cuerpo, es.reservationForm.rejection).mensaje).toBe(cuerpo.mensaje);
   });
 
   it("si el cuerpo no trae la cifra que pide el texto, no se inventa: vale el mensaje del servidor", () => {

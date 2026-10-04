@@ -380,6 +380,7 @@ export const translations: Translations = {
           numero_comensales_fuera_de_rango: "Online bookings are for a minimum of {min} and a maximum of {max} guests.",
           fecha_pasada: "The selected date has already passed.",
           fecha_demasiado_lejana: "Bookings can only be made up to {days} days in advance.",
+          condiciones_no_aceptadas: "To send the booking you need to accept the privacy policy and the booking conditions.",
         } as Record<string, string>,
         invalidMessage: "Some of the details in the form couldn't be read.",
         offlineTitle: "You seem to be offline",
