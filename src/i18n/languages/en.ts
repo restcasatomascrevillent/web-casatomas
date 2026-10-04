@@ -495,6 +495,13 @@ export const translations: Translations = {
       giftFormDeliveryDate: "Desired delivery date (optional)",
       giftFormSubmit: "Go to secure payment",
       giftFormSubmitting: "Connecting to payment...",
+      giftInvoiceRequest: "I want an invoice by email",
+      giftInvoiceDescription: "A PDF will be sent to your purchase email once payment is confirmed.",
+      giftInvoiceName: "Full name or company name",
+      giftInvoiceTaxId: "Tax identification number",
+      giftInvoiceAddress: "Full billing address (including postal code and city)",
+      giftInvoiceNotReady: "Invoicing is not available yet. Contact the restaurant before paying.",
+      giftInvoiceMissingData: "Complete your name, tax ID and billing address to receive an invoice.",
       giftFormCancel: "Cancel",
       toasts: {
         errorTitle: "Error",
@@ -760,3 +767,4 @@ const pack: LanguagePack = {
 };
 
 export default pack;
+

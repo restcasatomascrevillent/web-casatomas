@@ -2,30 +2,25 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { MapPin, Phone, Mail, Gift, Loader2 } from "lucide-react";
+import { CompraChequePasos } from "@/components/CompraChequePasos";
+import { MapPin, Phone, Mail, Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
-interface DatosComprador {
+export interface DatosComprador {
   nombre: string;
   email: string;
   telefono: string;
   destinatario: string;
   mensaje: string;
   fechaEntrega: string;
+  solicitaFactura: boolean;
+  facturaNombre: string;
+  facturaNif: string;
+  facturaDireccion: string;
 }
 
 const DATOS_COMPRADOR_VACIOS: DatosComprador = {
@@ -35,6 +30,10 @@ const DATOS_COMPRADOR_VACIOS: DatosComprador = {
   destinatario: "",
   mensaje: "",
   fechaEntrega: "",
+  solicitaFactura: false,
+  facturaNombre: "",
+  facturaNif: "",
+  facturaDireccion: "",
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,6 +102,10 @@ const ContactoSection = () => {
       return;
     }
 
+    if (datos.solicitaFactura && (!datos.facturaNombre.trim() || !datos.facturaNif.trim() || !datos.facturaDireccion.trim())) {
+      setErrorFormulario(t.contacto.giftInvoiceMissingData);
+      return;
+    }
     setErrorFormulario(null);
     setEnviando(true);
     try {
@@ -111,6 +114,12 @@ const ContactoSection = () => {
         headers: functionHeaders(),
         body: JSON.stringify({
           importe_eur: parseFloat(giftAmount),
+          solicita_factura: datos.solicitaFactura,
+          datos_factura: datos.solicitaFactura ? {
+            nombre: datos.facturaNombre.trim(),
+            nif: datos.facturaNif.trim(),
+            direccion: datos.facturaDireccion.trim(),
+          } : undefined,
           comprador_nombre: nombre,
           comprador_email: email,
           comprador_telefono: datos.telefono.trim() || undefined,
@@ -119,16 +128,20 @@ const ContactoSection = () => {
           fecha_entrega_deseada: datos.fechaEntrega || undefined,
         }),
       });
-      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string } | null;
+      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; message?: string; factura_solicitada?: boolean } | null;
 
       if (!response.ok || !cuerpo?.url) {
-        throw new Error(cuerpo?.mensaje);
+        throw new Error(cuerpo?.mensaje || cuerpo?.message || `No se pudo abrir el pago (HTTP ${response.status}).`);
+      }
+
+      if (datos.solicitaFactura && cuerpo.factura_solicitada !== true) {
+        throw new Error(t.contacto.giftInvoiceNotReady);
       }
 
       // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
       window.location.href = cuerpo.url;
-    } catch {
-      setErrorFormulario(`${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
+    } catch (error) {
+      setErrorFormulario(error instanceof Error && error.message ? error.message : `${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
       setEnviando(false);
     }
   };
@@ -297,121 +310,12 @@ const ContactoSection = () => {
         </div>
       </motion.div>
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => !enviando && setDialogOpen(open)}>
-        {/* La "X" la pone `DialogContent` en `absolute`: cabecera y pie se
-            quedan fijos (`shrink-0`) y solo scrollea el bloque de campos de
-            en medio — así el botón de pago está siempre a la vista en
-            móvil, sin tener que buscarlo haciendo scroll hasta el final. */}
-        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0">
-          <DialogHeader className="shrink-0 border-b border-border/60 p-5 pb-4 text-left sm:p-6 sm:pb-4">
-            <DialogTitle className="pr-8">{t.contacto.giftDialogTitle}</DialogTitle>
-            <DialogDescription>{t.contacto.giftDialogDescription}</DialogDescription>
-          </DialogHeader>
-
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-5 sm:p-6">
-            <p className="text-sm font-medium text-accent">
-              {t.contacto.giftFormAmountSummary.replace("{amount}", giftAmount)}
-            </p>
-
-            {errorFormulario && (
-              <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {errorFormulario}
-              </p>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-buyer-name">{t.contacto.giftFormBuyerName}</Label>
-              <Input
-                id="gift-buyer-name"
-                value={datos.nombre}
-                onChange={(e) => setDatos((prev) => ({ ...prev, nombre: e.target.value }))}
-                placeholder={t.contacto.giftFormBuyerNamePlaceholder}
-                autoComplete="name"
-                maxLength={200}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-buyer-email">{t.contacto.giftFormBuyerEmail}</Label>
-              <Input
-                id="gift-buyer-email"
-                type="email"
-                inputMode="email"
-                value={datos.email}
-                onChange={(e) => setDatos((prev) => ({ ...prev, email: e.target.value }))}
-                placeholder={t.contacto.giftFormBuyerEmailPlaceholder}
-                autoComplete="email"
-                maxLength={320}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-buyer-phone">{t.contacto.giftFormBuyerPhone}</Label>
-              <Input
-                id="gift-buyer-phone"
-                type="tel"
-                inputMode="tel"
-                value={datos.telefono}
-                onChange={(e) => setDatos((prev) => ({ ...prev, telefono: e.target.value }))}
-                placeholder={t.contacto.giftFormBuyerPhonePlaceholder}
-                autoComplete="tel"
-                maxLength={40}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-recipient-name">{t.contacto.giftFormRecipientName}</Label>
-              <Input
-                id="gift-recipient-name"
-                value={datos.destinatario}
-                onChange={(e) => setDatos((prev) => ({ ...prev, destinatario: e.target.value }))}
-                placeholder={t.contacto.giftFormRecipientNamePlaceholder}
-                maxLength={200}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-message">{t.contacto.giftFormMessage}</Label>
-              <Textarea
-                id="gift-message"
-                value={datos.mensaje}
-                onChange={(e) => setDatos((prev) => ({ ...prev, mensaje: e.target.value }))}
-                placeholder={t.contacto.giftFormMessagePlaceholder}
-                maxLength={500}
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gift-delivery-date">{t.contacto.giftFormDeliveryDate}</Label>
-              <Input
-                id="gift-delivery-date"
-                type="date"
-                value={datos.fechaEntrega}
-                onChange={(e) => setDatos((prev) => ({ ...prev, fechaEntrega: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="shrink-0 gap-2 border-t border-border/60 p-5 pt-4 sm:gap-2 sm:p-6 sm:pt-4">
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={enviando}>
-              {t.contacto.giftFormCancel}
-            </Button>
-            <Button
-              className="bg-accent hover:bg-accent/90"
-              onClick={handleConfirmarCompra}
-              disabled={enviando}
-            >
-              {enviando && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {enviando ? t.contacto.giftFormSubmitting : t.contacto.giftFormSubmit}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CompraChequePasos open={dialogOpen} onOpenChange={open => !enviando && setDialogOpen(open)}
+        datos={datos} setDatos={setDatos} importe={giftAmount} enviando={enviando}
+        error={errorFormulario} setError={setErrorFormulario} confirmar={handleConfirmarCompra} />
     </section>
   );
 };
 
 export default ContactoSection;
+

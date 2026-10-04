@@ -49,6 +49,8 @@ const IMPORTE_MIN = 10;
 const IMPORTE_MAX = 1000;
 
 interface CrearPayload {
+  solicita_factura?: unknown;
+  datos_factura?: { nombre?: unknown; nif?: unknown; direccion?: unknown };
   importe_eur?: unknown;
   comprador_nombre?: unknown;
   comprador_email?: unknown;
@@ -94,6 +96,23 @@ async function handleCrear(req: Request): Promise<Response> {
     return json({ motivo: "email_invalido", mensaje: "El email del comprador no es válido." }, 422);
   }
 
+  const solicitaFactura = payload.solicita_factura === true;
+  const datosFactura = solicitaFactura ? {
+    nombre: textoOpcional(payload.datos_factura?.nombre, 200),
+    nif: textoOpcional(payload.datos_factura?.nif, 30),
+    direccion: textoOpcional(payload.datos_factura?.direccion, 300),
+  } : null;
+  if (solicitaFactura) {
+    if (!datosFactura?.nombre || !datosFactura.nif || !datosFactura.direccion) {
+      return json({ mensaje: "Completa nombre, NIF y dirección fiscal para recibir la factura." }, 422);
+    }
+    const { data: plantilla, error } = await supabase.from("plantilla_factura_cheques")
+      .select("emisor_nombre, emisor_nif, emisor_direccion").eq("id", true).single();
+    if (error || !plantilla?.emisor_nombre || !plantilla.emisor_nif || !plantilla.emisor_direccion) {
+      return json({ mensaje: "La facturación no está disponible todavía. Contacta con el restaurante." }, 503);
+    }
+  }
+
   const compradorTelefono = textoOpcional(payload.comprador_telefono, 40);
   const destinatarioNombre = textoOpcional(payload.destinatario_nombre, 200);
   const mensaje = textoOpcional(payload.mensaje, 500);
@@ -102,7 +121,9 @@ async function handleCrear(req: Request): Promise<Response> {
   const { data: fila, error: errorInsert } = await supabase
     .from("cheques_regalo")
     .insert({
-      importe_eur: importe,
+      importe_eur: Math.round(importe * 100) / 100,
+      solicita_factura: solicitaFactura,
+      datos_factura: datosFactura,
       comprador_nombre: compradorNombre,
       comprador_email: compradorEmail,
       comprador_telefono: compradorTelefono,
@@ -157,7 +178,7 @@ async function handleCrear(req: Request): Promise<Response> {
     if (errorUpdate) console.error("[cheques-regalo-web] no se pudo guardar stripe_session_id:", errorUpdate);
 
     if (!session.url) throw new Error("Stripe no devolvió url de checkout");
-    return json({ url: session.url });
+    return json({ url: session.url, factura_solicitada: solicitaFactura });
   } catch (error) {
     console.error("[cheques-regalo-web] Stripe checkout falló:", error);
     await supabase.from("cheques_regalo").update({ estado: "cancelado" }).eq("id", fila.id);
@@ -175,3 +196,4 @@ Deno.serve(async (req) => {
 
   return json({ motivo: "no_encontrado", mensaje: "Ruta no soportada." }, 404);
 });
+
