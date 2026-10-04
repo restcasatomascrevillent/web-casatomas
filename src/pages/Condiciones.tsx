@@ -10,6 +10,7 @@ import {
   ANCLA_CONDICIONES_NEWSLETTER,
   ANCLA_CONDICIONES_RESERVA,
   CONDICIONES_PATH,
+  POLITICA_PRIVACIDAD_PATH,
 } from "@/lib/condiciones";
 
 type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
@@ -18,14 +19,11 @@ type Seccion = { readonly title: string; readonly paragraphs: readonly string[] 
  * Condiciones de reserva y de la newsletter (es/en/fr). Mismo esqueleto
  * visual que `PoliticaPrivacidad` y, como ella, `noindex`.
  *
- * A diferencia de la política (solo en español), esta página existe en las
- * tres ramas (`/condiciones`, `/en/condiciones`, `/fr/condiciones`): el pie de
- * página de cada idioma enlaza a la suya. El formulario de reserva, en cambio,
- * solo existe en `/reservas` (rama española; los botones «Reservar» de `/en`
- * y `/fr` llevan ahí), así que hoy sus casillas siempre abren `/condiciones`.
- * Ya construye el enlace con el idioma activo (`construirRutaIdioma`), de modo
- * que cuando existan `/en/reservas` y `/fr/reservas` apuntará a su rama sin
- * tocar nada.
+ * Existe en las tres ramas (`/condiciones`, `/en/condiciones`,
+ * `/fr/condiciones`), igual que el formulario de reserva (`/reservas`,
+ * `/en/reservas`, `/fr/reservas`) que enlaza cada casilla a su sección, y la
+ * política de privacidad: todos los enlaces se construyen con el idioma
+ * activo (`construirRutaIdioma`).
  */
 const Condiciones = () => {
   const { t, language } = useTranslations();
@@ -70,7 +68,11 @@ const Condiciones = () => {
       if (parte === "{phone}") return <TelLink key={indice} className="text-accent hover:underline" />;
       if (parte === "{privacy}") {
         return (
-          <Link key={indice} to="/politica-privacidad" className="text-accent hover:underline">
+          <Link
+            key={indice}
+            to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
+            className="text-accent hover:underline"
+          >
             {c.privacyLink}
           </Link>
         );
@@ -176,7 +178,10 @@ const Condiciones = () => {
             {c.homeLink}
           </Link>
           {" · "}
-          <Link to="/politica-privacidad" className="hover:text-accent transition-colors">
+          <Link
+            to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
+            className="hover:text-accent transition-colors"
+          >
             {c.privacyFooterLink}
           </Link>
         </p>
