@@ -15,7 +15,7 @@
  * Los párrafos admiten un marcado mínimo (`renderTextoRico` en la página):
  * `**negrita**`, `[texto](https://enlace)`, `{phone}` y `{email}`.
  */
-import type { Language } from "@/i18n/types";
+import type { Language } from "../i18n/types";
 
 export interface TextosPrivacidad {
   seoTitle: string;
