@@ -1413,4 +1413,23 @@ describe("casillas legales en es/en/fr", () => {
       expect(parrafos).toMatch(constancia);
     }
   });
+
+  // Flujo real (emails-reserva): la solicitud web queda pendiente, el
+  // restaurante manda la propuesta por email y la reserva se confirma cuando
+  // el cliente la confirma desde ese email (o la rechaza y queda cancelada).
+  it("el apartado 1 de las condiciones de reserva describe la confirmación desde el email", () => {
+    const esperado = [
+      { pack: esPack, propuesta: /email con la propuesta de reserva/i, confirma: /queda confirmada cuando pulsas en ese email el botón/i, rechazo: /rechazarla, y la reserva queda cancelada/i },
+      { pack: enPack, propuesta: /email with the booking proposal/i, confirma: /confirmed when you click the button to confirm it in that email/i, rechazo: /decline it, and your booking is cancelled/i },
+      { pack: frPack, propuesta: /email avec la proposition de réservation/i, confirma: /confirmée lorsque vous cliquez sur le bouton de confirmation de cet email/i, rechazo: /le refuser, et votre réservation est annulée/i },
+    ];
+    for (const { pack, propuesta, confirma, rechazo } of esperado) {
+      const texto = pack.translations.conditionsPage.bookingSections[0].paragraphs.join("\n");
+      expect(texto).toMatch(propuesta);
+      expect(texto).toMatch(confirma);
+      expect(texto).toMatch(rechazo);
+      // Ya no dice que la reserva se confirma solo con recibir un email.
+      expect(texto).not.toMatch(/solo queda confirmada cuando recibes|only confirmed once you receive|confirmée qu'à réception/i);
+    }
+  });
 });
