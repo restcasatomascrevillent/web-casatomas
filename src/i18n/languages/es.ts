@@ -282,7 +282,7 @@ export const translations = {
       backToSite: "Volver al sitio web",
       disclaimer: {
         title: "Importante:",
-        note: "La reserva no queda confirmada hasta que recibas el email de confirmación. Casa Tomás queda exento de responsabilidad hasta ese momento.",
+        note: "Enviar el formulario es una solicitud, no una reserva confirmada: el restaurante la revisa y te envía un email con la propuesta. La reserva queda confirmada cuando la confirmas desde ese email. Casa Tomás queda exento de responsabilidad hasta ese momento.",
         callUs: "Si no hay disponibilidad online, llámanos al",
         steps: [
           "Consultar disponibilidad (cliente)",
@@ -291,6 +291,12 @@ export const translations = {
           "Confirmar reserva (recibirás el correo de confirmación)",
         ],
       },
+    },
+    reservasPage: {
+      seoTitle: "Reservar mesa | Casa Tomás Restaurante en Crevillent",
+      seoDescription: "Reserva tu mesa en Casa Tomás, restaurante de cocina tradicional en Crevillent (Alicante). Reservas online rápidas y sencillas.",
+      keywords: ["reservar mesa Crevillent", "reservas Casa Tomás", "reservar restaurante Alicante"],
+      breadcrumb: "Reservar mesa",
     },
     reservationForm: {
       /*
@@ -302,7 +308,7 @@ export const translations = {
        * presentaba creyendo que tenía mesa.
        */
       successTitle: "Solicitud recibida",
-      successLead: "Aún no es una reserva confirmada: te escribiremos por correo cuando el restaurante la confirme.",
+      successLead: "Aún no es una reserva confirmada: el restaurante revisará tu solicitud y te enviará un email con la propuesta. Queda confirmada cuando la confirmas desde ese email.",
       successLine3: "Guarda este resguardo: es el único acuse de que tu solicitud ha llegado.",
       successButton: "Volver al inicio",
       successCloseAria: "Cerrar el resguardo",
@@ -314,7 +320,7 @@ export const translations = {
         timeLabel: "Hora",
         guestsLabel: "Comensales",
         emailLabel: "Confirmación a",
-        emailHint: "Ahora no recibirás ningún correo: te escribiremos a esta dirección cuando el restaurante confirme la reserva. Revisa también la carpeta de spam.",
+        emailHint: "Ahora no recibirás ningún correo: tras revisar tu solicitud, el restaurante te escribirá a esta dirección con la propuesta, y la reserva queda confirmada cuando la confirmes desde ese email. Revisa también la carpeta de spam.",
         stepCaption: "Paso {done} de {total}",
         /* Los mismos cuatro pasos que anuncia `reservas.disclaimer.steps`. */
         steps: [
@@ -360,7 +366,7 @@ export const translations = {
       submitting: "Reservando...",
       footer: "Reservas online seguras y rápidas",
       toasts: {
-        missingFields: "Selecciona una fecha, una sala y el número de comensales",
+        missingFields: "Selecciona una fecha y el número de comensales",
         availabilityFull: "¡Todos los horarios disponibles para esta fecha!",
         availabilityChecked: "Disponibilidad actualizada",
         closedDay: "Ese día el restaurante no está disponible. Elige otra fecha.",
@@ -377,6 +383,8 @@ export const translations = {
       rejection: {
         title: "No hemos podido completar la reserva",
         close: "Entendido",
+        closeAria: "Cerrar el aviso",
+        reasons: {} as Record<string, string>,
         invalidMessage: "Hay algún dato del formulario que no hemos podido leer.",
         offlineTitle: "Parece que te has quedado sin conexión",
         offlineMessage: "Tu solicitud no ha salido porque se ha perdido la conexión.",
@@ -402,6 +410,7 @@ export const translations = {
     },
     mobileCta: {
       call: "Llamar",
+      callAria: "Llamar a Casa Tomás",
       reserve: "Reservar mesa",
     },
     reviews: {

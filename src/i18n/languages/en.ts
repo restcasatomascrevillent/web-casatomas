@@ -276,7 +276,7 @@ export const translations: Translations = {
       backToSite: "Back to the website",
       disclaimer: {
         title: "Important:",
-        note: "Your booking is not confirmed until you receive the confirmation email. Casa Tomás is not responsible until that moment.",
+        note: "Submitting the form is a request, not a confirmed booking: the restaurant reviews it and emails you a proposal. The booking is confirmed when you confirm it from that email. Casa Tomás is not responsible until that moment.",
         callUs: "If no availability is shown online, please call us at",
         steps: [
           "Check availability (guest)",
@@ -286,9 +286,15 @@ export const translations: Translations = {
         ],
       },
     },
+    reservasPage: {
+      seoTitle: "Book a table | Casa Tomás Restaurant in Crevillent",
+      seoDescription: "Book your table at Casa Tomás, a traditional cuisine restaurant in Crevillent (Alicante, Spain). Quick and easy online reservations.",
+      keywords: ["book a table Crevillent", "Casa Tomás reservations", "restaurant booking Alicante"],
+      breadcrumb: "Book a table",
+    },
     reservationForm: {
       successTitle: "Request received",
-      successLead: "This is not a confirmed booking yet — we'll email you once the restaurant confirms it.",
+      successLead: "This is not a confirmed booking yet: the restaurant will review your request and email you a proposal. It is confirmed once you confirm it from that email.",
       successLine3: "Keep this receipt: it's the only acknowledgement that your request came through.",
       successButton: "Back to Home",
       successCloseAria: "Close the receipt",
@@ -300,7 +306,7 @@ export const translations: Translations = {
         timeLabel: "Time",
         guestsLabel: "Guests",
         emailLabel: "Confirmation to",
-        emailHint: "No email will arrive right now: we'll write to this address once the restaurant confirms the booking. Check your spam folder too.",
+        emailHint: "No email will arrive right now: after reviewing your request, the restaurant will write to this address with a proposal, and the booking is confirmed once you confirm it from that email. Check your spam folder too.",
         stepCaption: "Step {done} of {total}",
         steps: [
           "Availability checked",
@@ -345,7 +351,7 @@ export const translations: Translations = {
       submitting: "Booking...",
       footer: "Secure, fast online reservations",
       toasts: {
-        missingFields: "Select a date, room, and party size",
+        missingFields: "Select a date and party size",
         availabilityFull: "All times available for this date!",
         availabilityChecked: "Availability updated",
         closedDay: "The restaurant is not available on that day. Please choose another date.",
@@ -362,6 +368,19 @@ export const translations: Translations = {
       rejection: {
         title: "We couldn't complete your booking",
         close: "Got it",
+        closeAria: "Close this notice",
+        reasons: {
+          no_disponible: "We were unable to process the request.",
+          grupo_grande: "For larger groups, please contact the restaurant directly.",
+          reserva_hoy: "Same-day bookings are handled by phone.",
+          corte_horario: "That time is too close: bookings must be made with a minimum notice before the service.",
+          max_reservas_telefono: "There are already active bookings with this phone number for that date.",
+          max_reservas_email: "There are already active bookings with this email for that date.",
+          sin_disponibilidad: "There is no availability left for that date and time.",
+          numero_comensales_fuera_de_rango: "Online bookings are for a minimum of {min} and a maximum of {max} guests.",
+          fecha_pasada: "The selected date has already passed.",
+          fecha_demasiado_lejana: "Bookings can only be made up to {days} days in advance.",
+        } as Record<string, string>,
         invalidMessage: "Some of the details in the form couldn't be read.",
         offlineTitle: "You seem to be offline",
         offlineMessage: "Your request didn't go through because the connection dropped.",
@@ -387,6 +406,7 @@ export const translations: Translations = {
     },
     mobileCta: {
       call: "Call",
+      callAria: "Call Casa Tomás",
       reserve: "Book a table",
     },
     reviews: {
@@ -677,7 +697,7 @@ export const translations: Translations = {
           ],
         },
       ],
-      privacyLink: "privacy policy (in Spanish)",
+      privacyLink: "privacy policy",
       contactTitle: "Contact",
       contactIntro: "For any questions about your booking:",
       homeLink: "Home",

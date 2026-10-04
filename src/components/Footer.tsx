@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 import { openCookiePreferences } from "@/lib/cookie-consent";
-import { CONDICIONES_PATH } from "@/lib/condiciones";
+import { CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH } from "@/lib/condiciones";
 
 const Footer = () => {
   const { t, language } = useTranslations();
@@ -42,10 +42,9 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                {/* Reservas se queda solo en español por ahora (ver el informe
-                    del cambio de i18n): el formulario no tiene versión propia
-                    en /en ni /fr todavía. */}
-                <a href="/reservas" className="hover:text-accent transition-colors">{t.footer.reserveLink}</a>
+                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className="hover:text-accent transition-colors">
+                  {t.footer.reserveLink}
+                </Link>
               </li>
               <li>
                 <a href="https://restaurantecasatomascrevillente.es/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
@@ -99,7 +98,7 @@ const Footer = () => {
 
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center">
             <Link
-              to="/politica-privacidad"
+              to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
               className="text-xs text-stone hover:text-accent transition-colors"
             >
               {t.footer.terms}

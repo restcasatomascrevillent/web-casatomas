@@ -3,6 +3,8 @@ import { Calendar, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { PHONE_HREF } from "@/components/TelLink";
+import { construirRutaIdioma, quitarPrefijoIdioma } from "@/i18n/routing";
+import { RESERVAS_PATH } from "@/lib/condiciones";
 import { useEffect, useState } from "react";
 
 // Barra fija de conversión en móvil: llamar o reservar sin hacer scroll.
@@ -26,7 +28,7 @@ const HOME_PATHS = ["/", "/en", "/fr"];
 const MOBILE_CTA_HEIGHT = "4.25rem";
 
 const MobileReserveCTA = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = HOME_PATHS.includes(location.pathname);
@@ -89,7 +91,7 @@ const MobileReserveCTA = () => {
   }, [location.pathname]);
 
   const hiddenOnPath =
-    HIDE_ON_PATHS.includes(location.pathname) || RUTA_CARTA.test(location.pathname);
+    HIDE_ON_PATHS.includes(quitarPrefijoIdioma(location.pathname)) || RUTA_CARTA.test(location.pathname);
   const visible = !hiddenOnPath && pastHero && !nearFooter;
 
   // Publica la altura que ocupa la barra (0 si está oculta) en
@@ -135,7 +137,7 @@ const MobileReserveCTA = () => {
             size="lg"
             className="h-11 min-w-0 flex-1 rounded-full bg-primary px-2 text-[13px] font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 min-[360px]:text-sm sm:px-8"
           >
-            <a href={PHONE_HREF} aria-label="Llamar a Casa Tomás">
+            <a href={PHONE_HREF} aria-label={t.mobileCta.callAria}>
               <Phone className="w-5 h-5" />
               {t.mobileCta.call}
             </a>
@@ -143,7 +145,7 @@ const MobileReserveCTA = () => {
           <Button
             size="lg"
             className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2 text-[13px] font-semibold text-accent-foreground shadow-lg hover:bg-accent/90 min-[360px]:text-sm sm:px-8"
-            onClick={() => navigate("/reservas")}
+            onClick={() => navigate(construirRutaIdioma(RESERVAS_PATH, language))}
           >
             <Calendar className="w-5 h-5" />
             {t.mobileCta.reserve}

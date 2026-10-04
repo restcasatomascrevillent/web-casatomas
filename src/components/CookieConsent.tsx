@@ -5,10 +5,12 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Cookie } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { construirRutaIdioma } from "@/i18n/routing";
+import { POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
 import { getStoredConsent, saveConsent, OPEN_PREFERENCES_EVENT } from "@/lib/cookie-consent";
 
 const CookieConsent = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [mapsDraft, setMapsDraft] = useState(false);
@@ -83,7 +85,7 @@ const CookieConsent = () => {
                 <h3 className="text-sm md:text-lg font-bold mb-1 md:mb-2">{t.cookie.title}</h3>
                 <p className="text-xs md:text-sm text-muted-foreground">
                   {t.cookie.message}{" "}
-                  <a href="/politica-privacidad" className="text-primary hover:underline font-medium">
+                  <a href={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)} className="text-primary hover:underline font-medium">
                     {t.cookie.link}
                   </a>
                   .

@@ -7,6 +7,8 @@
  * (`usePedido`, `sessionManager`) para no reescribir media carta.
  */
 import type { Language } from "@/i18n/types";
+import { construirRutaIdioma } from "@/i18n/routing";
+import { RESERVAS_PATH } from "@/lib/condiciones";
 
 /** Rango del selector de comensales de Mi mesa. */
 export const COMENSALES_MIN = 1;
@@ -226,9 +228,9 @@ export const sufijoPrecio = (unidad?: string | null): string =>
 // Reservas
 // ---------------------------------------------------------------------------
 
-/** Enlace a reservas con los comensales de la mesa (reservas solo existe en la raíz, en español). */
-export const rutaReservaMesa = (comensales: number): string =>
-  `/reservas?${PARAM_COMENSALES}=${acotarComensales(comensales)}`;
+/** Enlace a reservas (en el idioma pedido; español por defecto) con los comensales de la mesa. */
+export const rutaReservaMesa = (comensales: number, lang: Language = "es"): string =>
+  `${construirRutaIdioma(RESERVAS_PATH, lang)}?${PARAM_COMENSALES}=${acotarComensales(comensales)}`;
 
 export interface ComensalesReserva {
   /** Valor para rellenar el formulario, o `null` si no hay que tocarlo. */

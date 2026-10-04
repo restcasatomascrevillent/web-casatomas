@@ -46,6 +46,7 @@ import {
   ANCLA_CONDICIONES_NEWSLETTER,
   ANCLA_CONDICIONES_RESERVA,
   CONDICIONES_PATH,
+  POLITICA_PRIVACIDAD_PATH,
 } from "@/lib/condiciones";
 
 type ReservationFormProps = {
@@ -83,7 +84,7 @@ const conTelefono = (texto: string) => texto.replace("{phone}", PHONE_DISPLAY);
 
 /**
  * Enlace de las casillas legales. Se abre en pestaña nueva a propósito: el
- * formulario vive en `/reservas`, y navegar en la misma pestaña desmontaría
+ * formulario vive en `/reservas` (o `/en|fr/reservas`), y navegar en la misma pestaña desmontaría
  * el formulario y se perdería todo lo que el visitante ya ha rellenado.
  * Al ser un `<a>`, pulsarlo dentro del `<label>` NO marca la casilla (el
  * enlace es el destino de la activación, no la etiqueta).
@@ -330,7 +331,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   const handleCloseSuccessDialog = () => {
     setShowSuccessDialog(false);
     if (onSuccessClose) onSuccessClose();
-    if (navigateOnClose) navigate("/");
+    if (navigateOnClose) navigate(construirRutaIdioma("/", language));
   };
 
   return (
@@ -405,7 +406,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       </Dialog>
 
       <Dialog open={rechazo !== null} onOpenChange={(abierto) => !abierto && setRechazo(null)}>
-        <DialogContent className="sm:max-w-md text-center">
+        <DialogContent className="sm:max-w-md text-center" closeLabel={t.reservationForm.rejection.closeAria}>
           <DialogHeader className="space-y-4">
             <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
               <AlertCircle className="w-10 h-10 text-amber-600" />
@@ -707,7 +708,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             {t.reservationForm.termsLink}
                           </EnlaceLegal>
                           {entre}
-                          <EnlaceLegal href="/politica-privacidad" aviso={t.reservationForm.newTabHint}>
+                          <EnlaceLegal href={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)} aviso={t.reservationForm.newTabHint}>
                             {t.reservationForm.privacyLink}
                           </EnlaceLegal>
                           {despues}

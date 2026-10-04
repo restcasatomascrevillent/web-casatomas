@@ -276,7 +276,7 @@ export const translations: Translations = {
       backToSite: "Retour au site",
       disclaimer: {
         title: "Important :",
-        note: "La réservation n'est pas confirmée tant que vous ne recevez pas l'email de confirmation. Casa Tomás décline toute responsabilité jusque-là.",
+        note: "L'envoi du formulaire est une demande, pas une réservation confirmée : le restaurant l'examine et vous envoie un e-mail avec une proposition. La réservation est confirmée lorsque vous la confirmez depuis cet e-mail. Casa Tomás décline toute responsabilité jusque-là.",
         callUs: "Si aucune disponibilité n'est affichée en ligne, appelez-nous au",
         steps: [
           "Vérifier la disponibilité (client)",
@@ -286,9 +286,15 @@ export const translations: Translations = {
         ],
       },
     },
+    reservasPage: {
+      seoTitle: "Réserver une table | Restaurant Casa Tomás à Crevillent",
+      seoDescription: "Réservez votre table chez Casa Tomás, restaurant de cuisine traditionnelle à Crevillent (Alicante, Espagne). Réservation en ligne rapide et simple.",
+      keywords: ["réserver une table Crevillent", "réservations Casa Tomás", "réserver restaurant Alicante"],
+      breadcrumb: "Réserver une table",
+    },
     reservationForm: {
       successTitle: "Demande reçue",
-      successLead: "Ce n'est pas encore une réservation confirmée : nous vous écrirons par e-mail dès que le restaurant l'aura confirmée.",
+      successLead: "Ce n'est pas encore une réservation confirmée : le restaurant examinera votre demande et vous enverra un e-mail avec une proposition. Elle est confirmée lorsque vous la confirmez depuis cet e-mail.",
       successLine3: "Conservez ce reçu : c'est le seul accusé de réception de votre demande.",
       successButton: "Retour à l'accueil",
       successCloseAria: "Fermer le reçu",
@@ -300,7 +306,7 @@ export const translations: Translations = {
         timeLabel: "Heure",
         guestsLabel: "Convives",
         emailLabel: "Confirmation à",
-        emailHint: "Vous ne recevrez aucun e-mail maintenant : nous écrirons à cette adresse dès que le restaurant confirmera la réservation. Vérifiez aussi vos courriers indésirables.",
+        emailHint: "Vous ne recevrez aucun e-mail maintenant : après avoir examiné votre demande, le restaurant vous écrira à cette adresse avec une proposition, et la réservation est confirmée lorsque vous la confirmez depuis cet e-mail. Vérifiez aussi vos courriers indésirables.",
         stepCaption: "Étape {done} sur {total}",
         steps: [
           "Disponibilité vérifiée",
@@ -345,7 +351,7 @@ export const translations: Translations = {
       submitting: "Réservation en cours...",
       footer: "Réservation en ligne rapide et sécurisée",
       toasts: {
-        missingFields: "Sélectionnez une date, une salle et le nombre de convives",
+        missingFields: "Sélectionnez une date et le nombre de convives",
         availabilityFull: "Disponibilité totale pour cette date !",
         availabilityChecked: "Disponibilités mises à jour",
         closedDay: "Le restaurant est fermé ce jour-là. Choisissez une autre date.",
@@ -362,6 +368,19 @@ export const translations: Translations = {
       rejection: {
         title: "Nous n'avons pas pu finaliser la réservation",
         close: "J'ai compris",
+        closeAria: "Fermer cet avis",
+        reasons: {
+          no_disponible: "Il n'a pas été possible de traiter la demande.",
+          grupo_grande: "Pour les groupes plus importants, veuillez contacter directement le restaurant.",
+          reserva_hoy: "Les réservations pour aujourd'hui se gèrent par téléphone.",
+          corte_horario: "Ce créneau est trop proche : les réservations doivent être faites avec un délai minimum avant le service.",
+          max_reservas_telefono: "Il existe déjà des réservations actives avec ce numéro de téléphone pour cette date.",
+          max_reservas_email: "Il existe déjà des réservations actives avec cet e-mail pour cette date.",
+          sin_disponibilidad: "Il n'y a plus de disponibilité pour cette date et cette heure.",
+          numero_comensales_fuera_de_rango: "Les réservations en ligne sont pour un minimum de {min} et un maximum de {max} personnes.",
+          fecha_pasada: "La date sélectionnée est déjà passée.",
+          fecha_demasiado_lejana: "On ne peut réserver qu'au maximum {days} jours à l'avance.",
+        } as Record<string, string>,
         invalidMessage: "Certaines informations du formulaire n'ont pas pu être lues.",
         offlineTitle: "Vous semblez hors connexion",
         offlineMessage: "Votre demande n'est pas partie : la connexion a été perdue.",
@@ -387,6 +406,7 @@ export const translations: Translations = {
     },
     mobileCta: {
       call: "Appeler",
+      callAria: "Appeler Casa Tomás",
       reserve: "Réserver",
     },
     reviews: {
@@ -677,7 +697,7 @@ export const translations: Translations = {
           ],
         },
       ],
-      privacyLink: "politique de confidentialité (en espagnol)",
+      privacyLink: "politique de confidentialité",
       contactTitle: "Contact",
       contactIntro: "Pour toute question sur votre réservation :",
       homeLink: "Accueil",

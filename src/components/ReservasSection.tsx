@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Button } from "@/components/ui/button";
 import ReservationForm from "@/components/ReservationForm";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
+import { construirRutaIdioma } from "@/i18n/routing";
 
 type ReservasSectionProps = {
   forceShowForm?: boolean;
@@ -12,7 +14,8 @@ type ReservasSectionProps = {
 };
 
 const ReservasSection = ({ forceShowForm = false, showBackButton = false }: ReservasSectionProps) => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
+  const navigate = useNavigate();
   const { elementRef, isVisible } = useScrollReveal();
   const [showForm, setShowForm] = useState(forceShowForm);
 
@@ -79,7 +82,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
               {showBackButton && (
                 <div className="flex justify-center">
                   <Button
-                    onClick={() => (window.location.href = "/")}
+                    onClick={() => navigate(construirRutaIdioma("/", language))}
                     className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-6 py-3 shadow-md hover:shadow-lg transition-colors"
                   >
                     {t.reservas.backToSite}

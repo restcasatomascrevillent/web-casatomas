@@ -7,7 +7,7 @@ interface SeoProps {
   description?: string;
   canonical?: string;
   ogImage?: string;
-  keywords?: string[];
+  keywords?: readonly string[];
   noindex?: boolean;
   /** Idioma de ESTA página. Fija el `lang` real de `<html>` (ver `index.html`). */
   lang?: Language;

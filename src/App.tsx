@@ -135,18 +135,34 @@ const cartaChildren = (lang: Language): RouteRecord[] => [
 ];
 
 /**
- * Condiciones de reserva y de la newsletter: en las TRES ramas, a diferencia
- * de la política de privacidad, porque las enlaza el pie de página de cada
- * idioma. Las casillas del formulario de reserva también las enlazan, pero el
- * formulario solo existe en `/reservas` (rama española; los botones
- * «Reservar» de `/en` y `/fr` llevan ahí), así que hoy abren siempre
- * `/condiciones`. Fábrica por la misma razón que `buildCatchAllRoute` (un
- * objeto por rama).
+ * Páginas que existen en las TRES ramas además de la portada y la carta:
+ * el formulario de reserva (`reservas`), la política de privacidad, y las
+ * condiciones de reserva y de la newsletter. Las enlazan los botones
+ * «Reservar», las casillas del formulario y el pie de página de cada idioma,
+ * y cada una usa el idioma de su rama (`useTranslations`). Fábricas por la
+ * misma razón que `buildCatchAllRoute` (un objeto por rama).
  */
+const buildReservasRoute = (): RouteRecord => ({
+  path: "reservas",
+  lazy: lazyRoute(() => import("./pages/Reservas")),
+});
+
+const buildPoliticaPrivacidadRoute = (): RouteRecord => ({
+  path: "politica-privacidad",
+  lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
+});
+
 const buildCondicionesRoute = (): RouteRecord => ({
   path: "condiciones",
   lazy: lazyRoute(() => import("./pages/Condiciones")),
 });
+
+/** Las páginas multiidioma que no son de la carta, para una rama. */
+const paginasComunes = (): RouteRecord[] => [
+  buildReservasRoute(),
+  buildPoliticaPrivacidadRoute(),
+  buildCondicionesRoute(),
+];
 
 // Ruta compartida por las tres ramas: sin ella, un enlace roto a
 // `/en/lo-que-sea` se quedaría sin coincidir en vez de caer en NotFound.
@@ -166,26 +182,17 @@ export const routes: RouteRecord[] = [
     element: <Layout lang="es" />,
     children: [
       ...cartaChildren("es"),
-      // Reservas y la política de privacidad se quedan solo en español por
-      // ahora (ver informe final): el formulario de reservas no forma parte
-      // del problema de indexación que motiva este cambio (no lo lee
-      // Google) y la política es contenido legal `noindex`, sin traducción
-      // en la base de datos. Nada les impide sumarse más adelante — solo
-      // haría falta añadirlas a `cartaChildren` y escribirles título/
-      // descripción por idioma, igual que aquí. El selector de idioma manda
-      // las rutas solo-es a la portada del otro idioma
+      // Reservas, política de privacidad y condiciones existen en las tres
+      // ramas (`paginasComunes`). El selector de idioma las mantiene
       // (`existeEnTodosLosIdiomas` en `i18n/routing.ts`; un test compara esa
-      // lista con este árbol, así que si una ruta pasa a las tres ramas, el
-      // test avisa de que hay que actualizarla).
-      { path: "reservas", lazy: lazyRoute(() => import("./pages/Reservas")) },
-      {
-        path: "politica-privacidad",
-        lazy: lazyRoute(() => import("./pages/PoliticaPrivacidad")),
-      },
-      buildCondicionesRoute(),
+      // lista con este árbol, así que si una ruta cambia de rama, el test
+      // avisa de que hay que actualizarla).
+      ...paginasComunes(),
       // Páginas de los enlaces de los correos (Supabase sirve el HTML de sus
-      // funciones como text/plain, así que las sirve la web). `noindex`, solo
-      // en español como los correos, y el SSG prerenderiza un cascarón vacío:
+      // funciones como text/plain, así que las sirve la web). `noindex`, SOLO
+      // en español a propósito: los correos están en español y enlazan a esta
+      // versión; el selector de idioma manda desde aquí a la portada del otro
+      // idioma. El SSG prerenderiza un cascarón vacío:
       // el token/firma se lee en el navegador, nunca en el build.
       { path: "reserva/respuesta", lazy: lazyRoute(() => import("./pages/RespuestaReserva")) },
       { path: "newsletter/baja", lazy: lazyRoute(() => import("./pages/NewsletterBaja")) },
@@ -198,6 +205,6 @@ export const routes: RouteRecord[] = [
       buildCatchAllRoute(),
     ],
   },
-  { path: "/en", element: <Layout lang="en" />, children: [...cartaChildren("en"), buildCondicionesRoute(), buildCatchAllRoute()] },
-  { path: "/fr", element: <Layout lang="fr" />, children: [...cartaChildren("fr"), buildCondicionesRoute(), buildCatchAllRoute()] },
+  { path: "/en", element: <Layout lang="en" />, children: [...cartaChildren("en"), ...paginasComunes(), buildCatchAllRoute()] },
+  { path: "/fr", element: <Layout lang="fr" />, children: [...cartaChildren("fr"), ...paginasComunes(), buildCatchAllRoute()] },
 ];

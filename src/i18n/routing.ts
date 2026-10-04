@@ -54,17 +54,25 @@ export function construirRutaIdioma(pathRelativoEs: string, lang: Language): str
 /**
  * ¿Existe esta ruta (escrita en español, SIN prefijo) en las TRES ramas del
  * router? Es el espejo de lo que `App.tsx` monta bajo `/en` y `/fr`
- * (`cartaChildren` + `buildCondicionesRoute`): la portada, la carta (índice,
- * vinos, bebidas y cada categoría) y las condiciones.
+ * (`cartaChildren` + `paginasComunes`): la portada, la carta (índice, vinos,
+ * bebidas y cada categoría), el formulario de reservas, la política de
+ * privacidad y las condiciones.
  *
- * Todo lo demás existe solo en español: `/reservas`, `/politica-privacidad`,
- * las páginas de los enlaces de los correos (`/reserva/respuesta`,
- * `/newsletter/baja`) y `/404`. Un test (`i18n-routing.test.ts`) recorre las
- * rutas reales de `App.tsx` para que esta lista no se quede atrás.
+ * Todo lo demás existe solo en español: las páginas de los enlaces de los
+ * correos (`/reserva/respuesta`, `/newsletter/baja`; los correos van en
+ * español y enlazan a esa versión) y `/404`. Un test (`i18n-routing.test.ts`)
+ * recorre las rutas reales de `App.tsx` para que esta lista no se quede atrás.
  */
 export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
   const ruta = pathRelativoEs.replace(/\/+$/, "") || "/";
-  return ruta === "/" || ruta === "/carta" || /^\/carta\/[^/]+$/.test(ruta) || ruta === "/condiciones";
+  return (
+    ruta === "/" ||
+    ruta === "/carta" ||
+    /^\/carta\/[^/]+$/.test(ruta) ||
+    ruta === "/reservas" ||
+    ruta === "/politica-privacidad" ||
+    ruta === "/condiciones"
+  );
 }
 
 /**
@@ -72,11 +80,11 @@ export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
  * prefijo que tenga (si tiene) y pone el nuevo. Es lo que usa el selector de
  * idioma del header para no mandar siempre a la portada.
  *
- * Si esa página no existe en el idioma destino (p. ej. `/reservas`, que solo
- * está en español), lleva a la portada de ese idioma en vez de a un 404
- * (`/reservas` -> `/en`). La portada no tiene sección de reservas: su botón
- * «Reservar» vuelve a `/reservas`. Lo mismo si se parte de una URL de otro
- * idioma que no existe (la página de 404 de `/en/lo-que-sea`).
+ * Si esa página no existe en el idioma destino (p. ej. `/reserva/respuesta`,
+ * la de los enlaces de los correos, que solo está en español), lleva a la
+ * portada de ese idioma en vez de a un 404 (`/reserva/respuesta` -> `/en`).
+ * Lo mismo si se parte de una URL de otro idioma que no existe (la página de
+ * 404 de `/en/lo-que-sea`).
  */
 export function rutaEquivalente(pathnameActual: string, lang: Language): string {
   const rutaEs = quitarPrefijoIdioma(pathnameActual);

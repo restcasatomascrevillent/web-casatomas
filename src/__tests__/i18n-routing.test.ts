@@ -89,24 +89,34 @@ describe("rutaEquivalente — lo que usa el selector de idioma del header", () =
     expect(rutaEquivalente("/fr/condiciones", "es")).toBe("/condiciones");
   });
 
+  it("las reservas y la política de privacidad existen en los tres idiomas: va a su equivalente", () => {
+    expect(rutaEquivalente("/reservas", "en")).toBe("/en/reservas");
+    expect(rutaEquivalente("/reservas", "fr")).toBe("/fr/reservas");
+    expect(rutaEquivalente("/en/reservas", "fr")).toBe("/fr/reservas");
+    expect(rutaEquivalente("/fr/reservas", "es")).toBe("/reservas");
+    expect(rutaEquivalente("/politica-privacidad", "en")).toBe("/en/politica-privacidad");
+    expect(rutaEquivalente("/fr/politica-privacidad", "es")).toBe("/politica-privacidad");
+  });
+
   it("una página que solo existe en español lleva a la portada del idioma destino, no a un 404", () => {
-    for (const rutaSoloEs of ["/reservas", "/politica-privacidad", "/reserva/respuesta", "/newsletter/baja", "/404"]) {
+    for (const rutaSoloEs of ["/reserva/respuesta", "/newsletter/baja", "/404"]) {
       expect(rutaEquivalente(rutaSoloEs, "en")).toBe("/en");
       expect(rutaEquivalente(rutaSoloEs, "fr")).toBe("/fr");
     }
   });
 
   it("elegir el mismo idioma en una página solo-es no la abandona", () => {
-    expect(rutaEquivalente("/reservas", "es")).toBe("/reservas");
+    expect(rutaEquivalente("/reserva/respuesta", "es")).toBe("/reserva/respuesta");
+    expect(rutaEquivalente("/newsletter/baja", "es")).toBe("/newsletter/baja");
   });
 
   it("desde un 404 de /en o /fr lleva a la portada del destino", () => {
     expect(rutaEquivalente("/en/no-existe", "es")).toBe("/");
-    expect(rutaEquivalente("/en/reservas", "fr")).toBe("/fr");
+    expect(rutaEquivalente("/en/no-existe", "fr")).toBe("/fr");
   });
 
   it("una página solo-es con barra final también va a la portada del destino", () => {
-    expect(rutaEquivalente("/reservas/", "en")).toBe("/en");
+    expect(rutaEquivalente("/reserva/respuesta/", "en")).toBe("/en");
   });
 });
 
@@ -129,8 +139,18 @@ describe("existeEnTodosLosIdiomas — espejo de las rutas reales de App.tsx", ()
   it("toda ruta que solo está en la rama española NO cuenta como multiidioma", () => {
     const enIngles = new Set(rutasDeRama("/en"));
     const soloEs = rutasDeRama("/").filter((ruta) => !enIngles.has(ruta));
-    expect(soloEs).toEqual(expect.arrayContaining(["/reservas", "/politica-privacidad"]));
+    // Solo las páginas de los enlaces de los correos (que van en español) y el 404.
+    expect([...soloEs].sort()).toEqual(["/404", "/newsletter/baja", "/reserva/respuesta"]);
     for (const ruta of soloEs) expect(existeEnTodosLosIdiomas(ruta), ruta).toBe(false);
+  });
+
+  it("el formulario de reservas, la política de privacidad y las condiciones están en las tres ramas", () => {
+    for (const rama of ["/", "/en", "/fr"]) {
+      const rutas = rutasDeRama(rama);
+      for (const ruta of ["/reservas", "/politica-privacidad", "/condiciones"]) {
+        expect(rutas, `${rama} → ${ruta}`).toContain(ruta);
+      }
+    }
   });
 
   it("/en y /fr montan exactamente las mismas rutas", () => {

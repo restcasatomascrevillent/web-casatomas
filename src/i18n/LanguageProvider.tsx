@@ -171,6 +171,13 @@ export const LanguageProvider = ({ children, initialLanguage }: LanguageProvider
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };
 
+/**
+ * Como `useTranslations`, pero devuelve `undefined` en vez de lanzar si no hay
+ * `LanguageProvider` por encima. Para piezas sueltas (p. ej. `TelLink`) que
+ * también se montan sin él en los tests y deben seguir funcionando.
+ */
+export const useOptionalTranslations = () => useContext(LanguageContext);
+
 export const useTranslations = () => {
   const context = useContext(LanguageContext);
   if (!context) {
