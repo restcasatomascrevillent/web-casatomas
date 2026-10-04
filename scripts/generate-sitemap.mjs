@@ -9,7 +9,8 @@
  * Reglas:
  *  - Se recorre `dist/` buscando `.html`.
  *  - Se excluye `404.html` y cualquier página que declare `noindex`
- *    (política de privacidad, la redirección de Touza, el propio 404).
+ *    (política de privacidad y condiciones en los tres idiomas, las páginas
+ *    de los enlaces de los correos, la redirección de Touza, el propio 404).
  *  - `vercel.json` usa `cleanUrls: true`, así que la URL pública no lleva `.html`
  *    y `index.html` es la raíz.
  *  - Cada URL con versión en otro idioma lleva sus `<xhtml:link>` de `hreflang`
@@ -92,8 +93,9 @@ export async function generarSitemapYRobots(dir, siteUrl) {
   }
 
   // Qué idiomas tiene realmente cada página (grupo = misma ruta sin prefijo).
-  // Una página sin hermanas en otro idioma (hoy, /reservas) no lleva bloque
-  // `hreflang`: con un solo idioma esa etiqueta no aporta nada.
+  // Una página sin hermanas indexables en otro idioma no lleva bloque
+  // `hreflang`: con un solo idioma esa etiqueta no aporta nada. Hoy llevan
+  // bloque la portada, la carta y /reservas (las tres versiones de cada una).
   const rutasPorGrupo = new Map();
   for (const ruta of rutas) {
     const clave = rutaSinPrefijo(ruta);
