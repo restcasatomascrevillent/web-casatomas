@@ -208,7 +208,7 @@ const Header = () => {
                 {languages.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value, location))}
                     className={language === option.value ? "font-semibold text-primary" : ""}
                   >
                     {option.label}
@@ -239,7 +239,7 @@ const Header = () => {
                 {languages.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value, location))}
                     className={language === option.value ? "font-semibold text-primary" : ""}
                   >
                     {option.label}

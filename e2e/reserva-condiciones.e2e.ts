@@ -517,6 +517,20 @@ test.describe("selector de idioma en /reservas (existe en los tres idiomas)", ()
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(formulario(page, es).condiciones).toBeVisible();
   });
+
+  test("conserva la query: /reservas?comensales=4 -> /en/reservas?comensales=4 con el campo relleno", async ({ page }) => {
+    const [ingles] = TRADUCIDOS;
+    await page.goto("/reservas?comensales=4");
+    await esperarHidratacion(page);
+    await expect(formulario(page, es).condiciones).toBeVisible();
+    await expect(page.getByRole("spinbutton")).toHaveValue("4");
+
+    await cambiarIdioma(page, ESPANOL, ingles);
+    await expect.poll(() => new URL(page.url()).pathname).toBe("/en/reservas");
+    expect(new URL(page.url()).search).toBe("?comensales=4");
+    await expect(formulario(page, ingles.t).condiciones).toBeVisible();
+    await expect(page.getByRole("spinbutton")).toHaveValue("4");
+  });
 });
 
 for (const { codigo, prefijo, t } of IDIOMAS.filter((i) => i.codigo !== "es")) {

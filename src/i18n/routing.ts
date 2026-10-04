@@ -86,11 +86,20 @@ export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
  * Lo mismo si se parte de una URL de otro idioma que no existe (la página de
  * 404 de `/en/lo-que-sea`).
  */
-export function rutaEquivalente(pathnameActual: string, lang: Language): string {
+export function rutaEquivalente(
+  pathnameActual: string,
+  lang: Language,
+  { search = "", hash = "" }: { search?: string; hash?: string } = {},
+): string {
   const rutaEs = quitarPrefijoIdioma(pathnameActual);
   const mismoIdioma = idiomaDeRuta(pathnameActual) === lang;
+  // Si la página no existe en el otro idioma se va a su portada, SIN la query
+  // ni el ancla: lo que sirve a `/reserva/respuesta?token=…` no pinta nada en
+  // `/en`, y el token no debe viajar a otra página.
   if (!mismoIdioma && !existeEnTodosLosIdiomas(rutaEs)) return construirRutaIdioma("/", lang);
-  return construirRutaIdioma(rutaEs, lang);
+  // La misma página en otro idioma conserva la query (`/reservas?comensales=4`,
+  // que rellena el formulario) y el ancla (`/condiciones#newsletter`).
+  return `${construirRutaIdioma(rutaEs, lang)}${search}${hash}`;
 }
 
 export interface AlternateIdioma {

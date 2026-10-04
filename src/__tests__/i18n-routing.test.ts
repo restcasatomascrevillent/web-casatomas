@@ -72,6 +72,26 @@ describe("construirRutaIdioma", () => {
   });
 });
 
+describe("rutaEquivalente — query y ancla", () => {
+  it("la misma página en otro idioma conserva la query y el ancla", () => {
+    expect(rutaEquivalente("/reservas", "en", { search: "?comensales=4" })).toBe("/en/reservas?comensales=4");
+    expect(rutaEquivalente("/fr/reservas", "es", { search: "?comensales=4" })).toBe("/reservas?comensales=4");
+    expect(rutaEquivalente("/condiciones", "fr", { hash: "#newsletter" })).toBe("/fr/condiciones#newsletter");
+    expect(rutaEquivalente("/en/carta", "es", { search: "?q=1", hash: "#vinos" })).toBe("/carta?q=1#vinos");
+    // Mismo idioma (página solo en español): se queda tal cual, con su query.
+    expect(rutaEquivalente("/reserva/respuesta", "es", { search: "?token=abc" })).toBe("/reserva/respuesta?token=abc");
+  });
+
+  it("si la página no existe en el otro idioma, va a la portada SIN query ni ancla (el token no viaja)", () => {
+    expect(rutaEquivalente("/reserva/respuesta", "en", { search: "?token=abc", hash: "#x" })).toBe("/en");
+    expect(rutaEquivalente("/newsletter/baja", "fr", { search: "?s=1&firma=f" })).toBe("/fr");
+  });
+
+  it("sin query ni ancla, igual que siempre", () => {
+    expect(rutaEquivalente("/reservas", "en", {})).toBe("/en/reservas");
+  });
+});
+
 describe("rutaEquivalente — lo que usa el selector de idioma del header", () => {
   it("cambia de idioma sin volver a la portada", () => {
     expect(rutaEquivalente("/carta/vinos", "en")).toBe("/en/carta/vinos");
