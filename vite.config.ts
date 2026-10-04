@@ -195,12 +195,12 @@ export default defineConfig(({ mode, command }) => {
         // Un solo `<html` por página y con el `lang` de su idioma; si no, el build falla.
         // Los `.html` de `public/` (p. ej. la verificación de Search Console) se
         // copian tal cual, no los prerenderiza nadie: quedan fuera de la comprobación.
-        const paginas = await verificarHtmlPrerenderizado(path.resolve(dir), {
-          ignorar: await htmlDePublic(path.resolve(__dirname, "public")),
-        });
+        const dePublic = await htmlDePublic(path.resolve(__dirname, "public"));
+        const paginas = await verificarHtmlPrerenderizado(path.resolve(dir), { ignorar: dePublic });
         // eslint-disable-next-line no-console
         console.log(`[verificar-html] ${paginas} páginas: un solo <html> y lang correcto`);
-        const rutas = await generarSitemapYRobots(dir, siteUrl);
+        // El sitemap tampoco los lista: no son páginas del sitio.
+        const rutas = await generarSitemapYRobots(dir, siteUrl, { ignorar: dePublic });
         // eslint-disable-next-line no-console
         console.log(`[sitemap] ${rutas.length} URLs indexables: ${rutas.join(", ")}`);
       },
