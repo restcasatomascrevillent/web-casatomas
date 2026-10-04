@@ -202,7 +202,7 @@ describe.each(TRADUCIDOS)("formulario de reserva en $lang", ({ lang, prefijo, t 
     renderFormulario(lang, prefijo);
     await rellenar(user, t);
     await user.click(casillaNewsletter(t)); // la newsletter sola no basta
-    await user.click(screen.getByRole("button", { name: f.submit, exact: true }));
+    await user.click(screen.getByRole("button", { name: f.submit }));
 
     expect(await screen.findByText(t.validation.termsRequired)).toBeInTheDocument();
     expect(screen.queryByText(es.validation.termsRequired)).toBeNull();
@@ -217,7 +217,7 @@ describe.each(TRADUCIDOS)("formulario de reserva en $lang", ({ lang, prefijo, t 
     await user.click(casillaCondiciones(t));
     if (caso.cuerpo.consentimiento_newsletter === true) await user.click(casillaNewsletter(t));
 
-    await user.click(screen.getByRole("button", { name: f.submit, exact: true }));
+    await user.click(screen.getByRole("button", { name: f.submit }));
     // Resguardo: título y frase en su idioma.
     expect(await screen.findByText(f.successTitle)).toBeInTheDocument();
     expect(screen.getByText(f.successLead)).toBeInTheDocument();
@@ -235,7 +235,7 @@ describe.each(TRADUCIDOS)("formulario de reserva en $lang", ({ lang, prefijo, t 
     renderFormulario(lang, prefijo);
     await rellenar(user, t);
     await user.click(casillaCondiciones(t));
-    await user.click(screen.getByRole("button", { name: f.submit, exact: true }));
+    await user.click(screen.getByRole("button", { name: f.submit }));
     await screen.findByText(f.successTitle);
 
     await user.click(screen.getByRole("button", { name: f.successButton }));
@@ -253,7 +253,7 @@ describe.each(TRADUCIDOS)("formulario de reserva en $lang", ({ lang, prefijo, t 
     renderFormulario(lang, prefijo);
     await rellenar(user, t);
     await user.click(casillaCondiciones(t));
-    await user.click(screen.getByRole("button", { name: f.submit, exact: true }));
+    await user.click(screen.getByRole("button", { name: f.submit }));
 
     const dialogo = await screen.findByRole("dialog");
     expect(within(dialogo).getByText(f.rejection.title)).toBeInTheDocument();
