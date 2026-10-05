@@ -5,7 +5,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
+import AvisoReservaConfirmada from "@/components/carta/AvisoReservaConfirmada";
+import { LanguageProvider } from "@/i18n/LanguageProvider";
 import {
   leerToken,
   normalizarRespuesta,
@@ -21,6 +23,9 @@ import {
 import { PHONE_DISPLAY } from "@/components/TelLink";
 
 vi.mock("@/components/Seo", () => ({ Seo: () => null }));
+// Antes de ir a la carta, la página carga su código (ruta perezosa). Aquí basta
+// un módulo vacío: la carta de verdad se prueba en aviso-reserva-confirmada.test.tsx.
+vi.mock("@/pages/carta/Indice", () => ({ default: () => null }));
 
 const NEGOCIO = { marca: "casa_tomas", nombre: "Casa Tomás", telefonoTexto: "966 10 78 87", telefonoDigits: "966107887", web: "https://x" };
 const DETALLES = { nombre: "Ana", fecha: "2026-10-03", hora: "21:30", comensales: 4, espacio: "Salón" };
@@ -171,21 +176,45 @@ describe("<RespuestaReserva />", () => {
     vi.restoreAllMocks();
   });
 
+  /** La carta, tal y como la ve el cliente al llegar: el aviso de verdad y una sonda de la navegación. */
+  const Carta = () => {
+    const { pathname, search, hash, state } = useLocation();
+    const tipo = useNavigationType();
+    return (
+      <>
+        <AvisoReservaConfirmada />
+        <output data-testid="carta">{JSON.stringify({ url: pathname + search + hash, tipo, state })}</output>
+      </>
+    );
+  };
+  const enLaCarta = () => JSON.parse(screen.getByTestId("carta").textContent ?? "null");
+
   const pintar = async () => {
     const { default: RespuestaReserva } = await import("@/pages/RespuestaReserva");
     return render(
-      <MemoryRouter>
-        <RespuestaReserva />
+      <MemoryRouter initialEntries={["/reserva/respuesta?token=tok123"]}>
+        <LanguageProvider initialLanguage="es">
+          <Routes>
+            <Route path="/reserva/respuesta" element={<RespuestaReserva />} />
+            <Route path="/carta" element={<Carta />} />
+          </Routes>
+        </LanguageProvider>
       </MemoryRouter>,
     );
   };
 
-  it("dos pasos: al abrir solo consulta; ejecuta solo tras el clic", async () => {
+  /** Consulta -> `pendiente`; el clic -> `tras`. */
+  const conClic = (tras: Partial<RespuestaEnlace>, antes: Partial<RespuestaEnlace> = {}) => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValueOnce(jsonResponse(respuesta()))
-      .mockResolvedValueOnce(jsonResponse(respuesta({ estado: "hecho" })));
+      .mockResolvedValueOnce(jsonResponse(respuesta(antes)))
+      .mockResolvedValueOnce(jsonResponse(respuesta({ ...antes, ...tras })));
     vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  };
+
+  it("dos pasos: al abrir solo consulta; ejecuta solo tras el clic", async () => {
+    const fetchMock = conClic({ estado: "hecho" });
 
     await pintar();
     expect(await screen.findByRole("heading", { name: "Confirma tu reserva" })).toBeInTheDocument();
@@ -194,9 +223,97 @@ describe("<RespuestaReserva />", () => {
     expect(fetchMock.mock.calls[0][0]).toBe(ENLACE_CONSULTAR_URL);
 
     await userEvent.click(screen.getByRole("button", { name: "Sí, confirmo la reserva" }));
-    expect(await screen.findByRole("heading", { name: "¡Reserva confirmada!" })).toBeInTheDocument();
+    // Confirmada: el cliente sigue en la carta, con el aviso (ver el test siguiente).
+    expect(await screen.findByRole("dialog", { name: "¡Reserva confirmada!" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1][0]).toBe(ENLACE_EJECUTAR_URL);
+  });
+
+  it("confirmada con el clic: a la carta (replace) con el aviso; los datos van en el state, no en la URL", async () => {
+    conClic({ estado: "hecho" });
+    await pintar();
+    await userEvent.click(await screen.findByRole("button", { name: "Sí, confirmo la reserva" }));
+
+    expect(await screen.findByRole("dialog", { name: "¡Reserva confirmada!" })).toHaveAccessibleDescription(
+      "Gracias, Ana. Te esperamos el sábado, 3 de octubre de 2026 a las 21:30 · 4 personas. " +
+        "Mientras tanto, aquí tienes nuestra carta para que vayas abriendo boca.",
+    );
+    // Solo lo que ya devuelve la función, sin la sala, y ni rastro del token.
+    expect(enLaCarta()).toEqual({
+      url: "/carta",
+      tipo: "REPLACE",
+      state: { reservaConfirmada: { estado: "hecho", nombre: "Ana", fecha: "2026-10-03", hora: "21:30", comensales: 4 } },
+    });
+  });
+
+  it("ya estaba confirmada al pulsar (ya_hecho): también a la carta, con su aviso", async () => {
+    conClic({ estado: "ya_hecho" });
+    await pintar();
+    await userEvent.click(await screen.findByRole("button", { name: "Sí, confirmo la reserva" }));
+
+    expect(await screen.findByRole("dialog", { name: "Tu reserva ya estaba confirmada" })).toHaveAccessibleDescription(
+      "No tienes que hacer nada más. Mientras tanto, ve abriendo boca con nuestra carta.",
+    );
+    expect(enLaCarta()).toMatchObject({ url: "/carta", tipo: "REPLACE", state: { reservaConfirmada: { estado: "ya_hecho" } } });
+  });
+
+  it.each<{ caso: string; antes?: Partial<RespuestaEnlace>; tras: Partial<RespuestaEnlace>; titulo: string }>([
+    {
+      caso: "enlace caducado o ya usado",
+      tras: { ok: false, estado: "invalido", tipo: null, accion: null, detalles: null },
+      titulo: "Este enlace ya no es válido",
+    },
+    { caso: "fecha pasada", tras: { ok: false, estado: "fecha_pasada" }, titulo: "Esta propuesta ha caducado" },
+    { caso: "sin aforo", tras: { ok: false, estado: "sin_aforo" }, titulo: "No hemos podido confirmar la reserva" },
+    { caso: "error", tras: { ok: false, estado: "error" }, titulo: "No hemos podido completar tu respuesta" },
+    { caso: "recibida, pendiente de revisar", tras: { estado: "recibida" }, titulo: "Hemos recibido tu respuesta" },
+    { caso: "rechazar la propuesta", antes: { accion: "rechazar" }, tras: { estado: "hecho" }, titulo: "Gracias por avisarnos" },
+    {
+      caso: "cancelar la contraoferta",
+      antes: { accion: "rechazar", tipo: "contraoferta" },
+      tras: { estado: "hecho" },
+      titulo: "Reserva cancelada",
+    },
+    { caso: "rechazo repetido", antes: { accion: "rechazar" }, tras: { estado: "ya_hecho" }, titulo: "Ya nos lo habías dicho" },
+  ])("$caso: se queda en esta página con su texto de siempre", async ({ antes = {}, tras, titulo }) => {
+    conClic(tras, antes);
+    await pintar();
+    const boton = antes.accion === "rechazar" ? "Sí, rechazar la propuesta" : "Sí, confirmo la reserva";
+    await userEvent.click(await screen.findByRole("button", { name: boton }));
+
+    expect(await screen.findByRole("heading", { name: titulo })).toBeInTheDocument();
+    expect(screen.queryByTestId("carta")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("al abrir un enlace ya confirmado no navega ni ejecuta: solo consulta y lo dice aquí", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(respuesta({ estado: "ya_hecho" })));
+    vi.stubGlobal("fetch", fetchMock);
+    await pintar();
+
+    expect(await screen.findByRole("heading", { name: "Tu reserva ya está confirmada" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe(ENLACE_CONSULTAR_URL);
+    expect(screen.queryByTestId("carta")).toBeNull();
+  });
+
+  it("si el código de la carta no llega, el «¡Reserva confirmada!» se queda aquí", async () => {
+    vi.doMock("@/pages/carta/Indice", () => {
+      throw new Error("chunk de la carta caído");
+    });
+    const errores = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      conClic({ estado: "hecho" });
+      await pintar();
+      await userEvent.click(await screen.findByRole("button", { name: "Sí, confirmo la reserva" }));
+
+      expect(await screen.findByRole("heading", { name: "¡Reserva confirmada!" })).toBeInTheDocument();
+      expect(screen.getByText("sábado, 3 de octubre de 2026")).toBeInTheDocument();
+      expect(screen.queryByTestId("carta")).toBeNull();
+      expect(errores).toHaveBeenCalled();
+    } finally {
+      vi.doMock("@/pages/carta/Indice", () => ({ default: () => null }));
+    }
   });
 
   it("no enseña la sala aunque el servidor la mande: en Casa Tomás la decide el equipo", async () => {

@@ -21,6 +21,7 @@ import { Card } from "@/components/ui/card";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
+import AvisoReservaConfirmada from "@/components/carta/AvisoReservaConfirmada";
 import {
   CATEGORIAS_CARTA,
   etiquetaCategoriaIdioma,
@@ -262,6 +263,11 @@ const CartaIndice = () => {
           </div>
         </section>
       </CartaPageLayout>
+
+      {/* Pop-up tras confirmar la reserva desde el correo (solo con `state`,
+          en el navegador). Al final a propósito: un hijo nuevo delante del
+          layout cambiaría los ids de `useId` del HTML prerenderizado. */}
+      <AvisoReservaConfirmada />
     </>
   );
 };
