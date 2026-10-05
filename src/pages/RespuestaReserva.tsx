@@ -26,7 +26,9 @@ import type { TipoFallo } from "@/lib/supabase-functions";
  * navegador (useEffect), nunca en el build, y la página es `noindex`.
  * Dos pasos: al abrirla solo se CONSULTA; la acción la lanza el botón (POST).
  * Si el clic confirma la reserva (o ya lo estaba), el cliente sigue en la
- * carta con un aviso (`AvisoReservaConfirmada`); lo demás se queda aquí.
+ * carta con un aviso (`AvisoReservaConfirmada`). Un enlace de confirmar que se
+ * reabre con la reserva YA confirmada también va directo a la carta: la
+ * consulta no cambia nada. Lo demás se queda aquí.
  */
 type Fase =
   | { tipo: "cargando" }
@@ -67,20 +69,47 @@ const RespuestaReserva = () => {
   const tokenRef = useRef<string | null>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
 
+  /** A la carta con el aviso si la reserva está confirmada; `false` si no toca (o no se puede) ir. */
+  const irALaCarta = useCallback(
+    async (respuesta: RespuestaEnlace) => {
+      const reservaConfirmada = reservaParaLaCarta(respuesta);
+      if (!reservaConfirmada) return false;
+      try {
+        // La carta es una ruta perezosa: se carga ANTES de navegar. Si su código
+        // no llega (red, despliegue nuevo), el router pintaría su página de
+        // error y se perdería el mensaje de confirmada, que entonces se queda aquí.
+        await import("@/pages/carta/Indice");
+        // `replace`: «atrás» no vuelve a esta página ni a su token.
+        navigate("/carta", { replace: true, state: { reservaConfirmada } });
+        return true;
+      } catch (e) {
+        console.error("[respuesta-reserva]", e);
+        return false;
+      }
+    },
+    [navigate],
+  );
+
   const consultar = useCallback(async () => {
     const token = tokenRef.current;
     if (!token) return setFase({ tipo: "sin_token" });
     setFase({ tipo: "cargando" });
+    let respuesta: RespuestaEnlace;
     try {
-      setFase({ tipo: "lista", respuesta: await llamarEnlace("consultar", token), enviando: false });
+      respuesta = await llamarEnlace("consultar", token);
     } catch (e) {
       if (!(e instanceof ErrorConexion)) console.error("[respuesta-reserva]", e);
       // Lo que no es un `ErrorConexion` es un fallo de nuestro propio código:
       // también es NUESTRO, así que por defecto "servidor".
       const fallo: TipoFallo = e instanceof ErrorConexion ? e.tipo : "servidor";
-      setFase({ tipo: "sin_conexion", reintentar: "consultar", fallo });
+      return setFase({ tipo: "sin_conexion", reintentar: "consultar", fallo });
     }
-  }, []);
+    // Enlace de confirmar reabierto con la reserva YA confirmada: la consulta no
+    // cambia nada, así que se va a la carta sin pedir otro clic. Hasta navegar
+    // sigue el «cargando»: la tarjeta de «ya está confirmada» no llega a verse.
+    if (respuesta.estado === "ya_hecho" && (await irALaCarta(respuesta))) return;
+    setFase({ tipo: "lista", respuesta, enviando: false });
+  }, [irALaCarta]);
 
   const ejecutar = useCallback(async () => {
     const token = tokenRef.current;
@@ -94,22 +123,9 @@ const RespuestaReserva = () => {
       const fallo: TipoFallo = e instanceof ErrorConexion ? e.tipo : "servidor";
       return setFase({ tipo: "sin_conexion", reintentar: "ejecutar", fallo });
     }
-    const reservaConfirmada = reservaParaLaCarta(respuesta);
-    if (reservaConfirmada) {
-      try {
-        // La carta es una ruta perezosa: se carga ANTES de navegar. Si su código
-        // no llega (red, despliegue nuevo), el router pintaría su página de
-        // error y se perdería el «¡Reserva confirmada!», que entonces se queda aquí.
-        await import("@/pages/carta/Indice");
-        // `replace`: «atrás» no vuelve a esta página ni a su token.
-        navigate("/carta", { replace: true, state: { reservaConfirmada } });
-        return;
-      } catch (e) {
-        console.error("[respuesta-reserva]", e);
-      }
-    }
+    if (await irALaCarta(respuesta)) return;
     setFase({ tipo: "lista", respuesta, enviando: false });
-  }, [navigate]);
+  }, [irALaCarta]);
 
   useEffect(() => {
     tokenRef.current = leerToken(window.location.search);

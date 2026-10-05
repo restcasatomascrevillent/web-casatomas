@@ -129,7 +129,8 @@ function leerReserva(state: unknown): ReservaConfirmada | null {
 
 /**
  * Aviso de bienvenida de la carta cuando se llega desde «Sí, confirmo la
- * reserva» (`RespuestaReserva` navega aquí con `state.reservaConfirmada`).
+ * reserva», o reabriendo ese enlace con la reserva ya confirmada
+ * (`RespuestaReserva` navega aquí con `state.reservaConfirmada`).
  *
  * SSG: en el prerenderizado nunca hay `state`, así que no pinta nada y el HTML
  * de la carta no cambia; el aviso solo existe en el navegador. Al cerrarlo

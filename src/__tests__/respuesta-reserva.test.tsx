@@ -286,15 +286,105 @@ describe("<RespuestaReserva />", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("al abrir un enlace ya confirmado no navega ni ejecuta: solo consulta y lo dice aquí", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(respuesta({ estado: "ya_hecho" })));
+  /** Solo la consulta al abrir el enlace, sin clic. */
+  const alAbrir = (r: Partial<RespuestaEnlace>) => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(respuesta(r)));
     vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  };
+
+  it("enlace de confirmar reabierto con la reserva ya confirmada: a la carta sin pulsar nada, con su aviso", async () => {
+    const fetchMock = alAbrir({ estado: "ya_hecho" });
     await pintar();
 
-    expect(await screen.findByRole("heading", { name: "Tu reserva ya está confirmada" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Tu reserva ya estaba confirmada" })).toHaveAccessibleDescription(
+      "No tienes que hacer nada más. Mientras tanto, ve abriendo boca con nuestra carta.",
+    );
+    expect(enLaCarta()).toEqual({
+      url: "/carta",
+      tipo: "REPLACE",
+      state: { reservaConfirmada: { estado: "ya_hecho", nombre: "Ana", fecha: "2026-10-03", hora: "21:30", comensales: 4 } },
+    });
+    // Solo se ha consultado (no muta nada): ni rastro de `ejecutar`.
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toBe(ENLACE_CONSULTAR_URL);
+  });
+
+  it("…sin parpadeo: sigue «cargando» hasta ir a la carta y la tarjeta de «ya está confirmada» no llega a verse", async () => {
+    const pedida = vi.fn();
+    let soltar: () => void = () => {};
+    vi.doMock("@/pages/carta/Indice", async () => {
+      pedida();
+      await new Promise<void>((r) => (soltar = r));
+      return { default: () => null };
+    });
+    try {
+      alAbrir({ estado: "ya_hecho" });
+      await pintar();
+      // La página ya ha decidido ir a la carta y está esperando su código.
+      await waitFor(() => expect(pedida).toHaveBeenCalled());
+      expect(screen.getByText("Cargando tu reserva…")).toBeInTheDocument();
+      expect(screen.queryByRole("heading", { name: "Tu reserva ya está confirmada" })).toBeNull();
+
+      soltar();
+      expect(await screen.findByRole("dialog", { name: "Tu reserva ya estaba confirmada" })).toBeInTheDocument();
+    } finally {
+      // Si algo falla antes, la importación pendiente se suelta igual: si no,
+      // los tests siguientes se quedarían esperando el código de la carta.
+      soltar();
+      vi.doMock("@/pages/carta/Indice", () => ({ default: () => null }));
+    }
+  });
+
+  it.each<{ caso: string; r: Partial<RespuestaEnlace>; titulo: string; boton?: string }>([
+    { caso: "propuesta pendiente de confirmar", r: {}, titulo: "Confirma tu reserva", boton: "Sí, confirmo la reserva" },
+    {
+      caso: "enlace de cancelar pendiente",
+      r: { accion: "rechazar" },
+      titulo: "¿No te viene bien esta propuesta?",
+      boton: "Sí, rechazar la propuesta",
+    },
+    { caso: "enlace de cancelar ya usado", r: { accion: "rechazar", estado: "ya_hecho" }, titulo: "Ya nos lo habías dicho" },
+    {
+      caso: "cancelar contraoferta ya usado",
+      r: { accion: "rechazar", tipo: "contraoferta", estado: "ya_hecho" },
+      titulo: "Esta reserva ya estaba cancelada",
+    },
+    {
+      caso: "enlace caducado o no válido",
+      r: { ok: false, estado: "invalido", tipo: null, accion: null, detalles: null },
+      titulo: "Este enlace ya no es válido",
+    },
+    { caso: "ya confirmada sin acción conocida", r: { estado: "ya_hecho", accion: null }, titulo: "Tu reserva ya está confirmada" },
+    // La consulta nunca confirma: un `hecho` en ella (no debería llegar) no
+    // abre el aviso de «acabas de confirmar».
+    { caso: "consulta que dijera «hecho»", r: { estado: "hecho" }, titulo: "¡Reserva confirmada!" },
+  ])("al abrir, $caso: se queda en esta página con su texto de siempre", async ({ r, titulo, boton }) => {
+    const fetchMock = alAbrir(r);
+    await pintar();
+
+    expect(await screen.findByRole("heading", { name: titulo })).toBeInTheDocument();
+    if (boton) expect(screen.getByRole("button", { name: boton })).toBeInTheDocument();
     expect(screen.queryByTestId("carta")).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("si el código de la carta no llega al reabrirlo, «Tu reserva ya está confirmada» se queda aquí", async () => {
+    vi.doMock("@/pages/carta/Indice", () => {
+      throw new Error("chunk de la carta caído");
+    });
+    const errores = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      alAbrir({ estado: "ya_hecho" });
+      await pintar();
+
+      expect(await screen.findByRole("heading", { name: "Tu reserva ya está confirmada" })).toBeInTheDocument();
+      expect(screen.getByText("sábado, 3 de octubre de 2026")).toBeInTheDocument();
+      expect(screen.queryByTestId("carta")).toBeNull();
+      expect(errores).toHaveBeenCalled();
+    } finally {
+      vi.doMock("@/pages/carta/Indice", () => ({ default: () => null }));
+    }
   });
 
   it("si el código de la carta no llega, el «¡Reserva confirmada!» se queda aquí", async () => {
