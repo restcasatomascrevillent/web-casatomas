@@ -5,6 +5,7 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import Stripe from "npm:stripe@23.0.0";
 import { generarCodigo } from "../_shared/cheques-regalo/codigo.ts";
 import { enviarEmailCheque } from "../_shared/cheques-regalo/email.ts";
+import { prepararChequeEmail } from "../_shared/cheques-regalo/preparar-email.ts";
 import type { ChequeParaEmail } from "../_shared/cheques-regalo/tipos.ts";
 import { enviarFacturaCheque } from "../_shared/enviar-factura-cheque.ts";
 
@@ -58,7 +59,8 @@ const cryptoProvider = Stripe.createSubtleCryptoProvider();
  * mano desde el panel (`cheques-regalo-admin`), un cheque de cortesía.
  */
 async function enviarYMarcarEmail(fila: ChequeParaEmail): Promise<void> {
-  if (!(await enviarEmailCheque(fila, { ocultarImporte: false })))
+  const preparado = await prepararChequeEmail(supabase, fila);
+  if (!(await enviarEmailCheque(preparado, { ocultarImporte: false })))
     throw new Error(`email del cheque ${fila.id} no enviado`);
 
   const { error } = await supabase

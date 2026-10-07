@@ -1,14 +1,5 @@
 /** Fila de `cheques_regalo` con lo necesario para generar el PDF y el email. */
-export interface ChequeParaEmail {
-  id: string;
-  comprador_email: string;
-  comprador_nombre: string;
-  destinatario_nombre: string | null;
-  mensaje: string | null;
-  fecha_entrega_deseada: string | null;
-  importe_eur: number;
-  codigo: string;
-}
+export type ChequeParaEmail = import("./plantilla.ts").ChequeRegalo;
 
 /**
  * `ocultarImporte`: el cheque pagado por un cliente siempre enseña el importe

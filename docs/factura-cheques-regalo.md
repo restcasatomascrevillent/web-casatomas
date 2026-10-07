@@ -1,5 +1,13 @@
 # Factura opcional del cheque regalo
 
+## Correo y PDF del regalo
+
+El código del regalo y su PDF tienen una plantilla independiente de la factura, editable en **Cheques → Correo y PDF** de `adminpanelct`. Se guardan asunto, mensaje, título, subtítulo, instrucciones, pie, logo y colores en `plantilla_cheques_regalo`. Los datos de la plantilla se conservan en el cheque antes del envío para que los reintentos generen el mismo PDF y cuerpo de correo. Resend usa la clave de idempotencia `cheque-regalo-{id}`.
+
+Aplicar primero la migración `20261007190000_cheques_manual_plantilla.sql` del panel. Después desplegar `cheques-regalo-admin` y `stripe-webhook-cheques-regalo --no-verify-jwt` desde este repositorio. La función del panel exige sesión autenticada y permisos de Cheques; el webhook mantiene la firma de Stripe. Las compras manuales se registran por la RPC transaccional `crear_cheque_manual` y la función `enviar_manual` entrega el correo y el PDF sin generar otro código.
+
+Pruebas de PDF y correo (sin enviar correos reales): `deno test --allow-env supabase/functions/_shared/cheques-regalo/plantilla.test.ts`. La vista previa del panel usa el mismo código de `pdf-plantilla.ts` con imports del navegador; mantener los dos generadores y valores por defecto sincronizados.
+
 La compra ofrece solicitar factura y recoge nombre/razón social, NIF y dirección fiscal. El servidor valida esos datos y la configuración del emisor antes de crear la sesión de Stripe. Solo tras un cobro confirmado el webhook emite una factura numerada y envía el PDF al email del comprador mediante Resend.
 
 El validador, la plantilla y la migración de base de datos están en `oficiososia/adminpanelct`: ver `docs/CHEQUES-REGALO.md`. Ambas aplicaciones deben usar el mismo proyecto Supabase.

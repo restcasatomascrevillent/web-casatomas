@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { generarCodigo } from "../_shared/cheques-regalo/codigo.ts";
+import { prepararChequeEmail } from "../_shared/cheques-regalo/preparar-email.ts";
 import { enviarEmailCheque } from "../_shared/cheques-regalo/email.ts";
 import { verificarAdmin } from "../_shared/cheques-regalo/admin-auth.ts";
 import type { ChequeParaEmail } from "../_shared/cheques-regalo/tipos.ts";
@@ -29,23 +29,14 @@ function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const IMPORTE_MIN = 10;
-const IMPORTE_MAX = 1000;
-
-/** Recorta y descarta strings vacíos — para que queden `null` en vez de `""`. Mismo criterio que `cheques-regalo-web`. */
-function textoOpcional(valor: unknown, maxLen: number): string | null {
-  if (typeof valor !== "string") return null;
-  const recortado = valor.trim().slice(0, maxLen);
-  return recortado || null;
-}
-
 interface AccionListar {
   accion: "listar";
 }
 
 interface AccionCrearManual {
   accion: "crear_manual";
+  solicitud_id?: string;
+  pago_manual_metodo?: unknown;
   importe_eur?: unknown;
   comprador_nombre?: unknown;
   comprador_email?: unknown;
@@ -61,7 +52,7 @@ interface AccionEliminar {
   id?: unknown;
 }
 
-type Peticion = AccionListar | AccionCrearManual | AccionEliminar;
+type Peticion = AccionListar | AccionCrearManual | AccionEliminar | { accion: "enviar_manual"; id?: unknown };
 
 /**
  * Solo los expedidos de verdad: "pendiente" (carrito de Stripe abandonado,
@@ -72,7 +63,7 @@ async function handleListar(admin: SupabaseClient): Promise<Response> {
   const { data, error } = await admin
     .from("cheques_regalo")
     .select("*")
-    .eq("estado", "pagado")
+    .eq("estado", "pagado").not("codigo", "is", null)
     .order("created_at", { ascending: false });
   if (error) {
     console.error("[cheques-regalo-admin] listar falló:", error);
@@ -81,67 +72,35 @@ async function handleListar(admin: SupabaseClient): Promise<Response> {
   return json({ cheques: data ?? [] });
 }
 
-async function handleCrearManual(admin: SupabaseClient, payload: AccionCrearManual): Promise<Response> {
-  const importe = Number(payload.importe_eur);
-  const compradorNombre = textoOpcional(payload.comprador_nombre, 200);
-  const compradorEmail = typeof payload.comprador_email === "string" ? payload.comprador_email.trim().slice(0, 320) : "";
-
-  if (!Number.isFinite(importe) || importe < IMPORTE_MIN || importe > IMPORTE_MAX) {
-    return json({ motivo: "importe_invalido", mensaje: `El importe debe estar entre ${IMPORTE_MIN}€ y ${IMPORTE_MAX}€.` }, 422);
-  }
-  if (!compradorNombre) {
-    return json({ motivo: "nombre_requerido", mensaje: "Falta el nombre de quien recibe el cheque." }, 422);
-  }
-  if (!EMAIL_RE.test(compradorEmail)) {
-    return json({ motivo: "email_invalido", mensaje: "El email no es válido." }, 422);
-  }
-
-  const compradorTelefono = textoOpcional(payload.comprador_telefono, 40);
-  const destinatarioNombre = textoOpcional(payload.destinatario_nombre, 200);
-  const mensaje = textoOpcional(payload.mensaje, 500);
-  const fechaEntregaDeseada = textoOpcional(payload.fecha_entrega_deseada, 10);
-  const ocultarImporte = payload.ocultar_importe === true;
-
-  // Mismo reintento ante choque de código (UNIQUE) que en el webhook de Stripe.
-  let fila: ChequeParaEmail | null = null;
-  for (let intento = 0; intento < 5 && !fila; intento++) {
-    const candidato = generarCodigo();
-    const { data, error } = await admin
-      .from("cheques_regalo")
-      .insert({
-        importe_eur: importe,
-        comprador_nombre: compradorNombre,
-        comprador_email: compradorEmail,
-        comprador_telefono: compradorTelefono,
-        destinatario_nombre: destinatarioNombre,
-        mensaje,
-        fecha_entrega_deseada: fechaEntregaDeseada,
-        estado: "pagado",
-        codigo: candidato,
-      })
-      .select("*")
-      .single();
-    if (error) {
-      if (error.code === "23505") continue; // código ya usado por otro cheque: se prueba otro
-      console.error("[cheques-regalo-admin] insert falló:", error);
-      return json({ motivo: "error_servidor", mensaje: "No se pudo crear el cheque." }, 500);
+async function handleEnviarManual(admin: SupabaseClient, id: unknown): Promise<Response> {
+  if (typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)) return json({ mensaje: "ID inválido" }, 422);
+  const { data: fila, error } = await admin.from("cheques_regalo").select("*")
+    .eq("id", id).eq("origen", "manual").eq("estado", "pagado").single();
+  if (error || !fila?.codigo) return json({ mensaje: "Cheque manual no encontrado" }, 404);
+  if (fila.email_enviado_en) return json({ cheque: fila, email_enviado: true });
+  try {
+    const preparado = await prepararChequeEmail(admin, fila as ChequeParaEmail);
+    const enviado = await enviarEmailCheque(preparado, { ocultarImporte: fila.ocultar_importe === true });
+    if (enviado) {
+      const { error: errorMarca } = await admin.from("cheques_regalo")
+        .update({ email_enviado_en: new Date().toISOString() }).eq("id", id);
+      if (errorMarca) throw new Error("No se ha confirmado el registro del envío");
     }
-    fila = data;
+    return json({ cheque: fila, email_enviado: enviado });
+  } catch (error) {
+    console.error("[cheques-regalo-admin] envío falló:", error);
+    return json({ mensaje: "El cheque está expedido; no se ha confirmado el envío", email_enviado: false }, 502);
   }
-  if (!fila) return json({ motivo: "error_servidor", mensaje: "5 códigos repetidos seguidos, inténtalo otra vez." }, 500);
+}
 
-  const emailEnviado = await enviarEmailCheque(fila, { ocultarImporte });
-  if (emailEnviado) {
-    const { error: errorUpdate } = await admin
-      .from("cheques_regalo")
-      .update({ email_enviado_en: new Date().toISOString() })
-      .eq("id", fila.id);
-    if (errorUpdate) console.error("[cheques-regalo-admin] no se pudo guardar email_enviado_en:", errorUpdate);
-  } else {
-    console.error("[cheques-regalo-admin] el cheque se creó pero el email no salió:", fila.id);
-  }
-
-  return json({ cheque: fila, email_enviado: emailEnviado });
+async function handleCrearManual(admin: SupabaseClient, usuario: SupabaseClient, payload: AccionCrearManual): Promise<Response> {
+  if (!payload.solicitud_id) return json({ mensaje: "Falta la referencia de la compra manual" }, 422);
+  const { data, error } = await usuario.rpc("crear_cheque_manual", {
+    p_solicitud_id: payload.solicitud_id,
+    p_datos: { ...payload, pago_manual_metodo: payload.pago_manual_metodo || "cortesia" },
+  });
+  if (error || !data?.id) return json({ mensaje: error?.message || "No se pudo crear el cheque" }, 422);
+  return handleEnviarManual(admin, data.id);
 }
 
 async function handleEliminar(admin: SupabaseClient, payload: AccionEliminar): Promise<Response> {
@@ -160,9 +119,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ motivo: "metodo_no_soportado", mensaje: "Solo POST." }, 405);
 
-  const verificacion = await verificarAdmin(req);
-  if (!verificacion.ok) return json({ motivo: "no_autorizado", mensaje: verificacion.mensaje }, verificacion.status);
-
   let payload: Peticion;
   try {
     payload = await req.json();
@@ -170,14 +126,20 @@ Deno.serve(async (req) => {
     return json({ motivo: "payload_invalido", mensaje: "Cuerpo de la petición ilegible." }, 400);
   }
 
+  if (!payload || typeof payload !== "object") return json({ mensaje: "Petición inválida" }, 400);
+  const verificacion = await verificarAdmin(req, payload.accion === "listar" ? "view" : "edit");
+  if (!verificacion.ok) return json({ motivo: "no_autorizado", mensaje: verificacion.mensaje }, verificacion.status);
+
   switch (payload.accion) {
     case "listar":
       return handleListar(verificacion.admin);
     case "crear_manual":
-      return handleCrearManual(verificacion.admin, payload);
+      return handleCrearManual(verificacion.admin, verificacion.usuario, payload);
+    case "enviar_manual":
+      return handleEnviarManual(verificacion.admin, payload.id);
     case "eliminar":
       return handleEliminar(verificacion.admin, payload);
     default:
-      return json({ motivo: "accion_desconocida", mensaje: "accion debe ser listar, crear_manual o eliminar." }, 400);
+      return json({ motivo: "accion_desconocida", mensaje: "Acción de cheques no reconocida." }, 400);
   }
 });
