@@ -17,6 +17,8 @@ export interface DatosComprador {
   destinatario: string;
   mensaje: string;
   fechaEntrega: string;
+  ocultarImporte: boolean;
+  incluirDedicatoria: boolean;
   solicitaFactura: boolean;
   facturaNombre: string;
   facturaNif: string;
@@ -30,6 +32,8 @@ const DATOS_COMPRADOR_VACIOS: DatosComprador = {
   destinatario: "",
   mensaje: "",
   fechaEntrega: "",
+  ocultarImporte: false,
+  incluirDedicatoria: true,
   solicitaFactura: false,
   facturaNombre: "",
   facturaNif: "",
@@ -39,7 +43,7 @@ const DATOS_COMPRADOR_VACIOS: DatosComprador = {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ContactoSection = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [giftAmount, setGiftAmount] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [datos, setDatos] = useState<DatosComprador>(DATOS_COMPRADOR_VACIOS);
@@ -124,11 +128,13 @@ const ContactoSection = () => {
           comprador_email: email,
           comprador_telefono: datos.telefono.trim() || undefined,
           destinatario_nombre: datos.destinatario.trim() || undefined,
-          mensaje: datos.mensaje.trim() || undefined,
+          ocultar_importe: datos.ocultarImporte,
+          incluir_dedicatoria: datos.incluirDedicatoria,
+          mensaje: datos.incluirDedicatoria ? datos.mensaje.trim() || undefined : undefined,
           fecha_entrega_deseada: datos.fechaEntrega || undefined,
         }),
       });
-      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; message?: string; factura_solicitada?: boolean } | null;
+      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; message?: string; factura_solicitada?: boolean; ocultar_importe?: boolean } | null;
 
       if (!response.ok || !cuerpo?.url) {
         throw new Error(cuerpo?.mensaje || cuerpo?.message || `No se pudo abrir el pago (HTTP ${response.status}).`);
@@ -138,6 +144,9 @@ const ContactoSection = () => {
         throw new Error(t.contacto.giftInvoiceNotReady);
       }
 
+      if (datos.ocultarImporte && cuerpo.ocultar_importe !== true) {
+        throw new Error({ es: "No se pudo confirmar que el importe quede oculto. Inténtalo más tarde.", en: "Your hidden amount preference could not be confirmed. Please try again later.", fr: "Le masquage du montant n’a pas pu être confirmé. Réessayez plus tard." }[language || "es"]);
+      }
       // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
       window.location.href = cuerpo.url;
     } catch (error) {

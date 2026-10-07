@@ -5,6 +5,7 @@ vi.mock("@/i18n/LanguageProvider", () => ({ useTranslations: () => ({ t: es.tran
 vi.mock("@/components/TelLink", () => ({ TelLink: () => <span>Teléfono</span> }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/lib/supabase-functions", () => ({ CHEQUES_REGALO_CREAR_URL: "https://example.com/crear", functionHeaders: () => ({ "Content-Type": "application/json" }), leerCuerpo: async (r: Response) => r.json() }));
+vi.mock("@/components/VistaRegaloCompra", () => ({ VistaRegaloCompra: () => <div>Vista PDF</div> }));
 import ContactoSection from "@/components/ContactoSection";
 const c = es.translations.contacto;
 function continuar() { fireEvent.click(screen.getByRole("button", { name: "Continuar" })); }
@@ -62,6 +63,25 @@ describe("Compra guiada del cheque", () => {
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const body=JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
     expect(body.solicita_factura).toBe(false); expect(body.datos_factura).toBeUndefined();
+  });
+  it("permite elegir sin importe ni dedicatoria antes del pago", async () => {
+    await abrir(); continuar();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar el importe en el regalo y en el PDF" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Incluir dedicatoria en el PDF" }));
+    fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
+    expect(body.ocultar_importe).toBe(true);
+    expect(body.incluir_dedicatoria).toBe(false);
+    expect(body.mensaje).toBeUndefined();
+    expect(body.importe_eur).toBe(100);
+  });
+  it("evita cobrar si el servidor antiguo ignora la selección de importe oculto", async () => {
+    await abrir(); continuar();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar el importe en el regalo y en el PDF" }));
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://checkout.stripe.com/test" }) } as Response);
+    fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo confirmar que el importe quede oculto");
   });
   it("mantiene el campo montado y el foco al continuar", () => {
     render(<ContactoSection />);

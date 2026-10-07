@@ -1,6 +1,9 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 // `npm:` y no esm.sh: ver el comentario en `stripe-webhook-cheques-regalo`.
 import Stripe from "npm:stripe@23.0.0";
+import { generarVistaRegalo } from "../_shared/cheques-regalo/pdf-plantilla.ts";
+import { PLANTILLA_REGALO } from "../_shared/cheques-regalo/plantilla.ts";
+import { LOGO_CASA_TOMAS_PNG_BASE64 } from "../_shared/cheques-regalo/logo-base64.ts";
 
 /**
  * Venta de cheques regalo desde casa-tomas-story: crea la fila "pendiente" en
@@ -11,8 +14,8 @@ import Stripe from "npm:stripe@23.0.0";
  * función con esta.
  *
  * Mismo patrón de rutas que `reservas-web` (un solo `Deno.serve`, sub-rutas
- * por `url.pathname`): hoy solo hay `/crear`, pero deja sitio para añadir
- * `/estado/:codigo` el día que el panel quiera consultarlo desde aquí.
+ * por `url.pathname`): `/crear` inicia el pago y `/vista-previa` muestra
+ * el regalo antes de comprar, sin registrar compras ni generar códigos.
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -49,6 +52,8 @@ const IMPORTE_MIN = 10;
 const IMPORTE_MAX = 1000;
 
 interface CrearPayload {
+  ocultar_importe?: unknown;
+  incluir_dedicatoria?: unknown;
   solicita_factura?: unknown;
   datos_factura?: { nombre?: unknown; nif?: unknown; direccion?: unknown };
   importe_eur?: unknown;
@@ -115,7 +120,7 @@ async function handleCrear(req: Request): Promise<Response> {
 
   const compradorTelefono = textoOpcional(payload.comprador_telefono, 40);
   const destinatarioNombre = textoOpcional(payload.destinatario_nombre, 200);
-  const mensaje = textoOpcional(payload.mensaje, 500);
+  const mensaje = payload.incluir_dedicatoria === false ? null : textoOpcional(payload.mensaje, 500);
   const fechaEntregaDeseada = textoOpcional(payload.fecha_entrega_deseada, 10);
 
   const { data: fila, error: errorInsert } = await supabase
@@ -129,6 +134,7 @@ async function handleCrear(req: Request): Promise<Response> {
       comprador_telefono: compradorTelefono,
       destinatario_nombre: destinatarioNombre,
       mensaje,
+      ocultar_importe: payload.ocultar_importe === true,
       fecha_entrega_deseada: fechaEntregaDeseada,
     })
     .select("id")
@@ -178,12 +184,32 @@ async function handleCrear(req: Request): Promise<Response> {
     if (errorUpdate) console.error("[cheques-regalo-web] no se pudo guardar stripe_session_id:", errorUpdate);
 
     if (!session.url) throw new Error("Stripe no devolvió url de checkout");
-    return json({ url: session.url, factura_solicitada: solicitaFactura });
+    return json({ url: session.url, factura_solicitada: solicitaFactura, ocultar_importe: payload.ocultar_importe === true });
   } catch (error) {
     console.error("[cheques-regalo-web] Stripe checkout falló:", error);
     await supabase.from("cheques_regalo").update({ estado: "cancelado" }).eq("id", fila.id);
     return json({ motivo: "stripe_error", mensaje: "No se pudo iniciar el pago. Inténtalo de nuevo." }, 502);
   }
+}
+
+/** Solo usa los datos introducidos y el diseño público del PDF; no consulta compras. */
+async function handleVistaPrevia(req: Request): Promise<Response> {
+  try {
+    const payload: CrearPayload = await req.json();
+    const importe = Number(payload.importe_eur);
+    if (!Number.isFinite(importe) || importe < IMPORTE_MIN || importe > IMPORTE_MAX) return json({ mensaje: "Importe inválido" }, 422);
+    const { data, error } = await supabase.from("plantilla_cheques_regalo")
+      .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo").eq("id", true).single();
+    if (error || !data) return json({ mensaje: "No se pudo cargar la vista previa" }, 503);
+    const vista = await generarVistaRegalo({
+      id: "ejemplo", codigo: "CT-EJEMPLO", importe_eur: Math.round(importe * 100) / 100,
+      comprador_nombre: textoOpcional(payload.comprador_nombre, 200) || "", comprador_email: "",
+      destinatario_nombre: textoOpcional(payload.destinatario_nombre, 200),
+      mensaje: payload.incluir_dedicatoria === false ? null : textoOpcional(payload.mensaje, 500),
+      ocultar_importe: payload.ocultar_importe === true, fecha_entrega_deseada: null,
+    }, { ...PLANTILLA_REGALO, ...data }, "data:image/png;base64," + LOGO_CASA_TOMAS_PNG_BASE64);
+    return json({ paginas: vista.paginas });
+  } catch { return json({ mensaje: "No se pudo generar la vista previa" }, 400); }
 }
 
 Deno.serve(async (req) => {
@@ -192,6 +218,7 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const ruta = url.pathname.replace(/^\/cheques-regalo-web/, "") || "/";
 
+  if (req.method === "POST" && ruta === "/vista-previa") return handleVistaPrevia(req);
   if (req.method === "POST" && ruta === "/crear") return handleCrear(req);
 
   return json({ motivo: "no_encontrado", mensaje: "Ruta no soportada." }, 404);

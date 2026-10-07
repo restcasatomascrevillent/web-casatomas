@@ -54,13 +54,11 @@ const cryptoProvider = Stripe.createSubtleCryptoProvider();
  * Lanza si el email no sale, para que Stripe reintente: el reintento encuentra
  * el cheque ya "pagado" sin `email_enviado_en` y lo reenvía con el MISMO código.
  *
- * `ocultarImporte: false` siempre aquí: quien paga el cheque ya sabe lo que
- * vale (lo acaba de cobrar Stripe). Ocultarlo es solo para el generado a
- * mano desde el panel (`cheques-regalo-admin`), un cheque de cortesía.
+ * El regalo conserva la selección de importe guardada antes del pago.
  */
 async function enviarYMarcarEmail(fila: ChequeParaEmail): Promise<void> {
   const preparado = await prepararChequeEmail(supabase, fila);
-  if (!(await enviarEmailCheque(preparado, { ocultarImporte: false })))
+  if (!(await enviarEmailCheque(preparado, { ocultarImporte: preparado.ocultar_importe === true })))
     throw new Error(`email del cheque ${fila.id} no enviado`);
 
   const { error } = await supabase

@@ -4,15 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { flushSync } from "react-dom";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { VistaRegaloCompra } from "./VistaRegaloCompra";
 import { Label } from "@/components/ui/label";
 import { Check, FileText, Loader2 } from "lucide-react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { DatosComprador } from "./ContactoSection";
 
 const copyByLanguage = {
-  es: { next: "Continuar", back: "Atrás", step: "Paso", of: "de", optional: "Opcional · puedes continuar sin rellenarlo", invoice: "¿Necesitas factura?", no: "No necesito factura", review: "Revisa tu regalo", required: "Completa este dato para continuar." },
-  en: { next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", invoice: "Do you need an invoice?", no: "No invoice needed", review: "Review your gift", required: "Complete this field to continue." },
-  fr: { next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", invoice: "Souhaitez-vous une facture ?", no: "Pas de facture", review: "Vérifiez votre cadeau", required: "Renseignez ce champ pour continuer." },
+  es: { showAmount: "Mostrar el importe en el regalo y en el PDF", dedication: "Incluir dedicatoria en el PDF", preview: "Vista previa del cheque PDF", loading: "Generando vista previa…", previewError: "La vista previa no está disponible ahora. Puedes continuar con la compra.", sample: "Código de ejemplo. El definitivo se genera al confirmar el pago.", next: "Continuar", back: "Atrás", step: "Paso", of: "de", optional: "Opcional · puedes continuar sin rellenarlo", invoice: "¿Necesitas factura?", no: "No necesito factura", review: "Revisa tu regalo", required: "Completa este dato para continuar." },
+  en: { showAmount: "Show the amount on the gift and PDF", dedication: "Include a dedication in the PDF", preview: "Gift PDF preview", loading: "Generating preview…", previewError: "The preview is unavailable right now. You can continue with your purchase.", sample: "Sample code. The final code is generated after payment.", next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", invoice: "Do you need an invoice?", no: "No invoice needed", review: "Review your gift", required: "Complete this field to continue." },
+  fr: { showAmount: "Afficher le montant sur le cadeau et le PDF", dedication: "Inclure une dédicace dans le PDF", preview: "Aperçu du chèque PDF", loading: "Génération de l’aperçu…", previewError: "L’aperçu est indisponible. Vous pouvez continuer votre achat.", sample: "Code d’exemple. Le code définitif est généré après le paiement.", next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", invoice: "Souhaitez-vous une facture ?", no: "Pas de facture", review: "Vérifiez votre cadeau", required: "Renseignez ce champ pour continuer." },
 };
 type Props = {
   open: boolean; onOpenChange: (open: boolean) => void; importe: string; datos: DatosComprador;
@@ -55,7 +57,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
   const field = fields[Math.min(step, fields.length - 1)];
   const final = field.type === "summary";
   useLayoutEffect(() => {
-    if (open && step > 0) body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input:not([hidden]), textarea:not([hidden])")?.focus({ preventScroll: true });
+    if (open && step > 0) body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([hidden]):not([type="checkbox"]), textarea:not([hidden])')?.focus({ preventScroll: true });
   }, [open, step]);
   const value = field.key in datos ? String(datos[field.key as keyof DatosComprador]) : "";
   function next() {
@@ -67,8 +69,12 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
   function goTo(nextStep: number) {
     // iOS requires focus during the tap itself, rather than a later effect.
     flushSync(() => setStep(nextStep));
-    body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input:not([hidden]), textarea:not([hidden])")?.focus({ preventScroll: true });
+    body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([hidden]):not([type="checkbox"]), textarea:not([hidden])')?.focus({ preventScroll: true });
   }
+  const opciones = <div className="space-y-3 rounded-xl border p-3 text-sm">
+    <label className="flex items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
+    <label className="flex items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
+  </div>;
   function change(value: string) { setDatos(d => ({ ...d, [field.key]: value })); setError(null); }
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent onOpenAutoFocus={e => e.preventDefault()}
@@ -91,12 +97,13 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
                 <FileText className="h-5 w-5 shrink-0" />{c.giftInvoiceRequest}{datos.solicitaFactura && <Check className="h-5 w-5 shrink-0 ml-auto" />}
               </Button>
               <Button type="button" aria-pressed={!datos.solicitaFactura} disabled={enviando} variant="outline" className={`w-full min-h-14 ${!datos.solicitaFactura ? "border-accent bg-accent/10" : ""}`} onClick={() => { setDatos(d => ({ ...d, solicitaFactura: false })); setError(null); }}>{copy.no}</Button>
-            </div> : final ? <dl className="rounded-xl bg-muted/50 p-4 text-sm space-y-3">
-              {fields.filter(f => f.key in datos && String(datos[f.key as keyof DatosComprador] || "").trim()).map(f => <div key={f.key}><dt className="text-muted-foreground">{f.label}</dt><dd className="font-medium break-words whitespace-pre-wrap">{String(datos[f.key as keyof DatosComprador])}</dd></div>)}
+            </div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /><dl className="rounded-xl bg-muted/50 p-4 text-sm space-y-3">
+              {fields.filter(f => (f.key !== "mensaje" || datos.incluirDedicatoria) && f.key in datos && String(datos[f.key as keyof DatosComprador] || "").trim()).map(f => <div key={f.key}><dt className="text-muted-foreground">{f.label}</dt><dd className="font-medium break-words whitespace-pre-wrap">{String(datos[f.key as keyof DatosComprador])}</dd></div>)}
               <div><dt className="text-muted-foreground">{copy.invoice}</dt><dd>{datos.solicitaFactura ? c.giftInvoiceRequest : copy.no}</dd></div>
-            </dl> : <div className="space-y-3">
+            </dl></div> : <div className="space-y-3">
+              {field.key === "mensaje" && opciones}
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
-              <Textarea style={field.type === "date" ? { display: "none" } : undefined} hidden={field.type === "date"} id={field.type === "date" ? undefined : "gift-step-" + field.key}
+              <Textarea style={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria) ? { display: "none" } : undefined} hidden={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria)} id={field.type === "date" ? undefined : "gift-step-" + field.key}
                 className={`block w-full min-w-0 max-w-full resize-none text-[16px] leading-6 rounded-xl ${field.type === "textarea" ? "min-h-20 max-h-32" : "min-h-14 h-14"}`}
                 rows={field.type === "textarea" ? 3 : 1} value={value} maxLength={field.max}
                 inputMode={field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text"}

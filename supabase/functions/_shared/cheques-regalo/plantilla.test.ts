@@ -1,6 +1,6 @@
 import { PDFDocument } from "npm:pdf-lib@1.17.1";
 import { PLANTILLA_REGALO, CHEQUE_EJEMPLO, textoRegalo } from "./plantilla.ts";
-import { generarPdfRegalo } from "./pdf-plantilla.ts";
+import { generarPdfRegalo, generarVistaRegalo } from "./pdf-plantilla.ts";
 import { construirHtml, enviarEmailCheque } from "./email.ts";
 import { LOGO_CASA_TOMAS_PNG_BASE64 } from "./logo-base64.ts";
 const logo = "data:image/png;base64," + LOGO_CASA_TOMAS_PNG_BASE64;
@@ -37,4 +37,18 @@ Deno.test("reintentos usan el mismo PDF, asunto editable, destinatario y clave d
     assert(requests[0].body.subject === "Regalo para María");
     assert(JSON.stringify(requests[0].body) === JSON.stringify(requests[1].body), "El PDF y cuerpo deben ser estables entre reintentos");
   } finally { globalThis.fetch = originalFetch; if (originalKey) Deno.env.set("RESEND_API_KEY", originalKey); else Deno.env.delete("RESEND_API_KEY"); }
+});
+
+Deno.test("vista y PDF aplican las cuatro combinaciones elegidas en la compra", async () => {
+  for (const ocultar_importe of [false, true]) for (const dedicatoria of [false, true]) {
+    const cheque = { ...CHEQUE_EJEMPLO, ocultar_importe, mensaje: dedicatoria ? CHEQUE_EJEMPLO.mensaje : null };
+    const vista = await generarVistaRegalo(cheque, PLANTILLA_REGALO, logo);
+    const svg = vista.paginas.join("");
+    assert(svg.includes("100,00 €") === !ocultar_importe);
+    assert(svg.includes("¡Feliz cumpleaños!") === dedicatoria);
+    assert(svg.includes(cheque.codigo));
+    assert((await PDFDocument.load(vista.pdf)).getPageCount() === 1);
+    const html = construirHtml(cheque, { ocultarImporte: ocultar_importe }, PLANTILLA_REGALO);
+    assert(html.includes("100,00 €") === !ocultar_importe);
+  }
 });
