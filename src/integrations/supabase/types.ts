@@ -94,6 +94,7 @@ export type Database = {
       }
       Platos: {
         Row: {
+          sin_gluten_disponible: boolean
           activado: boolean
           alergenos_inferidos: string[] | null
           alergenos_notas: string | null
@@ -109,6 +110,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          sin_gluten_disponible?: boolean
           activado?: boolean
           alergenos_inferidos?: string[] | null
           alergenos_notas?: string | null
@@ -124,6 +126,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          sin_gluten_disponible?: boolean
           activado?: boolean
           alergenos_inferidos?: string[] | null
           alergenos_notas?: string | null

@@ -1,3 +1,4 @@
+import OpcionSinGluten from "./OpcionSinGluten";
 import { useState } from "react";
 import { Eye, EyeOff, Info, Plus, UtensilsCrossed } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -261,6 +262,10 @@ const ProductoCard = ({
               )}
             </CardHeader>
 
+            {plato.sin_gluten_disponible === true && (
+              <div className="px-5 pb-3"><OpcionSinGluten /></div>
+            )}
+
             <PiePlato
               precio={plato.precio_eur}
               unidad={plato.unidad}
@@ -305,9 +310,10 @@ const ProductoCard = ({
             </CardHeader>
 
             <CardContent className="px-5 py-4 flex-grow overflow-auto space-y-3">
-              {plato.displayDescripcion && (
-                <p className="text-sm text-muted-foreground">{plato.displayDescripcion}</p>
+              {plato.displayDescripcion?.trim() && (
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{plato.displayDescripcion}</p>
               )}
+              {plato.sin_gluten_disponible === true && <OpcionSinGluten />}
               {ingredientes.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-foreground">{t.platos.ingredientsTitle}</p>

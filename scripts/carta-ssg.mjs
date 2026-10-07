@@ -54,7 +54,7 @@ const CAMPOS_SALIDA = {
     'descripcion', 'descripcion_en', 'descripcion_fr',
     'precio_eur', 'unidad',
     'imagen_url', 'imagen_posicion_y', 'expanded',
-    'ingredientes',
+    'ingredientes', 'sin_gluten_disponible',
     'etiquetas_dieteticas',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
     'alergenos_en', 'alergenos_fr',
