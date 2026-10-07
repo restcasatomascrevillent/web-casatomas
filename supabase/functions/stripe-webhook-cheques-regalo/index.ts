@@ -1,9 +1,11 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 // `npm:` y no esm.sh: el build de esm.sh mete el polyfill de Node de
 // deno.land/std, que llenaba los logs de "Deno.core.runMicrotasks() is not
 // supported" cada vez que el worker se apagaba.
 import Stripe from "npm:stripe@23.0.0";
+import { generarCodigo } from "../_shared/cheques-regalo/codigo.ts";
+import { enviarEmailCheque } from "../_shared/cheques-regalo/email.ts";
+import type { ChequeParaEmail } from "../_shared/cheques-regalo/tipos.ts";
 
 /**
  * Webhook de Stripe para los cheques regalo: confirma el pago, genera el
@@ -39,101 +41,24 @@ import Stripe from "npm:stripe@23.0.0";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Casa Tomás <onboarding@resend.dev>";
 
 // Sin cliente de Stripe ni `STRIPE_SECRET_KEY`: todo lo que hace falta viene
 // en el propio evento, y verificar la firma solo necesita el secreto del
 // webhook. Menos claves cargadas, menos que perder.
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
-
-interface ChequeParaEmail {
-  id: string;
-  comprador_email: string;
-  comprador_nombre: string;
-  destinatario_nombre: string | null;
-  mensaje: string | null;
-  fecha_entrega_deseada: string | null;
-  importe_eur: number;
-  codigo: string;
-}
-
-function generarCodigo(): string {
-  // Sin 0/O/1/I: se lee en voz alta por teléfono y por WhatsApp sin
-  // confusiones. 8 caracteres de un alfabeto de 32 ⇒ más que de sobra para
-  // que un cheque regalo no choque con otro por azar.
-  // `crypto.getRandomValues` y no `Math.random()`: el código vale dinero y no
-  // puede ser predecible. 32 divide exacto a 256, así que `byte % 32` no
-  // favorece a ninguna letra.
-  const ALFABETO = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-  let codigo = "";
-  for (const byte of crypto.getRandomValues(new Uint8Array(8))) codigo += ALFABETO[byte % ALFABETO.length];
-  return `CT-${codigo}`;
-}
-
-function formatearFecha(iso: string | null): string {
-  if (!iso) return "";
-  const [anio, mes, dia] = iso.split("-");
-  return `${dia}/${mes}/${anio}`;
-}
-
-/** El nombre y el mensaje los escribe el comprador y van dentro del HTML del email. */
-function escaparHtml(texto: string): string {
-  return texto
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-async function enviarEmailCheque(fila: ChequeParaEmail): Promise<boolean> {
-  if (!resend) {
-    console.warn("[stripe-webhook-cheques-regalo] RESEND_API_KEY no configurada: email no enviado.");
-    return false;
-  }
-
-  const paraQuien = fila.destinatario_nombre ? `para <strong>${escaparHtml(fila.destinatario_nombre)}</strong>` : "";
-  const entrega = fila.fecha_entrega_deseada
-    ? `<p>Entrega deseada: <strong>${formatearFecha(fila.fecha_entrega_deseada)}</strong></p>`
-    : "";
-  const mensajePersonal = fila.mensaje
-    ? `<blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #b08968;color:#444;">${escaparHtml(fila.mensaje)}</blockquote>`
-    : "";
-
-  try {
-    const { error } = await resend.emails.send({
-      from: RESEND_FROM_EMAIL,
-      to: fila.comprador_email,
-      subject: "Tu cheque regalo de Casa Tomás ya está listo",
-      html: `
-        <div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;">
-          <h2 style="color:#5c3d2e;">¡Gracias, ${escaparHtml(fila.comprador_nombre)}!</h2>
-          <p>Tu cheque regalo de <strong>${fila.importe_eur}€</strong> ${paraQuien} ya está pagado.</p>
-          ${entrega}
-          ${mensajePersonal}
-          <p>Código para canjearlo en el restaurante:</p>
-          <p style="font-size:28px;font-weight:bold;letter-spacing:2px;color:#5c3d2e;">${fila.codigo}</p>
-          <p style="font-size:13px;color:#777;">Preséntalo (impreso o en el móvil) al pagar en Casa Tomás, Crevillente.</p>
-        </div>
-      `,
-    });
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error("[stripe-webhook-cheques-regalo] envío de email falló:", error);
-    return false;
-  }
-}
 
 /**
  * Lanza si el email no sale, para que Stripe reintente: el reintento encuentra
  * el cheque ya "pagado" sin `email_enviado_en` y lo reenvía con el MISMO código.
+ *
+ * `ocultarImporte: false` siempre aquí: quien paga el cheque ya sabe lo que
+ * vale (lo acaba de cobrar Stripe). Ocultarlo es solo para el generado a
+ * mano desde el panel (`cheques-regalo-admin`), un cheque de cortesía.
  */
 async function enviarYMarcarEmail(fila: ChequeParaEmail): Promise<void> {
-  if (!(await enviarEmailCheque(fila))) throw new Error(`email del cheque ${fila.id} no enviado`);
+  if (!(await enviarEmailCheque(fila, { ocultarImporte: false })))
+    throw new Error(`email del cheque ${fila.id} no enviado`);
 
   const { error } = await supabase
     .from("cheques_regalo")
