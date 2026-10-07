@@ -6,9 +6,12 @@
  * que no hace falta montar ningún componente ni un Router.
  */
 import { describe, expect, it } from "vitest";
+import type { RouteRecord } from "vite-react-ssg";
+import { routes } from "@/App";
 import {
   alternatesDePagina,
   construirRutaIdioma,
+  existeEnTodosLosIdiomas,
   idiomaDeRuta,
   quitarPrefijoIdioma,
   rutaEquivalente,
@@ -69,6 +72,26 @@ describe("construirRutaIdioma", () => {
   });
 });
 
+describe("rutaEquivalente — query y ancla", () => {
+  it("la misma página en otro idioma conserva la query y el ancla", () => {
+    expect(rutaEquivalente("/reservas", "en", { search: "?comensales=4" })).toBe("/en/reservas?comensales=4");
+    expect(rutaEquivalente("/fr/reservas", "es", { search: "?comensales=4" })).toBe("/reservas?comensales=4");
+    expect(rutaEquivalente("/condiciones", "fr", { hash: "#newsletter" })).toBe("/fr/condiciones#newsletter");
+    expect(rutaEquivalente("/en/carta", "es", { search: "?q=1", hash: "#vinos" })).toBe("/carta?q=1#vinos");
+    // Mismo idioma (página solo en español): se queda tal cual, con su query.
+    expect(rutaEquivalente("/reserva/respuesta", "es", { search: "?token=abc" })).toBe("/reserva/respuesta?token=abc");
+  });
+
+  it("si la página no existe en el otro idioma, va a la portada SIN query ni ancla (el token no viaja)", () => {
+    expect(rutaEquivalente("/reserva/respuesta", "en", { search: "?token=abc", hash: "#x" })).toBe("/en");
+    expect(rutaEquivalente("/newsletter/baja", "fr", { search: "?s=1&firma=f" })).toBe("/fr");
+  });
+
+  it("sin query ni ancla, igual que siempre", () => {
+    expect(rutaEquivalente("/reservas", "en", {})).toBe("/en/reservas");
+  });
+});
+
 describe("rutaEquivalente — lo que usa el selector de idioma del header", () => {
   it("cambia de idioma sin volver a la portada", () => {
     expect(rutaEquivalente("/carta/vinos", "en")).toBe("/en/carta/vinos");
@@ -79,6 +102,79 @@ describe("rutaEquivalente — lo que usa el selector de idioma del header", () =
   it("la portada de un idioma a otro es la portada del otro, no la raíz cruda", () => {
     expect(rutaEquivalente("/en", "fr")).toBe("/fr");
     expect(rutaEquivalente("/", "en")).toBe("/en");
+  });
+
+  it("las condiciones existen en los tres idiomas: va a su equivalente", () => {
+    expect(rutaEquivalente("/condiciones", "en")).toBe("/en/condiciones");
+    expect(rutaEquivalente("/fr/condiciones", "es")).toBe("/condiciones");
+  });
+
+  it("las reservas y la política de privacidad existen en los tres idiomas: va a su equivalente", () => {
+    expect(rutaEquivalente("/reservas", "en")).toBe("/en/reservas");
+    expect(rutaEquivalente("/reservas", "fr")).toBe("/fr/reservas");
+    expect(rutaEquivalente("/en/reservas", "fr")).toBe("/fr/reservas");
+    expect(rutaEquivalente("/fr/reservas", "es")).toBe("/reservas");
+    expect(rutaEquivalente("/politica-privacidad", "en")).toBe("/en/politica-privacidad");
+    expect(rutaEquivalente("/fr/politica-privacidad", "es")).toBe("/politica-privacidad");
+  });
+
+  it("una página que solo existe en español lleva a la portada del idioma destino, no a un 404", () => {
+    for (const rutaSoloEs of ["/reserva/respuesta", "/newsletter/baja", "/404"]) {
+      expect(rutaEquivalente(rutaSoloEs, "en")).toBe("/en");
+      expect(rutaEquivalente(rutaSoloEs, "fr")).toBe("/fr");
+    }
+  });
+
+  it("elegir el mismo idioma en una página solo-es no la abandona", () => {
+    expect(rutaEquivalente("/reserva/respuesta", "es")).toBe("/reserva/respuesta");
+    expect(rutaEquivalente("/newsletter/baja", "es")).toBe("/newsletter/baja");
+  });
+
+  it("desde un 404 de /en o /fr lleva a la portada del destino", () => {
+    expect(rutaEquivalente("/en/no-existe", "es")).toBe("/");
+    expect(rutaEquivalente("/en/no-existe", "fr")).toBe("/fr");
+  });
+
+  it("una página solo-es con barra final también va a la portada del destino", () => {
+    expect(rutaEquivalente("/reserva/respuesta/", "en")).toBe("/en");
+  });
+});
+
+/** Rutas de una rama de `App.tsx`, como rutas en español sin prefijo (`:param` -> `x`). */
+function rutasDeRama(rama: string): string[] {
+  const nodo = routes.find((r: RouteRecord) => r.path === rama);
+  if (!nodo?.children) throw new Error(`rama ${rama} no encontrada en App.tsx`);
+  return nodo.children
+    .filter((hijo) => hijo.path !== "*")
+    .map((hijo) => (hijo.index ? "/" : `/${hijo.path!.replace(/:[^/]+/g, "x")}`));
+}
+
+describe("existeEnTodosLosIdiomas — espejo de las rutas reales de App.tsx", () => {
+  it("toda ruta montada bajo /en y /fr existe en todos los idiomas", () => {
+    for (const rama of ["/en", "/fr"]) {
+      for (const ruta of rutasDeRama(rama)) expect(existeEnTodosLosIdiomas(ruta), `${rama}${ruta}`).toBe(true);
+    }
+  });
+
+  it("toda ruta que solo está en la rama española NO cuenta como multiidioma", () => {
+    const enIngles = new Set(rutasDeRama("/en"));
+    const soloEs = rutasDeRama("/").filter((ruta) => !enIngles.has(ruta));
+    // Solo las páginas de los enlaces de los correos (que van en español) y el 404.
+    expect([...soloEs].sort()).toEqual(["/404", "/newsletter/baja", "/reserva/respuesta"]);
+    for (const ruta of soloEs) expect(existeEnTodosLosIdiomas(ruta), ruta).toBe(false);
+  });
+
+  it("el formulario de reservas, la política de privacidad y las condiciones están en las tres ramas", () => {
+    for (const rama of ["/", "/en", "/fr"]) {
+      const rutas = rutasDeRama(rama);
+      for (const ruta of ["/reservas", "/politica-privacidad", "/condiciones"]) {
+        expect(rutas, `${rama} → ${ruta}`).toContain(ruta);
+      }
+    }
+  });
+
+  it("/en y /fr montan exactamente las mismas rutas", () => {
+    expect(rutasDeRama("/fr")).toEqual(rutasDeRama("/en"));
   });
 });
 

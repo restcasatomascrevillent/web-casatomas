@@ -10,6 +10,7 @@ export type ReservationValidationMessages = {
   guestsMin: string;
   guestsMax: string;
   notesMax: string;
+  termsRequired: string;
 };
 
 export const createReservationSchema = (messages: ReservationValidationMessages) =>
@@ -42,6 +43,20 @@ export const createReservationSchema = (messages: ReservationValidationMessages)
       .string()
       .max(500, { message: messages.notesMax })
       .optional(),
+    /**
+     * Aceptación de las condiciones de reserva y la política de privacidad:
+     * OBLIGATORIA. Sin ella no se envía nada.
+     */
+    acepta_condiciones: z.boolean().refine((valor) => valor === true, {
+      message: messages.termsRequired,
+    }),
+    /**
+     * Newsletter: casilla aparte, OPCIONAL y desmarcada por defecto. El RGPD
+     * y la LSSI exigen que este consentimiento sea libre y específico: no
+     * puede ir agrupado con las condiciones ni ser requisito para reservar,
+     * así que aquí no hay `refine` — `false` es tan válido como `true`.
+     */
+    consentimiento_newsletter: z.boolean().default(false),
   });
 
 export type ReservationFormData = z.infer<ReturnType<typeof createReservationSchema>>;

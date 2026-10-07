@@ -7,6 +7,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { useLocation, useNavigate } from "react-router-dom";
 import { construirRutaIdioma, rutaEquivalente } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
+import { RESERVAS_PATH } from "@/lib/condiciones";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,7 @@ const Header = () => {
   // Portada DE ESTE idioma: "/", "/en" o "/fr" — no siempre "/". La usan el
   // logo y la navegación por anclas para saber si ya están en casa.
   const home = construirRutaIdioma("/", language);
+  const reservasPath = construirRutaIdioma(RESERVAS_PATH, language);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -206,7 +208,7 @@ const Header = () => {
                 {languages.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value, location))}
                     className={language === option.value ? "font-semibold text-primary" : ""}
                   >
                     {option.label}
@@ -218,7 +220,7 @@ const Header = () => {
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
               onClick={() => {
-                navigate("/reservas");
+                navigate(reservasPath);
               }}
             >
               {t.header.cta}
@@ -237,7 +239,7 @@ const Header = () => {
                 {languages.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
-                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value))}
+                    onClick={() => navigate(rutaEquivalente(location.pathname, option.value, location))}
                     className={language === option.value ? "font-semibold text-primary" : ""}
                   >
                     {option.label}
@@ -283,7 +285,7 @@ const Header = () => {
                   size="lg"
                   className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
                   onClick={() => {
-                    navigate("/reservas");
+                    navigate(reservasPath);
                     setIsMobileMenuOpen(false);
                   }}
                 >

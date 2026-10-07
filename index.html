@@ -1,10 +1,12 @@
 <!doctype html>
 <html>
-  <!-- `lang` NO va aquí: cada página lo fija por su idioma real vía
-       `<Seo lang="…">` (src/components/Seo.tsx), que lo funde en esta
-       etiqueta a través de react-helmet-async. Si este `<html>` llevara un
-       `lang` fijo, el navegador se quedaría con el PRIMERO de los dos
-       atributos duplicados — el fijo, no el de la página. -->
+  <!-- El `lang` NO va en esta etiqueta: cada página lo fija por su idioma real vía
+       `<Seo lang="…">` (src/components/Seo.tsx), que lo funde en ella a través de
+       react-helmet-async. Si llevara un `lang` fijo, el navegador se quedaría con el
+       PRIMERO de los dos atributos duplicados — el fijo, no el de la página.
+       OJO: no escribas aquí el nombre de la etiqueta con corchetes angulares. El
+       prerenderizado conserva los comentarios y cada página saldría con un
+       falso segundo elemento html (scripts/verificar-html.mjs lo detecta). -->
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

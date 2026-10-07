@@ -52,12 +52,54 @@ export function construirRutaIdioma(pathRelativoEs: string, lang: Language): str
 }
 
 /**
+ * ¿Existe esta ruta (escrita en español, SIN prefijo) en las TRES ramas del
+ * router? Es el espejo de lo que `App.tsx` monta bajo `/en` y `/fr`
+ * (`cartaChildren` + `paginasComunes`): la portada, la carta (índice, vinos,
+ * bebidas y cada categoría), el formulario de reservas, la política de
+ * privacidad y las condiciones.
+ *
+ * Todo lo demás existe solo en español: las páginas de los enlaces de los
+ * correos (`/reserva/respuesta`, `/newsletter/baja`; los correos van en
+ * español y enlazan a esa versión) y `/404`. Un test (`i18n-routing.test.ts`)
+ * recorre las rutas reales de `App.tsx` para que esta lista no se quede atrás.
+ */
+export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
+  const ruta = pathRelativoEs.replace(/\/+$/, "") || "/";
+  return (
+    ruta === "/" ||
+    ruta === "/carta" ||
+    /^\/carta\/[^/]+$/.test(ruta) ||
+    ruta === "/reservas" ||
+    ruta === "/politica-privacidad" ||
+    ruta === "/condiciones"
+  );
+}
+
+/**
  * La "página equivalente" en otro idioma a partir de la URL actual: quita el
  * prefijo que tenga (si tiene) y pone el nuevo. Es lo que usa el selector de
  * idioma del header para no mandar siempre a la portada.
+ *
+ * Si esa página no existe en el idioma destino (p. ej. `/reserva/respuesta`,
+ * la de los enlaces de los correos, que solo está en español), lleva a la
+ * portada de ese idioma en vez de a un 404 (`/reserva/respuesta` -> `/en`).
+ * Lo mismo si se parte de una URL de otro idioma que no existe (la página de
+ * 404 de `/en/lo-que-sea`).
  */
-export function rutaEquivalente(pathnameActual: string, lang: Language): string {
-  return construirRutaIdioma(quitarPrefijoIdioma(pathnameActual), lang);
+export function rutaEquivalente(
+  pathnameActual: string,
+  lang: Language,
+  { search = "", hash = "" }: { search?: string; hash?: string } = {},
+): string {
+  const rutaEs = quitarPrefijoIdioma(pathnameActual);
+  const mismoIdioma = idiomaDeRuta(pathnameActual) === lang;
+  // Si la página no existe en el otro idioma se va a su portada, SIN la query
+  // ni el ancla: lo que sirve a `/reserva/respuesta?token=…` no pinta nada en
+  // `/en`, y el token no debe viajar a otra página.
+  if (!mismoIdioma && !existeEnTodosLosIdiomas(rutaEs)) return construirRutaIdioma("/", lang);
+  // La misma página en otro idioma conserva la query (`/reservas?comensales=4`,
+  // que rellena el formulario) y el ancla (`/condiciones#newsletter`).
+  return `${construirRutaIdioma(rutaEs, lang)}${search}${hash}`;
 }
 
 export interface AlternateIdioma {

@@ -282,7 +282,7 @@ export const translations = {
       backToSite: "Volver al sitio web",
       disclaimer: {
         title: "Importante:",
-        note: "La reserva no queda confirmada hasta que recibas el email de confirmación. Casa Tomás queda exento de responsabilidad hasta ese momento.",
+        note: "Enviar el formulario es una solicitud, no una reserva confirmada: el restaurante la revisa y te envía un email con la propuesta. La reserva queda confirmada cuando la confirmas desde ese email. Casa Tomás queda exento de responsabilidad hasta ese momento.",
         callUs: "Si no hay disponibilidad online, llámanos al",
         steps: [
           "Consultar disponibilidad (cliente)",
@@ -291,6 +291,12 @@ export const translations = {
           "Confirmar reserva (recibirás el correo de confirmación)",
         ],
       },
+    },
+    reservasPage: {
+      seoTitle: "Reservar mesa | Casa Tomás Restaurante en Crevillent",
+      seoDescription: "Reserva tu mesa en Casa Tomás, restaurante de cocina tradicional en Crevillent (Alicante). Reservas online rápidas y sencillas.",
+      keywords: ["reservar mesa Crevillent", "reservas Casa Tomás", "reservar restaurante Alicante"],
+      breadcrumb: "Reservar mesa",
     },
     reservationForm: {
       /*
@@ -302,7 +308,7 @@ export const translations = {
        * presentaba creyendo que tenía mesa.
        */
       successTitle: "Solicitud recibida",
-      successLead: "Aún no es una reserva confirmada: te escribiremos por correo cuando el restaurante la confirme.",
+      successLead: "Aún no es una reserva confirmada: el restaurante revisará tu solicitud y te enviará un email con la propuesta. Queda confirmada cuando la confirmas desde ese email.",
       successLine3: "Guarda este resguardo: es el único acuse de que tu solicitud ha llegado.",
       successButton: "Volver al inicio",
       successCloseAria: "Cerrar el resguardo",
@@ -314,7 +320,7 @@ export const translations = {
         timeLabel: "Hora",
         guestsLabel: "Comensales",
         emailLabel: "Confirmación a",
-        emailHint: "Ahora no recibirás ningún correo: te escribiremos a esta dirección cuando el restaurante confirme la reserva. Revisa también la carpeta de spam.",
+        emailHint: "Ahora no recibirás ningún correo: tras revisar tu solicitud, el restaurante te escribirá a esta dirección con la propuesta, y la reserva queda confirmada cuando la confirmes desde ese email. Revisa también la carpeta de spam.",
         stepCaption: "Paso {done} de {total}",
         /* Los mismos cuatro pasos que anuncia `reservas.disclaimer.steps`. */
         steps: [
@@ -350,11 +356,17 @@ export const translations = {
       emailPlaceholder: "tu@email.com",
       notesLabel: "Peticiones especiales",
       notesPlaceholder: "Alergias, preferencias, ocasión...",
+      termsLabel: "He leído y acepto las {terms} y la {privacy} *",
+      termsLink: "condiciones de reserva",
+      privacyLink: "política de privacidad",
+      newTabHint: "(se abre en una pestaña nueva)",
+      newsletterLabel: "Quiero recibir la newsletter de Casa Tomás (novedades, eventos y ofertas). Me apuntaréis cuando confirme mi reserva desde el correo que me enviaréis. Puedo darme de baja en cualquier momento.",
+      newsletterTermsLink: "Ver condiciones de la newsletter",
       submit: "Reservar ahora",
       submitting: "Reservando...",
       footer: "Reservas online seguras y rápidas",
       toasts: {
-        missingFields: "Selecciona una fecha, una sala y el número de comensales",
+        missingFields: "Selecciona una fecha y el número de comensales",
         availabilityFull: "¡Todos los horarios disponibles para esta fecha!",
         availabilityChecked: "Disponibilidad actualizada",
         closedDay: "Ese día el restaurante no está disponible. Elige otra fecha.",
@@ -371,6 +383,8 @@ export const translations = {
       rejection: {
         title: "No hemos podido completar la reserva",
         close: "Entendido",
+        closeAria: "Cerrar el aviso",
+        reasons: {} as Record<string, string>,
         invalidMessage: "Hay algún dato del formulario que no hemos podido leer.",
         offlineTitle: "Parece que te has quedado sin conexión",
         offlineMessage: "Tu solicitud no ha salido porque se ha perdido la conexión.",
@@ -396,6 +410,7 @@ export const translations = {
     },
     mobileCta: {
       call: "Llamar",
+      callAria: "Llamar a Casa Tomás",
       reserve: "Reservar mesa",
     },
     reviews: {
@@ -487,6 +502,13 @@ export const translations = {
       giftFormDeliveryDate: "Fecha deseada de entrega (opcional)",
       giftFormSubmit: "Ir al pago seguro",
       giftFormSubmitting: "Conectando con el pago...",
+      giftInvoiceRequest: "Quiero recibir la factura por email",
+      giftInvoiceDescription: "Recibirás un PDF en el email de compra cuando se confirme el pago.",
+      giftInvoiceName: "Nombre o razón social",
+      giftInvoiceTaxId: "NIF / CIF",
+      giftInvoiceAddress: "Dirección fiscal completa (incluye código postal y localidad)",
+      giftInvoiceNotReady: "La facturación todavía no está disponible. Contacta con el restaurante antes de pagar.",
+      giftInvoiceMissingData: "Completa nombre, NIF y dirección fiscal para recibir la factura.",
       giftFormCancel: "Cancelar",
       toasts: {
         errorTitle: "Error",
@@ -510,7 +532,8 @@ export const translations = {
       contactTitle: "Contacto",
       rights: "© 2026 Restaurante Casa Tomás. Todos los derechos reservados.",
       admin: "Administración",
-      terms: "Términos y condiciones",
+      terms: "Política de privacidad",
+      bookingTerms: "Condiciones de reserva y newsletter",
       cookieSettings: "Configurar cookies",
     },
     cookie: {
@@ -567,6 +590,139 @@ export const translations = {
         TODAS: "Todas",
       },
     },
+    /*
+     * Página /condiciones (reserva + newsletter). En los párrafos, `{phone}` y
+     * `{privacy}` se pintan como enlaces (teléfono y política de privacidad).
+     */
+    conditionsPage: {
+      seoTitle: "Condiciones de reserva y newsletter | Casa Tomás Restaurante",
+      seoDescription: "Condiciones de las reservas y de la newsletter de Casa Tomás Restaurante (Crevillent, Alicante): confirmación, puntualidad, cancelaciones, grupos, envíos, baja y datos personales.",
+      back: "Volver al inicio",
+      title: "Condiciones de reserva y newsletter",
+      updated: "Última actualización: octubre de 2026",
+      intro: "En esta página tienes las condiciones de las reservas en Restaurante Casa Tomás y las de su newsletter.",
+      tocLabel: "En esta página",
+      bookingHeading: "Condiciones de reserva",
+      bookingIntro: "Se aplican a las reservas tanto desde esta web como por teléfono. Al enviar una solicitud de reserva declaras haberlas leído y aceptado.",
+      bookingSections: [
+        {
+          title: "1. Cómo se confirma tu reserva",
+          paragraphs: [
+            "Enviar el formulario es una solicitud de reserva, no una reserva confirmada: queda pendiente mientras el restaurante la revisa, y hasta que se confirme Casa Tomás no puede garantizarte la mesa.",
+            "Cuando la hayamos revisado, te enviaremos un email con la propuesta de reserva. La reserva queda confirmada cuando pulsas en ese email el botón para confirmarla y lo confirmas en la página que se abre; después recibirás un email de confirmación.",
+            "Si te proponemos una hora distinta de la que pediste, desde ese mismo email puedes aceptarla, y la reserva queda confirmada, o rechazarla, y la reserva queda cancelada.",
+            "Si no te llega el correo, revisa la carpeta de spam o llámanos al {phone}.",
+          ],
+        },
+        {
+          title: "2. Puntualidad",
+          paragraphs: [
+            "Te guardamos la mesa durante 15 minutos a partir de la hora reservada. Pasado ese tiempo sin noticias tuyas, la mesa puede liberarse y asignarse a otros clientes.",
+            "Si vas a llegar tarde, llámanos al {phone} y haremos lo posible por mantenértela.",
+          ],
+        },
+        {
+          title: "3. Cancelaciones y cambios",
+          paragraphs: [
+            "Si no puedes venir o necesitas cambiar la fecha, la hora o el número de comensales, avísanos con la mayor antelación posible: desde el enlace del email de tu reserva o llamándonos al {phone}. Así podremos ofrecer la mesa a otras personas.",
+          ],
+        },
+        {
+          title: "4. Grupos grandes",
+          paragraphs: [
+            "Las reservas para grupos de más de 12 personas no se hacen desde la web: las gestiona directamente el restaurante. Llámanos al {phone} y lo organizamos contigo, incluidas las condiciones particulares que pueda requerir el grupo.",
+          ],
+        },
+        {
+          title: "5. Mesa y espacio",
+          paragraphs: [
+            "La reserva te garantiza sitio para el número de comensales indicado, no una mesa ni una zona concretas del restaurante. Si tienes alguna preferencia, indícala en «Peticiones especiales» y haremos lo posible por atenderla, pero la distribución de las mesas la decide el restaurante.",
+          ],
+        },
+        {
+          title: "6. Ausencias sin aviso",
+          paragraphs: [
+            "Cuando una reserva no se presenta y no se ha cancelado, esa mesa se queda vacía y otras personas se quedan sin sitio. Las ausencias reiteradas sin aviso pueden impedir que hagas nuevas reservas.",
+          ],
+        },
+        {
+          title: "7. Tus datos personales",
+          paragraphs: [
+            "Los datos que nos das al reservar (nombre, teléfono, email y los detalles de la reserva) los usamos para gestionar tu reserva, tal como se explica en nuestra {privacy}.",
+            "La newsletter es independiente de la reserva: solo la recibirás si la pides marcando su casilla y después confirmas tu reserva desde el enlace del email que te enviamos. No es necesaria para reservar y puedes darte de baja en cualquier momento desde el enlace de cada email.",
+          ],
+        },
+      ],
+      newsletterHeading: "Condiciones de la newsletter",
+      newsletterIntro: "Se aplican solo si, al reservar, marcas la casilla para recibir la newsletter de Casa Tomás.",
+      newsletterSections: [
+        {
+          title: "1. Qué recibirás",
+          paragraphs: [
+            "Correos con novedades, eventos, menús especiales y ofertas de Casa Tomás.",
+          ],
+        },
+        {
+          title: "2. Cuándo empiezas a recibirla",
+          paragraphs: [
+            "Marcar la casilla todavía no te apunta. Te apuntamos solo después de que confirmes tu reserva desde el enlace del email que te enviamos: así comprobamos que el email es tuyo.",
+            "Si la reserva se confirma por otra vía (por ejemplo, por teléfono) o se cancela antes de que la confirmes desde ese email, no te apuntamos a la newsletter.",
+          ],
+        },
+        {
+          title: "3. Con qué frecuencia",
+          paragraphs: [
+            "Los envíos son ocasionales: no nos comprometemos a una frecuencia fija y solo te escribiremos cuando tengamos algo que contarte.",
+          ],
+        },
+        {
+          title: "4. Qué datos usamos y para qué",
+          paragraphs: [
+            "Usamos el email y el nombre que indicaste en tu reserva con la única finalidad de enviarte la newsletter.",
+          ],
+        },
+        {
+          title: "5. Base legal: tu consentimiento",
+          paragraphs: [
+            "La base legal es tu consentimiento. Es voluntario y no es necesario para reservar: si no marcas la casilla, tu reserva se tramita exactamente igual.",
+          ],
+        },
+        {
+          title: "6. Baja",
+          paragraphs: [
+            "Puedes darte de baja en cualquier momento y sin ningún coste desde el enlace que incluye cada email. La baja es inmediata y no afecta a tus reservas.",
+          ],
+        },
+        {
+          title: "7. Constancia del consentimiento",
+          paragraphs: [
+            "Guardamos la fecha en que diste tu consentimiento (al marcar la casilla) y la fecha en que confirmaste tu email desde el enlace de tu reserva, como prueba de ambos.",
+          ],
+        },
+        {
+          title: "8. Destinatarios",
+          paragraphs: [
+            "No cedemos tus datos a terceros. Para hacer los envíos usamos un proveedor de envío de correo electrónico que actúa como encargado del tratamiento: trata los datos solo por cuenta de Casa Tomás y siguiendo sus instrucciones.",
+          ],
+        },
+        {
+          title: "9. Tus derechos",
+          paragraphs: [
+            "Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad, o reclamar ante la autoridad de control, tal como se explica en nuestra {privacy}.",
+          ],
+        },
+      ],
+      privacyLink: "política de privacidad",
+      contactTitle: "Contacto",
+      contactIntro: "Para cualquier duda sobre tu reserva:",
+      homeLink: "Inicio",
+      privacyFooterLink: "Política de privacidad",
+    },
+    /* Etiquetas ARIA de los botones del calendario (react-day-picker las trae en inglés). */
+    calendar: {
+      previousMonth: "Mes anterior",
+      nextMonth: "Mes siguiente",
+    },
     validation: {
       nameMin: "El nombre debe tener al menos 2 caracteres",
       nameMax: "El nombre no puede superar los 100 caracteres",
@@ -578,6 +734,7 @@ export const translations = {
       guestsMax: "Máximo 20 comensales",
       roomRequired: "Selecciona una sala",
       notesMax: "Las notas no pueden superar los 500 caracteres",
+      termsRequired: "Para reservar tienes que aceptar las condiciones de reserva y la política de privacidad",
     },
     notFound: {
       title: "404",
@@ -636,4 +793,5 @@ const pack: LanguagePack = {
 };
 
 export default pack;
+
 

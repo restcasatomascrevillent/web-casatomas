@@ -5,6 +5,8 @@ import { LOGO_HEIGHT, LOGO_WIDTH, logoHero } from "@/assets/logo";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Link } from "react-router-dom";
 import type { Language } from "@/i18n/types";
+import { construirRutaIdioma } from "@/i18n/routing";
+import { RESERVAS_PATH } from "@/lib/condiciones";
 
 // Aria-label de la flecha de scroll. Distinto del texto del botón "Ver
 // carta" (mismo destino) para no repetir el mismo nombre accesible dos
@@ -68,7 +70,7 @@ const Hero = () => {
               className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
               asChild
             >
-              <Link to="/reservas">
+              <Link to={construirRutaIdioma(RESERVAS_PATH, language)}>
                 <Calendar className="w-5 h-5 mr-2" />
                 {t.hero.ctaPrimary}
               </Link>

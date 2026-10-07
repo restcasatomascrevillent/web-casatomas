@@ -21,6 +21,7 @@ const messages = {
   guestsMin: "Mínimo 1 comensal",
   guestsMax: "Máximo 20 comensales",
   notesMax: "Las notas no pueden superar los 500 caracteres",
+  termsRequired: "Para reservar tienes que aceptar las condiciones de reserva y la política de privacidad",
 };
 
 const schema = createReservationSchema(messages);
@@ -36,6 +37,7 @@ const VALID_BASE = {
   fecha: tomorrow,
   numero_comensales: 2,
   notas_cliente: "",
+  acepta_condiciones: true,
 };
 
 const parse = (data: object) => schema.safeParse(data);
@@ -246,5 +248,36 @@ describe("Validation — full valid reservation", () => {
       expect(result.data.nombre).toBe("Ana García");
       expect(result.data.numero_comensales).toBe(2);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// acepta_condiciones (obligatoria) y consentimiento_newsletter (opcional)
+// ---------------------------------------------------------------------------
+
+describe("Validation — condiciones y newsletter", () => {
+  it("rechaza la reserva si no se aceptan las condiciones", () => {
+    const result = parse({ ...VALID_BASE, acepta_condiciones: false });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].path).toEqual(["acepta_condiciones"]);
+      expect(result.error.issues[0].message).toBe(messages.termsRequired);
+    }
+  });
+
+  it("rechaza la reserva si falta el campo acepta_condiciones", () => {
+    const { acepta_condiciones: _omitido, ...sinCondiciones } = VALID_BASE;
+    expect(parse(sinCondiciones).success).toBe(false);
+  });
+
+  it("la newsletter NO es condición para reservar: false es válido", () => {
+    const result = parse({ ...VALID_BASE, consentimiento_newsletter: false });
+    expect(result.success).toBe(true);
+  });
+
+  it("sin el campo de newsletter, vale false por defecto", () => {
+    const result = parse(VALID_BASE);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.consentimiento_newsletter).toBe(false);
   });
 });

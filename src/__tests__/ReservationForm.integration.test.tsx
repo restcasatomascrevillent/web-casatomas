@@ -35,8 +35,23 @@ import { PHONE_DISPLAY } from "@/components/TelLink";
 // Sonner toaster must be in the tree for toasts to render
 import { Toaster } from "sonner";
 
+// Los flujos completos (calendario + disponibilidad + rellenar + dos casillas)
+// rondan los 2-3 s en solitario; con la suite entera en paralelo alguno pasaba
+// de los 5 s por defecto y fallaba por tiempo, no por comportamiento.
+vi.setConfig({ testTimeout: 15_000 });
+
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn());
+  // El checkbox de consentimiento del newsletter monta un Checkbox de Radix,
+  // que usa ResizeObserver. setup.ts ya lo simula, pero el unstubAllGlobals()
+  // del afterEach de este archivo lo borra junto con el stub de fetch: sin
+  // volver a ponerlo aqui, todo test que no sea el primero del archivo
+  // revienta con "ResizeObserver is not defined" en cuanto el arbol renderiza
+  // el formulario.
+  vi.stubGlobal(
+    "ResizeObserver",
+    vi.fn(() => ({ observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() })),
+  );
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -101,8 +116,11 @@ describe("ReservationForm — honeypot anti-bot field", () => {
     renderForm();
     await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
 
-    // The honeypot container uses aria-hidden="true"
-    const honeypotContainer = document.querySelector('[aria-hidden="true"]');
+    // El propio checkbox de Radix tambien renderiza un input aria-hidden
+    // (el "bubble input" nativo), asi que hay que anclar la busqueda al
+    // honeypot en concreto en vez de al primer aria-hidden del documento.
+    const honeypot = document.querySelector('input[name="website"]');
+    const honeypotContainer = honeypot?.closest('[aria-hidden="true"]');
     expect(honeypotContainer).not.toBeNull();
   });
 
@@ -119,9 +137,8 @@ describe("ReservationForm — honeypot anti-bot field", () => {
     renderForm();
     await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
 
-    const honeypotContainer = document.querySelector(
-      '[aria-hidden="true"]'
-    ) as HTMLElement | null;
+    const honeypot = document.querySelector('input[name="website"]');
+    const honeypotContainer = honeypot?.closest('[aria-hidden="true"]') as HTMLElement | null;
     expect(honeypotContainer).not.toBeNull();
     expect(honeypotContainer!.style.left).toBe("-9999px");
   });
@@ -671,6 +688,11 @@ async function comprobarDisponibilidad(user: ReturnType<typeof userEvent.setup>)
   await user.click(screen.getByRole("button", { name: /comprobar disponibilidad/i }));
 }
 
+/** Casilla obligatoria de condiciones de reserva + política de privacidad. */
+const casillaCondiciones = () => screen.getByRole("checkbox", { name: /acepto las condiciones de reserva/i });
+/** Casilla opcional de la newsletter. */
+const casillaNewsletter = () => screen.getByRole("checkbox", { name: /newsletter de casa tom/i });
+
 /** Rellena el formulario entero y lo envia. */
 async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
   await comprobarDisponibilidad(user);
@@ -681,6 +703,8 @@ async function enviarReserva(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
   await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
   await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+  // Obligatoria: sin aceptar las condiciones el formulario no se envía.
+  await user.click(casillaCondiciones());
 
   await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
 }
@@ -1201,6 +1225,7 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
     await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
     await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
     await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+    await user.click(casillaCondiciones());
     await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
 
     await screen.findByText(EXITO.successTitle);
@@ -1211,5 +1236,200 @@ describe("ReservationForm — pinta los huecos que decide el motor, no los recal
     // La hora enviada es LITERALMENTE la que trajo el hueco, no una calculada
     // en el navegador con offsets fijos.
     expect(cuerpo.hora).toBe("13:30");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Casillas legales del formulario.
+//
+// - Condiciones de reserva + política de privacidad: OBLIGATORIA. Sin ella no
+//   se envía nada; viaja a `/crear` como `acepta_condiciones: true`.
+// - Newsletter: OPCIONAL, separada y desmarcada por defecto (RGPD/LSSI exigen
+//   un consentimiento libre y específico, nunca premarcado ni agrupado con
+//   las condiciones). Viaja tal cual en `consentimiento_newsletter`.
+// ---------------------------------------------------------------------------
+
+/** Cuerpo JSON de la llamada a `/crear`, o `undefined` si no la hubo. */
+function cuerpoCrear(): Record<string, unknown> | undefined {
+  const llamada = vi.mocked(fetch).mock.calls.find(([url]) => String(url) === RESERVAS_WEB_CREAR_URL);
+  return llamada ? JSON.parse(String(llamada[1]?.body)) : undefined;
+}
+
+/** Hasta el paso 3 relleno, SIN tocar ninguna de las dos casillas. */
+async function rellenarSinCasillas(user: ReturnType<typeof userEvent.setup>) {
+  await comprobarDisponibilidad(user);
+  await user.click(await screen.findByRole("button", { name: "13:00" }));
+  await user.type(screen.getByRole("textbox", { name: /nombre/i }), "Marta Ruiz");
+  await user.type(screen.getByPlaceholderText("+34 612345678"), "612345678");
+  await user.type(screen.getByRole("textbox", { name: /email/i }), "marta@example.com");
+}
+
+describe("ReservationForm — aceptación de las condiciones de reserva", () => {
+  it("la casilla existe, es obligatoria y empieza desmarcada", async () => {
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    const casilla = casillaCondiciones();
+    expect(casilla).not.toBeChecked();
+    expect(casilla).toHaveAttribute("aria-required", "true");
+  });
+
+  it("enlaza a las condiciones de reserva y a la política de privacidad en pestaña nueva", async () => {
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    const condiciones = screen.getByRole("link", { name: /condiciones de reserva/i });
+    expect(condiciones).toHaveAttribute("href", "/condiciones#reservas");
+    expect(condiciones).toHaveAttribute("target", "_blank");
+    expect(condiciones).toHaveAttribute("rel", expect.stringContaining("noopener"));
+
+    const privacidad = screen.getByRole("link", { name: /política de privacidad/i });
+    expect(privacidad).toHaveAttribute("href", "/politica-privacidad");
+    expect(privacidad).toHaveAttribute("target", "_blank");
+  });
+
+  it("sin aceptarlas NO se envía la reserva y se avisa con un error asociado a la casilla", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await rellenarSinCasillas(user);
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    const error = await screen.findByText(esPack.translations.validation.termsRequired);
+    const casilla = casillaCondiciones();
+    expect(casilla).toHaveAttribute("aria-invalid", "true");
+    expect(casilla.getAttribute("aria-describedby")).toContain(error.id);
+    expect(cuerpoCrear()).toBeUndefined();
+    expect(screen.queryByText(EXITO.successTitle)).toBeNull();
+  });
+
+  it("al aceptarlas se envía acepta_condiciones:true", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    await screen.findByText(EXITO.successTitle);
+    expect(cuerpoCrear()?.acepta_condiciones).toBe(true);
+  });
+});
+
+describe("ReservationForm — consentimiento de la newsletter", () => {
+  it("es una casilla distinta de la de condiciones, opcional y desmarcada", async () => {
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    expect(casillaNewsletter()).not.toBe(casillaCondiciones());
+    expect(casillaNewsletter()).not.toBeChecked();
+    expect(casillaNewsletter()).not.toHaveAttribute("aria-required");
+  });
+
+  it("junto a la casilla hay un enlace a las condiciones de la newsletter, que no la marca", async () => {
+    const user = userEvent.setup();
+    renderForm();
+    await waitFor(() => screen.getByPlaceholderText("+34 612345678"));
+
+    const enlace = screen.getByRole("link", { name: /condiciones de la newsletter/i });
+    expect(enlace).toHaveAttribute("href", "/condiciones#newsletter");
+    expect(enlace).toHaveAttribute("target", "_blank");
+    // "Junto a la casilla": dentro del mismo recuadro que el checkbox.
+    expect(casillaNewsletter().closest("div.rounded-xl")).toContainElement(enlace);
+
+    await user.click(enlace);
+    expect(casillaNewsletter()).not.toBeChecked();
+  });
+
+  it("sin marcarla, se envia consentimiento_newsletter:false (y la reserva sale igual)", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await enviarReserva(user);
+
+    await screen.findByText(EXITO.successTitle);
+    const cuerpo = cuerpoCrear();
+    expect(cuerpo?.consentimiento_newsletter).toBe(false);
+    expect(cuerpo?.acepta_condiciones).toBe(true);
+  });
+
+  it("al marcarla, se envia consentimiento_newsletter:true", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await rellenarSinCasillas(user);
+    await user.click(casillaNewsletter());
+    await user.click(casillaCondiciones());
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    await screen.findByText(EXITO.successTitle);
+    const cuerpo = cuerpoCrear();
+    expect(cuerpo?.consentimiento_newsletter).toBe(true);
+    expect(cuerpo?.acepta_condiciones).toBe(true);
+  });
+
+  it("marcar la newsletter no basta para reservar: las condiciones siguen siendo obligatorias", async () => {
+    mockReservas(creada);
+
+    const user = userEvent.setup();
+    renderForm();
+    await rellenarSinCasillas(user);
+    await user.click(casillaNewsletter());
+    await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
+
+    await screen.findByText(esPack.translations.validation.termsRequired);
+    expect(cuerpoCrear()).toBeUndefined();
+  });
+});
+
+describe("casillas legales en es/en/fr", () => {
+  it("los tres idiomas traen los textos de las casillas y el error, sin vacíos", () => {
+    for (const pack of [esPack, enPack, frPack]) {
+      const f = pack.translations.reservationForm;
+      for (const texto of [f.termsLabel, f.termsLink, f.privacyLink, f.newTabHint, f.newsletterLabel, f.newsletterTermsLink]) {
+        expect(texto.trim()).not.toBe("");
+      }
+      expect(f.termsLabel).toContain("{terms}");
+      expect(f.termsLabel).toContain("{privacy}");
+      expect(pack.translations.validation.termsRequired.trim()).not.toBe("");
+    }
+  });
+
+  // Doble opt-in: el backend solo da de alta en la newsletter cuando el
+  // cliente confirma la reserva desde el enlace del email (no al marcar la
+  // casilla). La casilla y las condiciones tienen que decirlo en cada idioma.
+  it("la casilla y las condiciones de la newsletter avisan de que el alta llega al confirmar desde el email", () => {
+    const esperado = [
+      { pack: esPack, casilla: /cuando confirme mi reserva desde el correo/i, condiciones: /confirmes tu reserva desde el enlace del email/i, constancia: /fecha en que confirmaste tu email/i },
+      { pack: enPack, casilla: /once I confirm my booking from the email/i, condiciones: /confirm your booking using the link in the email/i, constancia: /date on which you confirmed your email/i },
+      { pack: frPack, casilla: /lorsque je confirmerai ma réservation depuis l'email/i, condiciones: /confirmé votre réservation grâce au lien de l'email/i, constancia: /date à laquelle vous avez confirmé votre adresse email/i },
+    ];
+    for (const { pack, casilla, condiciones, constancia } of esperado) {
+      expect(pack.translations.reservationForm.newsletterLabel).toMatch(casilla);
+      const parrafos = pack.translations.conditionsPage.newsletterSections.flatMap((s) => s.paragraphs).join("\n");
+      expect(parrafos).toMatch(condiciones);
+      expect(parrafos).toMatch(constancia);
+    }
+  });
+
+  // Flujo real (emails-reserva): la solicitud web queda pendiente, el
+  // restaurante manda la propuesta por email y la reserva se confirma cuando
+  // el cliente la confirma desde ese email (o la rechaza y queda cancelada).
+  it("el apartado 1 de las condiciones de reserva describe la confirmación desde el email", () => {
+    const esperado = [
+      { pack: esPack, propuesta: /email con la propuesta de reserva/i, confirma: /queda confirmada cuando pulsas en ese email el botón/i, rechazo: /rechazarla, y la reserva queda cancelada/i },
+      { pack: enPack, propuesta: /email with the booking proposal/i, confirma: /confirmed when you click the button to confirm it in that email/i, rechazo: /decline it, and your booking is cancelled/i },
+      { pack: frPack, propuesta: /email avec la proposition de réservation/i, confirma: /confirmée lorsque vous cliquez sur le bouton de confirmation de cet email/i, rechazo: /le refuser, et votre réservation est annulée/i },
+    ];
+    for (const { pack, propuesta, confirma, rechazo } of esperado) {
+      const texto = pack.translations.conditionsPage.bookingSections[0].paragraphs.join("\n");
+      expect(texto).toMatch(propuesta);
+      expect(texto).toMatch(confirma);
+      expect(texto).toMatch(rechazo);
+      // Ya no dice que la reserva se confirma solo con recibir un email.
+      expect(texto).not.toMatch(/solo queda confirmada cuando recibes|only confirmed once you receive|confirmée qu'à réception/i);
+    }
   });
 });

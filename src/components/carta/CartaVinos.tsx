@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } fro
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import FiltrosTipoVino from "./FiltrosTipoVino";
+import { etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
 import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -153,7 +155,16 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           .order('orden', { ascending: true })
           .range(offset, to);
 
-        if (category !== "Todos") {
+        const tipo = tipoDesdeCategoria(category);
+        if (tipo) {
+          // Agrupa todas las categorías reales del tipo, incluso si están
+          // divididas entre vinos nacionales e internacionales. Se pagina
+          // este grupo en el servidor, no la primera página de «Todos».
+          const categorias = [...new Set(mapVinos
+            .filter(vino => tipoVino(vino.categoria) === tipo)
+            .map(vino => vino.categoria).filter((valor): valor is string => !!valor))];
+          query = query.in('categoria', categorias);
+        } else if (category !== "Todos") {
           query = query.eq('categoria', category);
         }
 
@@ -182,7 +193,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
         setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
       }
     },
-    [PAGE_SIZE, toast, t.vinos.toasts.errorDescription, t.vinos.toasts.errorTitle, vinosByCategory]
+    [PAGE_SIZE, toast, t.vinos.toasts.errorDescription, t.vinos.toasts.errorTitle, vinosByCategory, mapVinos]
   );
 
   useEffect(() => {
@@ -278,7 +289,10 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
 
     let items = translated;
 
-    if (selectedCategory !== "Todos") {
+    const tipo = tipoDesdeCategoria(selectedCategory);
+    if (tipo) {
+      items = items.filter(item => tipoVino(item.categoria) === tipo);
+    } else if (selectedCategory !== "Todos") {
       items = items.filter(item => item.categoria === selectedCategory);
     }
 
@@ -424,8 +438,10 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     }
   };
 
-  const translateCategory = (category: string) =>
-    category === "Todos" ? t.vinos.categoriesAll : category;
+  const translateCategory = (category: string) => {
+    const tipo = tipoDesdeCategoria(category);
+    return tipo ? etiquetaTipoVino(tipo, language) : category === "Todos" ? t.vinos.categoriesAll : category;
+  };
 
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
@@ -494,6 +510,13 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
 
       {isAdult !== false && (
       <>
+      {mapVinos.length > 0 && (
+        <FiltrosTipoVino
+          vinos={mapVinos}
+          seleccionado={tipoDesdeCategoria(selectedCategory) ?? (selectedCategory === "Todos" ? "todos" : null)}
+          onChange={tipo => handleCategoryChange(tipo === "todos" ? "Todos" : `tipo:${tipo}`)}
+        />
+      )}
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">

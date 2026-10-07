@@ -26,5 +26,9 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  /* `FacturaEmail.test.ts` importa código Deno de `supabase/functions/_shared/`
+     (global `Deno`, imports `npm:` y `https:`) que este tsconfig del navegador
+     no sabe tipar. Se sigue ejecutando en vitest; solo queda fuera de este tsc. */
+  "exclude": ["src/__tests__/FacturaEmail.test.ts"]
 }

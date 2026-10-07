@@ -13,6 +13,8 @@ export interface PlatoSSG {
   categoria_en?: string;
   categoria_fr?: string;
   descripcion?: string;
+  /** Preparación alternativa ofrecida explícitamente por el restaurante. */
+  sin_gluten_disponible?: boolean;
   descripcion_en?: string;
   descripcion_fr?: string;
   precio_eur: number;

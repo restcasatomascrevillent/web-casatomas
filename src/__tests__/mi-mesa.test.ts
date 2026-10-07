@@ -161,6 +161,11 @@ describe("?comensales= en reservas", () => {
     expect(rutaReservaMesa(6)).toBe("/reservas?comensales=6");
     expect(rutaReservaMesa(99)).toBe("/reservas?comensales=30");
   });
+
+  it("y en el idioma de la página: /en/reservas y /fr/reservas", () => {
+    expect(rutaReservaMesa(6, "en")).toBe("/en/reservas?comensales=6");
+    expect(rutaReservaMesa(99, "fr")).toBe("/fr/reservas?comensales=30");
+  });
 });
 
 describe("compartir", () => {

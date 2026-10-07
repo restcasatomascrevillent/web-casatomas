@@ -217,7 +217,44 @@ export type TextosRechazo = {
   /** Rechazo sin `mensaje` legible por cualquier otro motivo. */
   fallbackMessage: string;
   exits: Record<SalidaRechazo, string>;
+  /**
+   * Texto propio de cada motivo, por si el `mensaje` del servidor no sirve: la
+   * función `reservas-web` los manda SIEMPRE en español, así que en inglés y
+   * francés se sustituyen por estos (en español se queda vacío y se muestra
+   * el del servidor, que es el que manda). La clave es el `motivo` del cuerpo
+   * (o su `error`, en los 422 que no traen `motivo`). Pueden llevar `{min}`,
+   * `{max}` y `{days}`, que se rellenan con `min`, `max` y `dias_max` del
+   * cuerpo; si el cuerpo no los trae, ese texto no se usa y vale el del
+   * servidor (nunca se muestra una cifra inventada).
+   */
+  reasons?: Partial<Record<string, string>>;
 };
+
+/** Cifras del cuerpo del rechazo que un texto de `reasons` puede pedir. */
+const CIFRAS_RECHAZO: Record<string, string> = { "{min}": "min", "{max}": "max", "{days}": "dias_max" };
+
+/**
+ * Texto traducido de un rechazo, o `null` si no hay ninguno para ese
+ * `motivo`/`error` (o si pide una cifra que el cuerpo no trae).
+ */
+function textoTraducidoDeRechazo(
+  objeto: Record<string, unknown> | null,
+  reasons: TextosRechazo["reasons"],
+): string | null {
+  if (!objeto || !reasons) return null;
+  const clave = [objeto.motivo, objeto.error].find(
+    (valor): valor is string => typeof valor === "string" && !!valor && !!reasons[valor],
+  );
+  if (!clave) return null;
+  let texto = reasons[clave]!;
+  for (const [marcador, campo] of Object.entries(CIFRAS_RECHAZO)) {
+    if (!texto.includes(marcador)) continue;
+    const valor = objeto[campo];
+    if (typeof valor !== "number" && typeof valor !== "string") return null;
+    texto = texto.split(marcador).join(String(valor));
+  }
+  return texto;
+}
 
 export type RechazoReserva = {
   /** `motivo` tal cual viene de la función, o `null` si no venía. */
@@ -281,7 +318,14 @@ export function interpretarRechazoReserva(
   const mensajeServidor =
     typeof objeto?.mensaje === "string" && objeto.mensaje.trim() ? objeto.mensaje.trim() : null;
 
-  const salida = (motivo && SALIDA_POR_MOTIVO[motivo]) || salidaPorEstado(status);
+  // Los 422 de comensales y de fecha (`numero_comensales_fuera_de_rango`,
+  // `fecha_pasada`, `fecha_demasiado_lejana`) no traen `motivo`, sino `error`:
+  // sin mirarlo caían en "revisa el formulario" en vez de "elige otra fecha".
+  const codigoError = typeof objeto?.error === "string" && objeto.error ? objeto.error : null;
+  const salida =
+    (motivo && SALIDA_POR_MOTIVO[motivo]) ||
+    (codigoError && SALIDA_POR_MOTIVO[codigoError]) ||
+    salidaPorEstado(status);
 
   // Sin red: el ÚNICO caso en que la culpa no es nuestra. Con `status === 0`
   // no hay cuerpo del servidor, así que no hay `mensaje` que priorizar.
@@ -295,7 +339,10 @@ export function interpretarRechazoReserva(
   }
 
   let mensaje: string;
-  if (mensajeServidor) {
+  const mensajeTraducido = textoTraducidoDeRechazo(objeto, textos.reasons);
+  if (mensajeTraducido) {
+    mensaje = mensajeTraducido;
+  } else if (mensajeServidor) {
     mensaje = mensajeServidor;
   } else if (status === 400) {
     // Los 400 son los únicos rechazos SIN `mensaje`: el cuerpo trae `error`

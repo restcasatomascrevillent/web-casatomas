@@ -8,6 +8,7 @@ import { formatearTelefonoWebhook } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -40,6 +41,13 @@ import {
   type RechazoReserva,
 } from "@/lib/reservas-web";
 import { leerComensalesReserva } from "@/lib/mi-mesa";
+import { construirRutaIdioma } from "@/i18n/routing";
+import {
+  ANCLA_CONDICIONES_NEWSLETTER,
+  ANCLA_CONDICIONES_RESERVA,
+  CONDICIONES_PATH,
+  POLITICA_PRIVACIDAD_PATH,
+} from "@/lib/condiciones";
 
 type ReservationFormProps = {
   onSuccessClose?: () => void;
@@ -74,8 +82,27 @@ const TextoSalida = ({ texto }: { texto: string }) => {
  */
 const conTelefono = (texto: string) => texto.replace("{phone}", PHONE_DISPLAY);
 
+/**
+ * Enlace de las casillas legales. Se abre en pestaña nueva a propósito: el
+ * formulario vive en `/reservas` (o `/en|fr/reservas`), y navegar en la misma pestaña desmontaría
+ * el formulario y se perdería todo lo que el visitante ya ha rellenado.
+ * Al ser un `<a>`, pulsarlo dentro del `<label>` NO marca la casilla (el
+ * enlace es el destino de la activación, no la etiqueta).
+ */
+const EnlaceLegal = ({ href, children, aviso }: { href: string; children: string; aviso: string }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+  >
+    {children}
+    <span className="sr-only"> {aviso}</span>
+  </a>
+);
+
 export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
-  const { t, dateLocale } = useTranslations();
+  const { t, dateLocale, language } = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadHueco[]>([]);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
@@ -100,6 +127,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       email: "",
       numero_comensales: 2,
       notas_cliente: "",
+      acepta_condiciones: false,
+      consentimiento_newsletter: false,
     },
   });
 
@@ -243,7 +272,12 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
           hora: selectedHour.slice(0, 5),
           numero_comensales: data.numero_comensales,
           notas_cliente: data.notas_cliente || "",
-          estado: "pendiente"
+          estado: "pendiente",
+          // Contrato con `reservas-web/crear`: dos booleanos SEPARADOS. Las
+          // condiciones son obligatorias (el schema no deja llegar aquí sin
+          // ellas); la newsletter es opcional y viaja tal cual.
+          acepta_condiciones: data.acepta_condiciones,
+          consentimiento_newsletter: data.consentimiento_newsletter,
         })
       });
 
@@ -297,7 +331,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   const handleCloseSuccessDialog = () => {
     setShowSuccessDialog(false);
     if (onSuccessClose) onSuccessClose();
-    if (navigateOnClose) navigate("/");
+    if (navigateOnClose) navigate(construirRutaIdioma("/", language));
   };
 
   return (
@@ -372,7 +406,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
       </Dialog>
 
       <Dialog open={rechazo !== null} onOpenChange={(abierto) => !abierto && setRechazo(null)}>
-        <DialogContent className="sm:max-w-md text-center">
+        <DialogContent className="sm:max-w-md text-center" closeLabel={t.reservationForm.rejection.closeAria}>
           <DialogHeader className="space-y-4">
             <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
               <AlertCircle className="w-10 h-10 text-amber-600" />
@@ -632,6 +666,85 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/*
+                Dos casillas SEPARADAS a propósito (RGPD/LSSI): aceptar las
+                condiciones es obligatorio para reservar; la newsletter es un
+                consentimiento libre y específico, desmarcado por defecto y
+                que nunca condiciona la reserva.
+              */}
+              <FormField
+                control={form.control}
+                name="acepta_condiciones"
+                render={({ field, fieldState }) => {
+                  const rutaCondiciones = construirRutaIdioma(CONDICIONES_PATH, language);
+                  const [antes, entre, despues] = t.reservationForm.termsLabel.split(/\{terms\}|\{privacy\}/);
+                  return (
+                    <FormItem className="space-y-2">
+                      <div
+                        className={cn(
+                          "flex flex-row items-start space-x-3 rounded-xl border border-border/50 bg-white p-4",
+                          fieldState.error && "border-destructive",
+                        )}
+                      >
+                        <FormControl>
+                          <Checkbox
+                            ref={field.ref}
+                            checked={field.value}
+                            onCheckedChange={(marcada) => field.onChange(marcada === true)}
+                            onBlur={field.onBlur}
+                            aria-required="true"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal text-foreground cursor-pointer leading-snug">
+                          {antes}
+                          <EnlaceLegal
+                            href={`${rutaCondiciones}#${ANCLA_CONDICIONES_RESERVA}`}
+                            aviso={t.reservationForm.newTabHint}
+                          >
+                            {t.reservationForm.termsLink}
+                          </EnlaceLegal>
+                          {entre}
+                          <EnlaceLegal href={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)} aviso={t.reservationForm.newTabHint}>
+                            {t.reservationForm.privacyLink}
+                          </EnlaceLegal>
+                          {despues}
+                        </FormLabel>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              <FormField
+                control={form.control}
+                name="consentimiento_newsletter"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-border/50 bg-white p-4">
+                    <FormControl>
+                      <Checkbox
+                        ref={field.ref}
+                        checked={field.value}
+                        onCheckedChange={(marcada) => field.onChange(marcada === true)}
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
+                    <div className="text-sm leading-snug">
+                      <FormLabel className="font-normal text-foreground cursor-pointer leading-snug">
+                        {t.reservationForm.newsletterLabel}
+                      </FormLabel>{" "}
+                      {/* Fuera del <label>: leer las condiciones nunca marca la casilla. */}
+                      <EnlaceLegal
+                        href={`${construirRutaIdioma(CONDICIONES_PATH, language)}#${ANCLA_CONDICIONES_NEWSLETTER}`}
+                        aviso={t.reservationForm.newTabHint}
+                      >
+                        {t.reservationForm.newsletterTermsLink}
+                      </EnlaceLegal>
+                    </div>
                   </FormItem>
                 )}
               />

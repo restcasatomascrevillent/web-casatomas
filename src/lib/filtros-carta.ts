@@ -12,6 +12,7 @@ export function leerFiltros(search: string): ClaveFiltroDietetico[] {
 
 /** Los alérgenos permiten excluir, pero no demuestran que una receta sea vegetal. */
 export function cumpleDieta(plato: PlatoSSG, dieta: ClaveFiltroDietetico): boolean {
+  if (dieta === 'celiaquia' && plato.sin_gluten_disponible === true) return true;
   const datos = datosAlergenos(plato);
   if (dieta === 'celiaquia' || dieta === 'lactosa') return cumpleFiltroDietetico(datos, dieta);
   const etiquetas = [...normalizeAlergenos(plato.etiquetas_dieteticas), ...(etiquetasConfirmadas[plato.id] ?? [])].map(normalizarTexto);

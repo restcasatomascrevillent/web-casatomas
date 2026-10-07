@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import FiltrosTipoVino from "./FiltrosTipoVino";
+import { tipoVino as getCategoryKey, type TipoVino } from "@/lib/tipos-vino";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -127,15 +129,6 @@ const regionCoordinates: { [key: string]: [number, number] } = {
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-const getCategoryKey = (categoria?: string) => {
-  const cat = (categoria || "").toUpperCase();
-  if (cat.includes("TINTO")) return "tinto";
-  if (cat.includes("BLANCO")) return "blanco";
-  if (cat.includes("ROSADO") || cat.includes("ROSE")) return "rosado";
-  if (cat.includes("CHAMP") || cat.includes("CAVA") || cat.includes("ESPUMOS")) return "espumoso";
-  return "otro";
-};
-
 const colorByCategory: Record<string, string> = {
   tinto: "#8b1f3d",
   blanco: "#d1a536",
@@ -201,6 +194,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<{ region: string; vinos: Vino[]; category?: string } | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [tipoRegion, setTipoRegion] = useState<TipoVino>("todos");
   const { toast } = useToast();
 
   const addWineMarkers = useCallback(() => {
@@ -272,6 +266,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         // panel bajo el mapa: no hace falta desplazar la página para
         // enseñarla, aparece encima de donde esté mirando el visitante.
         el.addEventListener('click', () => {
+          setTipoRegion("todos");
           setSelectedRegion({ region, vinos: data.vinos, category: data.category });
           if (map.current) {
             map.current.flyTo({ center: coords, zoom: isMobile ? 2 : 3, speed: 0.7, essential: true });
@@ -366,7 +361,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   }, [selectedRegion]);
 
   const sortedSelectedVinos = selectedRegion
-    ? selectedRegion.vinos.slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
+    ? selectedRegion.vinos.filter(vino => tipoRegion === "todos" || getCategoryKey(vino.categoria) === tipoRegion)
+      .slice().sort((a, b) => a.nombre.localeCompare(b.nombre))
     : [];
 
   const visibleVinos = sortedSelectedVinos.slice(0, visibleCount);
@@ -374,7 +370,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [selectedRegion]);
+  }, [selectedRegion, tipoRegion]);
 
   return (
     <div className="mb-8 w-full overflow-hidden">
@@ -402,9 +398,9 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground font-semibold">{t.vinos.originLabel}</p>
                 <DialogTitle className="text-lg md:text-xl">{selectedRegion.region}</DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">
-                  {selectedRegion.vinos.length === 1
-                    ? t.map.countSingle.replace("{count}", selectedRegion.vinos.length.toString())
-                    : t.map.countPlural.replace("{count}", selectedRegion.vinos.length.toString())}
+                  {sortedSelectedVinos.length === 1
+                    ? t.map.countSingle.replace("{count}", sortedSelectedVinos.length.toString())
+                    : t.map.countPlural.replace("{count}", sortedSelectedVinos.length.toString())}
                 </DialogDescription>
               </DialogHeader>
 
@@ -415,6 +411,10 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                 </div>
               </div>
 
+              <FiltrosTipoVino vinos={selectedRegion.vinos} seleccionado={tipoRegion} onChange={setTipoRegion} />
+              {sortedSelectedVinos.length === 0 && (
+                <p role="status" className="py-6 text-center text-sm text-muted-foreground">{t.vinos.empty}</p>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {visibleVinos.map((vino) => {
                   const categoryKey = getCategoryKey(vino.categoria);

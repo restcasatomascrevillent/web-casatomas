@@ -276,7 +276,7 @@ export const translations: Translations = {
       backToSite: "Back to the website",
       disclaimer: {
         title: "Important:",
-        note: "Your booking is not confirmed until you receive the confirmation email. Casa Tomás is not responsible until that moment.",
+        note: "Submitting the form is a request, not a confirmed booking: the restaurant reviews it and emails you a proposal. The booking is confirmed when you confirm it from that email. Casa Tomás is not responsible until that moment.",
         callUs: "If no availability is shown online, please call us at",
         steps: [
           "Check availability (guest)",
@@ -286,9 +286,15 @@ export const translations: Translations = {
         ],
       },
     },
+    reservasPage: {
+      seoTitle: "Book a table | Casa Tomás Restaurant in Crevillent",
+      seoDescription: "Book your table at Casa Tomás, a traditional cuisine restaurant in Crevillent (Alicante, Spain). Quick and easy online reservations.",
+      keywords: ["book a table Crevillent", "Casa Tomás reservations", "restaurant booking Alicante"],
+      breadcrumb: "Book a table",
+    },
     reservationForm: {
       successTitle: "Request received",
-      successLead: "This is not a confirmed booking yet — we'll email you once the restaurant confirms it.",
+      successLead: "This is not a confirmed booking yet: the restaurant will review your request and email you a proposal. It is confirmed once you confirm it from that email.",
       successLine3: "Keep this receipt: it's the only acknowledgement that your request came through.",
       successButton: "Back to Home",
       successCloseAria: "Close the receipt",
@@ -300,7 +306,7 @@ export const translations: Translations = {
         timeLabel: "Time",
         guestsLabel: "Guests",
         emailLabel: "Confirmation to",
-        emailHint: "No email will arrive right now: we'll write to this address once the restaurant confirms the booking. Check your spam folder too.",
+        emailHint: "No email will arrive right now: after reviewing your request, the restaurant will write to this address with a proposal, and the booking is confirmed once you confirm it from that email. Check your spam folder too.",
         stepCaption: "Step {done} of {total}",
         steps: [
           "Availability checked",
@@ -335,11 +341,17 @@ export const translations: Translations = {
       emailPlaceholder: "you@email.com",
       notesLabel: "Special requests",
       notesPlaceholder: "Allergies, preferences, occasion...",
+      termsLabel: "I have read and accept the {terms} and the {privacy} *",
+      termsLink: "booking conditions",
+      privacyLink: "privacy policy",
+      newTabHint: "(opens in a new tab)",
+      newsletterLabel: "I'd like to receive the Casa Tomás newsletter (news, events and offers). You'll sign me up once I confirm my booking from the email you send me. I can unsubscribe at any time.",
+      newsletterTermsLink: "See newsletter terms",
       submit: "Book now",
       submitting: "Booking...",
       footer: "Secure, fast online reservations",
       toasts: {
-        missingFields: "Select a date, room, and party size",
+        missingFields: "Select a date and party size",
         availabilityFull: "All times available for this date!",
         availabilityChecked: "Availability updated",
         closedDay: "The restaurant is not available on that day. Please choose another date.",
@@ -356,6 +368,20 @@ export const translations: Translations = {
       rejection: {
         title: "We couldn't complete your booking",
         close: "Got it",
+        closeAria: "Close this notice",
+        reasons: {
+          no_disponible: "We were unable to process the request.",
+          grupo_grande: "For larger groups, please contact the restaurant directly.",
+          reserva_hoy: "Same-day bookings are handled by phone.",
+          corte_horario: "That time is too close: bookings must be made with a minimum notice before the service.",
+          max_reservas_telefono: "There are already active bookings with this phone number for that date.",
+          max_reservas_email: "There are already active bookings with this email for that date.",
+          sin_disponibilidad: "There is no availability left for that date and time.",
+          numero_comensales_fuera_de_rango: "Online bookings are for a minimum of {min} and a maximum of {max} guests.",
+          fecha_pasada: "The selected date has already passed.",
+          fecha_demasiado_lejana: "Bookings can only be made up to {days} days in advance.",
+          condiciones_no_aceptadas: "To send the booking you need to accept the privacy policy and the booking conditions.",
+        } as Record<string, string>,
         invalidMessage: "Some of the details in the form couldn't be read.",
         offlineTitle: "You seem to be offline",
         offlineMessage: "Your request didn't go through because the connection dropped.",
@@ -381,6 +407,7 @@ export const translations: Translations = {
     },
     mobileCta: {
       call: "Call",
+      callAria: "Call Casa Tomás",
       reserve: "Book a table",
     },
     reviews: {
@@ -468,6 +495,13 @@ export const translations: Translations = {
       giftFormDeliveryDate: "Desired delivery date (optional)",
       giftFormSubmit: "Go to secure payment",
       giftFormSubmitting: "Connecting to payment...",
+      giftInvoiceRequest: "I want an invoice by email",
+      giftInvoiceDescription: "A PDF will be sent to your purchase email once payment is confirmed.",
+      giftInvoiceName: "Full name or company name",
+      giftInvoiceTaxId: "Tax identification number",
+      giftInvoiceAddress: "Full billing address (including postal code and city)",
+      giftInvoiceNotReady: "Invoicing is not available yet. Contact the restaurant before paying.",
+      giftInvoiceMissingData: "Complete your name, tax ID and billing address to receive an invoice.",
       giftFormCancel: "Cancel",
       toasts: {
         errorTitle: "Error",
@@ -491,7 +525,8 @@ export const translations: Translations = {
       contactTitle: "Contact",
       rights: "© 2026 Casa Tomás Restaurant. All rights reserved.",
       admin: "Admin",
-      terms: "Terms & Conditions",
+      terms: "Privacy policy",
+      bookingTerms: "Booking and newsletter terms",
       cookieSettings: "Cookie settings",
     },
     cookie: {
@@ -548,6 +583,139 @@ export const translations: Translations = {
         TODAS: "All",
       },
     },
+    /*
+     * Página /condiciones (reserva + newsletter). En los párrafos, `{phone}` y
+     * `{privacy}` se pintan como enlaces (teléfono y política de privacidad).
+     */
+    conditionsPage: {
+      seoTitle: "Booking and newsletter terms | Casa Tomás Restaurant",
+      seoDescription: "Booking and newsletter terms at Casa Tomás Restaurant (Crevillent, Alicante): confirmation, punctuality, cancellations, groups, mailings, unsubscribing and personal data.",
+      back: "Back to home",
+      title: "Booking and newsletter terms",
+      updated: "Last updated: October 2026",
+      intro: "This page sets out the conditions for bookings at Restaurante Casa Tomás and for its newsletter.",
+      tocLabel: "On this page",
+      bookingHeading: "Booking conditions",
+      bookingIntro: "They apply to bookings made on this website or by phone. By sending a booking request you confirm that you have read and accepted them.",
+      bookingSections: [
+        {
+          title: "1. How your booking is confirmed",
+          paragraphs: [
+            "Sending the form is a booking request, not a confirmed booking: it stays pending while the restaurant reviews it, and until it is confirmed Casa Tomás cannot guarantee your table.",
+            "Once we've reviewed it, we'll send you an email with the booking proposal. Your booking is confirmed when you click the button to confirm it in that email and then confirm on the page that opens; you'll then receive a confirmation email.",
+            "If we suggest a different time from the one you asked for, you can accept it from that same email, and your booking is confirmed, or decline it, and your booking is cancelled.",
+            "If the email doesn't arrive, check your spam folder or call us on {phone}.",
+          ],
+        },
+        {
+          title: "2. Punctuality",
+          paragraphs: [
+            "We hold your table for 15 minutes after the booked time. After that, if we haven't heard from you, the table may be released and given to other guests.",
+            "If you're running late, call us on {phone} and we'll do our best to keep it for you.",
+          ],
+        },
+        {
+          title: "3. Cancellations and changes",
+          paragraphs: [
+            "If you can't come or need to change the date, time or number of guests, let us know as early as possible: through the link in your booking email or by calling us on {phone}. That way we can offer the table to someone else.",
+          ],
+        },
+        {
+          title: "4. Large groups",
+          paragraphs: [
+            "Bookings for groups of more than 12 people cannot be made on the website: the restaurant handles them directly. Call us on {phone} and we will arrange it with you, including any specific conditions the group may need.",
+          ],
+        },
+        {
+          title: "5. Table and area",
+          paragraphs: [
+            "Your booking guarantees seating for the number of guests indicated, not a specific table or area of the restaurant. If you have a preference, mention it under \"Special requests\" and we will do our best to accommodate it, but table allocation is decided by the restaurant.",
+          ],
+        },
+        {
+          title: "6. No-shows",
+          paragraphs: [
+            "When a booking isn't honoured and hasn't been cancelled, the table stays empty and other people miss out. Repeated no-shows may prevent you from making future bookings.",
+          ],
+        },
+        {
+          title: "7. Your personal data",
+          paragraphs: [
+            "The details you give us when booking (name, phone, email and booking details) are used to manage your booking, as explained in our {privacy}.",
+            "The newsletter is separate from your booking: you'll only receive it if you ask for it by ticking its box and then confirm your booking using the link in the email we send you. It is not required to book, and you can unsubscribe at any time using the link in every email.",
+          ],
+        },
+      ],
+      newsletterHeading: "Newsletter terms",
+      newsletterIntro: "They only apply if, when booking, you tick the box to receive the Casa Tomás newsletter.",
+      newsletterSections: [
+        {
+          title: "1. What you'll receive",
+          paragraphs: [
+            "Emails with news, events, special menus and offers from Casa Tomás.",
+          ],
+        },
+        {
+          title: "2. When you start receiving it",
+          paragraphs: [
+            "Ticking the box doesn't sign you up yet. We only sign you up after you confirm your booking using the link in the email we send you: that way we can check the email address is yours.",
+            "If your booking is confirmed some other way (for example, by phone) or is cancelled before you confirm it from that email, we won't sign you up to the newsletter.",
+          ],
+        },
+        {
+          title: "3. How often",
+          paragraphs: [
+            "Mailings are occasional: we don't commit to a fixed frequency and will only write when we have something to tell you.",
+          ],
+        },
+        {
+          title: "4. What data we use and why",
+          paragraphs: [
+            "We use the email address and name you gave in your booking for the sole purpose of sending you the newsletter.",
+          ],
+        },
+        {
+          title: "5. Legal basis: your consent",
+          paragraphs: [
+            "The legal basis is your consent. It is voluntary and not required to book: if you don't tick the box, your booking is handled exactly the same way.",
+          ],
+        },
+        {
+          title: "6. Unsubscribing",
+          paragraphs: [
+            "You can unsubscribe at any time, free of charge, using the link included in every email. Unsubscribing takes effect immediately and doesn't affect your bookings.",
+          ],
+        },
+        {
+          title: "7. Record of consent",
+          paragraphs: [
+            "We keep the date on which you gave your consent (by ticking the box) and the date on which you confirmed your email address using the link for your booking, as proof of both.",
+          ],
+        },
+        {
+          title: "8. Recipients",
+          paragraphs: [
+            "We do not share your data with third parties. To send the emails we use an email delivery provider acting as data processor: it handles the data only on behalf of Casa Tomás and following its instructions.",
+          ],
+        },
+        {
+          title: "9. Your rights",
+          paragraphs: [
+            "You can exercise your rights of access, rectification, erasure, objection, restriction and portability, or lodge a complaint with the supervisory authority, as explained in our {privacy}.",
+          ],
+        },
+      ],
+      privacyLink: "privacy policy",
+      contactTitle: "Contact",
+      contactIntro: "For any questions about your booking:",
+      homeLink: "Home",
+      privacyFooterLink: "Privacy policy",
+    },
+    /* Etiquetas ARIA de los botones del calendario (react-day-picker las trae en inglés). */
+    calendar: {
+      previousMonth: "Previous month",
+      nextMonth: "Next month",
+    },
     validation: {
       nameMin: "Name must be at least 2 characters",
       nameMax: "Name cannot exceed 100 characters",
@@ -559,6 +727,7 @@ export const translations: Translations = {
       guestsMax: "Maximum 20 guests",
       roomRequired: "Select a room",
       notesMax: "Notes cannot exceed 500 characters",
+      termsRequired: "To book, you need to accept the booking conditions and the privacy policy",
     },
     notFound: {
       title: "404",
@@ -598,3 +767,4 @@ const pack: LanguagePack = {
 };
 
 export default pack;
+

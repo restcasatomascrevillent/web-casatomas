@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import OpcionSinGluten from "./OpcionSinGluten";
 import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -63,6 +64,7 @@ interface Plato {
   nombre: string;
   categoria: string;
   descripcion?: string;
+  sin_gluten_disponible?: boolean;
   imagen_url?: string | null;
   imagen_posicion_y?: number | null;
   ingredientes?: string[] | string | null;
@@ -231,7 +233,8 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     if (activeDietaryFilters.length > 0) {
       items = items.filter((item) => {
         const datos = datosAlergenos(item);
-        return activeDietaryFilters.every((filterKey) => cumpleFiltroDietetico(datos, filterKey));
+        return activeDietaryFilters.every((filterKey) =>
+          (filterKey === "celiaquia" && item.sin_gluten_disponible === true) || cumpleFiltroDietetico(datos, filterKey));
       });
     }
 
@@ -684,6 +687,10 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                         </motion.div>
                       )}
                     </AnimatePresence>
+                    {item.sin_gluten_disponible === true && (
+                      <div className="px-6 pb-3"><OpcionSinGluten /></div>
+                    )}
+
                     <CardFooter
                       className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
                         expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
@@ -737,6 +744,10 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                     </CardHeader>
 
                     <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
+                      {item.displayDescripcion?.trim() && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{item.displayDescripcion}</p>
+                      )}
+                      {item.sin_gluten_disponible === true && <OpcionSinGluten />}
                       <div className="space-y-2">
                         <p className="text-sm font-semibold text-foreground">
                           {infoLabels.allergens}:

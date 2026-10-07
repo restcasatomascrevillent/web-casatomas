@@ -5,7 +5,7 @@
  * a desplazar la página (y en móvil quedaba fuera de la vista).
  */
 import { describe, it, expect, vi } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -61,12 +61,12 @@ const RIOJA_VINOS = [
   },
 ];
 
-const renderComponent = () => {
+const renderComponent = (vinos = RIOJA_VINOS) => {
   markerElements.length = 0;
   return render(
     <MemoryRouter>
       <LanguageProvider>
-        <MapaMundoVinos vinos={RIOJA_VINOS} />
+        <MapaMundoVinos vinos={vinos} />
       </LanguageProvider>
     </MemoryRouter>,
   );
@@ -103,4 +103,25 @@ describe("MapaMundoVinos — popup de región al pulsar una chincheta", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
   });
+});
+
+
+it("filtra dentro de la chincheta y reinicia la paginación al cambiar de tipo", async () => {
+  const vinos = [...RIOJA_VINOS, ...Array.from({ length: 7 }, (_, i) => ({
+    ...RIOJA_VINOS[0], nombre: `Blanco de Rioja ${i}`, categoria: "BLANCOS",
+  })), { ...RIOJA_VINOS[0], nombre: "Espumoso de Rioja", categoria: "ESPUMOSOS" }];
+  renderComponent(vinos);
+  act(() => { markerElements[0].click(); });
+  const dialog = within(await screen.findByRole("dialog"));
+  fireEvent.click(dialog.getByRole("button", { name: "Blancos" }));
+  expect(dialog.queryByText("Marqués de Riscal Reserva")).not.toBeInTheDocument();
+  expect(dialog.queryByText("Espumoso de Rioja")).not.toBeInTheDocument();
+  expect(dialog.queryByText("Blanco de Rioja 6")).not.toBeInTheDocument();
+  fireEvent.click(dialog.getByRole("button", { name: "Mostrar más" }));
+  expect(dialog.getByText("Blanco de Rioja 6")).toBeInTheDocument();
+  fireEvent.click(dialog.getByRole("button", { name: "Tintos" }));
+  expect(dialog.getByText("Marqués de Riscal Reserva")).toBeInTheDocument();
+  expect(dialog.queryByText("Blanco de Rioja 0")).not.toBeInTheDocument();
+  fireEvent.click(dialog.getByRole("button", { name: "Champagnes y espumosos" }));
+  expect(dialog.getByText("Espumoso de Rioja")).toBeInTheDocument();
 });

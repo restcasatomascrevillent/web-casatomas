@@ -32,8 +32,10 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     /** Oculta la "X" de cierre — para diálogos que solo se resuelven con un botón explícito (p. ej. la verificación de edad). */
     hideCloseButton?: boolean;
+    /** Texto accesible de la "X" de cierre. Por defecto "Close"; los diálogos traducidos pasan el suyo. */
+    closeLabel?: string;
   }
->(({ className, children, hideCloseButton, ...props }, ref) => (
+>(({ className, children, hideCloseButton, closeLabel = "Close", ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -48,7 +50,7 @@ const DialogContent = React.forwardRef<
       {!hideCloseButton && (
         <DialogPrimitive.Close className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-lg border border-border/70 hover:shadow-xl hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition">
           <X className="h-5 w-5" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{closeLabel}</span>
         </DialogPrimitive.Close>
       )}
     </DialogPrimitive.Content>

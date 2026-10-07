@@ -36,7 +36,11 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/__tests__/setup.ts"],
-    exclude: ["node_modules/**", "dist/**"],
+    // `supabase/functions/**` es código Deno: sus tests usan `Deno.test` e
+    // imports `npm:`/`https:` y se lanzan con `deno test`, no con vitest. Los
+    // tests de la web que prueban piezas de esas funciones viven en
+    // `src/__tests__/` (p. ej. `FacturaEmail.test.ts`) y se siguen ejecutando.
+    exclude: ["node_modules/**", "dist/**", "dist-e2e/**", "supabase/functions/**"],
     alias: {
       "framer-motion": path.resolve(__dirname, "./src/__mocks__/framer-motion.tsx"),
     },

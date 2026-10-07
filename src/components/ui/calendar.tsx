@@ -4,12 +4,33 @@ import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { useOptionalTranslations } from "@/i18n/LanguageProvider";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+/**
+ * react-day-picker pinta meses, días y `aria-label` en INGLÉS salvo que se le
+ * pase un `locale` de date-fns (meses/días/orden de la semana) y `labels`
+ * (aria-labels de los botones de mes, que `locale` no cubre). Si hay
+ * `LanguageProvider`, ambos salen del idioma activo; el `locale`/`labels` que
+ * pase quien llama gana siempre. El primer día de la semana lo da el propio
+ * `locale`: lunes en es/fr (y en-GB), domingo en en-US.
+ */
+function Calendar({ className, classNames, showOutsideDays = true, locale, labels, ...props }: CalendarProps) {
+  const idioma = useOptionalTranslations();
+  const etiquetas = idioma?.t.calendar;
   return (
     <DayPicker
+      locale={locale ?? idioma?.dateLocale}
+      labels={
+        etiquetas
+          ? {
+              labelPrevious: () => etiquetas.previousMonth,
+              labelNext: () => etiquetas.nextMonth,
+              ...labels,
+            }
+          : labels
+      }
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{

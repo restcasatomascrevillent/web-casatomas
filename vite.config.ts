@@ -5,6 +5,7 @@ import { rm } from "fs/promises";
 import { fetchCartaSSG, CARTA_SSG_VACIA } from "./scripts/carta-ssg.mjs";
 import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
+import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
 
 /**
  * Un `fetch` a Supabase, TRES módulos virtuales.
@@ -191,7 +192,15 @@ export default defineConfig(({ mode, command }) => {
         // así que no se pueden desactivar; pero ya no hacen falta y en `dist/` se
         // publicarían (/.vite/manifest.json, /.vite/ssr-manifest.json).
         await rm(path.join(path.resolve(dir), ".vite"), { recursive: true, force: true });
-        const rutas = await generarSitemapYRobots(dir, siteUrl);
+        // Un solo `<html` por página y con el `lang` de su idioma; si no, el build falla.
+        // Los `.html` de `public/` (p. ej. la verificación de Search Console) se
+        // copian tal cual, no los prerenderiza nadie: quedan fuera de la comprobación.
+        const dePublic = await htmlDePublic(path.resolve(__dirname, "public"));
+        const paginas = await verificarHtmlPrerenderizado(path.resolve(dir), { ignorar: dePublic });
+        // eslint-disable-next-line no-console
+        console.log(`[verificar-html] ${paginas} páginas: un solo <html> y lang correcto`);
+        // El sitemap tampoco los lista: no son páginas del sitio.
+        const rutas = await generarSitemapYRobots(dir, siteUrl, { ignorar: dePublic });
         // eslint-disable-next-line no-console
         console.log(`[sitemap] ${rutas.length} URLs indexables: ${rutas.join(", ")}`);
       },

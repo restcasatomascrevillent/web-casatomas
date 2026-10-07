@@ -8,8 +8,12 @@
  *
  * Reglas:
  *  - Se recorre `dist/` buscando `.html`.
+ *  - Solo entran páginas PRERENDERIZADAS: los `.html` que Vite copia tal cual
+ *    de `public/` (p. ej. la verificación de Search Console) llegan en
+ *    `ignorar` y no son páginas del sitio.
  *  - Se excluye `404.html` y cualquier página que declare `noindex`
- *    (política de privacidad, la redirección de Touza, el propio 404).
+ *    (política de privacidad y condiciones en los tres idiomas, las páginas
+ *    de los enlaces de los correos, la redirección de Touza, el propio 404).
  *  - `vercel.json` usa `cleanUrls: true`, así que la URL pública no lleva `.html`
  *    y `index.html` es la raíz.
  *  - Cada URL con versión en otro idioma lleva sus `<xhtml:link>` de `hreflang`
@@ -73,9 +77,18 @@ async function listarHtml(dir, raiz = dir, salida = []) {
 const aRutaPublica = (archivo) =>
   archivo === 'index.html' ? '/' : `/${archivo.replace(/\.html$/, '').replace(/\/index$/, '')}`;
 
-export async function generarSitemapYRobots(dir, siteUrl) {
+/**
+ * @param {string} dir
+ * @param {string} siteUrl
+ * @param {{ ignorar?: string[] }} [opciones] `ignorar`: `.html` relativos a
+ *   `dir` que no salen del prerenderizado (los de `public/`, ver
+ *   `htmlDePublic` en `verificar-html.mjs`).
+ * @returns {Promise<string[]>}
+ */
+export async function generarSitemapYRobots(dir, siteUrl, { ignorar = [] } = {}) {
   const base = siteUrl.replace(/\/+$/, '');
-  const archivos = await listarHtml(dir);
+  const omitidos = new Set(ignorar);
+  const archivos = (await listarHtml(dir)).filter((archivo) => !omitidos.has(archivo));
 
   const rutas = [];
   for (const archivo of archivos) {
@@ -92,8 +105,9 @@ export async function generarSitemapYRobots(dir, siteUrl) {
   }
 
   // Qué idiomas tiene realmente cada página (grupo = misma ruta sin prefijo).
-  // Una página sin hermanas en otro idioma (hoy, /reservas) no lleva bloque
-  // `hreflang`: con un solo idioma esa etiqueta no aporta nada.
+  // Una página sin hermanas indexables en otro idioma no lleva bloque
+  // `hreflang`: con un solo idioma esa etiqueta no aporta nada. Hoy llevan
+  // bloque la portada, la carta y /reservas (las tres versiones de cada una).
   const rutasPorGrupo = new Map();
   for (const ruta of rutas) {
     const clave = rutaSinPrefijo(ruta);
