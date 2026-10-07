@@ -262,10 +262,6 @@ const ProductoCard = ({
               )}
             </CardHeader>
 
-            {plato.sin_gluten_disponible === true && (
-              <div className="px-5 pb-3"><OpcionSinGluten /></div>
-            )}
-
             <PiePlato
               precio={plato.precio_eur}
               unidad={plato.unidad}

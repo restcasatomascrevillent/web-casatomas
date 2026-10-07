@@ -687,10 +687,6 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    {item.sin_gluten_disponible === true && (
-                      <div className="px-6 pb-3"><OpcionSinGluten /></div>
-                    )}
-
                     <CardFooter
                       className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
                         expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
