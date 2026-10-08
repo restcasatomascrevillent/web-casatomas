@@ -6,6 +6,7 @@ import { ChefHat, Clock, Sparkles } from "lucide-react";
 import CartaDelDia, { CLASES_TITULO_CARTA } from "@/components/espacios/CartaDelDia";
 import { parsearMenuDiario, type MenuDelDia, type MenuDiarioRow } from "@/lib/menu-dia";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { useVisibilidadMenuTapas } from "@/hooks/useVisibilidadMenuTapas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -123,6 +124,7 @@ const MenuDiarioCards = () => {
   const { t, dateLocale, language } = useTranslations();
   const [showTodayMenu, setShowTodayMenu] = useState(false);
   const [showTodayTapas, setShowTodayTapas] = useState(false);
+  const visibilidad = useVisibilidadMenuTapas();
 
   const idiomAliases = useMemo(() => getIdiomAliases(language), [language]);
 
@@ -171,8 +173,8 @@ const MenuDiarioCards = () => {
 
   const today = new Date();
   const todayDay = today.getDay();
-  const isMenuDayToday = todayDay >= 2 && todayDay <= 4;
-  const isTapasDayToday = todayDay === 4;
+  const isMenuDayToday = visibilidad.menu && todayDay >= 2 && todayDay <= 4;
+  const isTapasDayToday = visibilidad.tapas && todayDay === 4;
 
   const todayMenu = menusDelDia.find((menu) => isSameDay(menu.date, today)) ?? null;
   const todayTapas = tapasSemanales.find((tapas) => isSameDay(tapas.date, today)) ?? null;
@@ -243,7 +245,7 @@ const MenuDiarioCards = () => {
       {/* El menú de hoy, como una carta impresa sobre la bandeja del diálogo.
           El ancho es el de una carta (no el de un panel): con fotos, tres
           columnas de texto obligaban a leer en zigzag. */}
-      <Dialog open={showTodayMenu} onOpenChange={setShowTodayMenu}>
+      <Dialog open={isMenuDayToday && showTodayMenu} onOpenChange={setShowTodayMenu}>
         <DialogContent className="w-[92vw] sm:max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-border/60 bg-ticket-tray p-3 sm:p-5">
           <DialogDescription className="sr-only">Menú diario cargado desde base de datos.</DialogDescription>
           {todayMenu ? (
@@ -261,7 +263,7 @@ const MenuDiarioCards = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showTodayTapas} onOpenChange={setShowTodayTapas}>
+      <Dialog open={isTapasDayToday && showTodayTapas} onOpenChange={setShowTodayTapas}>
         <DialogContent className="w-[90vw] sm:max-w-2xl md:max-w-3xl rounded-2xl border border-border/70 bg-gradient-to-b from-background via-muted/40 to-background p-4 sm:p-6">
           <DialogHeader className="space-y-2 items-center text-center">
             <DialogTitle className="flex items-center gap-2 text-xl leading-tight text-center">

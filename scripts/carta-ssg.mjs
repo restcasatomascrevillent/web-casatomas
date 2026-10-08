@@ -215,6 +215,22 @@ export async function leerMostrarFotosPlatos(baseUrl, key) {
   }
 }
 
+export async function leerVisibilidadMenuTapas(baseUrl, key) {
+  try {
+    const respuesta = await fetch(`${baseUrl}/rest/v1/configuracion_web?select=*&id=eq.true&limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' },
+    });
+    if (!respuesta.ok) return { mostrarMenuDelDia: true, mostrarTapas: true };
+    const filas = await respuesta.json();
+    return {
+      mostrarMenuDelDia: filas?.[0]?.mostrar_menu_dia_casa_tomas !== false,
+      mostrarTapas: filas?.[0]?.mostrar_tapas_casa_tomas !== false,
+    };
+  } catch {
+    return { mostrarMenuDelDia: true, mostrarTapas: true };
+  }
+}
+
 /**
  * Recuento por categoría, en el orden en que llegaron las filas.
  *
@@ -249,11 +265,12 @@ export async function fetchCartaSSG({ url, key }) {
   }
 
   const baseUrl = url.replace(/\/+$/, '');
-  const [platos, vinos, bebidas, mostrarFotosPlatos] = await Promise.all([
+  const [platos, vinos, bebidas, mostrarFotosPlatos, visibilidadMenuTapas] = await Promise.all([
     descargarTabla(baseUrl, key, 'Platos'),
     descargarTabla(baseUrl, key, 'Vinos'),
     descargarTabla(baseUrl, key, 'Bebidas'),
     leerMostrarFotosPlatos(baseUrl, key),
+    leerVisibilidadMenuTapas(baseUrl, key),
   ]);
 
   return {
@@ -265,7 +282,7 @@ export async function fetchCartaSSG({ url, key }) {
     vinos,
     bebidas,
     resumen: { vinos: resumirPorCategoria(vinos), bebidas: resumirPorCategoria(bebidas) },
-    config: { mostrarFotosPlatos },
+    config: { mostrarFotosPlatos, ...visibilidadMenuTapas },
   };
 }
 

@@ -107,6 +107,8 @@ export interface CartaSSG {
      * el navegador pueda volver a enseñarlas si se encienden sin redeploy.
      */
     mostrarFotosPlatos: boolean;
+    mostrarMenuDelDia?: boolean;
+    mostrarTapas?: boolean;
   };
 }
 
