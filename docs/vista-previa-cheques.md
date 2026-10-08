@@ -23,3 +23,6 @@ No requiere migración SQL. La publicación de la web debe incluir el mismo comm
 - `Contacto.factura.test.tsx`: resumen y vista en pasos separados, pago solo al final, factura, opciones del regalo y foco del teclado.
 - `diseno.test.ts`: paridad de la vista local con el trazado del PDF, cuatro combinaciones de opciones, caracteres especiales y textos de varias páginas.
 - `cheques-regalo-web/index.test.ts`: precarga de campos públicos, sin compradores, compras ni Stripe.
+
+
+La plantilla pública incluye `caducidad_meses` (12 por defecto). La vista calcula la fecha orientativa con meses naturales y horario de Madrid. La fecha definitiva `caduca_el` la asigna la base de datos al confirmar el pago, y el webhook utiliza la fila actualizada para enviar el correo y el PDF. La migración de caducidad se mantiene en `adminpanelct/supabase/migrations`; debe aplicarse antes de desplegar las tres funciones de cheques.

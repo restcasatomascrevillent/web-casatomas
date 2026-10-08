@@ -117,6 +117,7 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
     typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null;
 
   let codigo: string | null = null;
+  let chequeEmitido: ChequeParaEmail | null = null;
   for (let intento = 0; intento < 5 && !codigo; intento++) {
     const candidato = generarCodigo();
     const { data: actualizadas, error } = await supabase
@@ -124,7 +125,7 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
       .update({ estado: "pagado", codigo: candidato, stripe_payment_intent_id: paymentIntentId })
       .eq("id", chequeId)
       .eq("estado", "pendiente") // también evita una carrera si dos eventos llegan a la vez
-      .select("id");
+      .select("*");
     if (error) {
       if (error.code === "23505") continue; // código ya usado por otro cheque (UNIQUE): se prueba otro
       throw new Error(`no se pudo marcar pagado el cheque ${chequeId}: ${error.message}`);
@@ -134,10 +135,11 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
     // email con un código que no estaba en la base.
     if (!actualizadas?.length) return;
     codigo = candidato;
+    chequeEmitido = actualizadas[0] as ChequeParaEmail;
   }
-  if (!codigo) throw new Error(`5 códigos repetidos seguidos para el cheque ${chequeId}`);
+  if (!codigo || !chequeEmitido) throw new Error(`5 códigos repetidos seguidos para el cheque ${chequeId}`);
 
-  await enviarYMarcarEmail({ ...fila, codigo });
+  await enviarYMarcarEmail(chequeEmitido);
   await enviarFacturaCheque(supabase, chequeId);
 }
 

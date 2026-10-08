@@ -2,6 +2,7 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { VistaRegaloCompra } from "@/components/VistaRegaloCompra";
 import { crearSesionVistaRegalo } from "@/lib/cheques/vista-regalo";
+import { calcularCaducidad, fechaCaducidad } from "../../supabase/functions/_shared/cheques-regalo/caducidad";
 import { PLANTILLA_REGALO } from "../../supabase/functions/_shared/cheques-regalo/plantilla";
 vi.mock("@/lib/supabase-functions", () => ({ CHEQUES_REGALO_PLANTILLA_VISTA_URL: "https://example.com/plantilla-vista", CHEQUES_REGALO_VISTA_URL: "https://example.com/vista-previa", functionHeaders: () => ({ "Content-Type": "application/json" }) }));
 const props = { importe: "100", nombre: "Ana", destinatario: "María", mensaje: "Felicidades", ocultarImporte: false, incluirDedicatoria: true,
@@ -65,4 +66,10 @@ describe("Vista PDF en la compra web", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(vi.mocked(fetch).mock.calls[1][0]).toBe("https://example.com/vista-previa");
   });
+  it("muestra la fecha calculada con el plazo configurado en el panel", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ plantilla: { ...PLANTILLA_REGALO, caducidad_meses: 6 } }) } as Response);
+    const paginas = await crearSesionVistaRegalo().generar(props);
+    expect(decode(paginas[0])).toContain("Válido hasta el " + fechaCaducidad(calcularCaducidad(6)) + " (incluido)");
+  });
+
 });

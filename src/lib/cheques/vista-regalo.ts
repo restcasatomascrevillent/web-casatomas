@@ -1,3 +1,4 @@
+import { calcularCaducidad, hoyMadrid } from "../../../supabase/functions/_shared/cheques-regalo/caducidad";
 import { CHEQUES_REGALO_PLANTILLA_VISTA_URL, CHEQUES_REGALO_VISTA_URL, functionHeaders } from "@/lib/supabase-functions";
 import { PLANTILLA_REGALO, type PlantillaRegalo, type ChequeRegalo } from "../../../supabase/functions/_shared/cheques-regalo/plantilla";
 
@@ -26,7 +27,7 @@ export function crearSesionVistaRegalo() {
       if (response.status === 404) return null;
       const data = await response.json() as { plantilla?: Record<string, unknown> };
       if (!response.ok || !data.plantilla || !campos.every(c => typeof data.plantilla[c] === "string")) throw new Error("Plantilla no disponible");
-      return { ...PLANTILLA_REGALO, ...Object.fromEntries(campos.map(c => [c, data.plantilla[c]])) };
+      return { ...PLANTILLA_REGALO, caducidad_meses: Number.isInteger(data.plantilla.caducidad_meses) ? Number(data.plantilla.caducidad_meses) : 12, ...Object.fromEntries(campos.map(c => [c, data.plantilla[c]])) };
     })().catch(error => { carga = undefined; throw error; });
     return Promise.all([carga, motor]);
   }
@@ -36,11 +37,11 @@ export function crearSesionVistaRegalo() {
       comprador_nombre: opcional(datos.nombre, 200) || "", comprador_email: "",
       destinatario_nombre: opcional(datos.destinatario, 200), mensaje: datos.incluirDedicatoria ? opcional(datos.mensaje, 500) : null,
       ocultar_importe: datos.ocultarImporte, fecha_entrega_deseada: null };
-    const key = JSON.stringify(cheque);
+    const key = hoyMadrid() + JSON.stringify(cheque);
     const guardada = vistas.get(key); if (guardada) return guardada;
     const vista = (async () => {
       const [plantilla, render] = await preparar();
-      if (plantilla) return imagenes(await render.generarPaginasRegalo(cheque, plantilla));
+      if (plantilla) return imagenes(await render.generarPaginasRegalo({ ...cheque, caduca_el: calcularCaducidad(plantilla.caducidad_meses) }, plantilla));
       const response = await solicitar(CHEQUES_REGALO_VISTA_URL, JSON.stringify(cheque));
       const data = await response.json() as { paginas?: string[] };
       if (!response.ok || !Array.isArray(data.paginas) || !data.paginas.length || !data.paginas.every(p => typeof p === "string" && p.startsWith("<svg "))) throw new Error("Vista no disponible");

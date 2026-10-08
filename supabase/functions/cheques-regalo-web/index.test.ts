@@ -6,7 +6,7 @@ Deno.test("la precarga solo consulta el diseño público y no genera PDF ni comp
   const originales = env.map(k => Deno.env.get(k));
   let handler!: (req: Request) => Promise<Response>;
   const consultas: URL[] = [];
-  const plantilla = { pdf_titulo: "Título editado", pdf_subtitulo: "Subtítulo", pdf_instrucciones: "Instrucciones", pdf_pie: "Pie", logo_data: "", color_acento: "#795440", color_fondo: "#faf7f1" };
+  const plantilla = { pdf_titulo: "Título editado", pdf_subtitulo: "Subtítulo", pdf_instrucciones: "Instrucciones", pdf_pie: "Pie", logo_data: "", color_acento: "#795440", color_fondo: "#faf7f1", caducidad_meses: 6 };
   Deno.env.set("SUPABASE_URL", "https://supabase.example.com");
   Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "clave-prueba");
   Deno.env.delete("STRIPE_SECRET_KEY");

@@ -35,6 +35,7 @@ Deno.test("reintentos usan el mismo PDF, asunto editable, destinatario y clave d
     assert(await enviarEmailCheque(cheque, { ocultarImporte: false }));
     assert(requests.length === 2); assert(requests[0].key === requests[1].key);
     assert(requests[0].body.subject === "Regalo para María");
+    assert(String(requests[0].body.text).includes("Válido hasta el 08/10/2027 (incluido)"));
     assert(JSON.stringify(requests[0].body) === JSON.stringify(requests[1].body), "El PDF y cuerpo deben ser estables entre reintentos");
   } finally { globalThis.fetch = originalFetch; if (originalKey) Deno.env.set("RESEND_API_KEY", originalKey); else Deno.env.delete("RESEND_API_KEY"); }
 });
@@ -50,5 +51,7 @@ Deno.test("vista y PDF aplican las cuatro combinaciones elegidas en la compra", 
     assert((await PDFDocument.load(vista.pdf)).getPageCount() === 1);
     const html = construirHtml(cheque, { ocultarImporte: ocultar_importe }, PLANTILLA_REGALO);
     assert(html.includes("100,00 €") === !ocultar_importe);
+    assert(html.includes("Válido hasta el 08/10/2027 (incluido)"));
+    assert(svg.includes("Válido hasta el 08/10/2027 (incluido)"));
   }
 });

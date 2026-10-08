@@ -1,3 +1,4 @@
+import { calcularCaducidad } from "../_shared/cheques-regalo/caducidad.ts";
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 // `npm:` y no esm.sh: ver el comentario en `stripe-webhook-cheques-regalo`.
 import type Stripe from "npm:stripe@23.0.0";
@@ -200,7 +201,7 @@ async function handleCrear(req: Request): Promise<Response> {
 /** Solo los campos públicos del diseño; nunca datos de compradores ni texto del email. */
 async function handlePlantillaVista(): Promise<Response> {
   const { data, error } = await supabase.from("plantilla_cheques_regalo")
-    .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo").eq("id", true).single();
+    .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo,caducidad_meses").eq("id", true).single();
   if (error || !data) return json({ mensaje: "No se pudo cargar la vista previa" }, 503);
   return json({ plantilla: data });
 }
@@ -212,11 +213,11 @@ async function handleVistaPrevia(req: Request): Promise<Response> {
     const importe = Number(payload.importe_eur);
     if (!Number.isFinite(importe) || importe < IMPORTE_MIN || importe > IMPORTE_MAX) return json({ mensaje: "Importe inválido" }, 422);
     const { data, error } = await supabase.from("plantilla_cheques_regalo")
-      .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo").eq("id", true).single();
+      .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo,caducidad_meses").eq("id", true).single();
     if (error || !data) return json({ mensaje: "No se pudo cargar la vista previa" }, 503);
     const { generarVistaRegalo } = await import("../_shared/cheques-regalo/pdf-plantilla.ts");
     const vista = await generarVistaRegalo({
-      id: "ejemplo", codigo: "CT-EJEMPLO", importe_eur: Math.round(importe * 100) / 100,
+      id: "ejemplo", codigo: "CT-EJEMPLO", caduca_el: calcularCaducidad(data.caducidad_meses), importe_eur: Math.round(importe * 100) / 100,
       comprador_nombre: textoOpcional(payload.comprador_nombre, 200) || "", comprador_email: "",
       destinatario_nombre: textoOpcional(payload.destinatario_nombre, 200),
       mensaje: payload.incluir_dedicatoria === false ? null : textoOpcional(payload.mensaje, 500),
@@ -238,4 +239,5 @@ Deno.serve(async (req) => {
 
   return json({ motivo: "no_encontrado", mensaje: "Ruta no soportada." }, 404);
 });
+
 
