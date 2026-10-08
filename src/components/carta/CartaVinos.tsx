@@ -92,6 +92,9 @@ interface Vino {
 
 type VinoRecord = Vino & Record<string, unknown>;
 
+let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
+const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");
+
 const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: CartaVinosProps) => {
   const { t, language } = useTranslations();
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -125,7 +128,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [mapVinos, setMapVinos] = useState<Vino[]>(() => initialMapVinos ?? []);
   const [mapLoading, setMapLoading] = useState(() => !initialMapVinos);
-  const [mapPrefetched, setMapPrefetched] = useState(false);
+  const mapFetchInFlight = useRef(false);
   const PAGE_SIZE = 24;
   const { toast } = useToast();
   const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
@@ -134,7 +137,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   const mapsConsent = useMapsConsent();
 
   const fetchVinosByCategory = useCallback(
-    async (category: string, append = false) => {
+    async (category: string, append = false, catalogo = mapVinos) => {
       setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
       const offset = append ? (vinosByCategory[category]?.length || 0) : 0;
       const to = offset + PAGE_SIZE - 1;
@@ -143,7 +146,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
         // Import perezoso: así el resto del módulo (componente, UI de
         // búsqueda) puede evaluarse y pintar su esqueleto sin esperar a que
         // el SDK de Supabase (~40 KB gzip) cargue primero.
-        const { supabase } = await import("@/integrations/supabase/client");
+        const { supabase } = await cargarSupabase();
         // Mismo filtro que el prerenderizado (`scripts/carta-ssg.mjs`):
         // `restaurante` separa la carta de Casa Tomás de la del bar (`touza`).
         let query = supabase
@@ -160,7 +163,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           // Agrupa todas las categorías reales del tipo, incluso si están
           // divididas entre vinos nacionales e internacionales. Se pagina
           // este grupo en el servidor, no la primera página de «Todos».
-          const categorias = [...new Set(mapVinos
+          const categorias = [...new Set(catalogo
             .filter(vino => tipoVino(vino.categoria) === tipo)
             .map(vino => vino.categoria).filter((valor): valor is string => !!valor))];
           query = query.in('categoria', categorias);
@@ -202,26 +205,58 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   }, []);
 
   const fetchMap = useCallback(async () => {
-    if (mapPrefetched) return;
+    if (mapFetchInFlight.current) return;
+    mapFetchInFlight.current = true;
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase
-        .from('Vinos')
-        .select('categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, precio_eur')
-        .eq('activado', true)
-        .is('restaurante', true);
-      if (error) throw error;
-      setMapVinos(data || []);
+      const { supabase } = await cargarSupabase();
+      const catalogo: Vino[] = [];
+      const pageSize = 1000;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase
+          .from('Vinos')
+          .select('id, categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, precio_eur')
+          .eq('activado', true)
+          .is('restaurante', true)
+          .order('id', { ascending: true })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        catalogo.push(...(data || []));
+        if ((data?.length || 0) < pageSize) break;
+      }
+      // No reconstruir Mapbox si el catálogo sigue siendo el mismo.
+      setMapVinos(prev => JSON.stringify(prev) === JSON.stringify(catalogo) ? prev : catalogo);
+      return catalogo;
     } catch (error) {
       console.error('Error fetching map vinos:', error);
     } finally {
-      setMapPrefetched(true);
+      mapFetchInFlight.current = false;
       setMapLoading(false);
     }
-  }, [mapPrefetched]);
+  }, []);
+
+  const refreshRef = useRef<() => Promise<void>>();
+  refreshRef.current = async () => {
+    const catalogo = await fetchMap();
+    if (catalogo) {
+      await fetchVinosByCategory(selectedCategory, false, catalogo);
+    }
+  };
 
   useEffect(() => {
-    fetchMap();
+    void fetchMap();
+    const refresh = () => {
+      if (document.visibilityState === "visible") void refreshRef.current?.();
+    };
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = window.setInterval(refresh, 60_000);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [fetchMap]);
 
   const getPedidoItemKey = (item: Vino & { nombre?: string }) =>

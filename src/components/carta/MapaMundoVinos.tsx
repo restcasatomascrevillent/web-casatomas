@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import FiltrosTipoVino from "./FiltrosTipoVino";
+import { claveOrigen, coordenadasConocidas, localizarOrigen } from "@/lib/origenes-vino";
 import { tipoVino as getCategoryKey, type TipoVino } from "@/lib/tipos-vino";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
 interface Vino {
+  id?: string;
   nombre: string;
   precio_eur: number;
   categoria?: string;
@@ -20,112 +22,6 @@ interface Vino {
 interface MapaMundoVinosProps {
   vinos: Vino[];
 }
-
-// Coordenadas aproximadas de las regiones
-const regionCoordinates: { [key: string]: [number, number] } = {
-  // Francia
-  "Champagne (Grand Est)": [4.0, 49.0],
-  "Borgoña (Bourgogne-Franche-Comté)": [4.85, 47.0],
-  "Borgoña (Yonne)": [3.6, 47.8],
-  "Borgoña (estimado)": [4.85, 47.0],
-  "Valle del Loira (Pays de la Loire)": [-0.5, 47.5],
-  "Valle del Loira (Indre‑et‑Loire)": [0.7, 47.3],
-  "Valle del Loira (Nièvre)": [3.5, 47.0],
-  "Burdeos (Nouvelle-Aquitaine)": [-0.5, 44.8],
-  "Burdeos (Pauillac)": [-0.75, 45.2],
-  "Valle del Ródano (Auvergne-Rhône-Alpes)": [4.8, 45.0],
-  "Valle del Ródano Septentrional (Drôme/Ardèche)": [4.8, 45.1],
-  "Alsacia (Grand Est)": [7.5, 48.3],
-  "Alsacia (Haut‑Rhin)": [7.3, 48.0],
-  "Languedoc-Rosellón (Occitanie)": [3.0, 43.5],
-  "Provenza (Provence-Alpes-Côte d'Azur)": [6.0, 43.5],
-  "Mosela (estimado)": [6.5, 49.8],
-  
-  // España - Galicia
-  "Galicia (Pontevedra)": [-8.6, 42.4],
-  "Galicia (Valdeorras, Ourense)": [-7.0, 42.4],
-  "Galicia (Ourense)": [-7.9, 42.3],
-  "Galicia (Ribeira Sacra – Lugo)": [-7.5, 42.5],
-  
-  // España - Castilla y León
-  "Castilla y León": [-4.5, 41.8],
-  "Castilla y León (Valladolid/Segovia)": [-4.7, 41.4],
-  "Castilla y León (Segovia)": [-4.1, 41.0],
-  "Castilla y León (El Bierzo, León)": [-6.6, 42.6],
-  "Castilla y León (Valladolid)": [-4.7, 41.65],
-  "Castilla y León (Zamora)": [-5.75, 41.5],
-  
-  // España - La Rioja y País Vasco
-  "La Rioja": [-2.5, 42.3],
-  "País Vasco (Rioja Alavesa, Álava)": [-2.7, 42.5],
-  
-  // España - Navarra
-  "Navarra": [-1.65, 42.7],
-  "Navarra)": [-1.65, 42.7],
-  "Navarra (Vino de Pago Otazu)": [-1.65, 42.7],
-  
-  // España - Cataluña
-  "Cataluña (Barcelona)": [2.15, 41.4],
-  "Cataluña (Penedès)": [1.5, 41.3],
-  "Cataluña (Priorat, Tarragona)": [0.7, 41.2],
-  
-  // España - Comunidad Valenciana
-  "Comunidad Valenciana (Alicante)": [-0.5, 38.3],
-  "Comunidad Valenciana (Valencia)": [-0.4, 39.5],
-  
-  // España - Región de Murcia
-  "Región de Murcia (Jumilla)": [-1.3, 38.5],
-  
-  // España - Castilla-La Mancha
-  "Castilla‑La Mancha (Albacete)": [-1.85, 39.0],
-  "Castilla‑La Mancha (Ciudad Real)": [-3.9, 38.9],
-  
-  // España - Islas Canarias
-  "Islas Canarias (Lanzarote)": [-13.6, 29.0],
-  
-  // España - Andalucía
-  "Andalucía (Jerez, Cádiz)": [-6.0, 36.7],
-  "Andalucía (Málaga)": [-4.4, 36.7],
-  
-  // Italia
-  "Toscana": [11.2, 43.3],
-  "Piamonte": [8.0, 45.0],
-  "Veneto": [11.5, 45.5],
-  "Sicilia": [14.0, 37.5],
-  "Lombardía (Franciacorta)": [10.1, 45.6],
-  
-  // Portugal
-  "Valle del Duero (Norte de Portugal)": [-7.8, 41.2],
-  "Alentejo": [-7.9, 38.5],
-  "Norte (Vinho Verde)": [-8.5, 41.5],
-  "Lisboa (Alenquer)": [-9.0, 39.1],
-  
-  // Alemania
-  "Rheingau": [8.0, 50.0],
-  "Baden": [7.8, 48.5],
-  
-  // Estados Unidos
-  "Valle de Napa (California)": [-122.3, 38.5],
-  "Valle de Sonoma (California)": [-122.8, 38.4],
-  "California (Paso Robles)": [-120.7, 35.6],
-  
-  // Argentina
-  "Mendoza": [-69.0, -33.0],
-  
-  // Chile
-  "Valle de Maipo (Región Metropolitana)": [-70.7, -33.5],
-  "Valle de Colchagua (Región de O'Higgins)": [-71.0, -34.6],
-  
-  // Australia
-  "Barossa Valley (Australia del Sur)": [139.0, -34.5],
-  
-  // Nueva Zelanda
-  "Marlborough (Isla Sur)": [173.8, -41.5],
-  
-  // Sudáfrica
-  "Stellenbosch (Provincia Occidental del Cabo)": [18.9, -33.9],
-  "Western Cape (Elgin)": [19.0, -34.2],
-};
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -196,32 +92,32 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [tipoRegion, setTipoRegion] = useState<TipoVino>("todos");
   const { toast } = useToast();
+  const solicitudes = useRef<AbortController | null>(null);
+  type Grupo = { region: string; count: number; vinos: Vino[]; category: string };
+  const [sinUbicar, setSinUbicar] = useState<Grupo[]>([]);
 
   const addWineMarkers = useCallback(() => {
     if (!map.current) return;
 
-    const regionCount: { [key: string]: { count: number; vinos: Vino[]; category: string } } = {};
+    const mapaActual = map.current;
+    const signal = solicitudes.current!.signal;
+    const regionCount: Record<string, Grupo> = {};
     const isMobile = window.innerWidth < 768;
 
     vinos.forEach(vino => {
-      const region = vino.ubicacion_region;
-      if (region) {
-        if (!regionCount[region]) {
-          regionCount[region] = { count: 0, vinos: [], category: getCategoryKey(vino.categoria) };
-        }
-        regionCount[region].count++;
-        regionCount[region].vinos.push(vino);
-        const currentCategory = regionCount[region].category;
-        const vinoCategory = getCategoryKey(vino.categoria);
-        if (currentCategory === "otro" && vinoCategory !== "otro") {
-          regionCount[region].category = vinoCategory;
-        }
-      }
+      const key = claveOrigen(vino);
+      const region = vino.ubicacion_region?.trim() || vino.denominacion_origen?.trim()
+        || vino.ubicacion_pais?.trim() || t.map.noLocation;
+      if (!regionCount[key]) regionCount[key] = { region, count: 0, vinos: [], category: getCategoryKey(vino.categoria) };
+      const grupo = regionCount[key];
+      grupo.count++;
+      grupo.vinos.push(vino);
+      if (grupo.category === "otro") grupo.category = getCategoryKey(vino.categoria);
     });
 
-    Object.entries(regionCount).forEach(([region, data]) => {
-      const coords = regionCoordinates[region];
-      if (coords && map.current) {
+    const colocar = (data: Grupo, coords: [number, number]) => {
+      const region = data.region;
+      if (!signal.aborted && map.current === mapaActual) {
         const markerSize = isMobile ? 35 : 40;
         const fontSize = isMobile ? 12 : 14;
         const catList = data.vinos.map((v) => getCategoryKey(v.categoria));
@@ -280,12 +176,38 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         marker.setRotationAlignment("map");
         marker.setPitchAlignment("map");
       }
+    };
+
+    const pendientes: Grupo[] = [];
+    Object.values(regionCount).forEach(grupo => {
+      const coords = coordenadasConocidas(grupo.vinos[0]);
+      if (coords) colocar(grupo, coords);
+      else pendientes.push(grupo);
     });
-  }, [vinos]);
+    setSinUbicar(pendientes);
+    // Limitar las búsquedas simultáneas y cancelar al actualizar/desmontar el mapa.
+    let siguiente = 0;
+    const buscar = async () => {
+      while (siguiente < pendientes.length && !signal.aborted) {
+        const grupo = pendientes[siguiente++];
+        try {
+          const coords = await localizarOrigen(grupo.vinos[0], MAPBOX_TOKEN, signal);
+          if (coords && !signal.aborted && map.current === mapaActual) {
+            colocar(grupo, coords);
+            setSinUbicar(prev => prev.filter(item => item !== grupo));
+          }
+        } catch {
+          // Si la búsqueda falla, el grupo sigue accesible bajo el mapa.
+        }
+      }
+    };
+    for (let i = 0; i < Math.min(3, pendientes.length); i++) void buscar();
+  }, [vinos, t.map.noLocation]);
 
   const initializeMap = useCallback(() => {
     if (!mapContainer.current || map.current) return;
 
+    solicitudes.current = new AbortController();
     mapboxgl.accessToken = MAPBOX_TOKEN;
     
     try {
@@ -329,6 +251,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   }, [addWineMarkers, toast, t]);
 
   useEffect(() => {
+    solicitudes.current?.abort();
     if (map.current) {
       map.current.remove();
       map.current = null;
@@ -338,6 +261,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     initializeMap();
 
     return () => {
+      solicitudes.current?.abort();
       map.current?.remove();
       map.current = null;
     };
@@ -383,6 +307,21 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
         style={{ maxWidth: '100%', overflow: 'hidden' }}
       />
+      {sinUbicar.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-sm text-muted-foreground">{t.map.otherOrigins}</p>
+          <div className="flex flex-wrap gap-2">
+            {sinUbicar.map(grupo => (
+              <Button key={claveOrigen(grupo.vinos[0])} variant="outline" size="sm" onClick={() => {
+                setTipoRegion("todos");
+                setSelectedRegion({ region: grupo.region, vinos: grupo.vinos, category: grupo.category });
+              }}>
+                {grupo.region} ({grupo.count})
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Info de la región en un popup, no en un panel bajo el mapa: antes
           había que desplazar la página para verlo (y en móvil quedaba fuera
           de la vista); ahora aparece encima, dondequiera que esté mirando
@@ -424,7 +363,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
 
                   return (
                     <div
-                      key={vino.nombre + vino.denominacion_origen}
+                      key={vino.id || vino.nombre + vino.denominacion_origen}
                       className="rounded-lg border p-3 flex flex-col gap-1 shadow-sm transition-transform duration-150 hover:-translate-y-0.5"
                       style={{ backgroundColor: cardBg, borderColor }}
                     >

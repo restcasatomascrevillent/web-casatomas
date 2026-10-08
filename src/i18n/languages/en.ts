@@ -556,6 +556,8 @@ export const translations: Translations = {
       showAll: "See all {count} wines",
       showLess: "Show fewer",
       showMore: "Show more",
+      otherOrigins: "Other origins on our wine list",
+      noLocation: "Origin not specified",
       errorTitle: "Error",
       errorDescription: "We couldn't load the map",
     },

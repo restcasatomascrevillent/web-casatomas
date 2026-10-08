@@ -556,6 +556,8 @@ export const translations: Translations = {
       showAll: "Voir les {count} vins",
       showLess: "Voir moins",
       showMore: "Voir plus",
+      otherOrigins: "Autres origines de notre carte",
+      noLocation: "Origine non précisée",
       errorTitle: "Erreur",
       errorDescription: "Impossible de charger la carte",
     },

@@ -563,6 +563,8 @@ export const translations = {
       showAll: "Ver los {count} vinos",
       showLess: "Ver menos",
       showMore: "Mostrar más",
+      otherOrigins: "Otros orígenes de nuestra carta",
+      noLocation: "Origen sin especificar",
       errorTitle: "Error",
       errorDescription: "No pudimos cargar el mapa",
     },

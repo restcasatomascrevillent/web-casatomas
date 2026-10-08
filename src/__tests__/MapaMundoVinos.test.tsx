@@ -125,3 +125,20 @@ it("filtra dentro de la chincheta y reinicia la paginación al cambiar de tipo",
   fireEvent.click(dialog.getByRole("button", { name: "Champagnes y espumosos" }));
   expect(dialog.getByText("Espumoso de Rioja")).toBeInTheDocument();
 });
+
+it("actualiza el contador y los vinos de una región al añadir una referencia", async () => {
+  const vista = renderComponent();
+  expect(markerElements.at(-1)?.textContent).toBe("1");
+  vista.rerender(<MemoryRouter><LanguageProvider><MapaMundoVinos vinos={[
+    ...RIOJA_VINOS, { ...RIOJA_VINOS[0], nombre: "Vino recién añadido" },
+  ]} /></LanguageProvider></MemoryRouter>);
+  expect(markerElements.at(-1)?.textContent).toBe("2");
+  act(() => markerElements.at(-1)!.click());
+  expect(await screen.findByText("Vino recién añadido")).toBeInTheDocument();
+});
+
+it("permite consultar los vinos cuyo origen aún no se ha podido situar", async () => {
+  renderComponent([{ ...RIOJA_VINOS[0], nombre: "Vino de origen nuevo", ubicacion_region: "Región nueva" }]);
+  fireEvent.click(await screen.findByRole("button", { name: "Región nueva (1)" }));
+  expect(await screen.findByText("Vino de origen nuevo")).toBeInTheDocument();
+});
