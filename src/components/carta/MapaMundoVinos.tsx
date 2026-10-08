@@ -296,6 +296,10 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     setVisibleCount(PAGE_SIZE);
   }, [selectedRegion, tipoRegion]);
 
+  const origenesSinUbicar = sinUbicar.filter(grupo => grupo.vinos.some(vino =>
+    vino.ubicacion_region?.trim() || vino.denominacion_origen?.trim() || vino.ubicacion_pais?.trim(),
+  ));
+
   return (
     <div className="mb-8 w-full overflow-hidden">
       <h3 className="text-xl md:text-2xl font-bold text-center mb-3 md:mb-4 px-4">{t.map.title}</h3>
@@ -307,11 +311,11 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
         style={{ maxWidth: '100%', overflow: 'hidden' }}
       />
-      {sinUbicar.length > 0 && (
+      {origenesSinUbicar.length > 0 && (
         <div className="mt-4 space-y-2">
           <p className="text-sm text-muted-foreground">{t.map.otherOrigins}</p>
           <div className="flex flex-wrap gap-2">
-            {sinUbicar.map(grupo => (
+            {origenesSinUbicar.map(grupo => (
               <Button key={claveOrigen(grupo.vinos[0])} variant="outline" size="sm" onClick={() => {
                 setTipoRegion("todos");
                 setSelectedRegion({ region: grupo.region, vinos: grupo.vinos, category: grupo.category });

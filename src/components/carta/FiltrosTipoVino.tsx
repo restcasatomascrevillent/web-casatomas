@@ -24,13 +24,9 @@ export default function FiltrosTipoVino({ vinos, seleccionado, onChange }: Props
     return total;
   }, { todos: vinos.length });
   const tipos = TIPOS_VINO.filter(tipo => tipo !== 'otro' && (tipo !== 'rosado' || cantidades.rosado));
-  const conRosados = tipos.length === 5;
   return (
-    <div role="group" aria-label={grupos[language]} className={cn(
-      'mx-auto grid w-full max-w-2xl gap-1.5 rounded-xl border border-border/60 bg-muted/30 p-1.5',
-      conRosados ? 'grid-cols-6 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-4',
-    )}>
-      {tipos.map((tipo, i) => {
+    <div role="group" aria-label={grupos[language]} className="mx-auto flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto overscroll-x-contain rounded-xl border border-border/60 bg-muted/30 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-fit">
+      {tipos.map(tipo => {
         const activo = seleccionado === tipo;
         const etiqueta = etiquetaTipoVino(tipo, language);
         return (
@@ -43,13 +39,12 @@ export default function FiltrosTipoVino({ vinos, seleccionado, onChange }: Props
             aria-pressed={activo}
             onClick={() => onChange(tipo)}
             className={cn(
-              'h-11 min-w-0 justify-between gap-1.5 rounded-lg border px-2.5 py-0 font-sans text-xs font-medium tracking-normal hover:text-foreground sm:text-sm',
-              conRosados && (i < 3 ? 'col-span-2 sm:col-span-1' : 'col-span-3 sm:col-span-1'),
+              'h-11 shrink-0 justify-center gap-2 rounded-lg border px-2.5 py-0 font-sans text-xs font-medium tracking-normal hover:text-foreground sm:text-sm',
               activo ? 'border-accent/30 bg-background text-foreground shadow-sm hover:bg-background' : 'border-transparent text-muted-foreground hover:bg-background/70',
             )}
           >
             <span className={cn('min-w-0', activo && 'font-semibold')}>{etiquetasCortas[language][tipo]}</span>
-            <span aria-hidden="true" className={cn('shrink-0 text-[11px] tabular-nums sm:text-xs', activo ? 'font-semibold text-foreground' : 'text-muted-foreground/80')}>{cantidades[tipo] ?? 0}</span>
+            <span aria-hidden="true" className={cn('shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 text-[11px] leading-none tabular-nums sm:text-xs', activo ? 'font-semibold text-foreground' : 'text-muted-foreground/80')}>{cantidades[tipo] ?? 0}</span>
           </Button>
         );
       })}
