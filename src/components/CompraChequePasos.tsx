@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { flushSync } from "react-dom";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { crearSesionVistaRegalo } from "@/lib/cheques/vista-regalo";
 import { VistaRegaloCompra } from "./VistaRegaloCompra";
 import { Label } from "@/components/ui/label";
 import { Check, FileText, Loader2 } from "lucide-react";
@@ -12,19 +13,21 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import type { DatosComprador } from "./ContactoSection";
 
 const copyByLanguage = {
-  es: { showAmount: "Mostrar el importe en el regalo y en el PDF", dedication: "Incluir dedicatoria en el PDF", preview: "Vista previa del cheque PDF", loading: "Generando vista previa…", previewError: "La vista previa no está disponible ahora. Puedes continuar con la compra.", sample: "Código de ejemplo. El definitivo se genera al confirmar el pago.", next: "Continuar", back: "Atrás", step: "Paso", of: "de", optional: "Opcional · puedes continuar sin rellenarlo", invoice: "¿Necesitas factura?", no: "No necesito factura", review: "Revisa tu regalo", required: "Completa este dato para continuar." },
-  en: { showAmount: "Show the amount on the gift and PDF", dedication: "Include a dedication in the PDF", preview: "Gift PDF preview", loading: "Generating preview…", previewError: "The preview is unavailable right now. You can continue with your purchase.", sample: "Sample code. The final code is generated after payment.", next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", invoice: "Do you need an invoice?", no: "No invoice needed", review: "Review your gift", required: "Complete this field to continue." },
-  fr: { showAmount: "Afficher le montant sur le cadeau et le PDF", dedication: "Inclure une dédicace dans le PDF", preview: "Aperçu du chèque PDF", loading: "Génération de l’aperçu…", previewError: "L’aperçu est indisponible. Vous pouvez continuer votre achat.", sample: "Code d’exemple. Le code définitif est généré après le paiement.", next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", invoice: "Souhaitez-vous une facture ?", no: "Pas de facture", review: "Vérifiez votre cadeau", required: "Renseignez ce champ pour continuer." },
+  es: { showAmount: "Mostrar el importe en el regalo y en el PDF", dedication: "Incluir dedicatoria en el PDF", preview: "Vista previa del cheque PDF", loading: "Generando vista previa…", previewError: "La vista previa no está disponible ahora. Puedes continuar con la compra.", sample: "Código de ejemplo. El definitivo se genera al confirmar el pago.", next: "Continuar", back: "Atrás", step: "Paso", of: "de", optional: "Opcional · puedes continuar sin rellenarlo", invoice: "¿Necesitas factura?", no: "No necesito factura", review: "Revisa la información de compra", required: "Completa este dato para continuar." },
+  en: { showAmount: "Show the amount on the gift and PDF", dedication: "Include a dedication in the PDF", preview: "Gift PDF preview", loading: "Generating preview…", previewError: "The preview is unavailable right now. You can continue with your purchase.", sample: "Sample code. The final code is generated after payment.", next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", invoice: "Do you need an invoice?", no: "No invoice needed", review: "Review your purchase details", required: "Complete this field to continue." },
+  fr: { showAmount: "Afficher le montant sur le cadeau et le PDF", dedication: "Inclure une dédicace dans le PDF", preview: "Aperçu du chèque PDF", loading: "Génération de l’aperçu…", previewError: "L’aperçu est indisponible. Vous pouvez continuer votre achat.", sample: "Code d’exemple. Le code définitif est généré après le paiement.", next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", invoice: "Souhaitez-vous une facture ?", no: "Pas de facture", review: "Vérifiez les informations d’achat", required: "Renseignez ce champ pour continuer." },
 };
 type Props = {
   open: boolean; onOpenChange: (open: boolean) => void; importe: string; datos: DatosComprador;
   setDatos: Dispatch<SetStateAction<DatosComprador>>; enviando: boolean; error: string | null;
   setError: (error: string | null) => void; confirmar: () => Promise<void>;
 };
-type Field = { key: keyof DatosComprador | "factura" | "resumen"; label: string; type: string; required?: boolean; max?: number; complete?: string; placeholder?: string };
+type Field = { key: keyof DatosComprador | "factura" | "resumen" | "vista"; label: string; type: string; required?: boolean; max?: number; complete?: string; placeholder?: string };
 export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos, enviando, error, setError, confirmar }: Props) {
   const { t, language } = useTranslations();
   const c = t.contacto, copy = copyByLanguage[language || "es"];
+  const sesionVista = useMemo(() => open ? crearSesionVistaRegalo() : null, [open]);
+  useEffect(() => { if (sesionVista) void sesionVista.preparar().catch(() => {}); }, [sesionVista]);
   const [step, setStep] = useState(0);
   const [viewport, setViewport] = useState<{ height: number; top: number } | null>(null);
   const body = useRef<HTMLDivElement>(null);
@@ -53,9 +56,10 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
       { key: "facturaDireccion", label: c.giftInvoiceAddress, type: "textarea", required: true, max: 300, complete: "street-address" },
     ] as Field[] : []),
     { key: "resumen", label: copy.review, type: "summary" },
+    { key: "vista", label: copy.preview, type: "preview" },
   ];
   const field = fields[Math.min(step, fields.length - 1)];
-  const final = field.type === "summary";
+  const final = field.type === "preview";
   useLayoutEffect(() => {
     if (open && step > 0) body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([hidden]):not([type="checkbox"]), textarea:not([hidden])')?.focus({ preventScroll: true });
   }, [open, step]);
@@ -89,7 +93,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
       <form className="flex min-h-0 flex-1 flex-col" onSubmit={e => { e.preventDefault(); next(); }} noValidate>
         <div ref={body} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
           <div className="space-y-3 w-full min-w-0 my-auto">
-            <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>
+            {!final && <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>}
             {field.type === "choice" ? <div className="space-y-3">
               <p className="text-sm text-center text-muted-foreground">{c.giftInvoiceDescription}</p>
               <Button type="button" aria-pressed={datos.solicitaFactura} disabled={enviando} variant="outline" className={`w-full h-auto min-h-14 p-4 whitespace-normal text-left justify-start gap-3 ${datos.solicitaFactura ? "border-accent bg-accent/10" : ""}`}
@@ -97,10 +101,10 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
                 <FileText className="h-5 w-5 shrink-0" />{c.giftInvoiceRequest}{datos.solicitaFactura && <Check className="h-5 w-5 shrink-0 ml-auto" />}
               </Button>
               <Button type="button" aria-pressed={!datos.solicitaFactura} disabled={enviando} variant="outline" className={`w-full min-h-14 ${!datos.solicitaFactura ? "border-accent bg-accent/10" : ""}`} onClick={() => { setDatos(d => ({ ...d, solicitaFactura: false })); setError(null); }}>{copy.no}</Button>
-            </div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /><dl className="rounded-xl bg-muted/50 p-4 text-sm space-y-3">
+            </div> : field.type === "summary" ? <div className="space-y-4"><dl className="rounded-xl bg-muted/50 p-4 text-sm space-y-3">
               {fields.filter(f => (f.key !== "mensaje" || datos.incluirDedicatoria) && f.key in datos && String(datos[f.key as keyof DatosComprador] || "").trim()).map(f => <div key={f.key}><dt className="text-muted-foreground">{f.label}</dt><dd className="font-medium break-words whitespace-pre-wrap">{String(datos[f.key as keyof DatosComprador])}</dd></div>)}
               <div><dt className="text-muted-foreground">{copy.invoice}</dt><dd>{datos.solicitaFactura ? c.giftInvoiceRequest : copy.no}</dd></div>
-            </dl></div> : <div className="space-y-3">
+            </dl></div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /></div> : <div className="space-y-3">
               {field.key === "mensaje" && opciones}
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
               <Textarea style={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria) ? { display: "none" } : undefined} hidden={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria)} id={field.type === "date" ? undefined : "gift-step-" + field.key}

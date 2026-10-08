@@ -1,7 +1,6 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 // `npm:` y no esm.sh: ver el comentario en `stripe-webhook-cheques-regalo`.
-import Stripe from "npm:stripe@23.0.0";
-import { generarVistaRegalo } from "../_shared/cheques-regalo/pdf-plantilla.ts";
+import type Stripe from "npm:stripe@23.0.0";
 import { PLANTILLA_REGALO } from "../_shared/cheques-regalo/plantilla.ts";
 import { LOGO_CASA_TOMAS_PNG_BASE64 } from "../_shared/cheques-regalo/logo-base64.ts";
 
@@ -14,8 +13,8 @@ import { LOGO_CASA_TOMAS_PNG_BASE64 } from "../_shared/cheques-regalo/logo-base6
  * función con esta.
  *
  * Mismo patrón de rutas que `reservas-web` (un solo `Deno.serve`, sub-rutas
- * por `url.pathname`): `/crear` inicia el pago y `/vista-previa` muestra
- * el regalo antes de comprar, sin registrar compras ni generar códigos.
+ * por `url.pathname`): `/crear` inicia el pago, `/plantilla-vista` prepara
+ * el diseño público y `/vista-previa` conserva la compatibilidad anterior.
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -30,9 +29,12 @@ const CHEQUES_REGALO_ALLOWED_ORIGIN = Deno.env.get("CHEQUES_REGALO_ALLOWED_ORIGI
 const SITE_URL_FALLBACK = Deno.env.get("CHEQUES_REGALO_SITE_URL") || "https://restaurantecasatomascrevillente.es";
 
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const stripe = STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-09-30.endive", httpClient: Stripe.createFetchHttpClient() })
-  : null;
+// Stripe y pdf-lib solo se cargan para pagar o generar el PDF antiguo, no para preparar la vista.
+let stripePromise: Promise<Stripe> | undefined;
+function cargarStripe(): Promise<Stripe> {
+  return stripePromise ??= import("npm:stripe@23.0.0").then(({ default: Stripe }) =>
+    new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-09-30.endive", httpClient: Stripe.createFetchHttpClient() }));
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": CHEQUES_REGALO_ALLOWED_ORIGIN,
@@ -73,7 +75,7 @@ function textoOpcional(valor: unknown, maxLen: number): string | null {
 }
 
 async function handleCrear(req: Request): Promise<Response> {
-  if (!stripe) {
+  if (!STRIPE_SECRET_KEY) {
     return json({ motivo: "configuracion", mensaje: "Stripe no está configurado todavía." }, 503);
   }
 
@@ -153,6 +155,7 @@ async function handleCrear(req: Request): Promise<Response> {
     // Dashboard (tarjeta, Apple Pay, Google Pay…) que encajen con cada
     // comprador. Si se activa alguno que confirma más tarde (adeudo SEPA), el
     // webhook ya espera a `async_payment_succeeded` antes de dar el código.
+    const stripe = await cargarStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       // Etiqueta fija para filtrar en el Dashboard las sesiones de este flujo.
@@ -192,6 +195,14 @@ async function handleCrear(req: Request): Promise<Response> {
   }
 }
 
+/** Solo los campos públicos del diseño; nunca datos de compradores ni texto del email. */
+async function handlePlantillaVista(): Promise<Response> {
+  const { data, error } = await supabase.from("plantilla_cheques_regalo")
+    .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo").eq("id", true).single();
+  if (error || !data) return json({ mensaje: "No se pudo cargar la vista previa" }, 503);
+  return json({ plantilla: data });
+}
+
 /** Solo usa los datos introducidos y el diseño público del PDF; no consulta compras. */
 async function handleVistaPrevia(req: Request): Promise<Response> {
   try {
@@ -201,6 +212,7 @@ async function handleVistaPrevia(req: Request): Promise<Response> {
     const { data, error } = await supabase.from("plantilla_cheques_regalo")
       .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo").eq("id", true).single();
     if (error || !data) return json({ mensaje: "No se pudo cargar la vista previa" }, 503);
+    const { generarVistaRegalo } = await import("../_shared/cheques-regalo/pdf-plantilla.ts");
     const vista = await generarVistaRegalo({
       id: "ejemplo", codigo: "CT-EJEMPLO", importe_eur: Math.round(importe * 100) / 100,
       comprador_nombre: textoOpcional(payload.comprador_nombre, 200) || "", comprador_email: "",
@@ -218,6 +230,7 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const ruta = url.pathname.replace(/^\/cheques-regalo-web/, "") || "/";
 
+  if (req.method === "POST" && ruta === "/plantilla-vista") return handlePlantillaVista();
   if (req.method === "POST" && ruta === "/vista-previa") return handleVistaPrevia(req);
   if (req.method === "POST" && ruta === "/crear") return handleCrear(req);
 

@@ -6,6 +6,7 @@ vi.mock("@/components/TelLink", () => ({ TelLink: () => <span>Teléfono</span> }
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/lib/supabase-functions", () => ({ CHEQUES_REGALO_CREAR_URL: "https://example.com/crear", functionHeaders: () => ({ "Content-Type": "application/json" }), leerCuerpo: async (r: Response) => r.json() }));
 vi.mock("@/components/VistaRegaloCompra", () => ({ VistaRegaloCompra: () => <div>Vista PDF</div> }));
+vi.mock("@/lib/cheques/vista-regalo", () => ({ crearSesionVistaRegalo: () => ({ preparar: vi.fn().mockResolvedValue([]) }) }));
 import ContactoSection from "@/components/ContactoSection";
 const c = es.translations.contacto;
 function continuar() { fireEvent.click(screen.getByRole("button", { name: "Continuar" })); }
@@ -43,6 +44,7 @@ describe("Compra guiada del cheque", () => {
     fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
     expect(screen.getByLabelText(c.giftInvoiceAddress)).toHaveValue(" Calle Mayor, 1, 03330 Crevillent ");
     continuar();
+    continuar();
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const body=JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
@@ -53,19 +55,21 @@ describe("Compra guiada del cheque", () => {
   it("no lleva al pago si el backend antiguo no registra la factura", async () => {
     await abrir(); pedirFactura(); completarFactura();
     vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://checkout.stripe.com/test" }) } as Response);
+    continuar();
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
     expect(await screen.findByRole("alert")).toHaveTextContent(c.giftInvoiceNotReady);
   });
   it("sin factura, omite las preguntas fiscales", async () => {
     await abrir(); continuar();
     expect(screen.queryByLabelText(c.giftInvoiceTaxId)).toBeNull();
+    continuar();
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const body=JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
     expect(body.solicita_factura).toBe(false); expect(body.datos_factura).toBeUndefined();
   });
   it("permite elegir sin importe ni dedicatoria antes del pago", async () => {
-    await abrir(); continuar();
+    await abrir(); continuar(); continuar();
     fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar el importe en el regalo y en el PDF" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Incluir dedicatoria en el PDF" }));
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
@@ -77,11 +81,27 @@ describe("Compra guiada del cheque", () => {
     expect(body.importe_eur).toBe(100);
   });
   it("evita cobrar si el servidor antiguo ignora la selección de importe oculto", async () => {
-    await abrir(); continuar();
+    await abrir(); continuar(); continuar();
     fireEvent.click(screen.getByRole("checkbox", { name: "Mostrar el importe en el regalo y en el PDF" }));
     vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://checkout.stripe.com/test" }) } as Response);
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo confirmar que el importe quede oculto");
+  });
+  it("separa la información de compra de la vista previa y el pago", async () => {
+    await abrir(); continuar();
+    expect(screen.getByRole("heading", { name: "Revisa la información de compra" })).toBeInTheDocument();
+    expect(screen.getByText("ana@example.com")).toBeInTheDocument();
+    expect(screen.queryByText("Vista PDF")).toBeNull();
+    expect(screen.queryByRole("button", { name: c.giftFormSubmit })).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    continuar();
+    expect(screen.getByText("Vista PDF")).toBeInTheDocument();
+    expect(screen.queryByText("ana@example.com")).toBeNull();
+    expect(screen.getByRole("button", { name: c.giftFormSubmit })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
+    expect(screen.getByText("ana@example.com")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: c.giftFormSubmit })).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
   });
   it("mantiene el campo montado y el foco al continuar", () => {
     render(<ContactoSection />);

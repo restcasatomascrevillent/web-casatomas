@@ -38,6 +38,7 @@ export const CHAT_WEB_URL = `${FUNCTIONS_BASE_URL}/chat-web`;
  * (`stripe-webhook-cheques-regalo`) lo llama Stripe directamente, nunca el
  * navegador, así que no tiene URL aquí.
  */
+export const CHEQUES_REGALO_PLANTILLA_VISTA_URL = `${FUNCTIONS_BASE_URL}/cheques-regalo-web/plantilla-vista`;
 export const CHEQUES_REGALO_VISTA_URL = `${FUNCTIONS_BASE_URL}/cheques-regalo-web/vista-previa`;
 export const CHEQUES_REGALO_CREAR_URL = `${FUNCTIONS_BASE_URL}/cheques-regalo-web/crear`;
 

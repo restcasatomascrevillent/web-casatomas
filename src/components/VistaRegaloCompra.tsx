@@ -1,30 +1,24 @@
-import { useEffect, useState } from "react";
-import { CHEQUES_REGALO_VISTA_URL, functionHeaders } from "@/lib/supabase-functions";
+import { useEffect, useMemo, useState } from "react";
+import { crearSesionVistaRegalo, type SesionVistaRegalo } from "@/lib/cheques/vista-regalo";
 
-export function VistaRegaloCompra({ importe, nombre, destinatario, mensaje, ocultarImporte, incluirDedicatoria, texto }: {
+export function VistaRegaloCompra({ importe, nombre, destinatario, mensaje, ocultarImporte, incluirDedicatoria, sesion, texto }: {
   importe: string; nombre: string; destinatario: string; mensaje: string; ocultarImporte: boolean; incluirDedicatoria: boolean;
+  sesion?: SesionVistaRegalo;
   texto: { preview: string; loading: string; previewError: string; sample: string };
 }) {
+  const local = useMemo(crearSesionVistaRegalo, []);
   const [paginas, setPaginas] = useState<string[]>([]);
   const [error, setError] = useState(false);
+  const [cargando, setCargando] = useState(true);
   useEffect(() => {
-    const controller = new AbortController();
-    setPaginas([]); setError(false);
-    const timer = window.setTimeout(() => { void (async () => {
-      try {
-        const response = await fetch(CHEQUES_REGALO_VISTA_URL, {
-          method: "POST", headers: functionHeaders(), signal: controller.signal,
-          body: JSON.stringify({ importe_eur: Number(importe), comprador_nombre: nombre, destinatario_nombre: destinatario,
-            mensaje: incluirDedicatoria ? mensaje : null, ocultar_importe: ocultarImporte, incluir_dedicatoria: incluirDedicatoria }),
-        });
-        const data = await response.json() as { paginas?: string[] };
-        if (!response.ok || !Array.isArray(data.paginas) || !data.paginas.length || !data.paginas.every(p => typeof p === "string" && p.startsWith("<svg "))) throw new Error("Vista no disponible");
-        if (!controller.signal.aborted) setPaginas(data.paginas.map(svg => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg)));
-      } catch { if (!controller.signal.aborted) setError(true); }
-    })(); }, 250);
-    return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [importe, nombre, destinatario, mensaje, ocultarImporte, incluirDedicatoria]);
-  return <section className="space-y-2" aria-label={texto.preview}>
+    let activo = true;
+    setError(false); setCargando(true);
+    void (sesion || local).generar({ importe, nombre, destinatario, mensaje, ocultarImporte, incluirDedicatoria })
+      .then(p => { if (activo) { setPaginas(p); setCargando(false); } })
+      .catch(() => { if (activo) { setError(true); setCargando(false); } });
+    return () => { activo = false; };
+  }, [sesion, local, importe, nombre, destinatario, mensaje, ocultarImporte, incluirDedicatoria]);
+  return <section className="space-y-2" aria-label={texto.preview} aria-busy={cargando}>
     <h3 className="font-medium text-sm">{texto.preview}</h3>
     {error ? <p role="status" className="text-xs text-muted-foreground">{texto.previewError}</p> : paginas.length ? <div className="max-h-[45dvh] overflow-y-auto rounded-xl border bg-muted/30 p-3 space-y-3">
       {paginas.map((src, i) => <img key={i} src={src} alt={`${texto.preview} · ${i + 1}/${paginas.length}`} className="block w-full h-auto rounded-sm shadow" />)}
