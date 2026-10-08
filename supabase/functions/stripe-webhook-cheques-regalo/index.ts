@@ -47,7 +47,7 @@ const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
 // Sin cliente de Stripe ni `STRIPE_SECRET_KEY`: todo lo que hace falta viene
 // en el propio evento, y verificar la firma solo necesita el secreto del
 // webhook. Menos claves cargadas, menos que perder.
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { global: { headers: { "x-audit-source": "stripe-webhook-cheques-regalo" } } });
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 /**
@@ -219,4 +219,5 @@ Deno.serve(async (req) => {
     headers: { "Content-Type": "application/json" },
   });
 });
+
 

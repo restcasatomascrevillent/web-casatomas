@@ -119,6 +119,7 @@ Deno.serve(async (req) => {
   const verificacion = await verificarAdmin(req, payload.accion === "listar" ? "view" : "edit");
   if (!verificacion.ok) return json({ motivo: "no_autorizado", mensaje: verificacion.mensaje }, verificacion.status);
 
+  const ejecutar = async (): Promise<Response> => {
   switch (payload.accion) {
     case "listar":
       return handleListar(verificacion.admin);
@@ -131,4 +132,17 @@ Deno.serve(async (req) => {
     default:
       return json({ motivo: "accion_desconocida", mensaje: "Acción de cheques no reconocida." }, 400);
   }
+  };
+  const response = await ejecutar();
+  if (payload.accion !== "listar") {
+    const result = await response.clone().json().catch(() => null);
+    const failed = !response.ok || result?.email_enviado === false || (result?.factura_solicitada === true && result?.factura_enviada === false);
+    const { error } = await verificacion.admin.rpc("registrar_accion_auditoria_panel", {
+      p_operacion: `cheques-regalo-admin/${payload.accion}`,
+      p_detalles: { resultado: failed ? "fallida" : "completada", codigo_http: response.status },
+    });
+    if (error) return json({ mensaje: "La operación terminó pero no se pudo registrar en auditoría. Comprueba el cheque antes de repetirla." },500);
+  }
+  return response;
 });
+

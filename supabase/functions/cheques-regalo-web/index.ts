@@ -28,7 +28,9 @@ const CHEQUES_REGALO_ALLOWED_ORIGIN = Deno.env.get("CHEQUES_REGALO_ALLOWED_ORIGI
 // cross-origin), y como último recurso el dominio de producción.
 const SITE_URL_FALLBACK = Deno.env.get("CHEQUES_REGALO_SITE_URL") || "https://restaurantecasatomascrevillente.es";
 
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  global: { headers: { "x-audit-source": "cheques-regalo-web" } },
+});
 // Stripe y pdf-lib solo se cargan para pagar o generar el PDF antiguo, no para preparar la vista.
 let stripePromise: Promise<Stripe> | undefined;
 function cargarStripe(): Promise<Stripe> {
