@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import FiltrosTipoVino from "./FiltrosTipoVino";
-import { claveOrigen, coordenadasConocidas, localizarOrigen } from "@/lib/origenes-vino";
+import { claveOrigen, coordenadasConocidas, localizarOrigen, nombreOrigen } from "@/lib/origenes-vino";
 import { tipoVino as getCategoryKey, type TipoVino } from "@/lib/tipos-vino";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -106,8 +106,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
 
     vinos.forEach(vino => {
       const key = claveOrigen(vino);
-      const region = vino.ubicacion_region?.trim() || vino.denominacion_origen?.trim()
-        || vino.ubicacion_pais?.trim() || t.map.noLocation;
+      const region = nombreOrigen(vino) || t.map.noLocation;
       if (!regionCount[key]) regionCount[key] = { region, count: 0, vinos: [], category: getCategoryKey(vino.categoria) };
       const grupo = regionCount[key];
       grupo.count++;
@@ -297,7 +296,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   }, [selectedRegion, tipoRegion]);
 
   const origenesSinUbicar = sinUbicar.filter(grupo => grupo.vinos.some(vino =>
-    vino.ubicacion_region?.trim() || vino.denominacion_origen?.trim() || vino.ubicacion_pais?.trim(),
+    nombreOrigen(vino),
   ));
 
   return (

@@ -25,7 +25,7 @@ const regionCoordinates: { [key: string]: [number, number] } = {
   "Alsacia (Haut‑Rhin)": [7.3, 48.0],
   "Languedoc-Rosellón (Occitanie)": [3.0, 43.5],
   "Provenza (Provence-Alpes-Côte d'Azur)": [6.0, 43.5],
-  "Mosela (estimado)": [6.5, 49.8],
+  "Mosela": [7.06, 49.95],
   
   // España - Galicia
   "Galicia (Pontevedra)": [-8.6, 42.4],
@@ -129,7 +129,7 @@ const paisPorRegion: Record<string, string> = {
   "Alsacia (Haut‑Rhin)": "Francia",
   "Languedoc-Rosellón (Occitanie)": "Francia",
   "Provenza (Provence-Alpes-Côte d'Azur)": "Francia",
-  "Mosela (estimado)": "Francia",
+  "Mosela": "Alemania",
   "Galicia (Pontevedra)": "España",
   "Galicia (Valdeorras, Ourense)": "España",
   "Galicia (Ourense)": "España",
@@ -186,40 +186,112 @@ const codigosPais: Record<string, string> = {
   sudafrica: "za", "south africa": "za",
 };
 
+// Puntos representativos de zonas vinícolas, no coordenadas de cada bodega.
+// No inferir Cava desde la D.O.: se produce en varias comunidades autónomas.
+type Zona = { nombre: string; pais: string; coords: [number, number]; denominaciones?: string[]; regiones?: string[] };
+const zonas: Zona[] = [
+  { nombre: "La Rioja", pais: "es", coords: [-2.5, 42.3], denominaciones: ["Rioja"] },
+  { nombre: "Ribera del Duero", pais: "es", coords: [-3.69, 41.67], denominaciones: ["Ribera del Duero"] },
+  { nombre: "Rueda", pais: "es", coords: [-4.96, 41.41], denominaciones: ["Rueda"] },
+  { nombre: "Toro", pais: "es", coords: [-5.4, 41.52], denominaciones: ["Toro"] },
+  { nombre: "Ribeiro", pais: "es", coords: [-8.14, 42.29], denominaciones: ["Ribeiro"] },
+  { nombre: "Ribeira Sacra", pais: "es", coords: [-7.48, 42.47], denominaciones: ["Ribeira Sacra"] },
+  { nombre: "Valdeorras", pais: "es", coords: [-6.98, 42.42], denominaciones: ["Valdeorras"] },
+  { nombre: "Bierzo", pais: "es", coords: [-6.73, 42.61], denominaciones: ["Bierzo"] },
+  { nombre: "Rías Baixas", pais: "es", coords: [-8.78, 42.51], denominaciones: ["Rías Baixas"] },
+  { nombre: "Priorat", pais: "es", coords: [0.79, 41.19], denominaciones: ["Priorat"] },
+  { nombre: "Jumilla", pais: "es", coords: [-1.33, 38.48], denominaciones: ["Jumilla"] },
+  { nombre: "Valdepeñas", pais: "es", coords: [-3.38, 38.76], denominaciones: ["Valdepeñas"] },
+  { nombre: "Almansa", pais: "es", coords: [-1.1, 38.87], denominaciones: ["Almansa"] },
+  { nombre: "Jerez", pais: "es", coords: [-6.14, 36.69], denominaciones: ["Jerez-Xérès-Sherry"] },
+  { nombre: "Abadía Retuerta", pais: "es", coords: [-4.43, 41.61], denominaciones: ["Vino de Pago Abadía Retuerta", "Vino de Pago Abadía Retuerta / IGP Castilla y León"] },
+  { nombre: "Penedès", pais: "es", coords: [1.79, 41.43], regiones: ["Cataluña (Penedès, Barcelona)", "Cataluña (Penedès)"] },
+  { nombre: "Alella", pais: "es", coords: [2.29, 41.5], regiones: ["Cataluña (Maresme, Barcelona)"] },
+  { nombre: "Alpera (Albacete)", pais: "es", coords: [-1.23, 38.96], regiones: ["Castilla-La Mancha (Alpera, Albacete)"] },
+  { nombre: "Sierra de Gredos (Ávila)", pais: "es", coords: [-4.67, 40.32], regiones: ["Castilla y León (Ávila)"] },
+  { nombre: "Vinos de Madrid", pais: "es", coords: [-4.4, 40.32], denominaciones: ["Vinos de Madrid"] },
+  { nombre: "Rioja Alavesa", pais: "es", coords: [-2.58, 42.55], regiones: ["País Vasco (Rioja Alavesa, Álava)", "La Rioja/Álava (Rioja Alavesa)"] },
+  { nombre: "Saint-Émilion", pais: "fr", coords: [-0.16, 44.89], denominaciones: ["Saint-Émilion Grand Cru"] },
+  { nombre: "Côtes de Provence", pais: "fr", coords: [6.24, 43.33], denominaciones: ["Côtes de Provence"] },
+  { nombre: "Côtes du Rhône", pais: "fr", coords: [4.8, 44.15], denominaciones: ["Côtes du Rhône"] },
+  { nombre: "Vouvray", pais: "fr", coords: [0.8, 47.42], denominaciones: ["Vouvray"] },
+  { nombre: "Pouilly-Fumé", pais: "fr", coords: [2.96, 47.28], denominaciones: ["Pouilly-Fumé"] },
+  { nombre: "Chablis", pais: "fr", coords: [3.8, 47.81], denominaciones: ["Chablis"] },
+  { nombre: "Saumur (Loira)", pais: "fr", coords: [-0.07, 47.26], regiones: ["Valle del Loira (Saumur)"] },
+  { nombre: "Mosela", pais: "de", coords: [7.06, 49.95], denominaciones: ["Mosel", "Mosela"], regiones: ["Mosela", "Mosel"] },
+  { nombre: "Asti", pais: "it", coords: [8.21, 44.9], denominaciones: ["Moscato d'Asti"] },
+  { nombre: "Tokaj", pais: "hu", coords: [21.4, 48.2], denominaciones: ["Tokaj"], regiones: ["Tokaj"] },
+  { nombre: "Stellenbosch", pais: "za", coords: [18.85, -33.98], denominaciones: ["Stellenbosch"], regiones: ["Stellenbosch (Provincia Occidental del Cabo)"] },
+];
+
+const codigoPais = (pais: string) => {
+  const key = normalizarOrigen(pais);
+  return codigosPais[key] || ({ es: "es", fr: "fr", de: "de", it: "it", za: "za", hu: "hu", hungria: "hu", hungary: "hu", hongrie: "hu", espagne: "es", "afrique du sud": "za", allemagne: "de", italie: "it" } as Record<string, string>)[key];
+};
+
+const pendiente = (valor: string) => /por confirmar|sin especificar|desconocido|to be confirmed|a confirmer/i.test(normalizarOrigen(valor));
+const limpio = (valor?: string | null) => valor && !pendiente(valor) ? valor.trim() : "";
+const denominacion = (valor: string) => normalizarOrigen(valor)
+  .replace(/^(d\.o\.(?:ca\.|q\.|p\.)?|aoc|aop|docg|wo)\s*/, "")
+  .replace(/\s*\((estimado|segun carta)\)$/, "");
+
+function zonaConocida(vino: OrigenVino): Zona | undefined {
+  const pais = codigoPais(vino.ubicacion_pais || "");
+  if (!pais) return undefined;
+  const region = normalizarOrigen(limpio(vino.ubicacion_region));
+  const origen = denominacion(limpio(vino.denominacion_origen));
+  // Mantener las subzonas explícitas antes de recurrir a una D.O. más amplia.
+  return zonas.find(z => z.pais === pais && z.regiones?.some(r => normalizarOrigen(r) === region))
+    || zonas.find(z => z.pais === pais && z.denominaciones?.some(d => denominacion(d) === origen));
+}
+
+export const nombreOrigen = (vino: OrigenVino) => zonaConocida(vino)?.nombre
+  || limpio(vino.ubicacion_region) || limpio(vino.denominacion_origen) || limpio(vino.ubicacion_pais);
+
 export const claveOrigen = (vino: OrigenVino) => JSON.stringify([
-  normalizarOrigen(vino.ubicacion_pais || ""),
-  normalizarOrigen(vino.ubicacion_region || vino.denominacion_origen || ""),
+  codigoPais(vino.ubicacion_pais || "") || normalizarOrigen(limpio(vino.ubicacion_pais)),
+  normalizarOrigen(nombreOrigen(vino)),
 ]);
 
 export function coordenadasConocidas(vino: OrigenVino): [number, number] | null {
-  const region = normalizarOrigen(vino.ubicacion_region || "");
+  const zona = zonaConocida(vino);
+  if (zona) return zona.coords;
+  const region = normalizarOrigen(limpio(vino.ubicacion_region));
   const pais = normalizarOrigen(vino.ubicacion_pais || "");
-  if (!region) return null;
+  if (!region || /estimado/.test(region)) return null;
   const nombre = Object.keys(regionCoordinates).find(key =>
     normalizarOrigen(key) === region && (!pais || normalizarOrigen(paisPorRegion[key]) === pais
-      || (codigosPais[pais] && codigosPais[pais] === codigosPais[normalizarOrigen(paisPorRegion[key])])));
+      || (codigoPais(pais) && codigoPais(pais) === codigoPais(paisPorRegion[key]))));
   return nombre ? regionCoordinates[nombre] : null;
 }
 
-// Las coordenadas nuevas se usan solo durante esta visita; no se guardan en la base de datos.
+// Solo resultados temporales, con país y topónimo comprobados. Nunca usar el
+// centro del país como sustituto de una región que no se ha podido localizar.
 export async function localizarOrigen(vino: OrigenVino, token: string, signal: AbortSignal): Promise<[number, number] | null> {
   const conocidas = coordenadasConocidas(vino);
   if (conocidas) return conocidas;
-  if (!token) return null;
-  const lugar = vino.ubicacion_region?.trim() || vino.denominacion_origen?.trim() || vino.ubicacion_pais?.trim();
-  if (!lugar) return null;
-  const pais = vino.ubicacion_pais?.trim();
+  const pais = limpio(vino.ubicacion_pais);
+  const codigo = codigoPais(pais);
+  const lugar = limpio(vino.ubicacion_region);
+  if (!token || !codigo || !lugar || /estimado/i.test(lugar)) return null;
   const params = new URLSearchParams({
-    q: [lugar, pais && pais !== lugar ? pais : ""].filter(Boolean).join(", "),
-    access_token: token, limit: "1", autocomplete: "false", language: "es",
-    types: "country,region,district,place,locality",
+    q: `${lugar}, ${pais}`, country: codigo,
+    access_token: token, limit: "5", autocomplete: "false", language: "es",
+    types: "region,district,place,locality",
   });
-  const codigo = codigosPais[normalizarOrigen(pais || "")];
-  if (codigo) params.set("country", codigo);
   const response = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?${params}`, { signal });
   if (!response.ok) return null;
   const result = await response.json();
-  const coords = result.features?.[0]?.geometry?.coordinates;
-  return Array.isArray(coords) && coords.length === 2 && coords.every(Number.isFinite)
-    && Math.abs(coords[0]) <= 180 && Math.abs(coords[1]) <= 90 ? coords as [number, number] : null;
+  const features = Array.isArray(result.features) ? result.features : [];
+  // Comprobar todo el topónimo: aceptar solo un nombre inequívoco y exacto.
+  for (const feature of features) {
+    const props = feature.properties;
+    if (props?.context?.country?.country_code?.toLowerCase() !== codigo
+      || !["region", "district", "place", "locality"].includes(props?.feature_type)
+      || normalizarOrigen(props?.name || "") !== normalizarOrigen(lugar)) continue;
+    const coords = feature.geometry?.coordinates;
+    if (Array.isArray(coords) && coords.length === 2 && coords.every(Number.isFinite)
+      && Math.abs(coords[0]) <= 180 && Math.abs(coords[1]) <= 90) return coords as [number, number];
+  }
+  return null;
 }

@@ -138,7 +138,7 @@ it("actualiza el contador y los vinos de una región al añadir una referencia",
 });
 
 it("permite consultar los vinos cuyo origen aún no se ha podido situar", async () => {
-  renderComponent([{ ...RIOJA_VINOS[0], nombre: "Vino de origen nuevo", ubicacion_region: "Región nueva" }]);
+  renderComponent([{ ...RIOJA_VINOS[0], nombre: "Vino de origen nuevo", ubicacion_region: "Región nueva", denominacion_origen: "" }]);
   fireEvent.click(await screen.findByRole("button", { name: "Región nueva (1)" }));
   expect(await screen.findByText("Vino de origen nuevo")).toBeInTheDocument();
 });

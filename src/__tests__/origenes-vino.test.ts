@@ -6,14 +6,14 @@ afterEach(() => vi.unstubAllGlobals());
 describe("Orígenes de vinos nuevos", () => {
   it("reconoce regiones existentes con espacios, mayúsculas y acentos distintos", () => {
     expect(coordenadasConocidas({ ubicacion_region: "  LA RIOJA  ", ubicacion_pais: "España" })).toEqual([-2.5, 42.3]);
-    expect(coordenadasConocidas({ ubicacion_region: "Cataluna (Penedes)", ubicacion_pais: "España" })).toEqual([1.5, 41.3]);
+    expect(coordenadasConocidas({ ubicacion_region: "Cataluna (Penedes)", ubicacion_pais: "España" })).toEqual([1.79, 41.43]);
   });
   it("separa regiones del mismo nombre en países diferentes", () => {
     expect(claveOrigen({ ubicacion_region: "La Rioja", ubicacion_pais: "España" })).not.toBe(claveOrigen({ ubicacion_region: "La Rioja", ubicacion_pais: "Argentina" }));
     expect(coordenadasConocidas({ ubicacion_region: "La Rioja", ubicacion_pais: "Argentina" })).toBeNull();
   });
   it("busca una región nueva sin necesitar cambios en la lista fija", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ geometry: { coordinates: [-8.2, 42.1] } }] }) });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ geometry: { coordinates: [-8.2, 42.1] }, properties: { name: "Nueva región", feature_type: "region", context: { country: { country_code: "ES" } } } }] }) });
     vi.stubGlobal("fetch", fetchMock);
     const signal = new AbortController().signal;
     expect(await localizarOrigen({ ubicacion_region: "Nueva región", ubicacion_pais: "España" }, "token", signal)).toEqual([-8.2, 42.1]);
