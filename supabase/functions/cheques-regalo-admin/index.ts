@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { prepararChequeEmail } from "../_shared/cheques-regalo/preparar-email.ts";
-import { enviarEmailCheque } from "../_shared/cheques-regalo/email.ts";
+import { enviarCompraManual } from "../_shared/cheques-regalo/enviar-compra-manual.ts";
 import { verificarAdmin } from "../_shared/cheques-regalo/admin-auth.ts";
 import type { ChequeParaEmail } from "../_shared/cheques-regalo/tipos.ts";
 
@@ -45,6 +44,8 @@ interface AccionCrearManual {
   mensaje?: unknown;
   fecha_entrega_deseada?: unknown;
   ocultar_importe?: unknown;
+  solicita_factura?: unknown;
+  datos_factura?: unknown;
 }
 
 interface AccionEliminar {
@@ -77,25 +78,13 @@ async function handleEnviarManual(admin: SupabaseClient, id: unknown): Promise<R
   const { data: fila, error } = await admin.from("cheques_regalo").select("*")
     .eq("id", id).eq("origen", "manual").eq("estado", "pagado").single();
   if (error || !fila?.codigo) return json({ mensaje: "Cheque manual no encontrado" }, 404);
-  if (fila.email_enviado_en) return json({ cheque: fila, email_enviado: true });
-  try {
-    const preparado = await prepararChequeEmail(admin, fila as ChequeParaEmail);
-    const enviado = await enviarEmailCheque(preparado, { ocultarImporte: fila.ocultar_importe === true });
-    if (enviado) {
-      const { error: errorMarca } = await admin.from("cheques_regalo")
-        .update({ email_enviado_en: new Date().toISOString() }).eq("id", id);
-      if (errorMarca) throw new Error("No se ha confirmado el registro del envío");
-    }
-    return json({ cheque: fila, email_enviado: enviado });
-  } catch (error) {
-    console.error("[cheques-regalo-admin] envío falló:", error);
-    return json({ mensaje: "El cheque está expedido; no se ha confirmado el envío", email_enviado: false }, 502);
-  }
+  const envios = await enviarCompraManual(admin, fila as ChequeParaEmail);
+  return json({ cheque: fila, ...envios });
 }
 
 async function handleCrearManual(admin: SupabaseClient, usuario: SupabaseClient, payload: AccionCrearManual): Promise<Response> {
   if (!payload.solicitud_id) return json({ mensaje: "Falta la referencia de la compra manual" }, 422);
-  const { data, error } = await usuario.rpc("crear_cheque_manual", {
+  const { data, error } = await usuario.rpc(payload.solicita_factura === true ? "crear_cheque_manual_v2" : "crear_cheque_manual", {
     p_solicitud_id: payload.solicitud_id,
     p_datos: { ...payload, pago_manual_metodo: payload.pago_manual_metodo || "cortesia" },
   });
