@@ -796,7 +796,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                                 </div>
                               )}
                               {item.descripcion && (
-                                <p className="text-sm text-muted-foreground line-clamp-3">{item.descripcion}</p>
+                                <p className="text-sm text-muted-foreground">{item.descripcion}</p>
                               )}
                             </CardContent>
                           </motion.div>
