@@ -284,6 +284,22 @@ const ProductoCard = ({
               infoOpen ? "h-auto" : "h-full"
             }`}
           >
+            {/* Si el cliente ya había abierto la foto, sigue a la vista al
+                girar a la información: que desaparezca de golpe queda mal. */}
+            {expanded && imagen && (
+              <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
+                <img
+                  src={imagenOptimizada(imagen, 768)}
+                  alt={plato.displayNombre}
+                  className="w-full h-full object-cover"
+                  style={encuadre}
+                  loading="lazy"
+                  decoding="async"
+                  width={640}
+                  height={384}
+                />
+              </div>
+            )}
             <CardHeader className="pb-3 px-5 pt-4 flex-shrink-0 border-b bg-muted/20">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">

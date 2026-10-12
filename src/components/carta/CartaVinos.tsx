@@ -648,6 +648,34 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             const alergenosInferidos = Array.from(
               new Set(alergenosItem.inferidos.map((a) => etiquetaAlergeno(a, language)).filter(Boolean)),
             ).filter((etiqueta) => !alergenosOficiales.includes(etiqueta));
+            // La foto se pinta en las dos caras: si el cliente la ha abierto y
+            // luego pulsa «información», la tarjeta gira pero la foto sigue.
+            const bloqueFoto = (
+              <div className="relative h-48 overflow-hidden">
+                {hasVisibleImage ? (
+                  <img
+                    src={imagenOptimizada(imageUrl, 768) || undefined}
+                    alt={item.displayNombre || item.nombre}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    style={imageStyle}
+                    loading="lazy"
+                    decoding="async"
+                    onError={() =>
+                      setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
+                    }
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                    <Wine className="w-9 h-9 text-accent/70" />
+                  </div>
+                )}
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                    {translateCategory(item.categoria)}
+                  </Badge>
+                </div>
+              </div>
+            );
 
             return (
               // Sin `layout` (ver más abajo por qué) y con `initial={false}`:
@@ -706,30 +734,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                             style={{ transformOrigin: "top" }}
                             className="overflow-hidden bg-muted flex-shrink-0"
                           >
-                            <div className="relative h-48 overflow-hidden">
-                              {hasVisibleImage ? (
-                                <img
-                                  src={imagenOptimizada(imageUrl, 768) || undefined}
-                                  alt={item.displayNombre || item.nombre}
-                                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                                  style={imageStyle}
-                                  loading="lazy"
-                                  decoding="async"
-                                  onError={() =>
-                                    setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
-                                  }
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
-                                  <Wine className="w-9 h-9 text-accent/70" />
-                                </div>
-                              )}
-                              <div className="absolute top-2 right-2">
-                                <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                                  {translateCategory(item.categoria)}
-                                </Badge>
-                              </div>
-                            </div>
+                            {bloqueFoto}
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -837,6 +842,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                         infoOpen ? "h-auto" : "h-full"
                       }`}
                     >
+                      {expanded && <div className="bg-muted flex-shrink-0">{bloqueFoto}</div>}
                       <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">

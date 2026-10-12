@@ -560,6 +560,34 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
             )
           );
           const infoIngredientes = item.displayIngredientes || [];
+          // La foto se pinta en las dos caras: si el cliente la ha abierto y
+          // luego pulsa «información», la tarjeta gira pero la foto sigue.
+          const bloqueFoto = (
+            <div className="relative h-48 overflow-hidden">
+              {hasVisibleImage ? (
+                <img
+                  src={imagenOptimizada(imageUrl, 768) || undefined}
+                  alt={item.displayNombre}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  style={imageStyle}
+                  loading="lazy"
+                  decoding="async"
+                  onError={() =>
+                    setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
+                  }
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                  <UtensilsCrossed className="w-9 h-9 text-accent/70" />
+                </div>
+              )}
+              <div className="absolute top-2 right-2">
+                <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                  {categoryLabel}
+                </Badge>
+              </div>
+            </div>
+          );
           return (
             // Sin `layout`: con él, mostrar/ocultar la foto o la información
             // de UNA tarjeta cambiaba su alto y Framer Motion recalculaba y
@@ -601,30 +629,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                           transition={{ duration: 0.25, ease: "easeInOut" }}
                           className="overflow-hidden bg-muted flex-shrink-0"
                         >
-                          <div className="relative h-48 overflow-hidden">
-                            {hasVisibleImage ? (
-                              <img
-                                src={imagenOptimizada(imageUrl, 768) || undefined}
-                                alt={item.displayNombre}
-                                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                                style={imageStyle}
-                                loading="lazy"
-                                decoding="async"
-                                onError={() =>
-                                  setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
-                                }
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
-                                <UtensilsCrossed className="w-9 h-9 text-accent/70" />
-                              </div>
-                            )}
-                            <div className="absolute top-2 right-2">
-                              <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                                {categoryLabel}
-                              </Badge>
-                            </div>
-                          </div>
+                          {bloqueFoto}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -718,6 +723,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                       infoOpen ? "h-auto" : "h-full"
                     }`}
                   >
+                    {expanded && <div className="bg-muted flex-shrink-0">{bloqueFoto}</div>}
                     <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
