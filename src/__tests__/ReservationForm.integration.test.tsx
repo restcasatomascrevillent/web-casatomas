@@ -203,13 +203,13 @@ describe("ReservationForm — phone field default value", () => {
 });
 
 describe("ReservationForm — guests field constraints", () => {
-  it("guests input has min=1 and max=20 HTML attributes", async () => {
+  it("guests input has min=1 and max=7 HTML attributes", async () => {
     renderForm();
     await waitFor(() => screen.getByRole("spinbutton"));
 
     const guestsInput = screen.getByRole("spinbutton") as HTMLInputElement;
     expect(guestsInput.min).toBe("1");
-    expect(guestsInput.max).toBe("20");
+    expect(guestsInput.max).toBe("7");
   });
 });
 

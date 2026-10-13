@@ -399,7 +399,8 @@ export const translations: Translations = {
         },
       },
       roomNotSpecified: "Not specified",
-      largeGroupNotice: "For groups of more than 12, call us on {phone} and we'll arrange it with you.",
+      largeGroupNotice: "Tables of 8 or more can only be booked by phone: call us on {phone} and we'll arrange it with you.",
+      petsNotice: "Pets are not allowed in the restaurant.",
     },
     tomy: {
       cta: "Ask Tomy",
@@ -452,6 +453,8 @@ export const translations: Translations = {
       ],
     },
     contacto: {
+      petsLabel: "Pets",
+      petsText: "Pets are not allowed in the restaurant.",
       title: "Contact",
       subtitle: "We're here to help",
       infoTitle: "Contact Details",
@@ -726,7 +729,7 @@ export const translations: Translations = {
       emailMax: "Email cannot exceed 255 characters",
       dateRequired: "Please select a date",
       guestsMin: "Minimum 1 guest",
-      guestsMax: "Maximum 20 guests",
+      guestsMax: "Online, maximum 7 guests. For 8 or more, please call us.",
       roomRequired: "Select a room",
       notesMax: "Notes cannot exceed 500 characters",
       termsRequired: "To book, you need to accept the booking conditions and the privacy policy",

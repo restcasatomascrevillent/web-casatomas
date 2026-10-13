@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CompraChequePasos } from "@/components/CompraChequePasos";
-import { MapPin, Phone, Mail, Gift } from "lucide-react";
+import { MapPin, Phone, Mail, Gift, PawPrint } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -231,6 +231,14 @@ const ContactoSection = () => {
                     <p className="text-sm text-muted-foreground">
                       casatomascrevillent@gmail.com
                     </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <PawPrint className="w-5 h-5 text-accent flex-shrink-0 mt-1" aria-hidden="true" />
+                  <div>
+                    <p className="font-medium">{t.contacto.petsLabel}</p>
+                    <p className="text-sm text-muted-foreground">{t.contacto.petsText}</p>
                   </div>
                 </div>
               </CardContent>

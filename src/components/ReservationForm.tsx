@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { AlertCircle, CalendarIcon, Loader2, Search, X } from "lucide-react";
+import { AlertCircle, CalendarIcon, Loader2, PawPrint, Search, X } from "lucide-react";
 import TicketReserva, { type DatosTicket } from "@/components/reservas/TicketReserva";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -40,7 +40,7 @@ import {
   type DisponibilidadHueco,
   type RechazoReserva,
 } from "@/lib/reservas-web";
-import { leerComensalesReserva } from "@/lib/mi-mesa";
+import { leerComensalesReserva, MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { construirRutaIdioma } from "@/i18n/routing";
 import {
   ANCLA_CONDICIONES_NEWSLETTER,
@@ -133,6 +133,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   });
 
   const watchFecha = form.watch("fecha");
+  /** 8 o más: solo por teléfono. Se enseña el aviso y no se consulta disponibilidad. */
+  const superaMaxWeb = (form.watch("numero_comensales") ?? 0) > MAX_COMENSALES_RESERVA_WEB;
 
   // `?comensales=N` (lo manda "Reservar mesa para N" desde Mi mesa). Se lee
   // tras montar — en el prerender SSG no hay URL y el HTML debe coincidir con
@@ -497,7 +499,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                       <Input
                         type="number"
                         min={1}
-                        max={20}
+                        max={MAX_COMENSALES_RESERVA_WEB}
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value))}
                         className="rounded-xl border-border/50 bg-white"
@@ -509,7 +511,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
               />
             </div>
 
-            {grupoGrandeDesdeMesa && (
+            {(grupoGrandeDesdeMesa || superaMaxWeb) && (
               <p
                 role="status"
                 className="flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-foreground"
@@ -525,7 +527,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
               type="button"
               size="lg"
               onClick={checkAvailability}
-              disabled={!form.watch("fecha") || !form.watch("numero_comensales") || isCheckingAvailability}
+              disabled={!form.watch("fecha") || !form.watch("numero_comensales") || superaMaxWeb || isCheckingAvailability}
               className="w-full min-w-0 h-auto min-h-12 gap-2 whitespace-normal px-4 py-4 sm:px-8 bg-secondary text-foreground hover:bg-secondary/80 rounded-full text-base font-semibold shadow-sm transition-all"
             >
               {isCheckingAvailability ? (
@@ -760,6 +762,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                 />
               </div>
             </div>
+
+            <p className="flex items-start gap-2 rounded-xl border border-border/60 bg-muted/40 px-4 py-3 text-sm text-foreground">
+              <PawPrint className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+              <span>{t.reservationForm.petsNotice}</span>
+            </p>
 
             <Button
               type="submit"

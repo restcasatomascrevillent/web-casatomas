@@ -183,8 +183,8 @@ describe("Validation — numero_comensales", () => {
     expect(parse({ ...VALID_BASE, numero_comensales: 1 }).success).toBe(true);
   });
 
-  it("accepts 20 (maximum)", () => {
-    expect(parse({ ...VALID_BASE, numero_comensales: 20 }).success).toBe(true);
+  it("accepts 7 (maximum: 8 or more only by phone)", () => {
+    expect(parse({ ...VALID_BASE, numero_comensales: 7 }).success).toBe(true);
   });
 
   it("rejects 0 (below minimum)", () => {
@@ -195,8 +195,8 @@ describe("Validation — numero_comensales", () => {
     }
   });
 
-  it("rejects 21 (above maximum)", () => {
-    const result = parse({ ...VALID_BASE, numero_comensales: 21 });
+  it("rejects 8 (above maximum)", () => {
+    const result = parse({ ...VALID_BASE, numero_comensales: 8 });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe(messages.guestsMax);

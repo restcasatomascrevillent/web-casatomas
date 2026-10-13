@@ -1,3 +1,4 @@
+import { MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { z } from "zod";
 
 export type ReservationValidationMessages = {
@@ -38,7 +39,7 @@ export const createReservationSchema = (messages: ReservationValidationMessages)
     numero_comensales: z
       .number()
       .min(1, { message: messages.guestsMin })
-      .max(20, { message: messages.guestsMax }),
+      .max(MAX_COMENSALES_RESERVA_WEB, { message: messages.guestsMax }),
     notas_cliente: z
       .string()
       .max(500, { message: messages.notesMax })

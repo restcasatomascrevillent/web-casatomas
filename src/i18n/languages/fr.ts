@@ -399,7 +399,8 @@ export const translations: Translations = {
         },
       },
       roomNotSpecified: "Non spécifiée",
-      largeGroupNotice: "Pour les groupes de plus de 12 personnes, appelez-nous au {phone} et nous l'organisons avec vous.",
+      largeGroupNotice: "Les tables de 8 personnes ou plus se réservent uniquement par téléphone : appelez-nous au {phone} et nous l'organisons avec vous.",
+      petsNotice: "Les animaux ne sont pas admis dans le restaurant.",
     },
     tomy: {
       cta: "Demandez à Tomy",
@@ -452,6 +453,8 @@ export const translations: Translations = {
       ],
     },
     contacto: {
+      petsLabel: "Animaux",
+      petsText: "Les animaux ne sont pas admis dans le restaurant.",
       title: "Contact",
       subtitle: "Nous sommes à votre écoute",
       infoTitle: "Informations de contact",
@@ -726,7 +729,7 @@ export const translations: Translations = {
       emailMax: "L'email ne peut pas dépasser 255 caractères",
       dateRequired: "Veuillez sélectionner une date",
       guestsMin: "Minimum 1 convive",
-      guestsMax: "Maximum 20 convives",
+      guestsMax: "En ligne, 7 convives maximum. Pour 8 ou plus, appelez-nous.",
       roomRequired: "Veuillez choisir une salle",
       notesMax: "Les notes ne peuvent pas dépasser 500 caractères",
       termsRequired: "Pour réserver, vous devez accepter les conditions de réservation et la politique de confidentialité",

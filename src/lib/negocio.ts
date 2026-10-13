@@ -242,6 +242,7 @@ export function restaurantSchema(opts: {
     currenciesAccepted: "EUR",
     paymentAccepted: "Efectivo, Tarjeta de crédito",
     acceptsReservations: `${SITE_URL}/reservas`,
+    petsAllowed: false,
     ...(menu ? { hasMenu: menu } : {}),
     potentialAction: {
       "@type": "ReserveAction",

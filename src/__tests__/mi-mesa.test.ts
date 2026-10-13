@@ -139,13 +139,13 @@ describe("estado persistido de Mi mesa", () => {
 describe("?comensales= en reservas", () => {
   it("rellena de 1 a 12", () => {
     expect(leerComensalesReserva("?comensales=4")).toEqual({ comensales: 4, grupoGrande: false });
-    expect(leerComensalesReserva("?comensales=12")).toEqual({ comensales: 12, grupoGrande: false });
+    expect(leerComensalesReserva("?comensales=7")).toEqual({ comensales: 7, grupoGrande: false });
     expect(leerComensalesReserva("?comensales=1")).toEqual({ comensales: 1, grupoGrande: false });
     expect(leerComensalesReserva("?comensales=3.7")).toEqual({ comensales: 3, grupoGrande: false });
   });
 
   it("más de 12 no rellena y activa el aviso de grupos grandes", () => {
-    expect(leerComensalesReserva("?comensales=13")).toEqual({ comensales: null, grupoGrande: true });
+    expect(leerComensalesReserva("?comensales=8")).toEqual({ comensales: null, grupoGrande: true });
     expect(leerComensalesReserva("?comensales=30")).toEqual({ comensales: null, grupoGrande: true });
   });
 

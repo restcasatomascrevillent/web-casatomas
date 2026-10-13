@@ -16,11 +16,11 @@ export const COMENSALES_MAX = 30;
 export const COMENSALES_DEFECTO = 2;
 
 /**
- * Por encima de este número la reserva web la rechaza con `grupo_grande`
- * (el motor de reservas lo gestiona por teléfono): en vez de rellenar el
+ * Las mesas de 8 o más se reservan SOLO por teléfono (decisión del dueño,
+ * 13/10/2026): el formulario web admite como mucho 7: en vez de rellenar el
  * formulario se enseña el aviso de "llámanos".
  */
-export const MAX_COMENSALES_RESERVA_WEB = 12;
+export const MAX_COMENSALES_RESERVA_WEB = 7;
 
 /** Parámetro de `/reservas` que rellena el número de comensales. */
 export const PARAM_COMENSALES = "comensales";
@@ -241,7 +241,7 @@ export interface ComensalesReserva {
 
 /**
  * Lee `?comensales=N` de un `location.search`. Valores no enteros o < 1 se
- * ignoran; > 12 no rellenan nada y activan el aviso de grupos grandes.
+ * ignoran; > MAX_COMENSALES_RESERVA_WEB no rellenan nada y activan el aviso de grupos grandes.
  */
 export const leerComensalesReserva = (search: string): ComensalesReserva => {
   const crudo = new URLSearchParams(search).get(PARAM_COMENSALES);
