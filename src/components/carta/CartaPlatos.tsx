@@ -1,10 +1,25 @@
+import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import OpcionSinGluten from "./OpcionSinGluten";
-import { Search, Plus, ChevronDown, UtensilsCrossed, Eye, EyeOff, Info } from "lucide-react";
+import {
+  Search,
+  Plus,
+  ChevronDown,
+  UtensilsCrossed,
+  Eye,
+  EyeOff,
+  Info,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { imagenOptimizada } from "@/lib/carta-ssg";
@@ -89,7 +104,11 @@ interface Plato {
 
 type PlatoRecord = Plato & Record<string, unknown>;
 
-const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlatosProps) => {
+const CartaPlatos = ({
+  showAddButton,
+  active = true,
+  initialPlatos,
+}: CartaPlatosProps) => {
   const { t, language } = useTranslations();
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -98,23 +117,34 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
   // va con retraso, para no recalcular y re-animar en cada pulsación.
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
-  const [selectedCategory, setSelectedCategory] = useState<string>("NOVEDADES DEL DÍA");
-  const [platosByCategory, setPlatosByCategory] = useState<Record<string, Plato[]>>(
-    () => initialPlatos ?? {},
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>("NOVEDADES DEL DÍA");
+  const [platosByCategory, setPlatosByCategory] = useState<
+    Record<string, Plato[]>
+  >(() => initialPlatos ?? {});
+  const [loadingByCategory, setLoadingByCategory] = useState<
+    Record<string, boolean>
+  >({});
+  const [hasMoreByCategory, setHasMoreByCategory] = useState<
+    Record<string, boolean>
+  >({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>(
+    {},
   );
-  const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
-  const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
-  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  const [dietaryFilters, setDietaryFilters] = useState<Record<DietaryFilterKey, boolean>>({
+  const [dietaryFilters, setDietaryFilters] = useState<
+    Record<DietaryFilterKey, boolean>
+  >({
     celiaquia: false,
     lactosa: false,
   });
   const { toast } = useToast();
   const PAGE_SIZE = 24;
-  const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/+$/, "");
+  const supabaseUrl = (
+    import.meta.env.VITE_SUPABASE_URL as string | undefined
+  )?.replace(/\/+$/, "");
 
   const capitalizeFirst = (value: string) => {
     const trimmed = value.trim();
@@ -125,7 +155,7 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   const fetchPlatosByCategory = useCallback(
     async (category: string, append = false) => {
       setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
-      const offset = append ? (platosByCategory[category]?.length || 0) : 0;
+      const offset = append ? platosByCategory[category]?.length || 0 : 0;
       const to = offset + PAGE_SIZE - 1;
 
       try {
@@ -137,22 +167,23 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
         // El prerenderizado (`scripts/carta-ssg.mjs`) ya filtraba por ella; sin
         // esto, al hidratar volvían a aparecer platos que el HTML no traía.
         let query = supabase
-          .from('Platos')
-          .select('*')
-          .eq('activado', true)
-          .is('restaurante', true)
-          .order('categoria', { ascending: true })
-          .order('orden', { ascending: true })
+          .from("Platos")
+          .select("*")
+          .eq("activado", true)
+          .is("restaurante", true)
+          .order("categoria", { ascending: true })
+          .order("orden", { ascending: true })
           .range(offset, to);
 
         if (category !== "TODOS") {
-          query = query.eq('categoria', category);
+          query = query.eq("categoria", category);
         }
 
         const { data, error } = await query;
         if (error) throw error;
         const mapped = (data || []).map((item) => ({
           ...item,
+          unidad: normalizarUnidadPlato(item.unidad),
           alergenos_oficiales: normalizeAlergenos(item.alergenos_oficiales),
           alergenos_inferidos: normalizeAlergenos(item.alergenos_inferidos),
           expanded: Boolean((item as any).expanded),
@@ -162,9 +193,12 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
           const existing = append ? prev[category] || [] : [];
           return { ...prev, [category]: [...existing, ...mapped] };
         });
-        setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === PAGE_SIZE }));
+        setHasMoreByCategory((prev) => ({
+          ...prev,
+          [category]: (data?.length || 0) === PAGE_SIZE,
+        }));
       } catch (error) {
-        console.error('Error fetching platos:', error);
+        console.error("Error fetching platos:", error);
         toast({
           title: t.platos.toasts.errorTitle,
           description: t.platos.toasts.errorDescription,
@@ -174,7 +208,13 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
         setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
       }
     },
-    [PAGE_SIZE, platosByCategory, toast, t.platos.toasts.errorDescription, t.platos.toasts.errorTitle]
+    [
+      PAGE_SIZE,
+      platosByCategory,
+      toast,
+      t.platos.toasts.errorDescription,
+      t.platos.toasts.errorTitle,
+    ],
   );
 
   // Se refresca contra Supabase la primera vez que se abre la sección. Antes
@@ -215,16 +255,17 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   // La resolución de idioma vive en `@/lib/carta-i18n` para que la comparta
   // el prerenderizado de build (`carta-ssg.ts`) y no haya dos implementaciones.
   const translatedPlatos = useMemo(() => {
-    const categoryItems = (platosByCategory[selectedCategory] || []) as PlatoRecord[];
+    const categoryItems = (platosByCategory[selectedCategory] ||
+      []) as PlatoRecord[];
     return categoryItems.map((item) => resolveTranslatedItem(item, language));
   }, [language, platosByCategory, selectedCategory]);
 
   const filteredItems = useMemo(() => {
     let items = translatedPlatos;
 
-    const activeDietaryFilters = (Object.keys(dietaryFilters) as DietaryFilterKey[]).filter(
-      (key) => dietaryFilters[key]
-    );
+    const activeDietaryFilters = (
+      Object.keys(dietaryFilters) as DietaryFilterKey[]
+    ).filter((key) => dietaryFilters[key]);
 
     // Filtro de seguridad alimentaria: ver `cumpleFiltroDietetico`. Un plato
     // sin alérgenos registrados NO aparece —"no consta" no es "es apto"— y la
@@ -233,14 +274,20 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     if (activeDietaryFilters.length > 0) {
       items = items.filter((item) => {
         const datos = datosAlergenos(item);
-        return activeDietaryFilters.every((filterKey) =>
-          (filterKey === "celiaquia" && item.sin_gluten_disponible === true) || cumpleFiltroDietetico(datos, filterKey));
+        return activeDietaryFilters.every(
+          (filterKey) =>
+            (filterKey === "celiaquia" &&
+              item.sin_gluten_disponible === true) ||
+            cumpleFiltroDietetico(datos, filterKey),
+        );
       });
     }
 
     if (debouncedSearchTerm) {
-      items = items.filter(item =>
-        item.displayNombre.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      items = items.filter((item) =>
+        item.displayNombre
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase()),
       );
     }
 
@@ -295,7 +342,11 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
 
     if (typeof value === "string") {
       const trimmed = value.trim();
-      if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") {
+      if (
+        !trimmed ||
+        trimmed.toLowerCase() === "null" ||
+        trimmed.toLowerCase() === "undefined"
+      ) {
         return null;
       }
       if (
@@ -321,7 +372,16 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
 
     if (typeof value === "object") {
       const record = value as Record<string, unknown>;
-      const nestedKeys = ["url", "publicUrl", "public_url", "path", "src", "href", "link", "imagen_url"];
+      const nestedKeys = [
+        "url",
+        "publicUrl",
+        "public_url",
+        "path",
+        "src",
+        "href",
+        "link",
+        "imagen_url",
+      ];
       for (const nestedKey of nestedKeys) {
         const nested = extractImageCandidate(record[nestedKey]);
         if (nested) return nested;
@@ -331,7 +391,8 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     return null;
   };
 
-  const getDishImage = (item: PlatoRecord) => extractImageCandidate(item.imagen_url);
+  const getDishImage = (item: PlatoRecord) =>
+    extractImageCandidate(item.imagen_url);
 
   const getImagePositionY = (value: unknown): number | null => {
     if (value === null || value === undefined || value === "") return null;
@@ -341,15 +402,15 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
   };
 
   const getInitialCantidad = (unidad?: string) => {
-    if (unidad === "kg") return 1;
-    if (unidad === "100 g" || unidad === "100g") return 100;
+    const gramos = gramosDeUnidad(unidad);
+    if (gramos !== null) return gramos;
     return 1;
   };
 
   const getPedidoItemKey = (item: any) =>
     item.id
       ? `id:${item.id}`
-      : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
+      : `fallback:${item.nombre}|${item.precio_eur}|${normalizarUnidadPlato(item.unidad)}|${item.categoria ?? ""}`;
 
   const addToPedido = (item: any) => {
     const cantidadInicial = item.cantidad ?? getInitialCantidad(item.unidad);
@@ -361,7 +422,9 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     const pedido = getUserPedido();
     const nextPedido = [...pedido];
     const key = getPedidoItemKey(pedidoItem);
-    const existingIndex = nextPedido.findIndex((existingItem: any) => getPedidoItemKey(existingItem) === key);
+    const existingIndex = nextPedido.findIndex(
+      (existingItem: any) => getPedidoItemKey(existingItem) === key,
+    );
 
     if (existingIndex >= 0) {
       const existingItem = nextPedido[existingIndex];
@@ -381,12 +444,16 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     setUserPedido(nextPedido);
     toast({
       title: t.platos.toasts.addedTitle,
-      description: t.platos.toasts.addedDescription.replace("{name}", pedidoItem.nombre),
+      description: t.platos.toasts.addedDescription.replace(
+        "{name}",
+        pedidoItem.nombre,
+      ),
     });
   };
 
   const translateCategory = (category: string) =>
-    t.categories.platos[category as keyof typeof t.categories.platos] ?? category;
+    t.categories.platos[category as keyof typeof t.categories.platos] ??
+    category;
 
   const isCardExpanded = (item: any) => {
     const forcedExpanded = expandedCards[item.id];
@@ -435,7 +502,10 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
     { key: "lactosa", label: t.platos.dietaryFilters.lactosa },
   ];
 
-  const handleDietaryFilterChange = (filter: DietaryFilterKey, checked: boolean) => {
+  const handleDietaryFilterChange = (
+    filter: DietaryFilterKey,
+    checked: boolean,
+  ) => {
     setDietaryFilters((prev) => ({ ...prev, [filter]: checked }));
   };
 
@@ -455,10 +525,14 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
 
         {/* Category Filter Dropdown */}
         <div className="flex justify-center">
-          <DropdownMenu open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen} modal={false}>
+          <DropdownMenu
+            open={categoryMenuOpen}
+            onOpenChange={setCategoryMenuOpen}
+            modal={false}
+          >
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-72 h-12 justify-between bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition duration-300 text-base font-semibold touch-manipulation"
               >
                 <span className="flex items-center gap-2">
@@ -488,11 +562,13 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                   }`}
                 >
                   <span className="flex items-center gap-3">
-                    <span className={`w-2 h-2 rounded-full ${
-                      selectedCategory === category 
-                        ? "bg-accent-foreground" 
-                        : "bg-accent/40"
-                    }`} />
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        selectedCategory === category
+                          ? "bg-accent-foreground"
+                          : "bg-accent/40"
+                      }`}
+                    />
                     {translateCategory(category)}
                   </span>
                 </DropdownMenuItem>
@@ -519,8 +595,14 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
                   <Checkbox
                     id={checkboxId}
                     checked={checked}
-                    onCheckedChange={(value) => handleDietaryFilterChange(filter.key, value === true)}
-                    className={checked ? "border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" : ""}
+                    onCheckedChange={(value) =>
+                      handleDietaryFilterChange(filter.key, value === true)
+                    }
+                    className={
+                      checked
+                        ? "border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
+                        : ""
+                    }
                   />
                   <span className="font-medium">{filter.label}</span>
                 </label>
@@ -536,283 +618,353 @@ const CartaPlatos = ({ showAddButton, active = true, initialPlatos }: CartaPlato
           <p className="text-xl text-muted-foreground">{t.platos.loading}</p>
         </div>
       ) : (
-      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredItems.map((item, index) => {
-          const itemRecord = item as PlatoRecord;
-          const cardKey = itemRecord.id || `${itemRecord.nombre}|${itemRecord.precio_eur}|${itemRecord.categoria ?? ""}`;
-          const expanded = isCardExpanded(item);
-          const infoOpen = isInfoCardOpen(item);
-          const imageUrl = getDishImage(itemRecord);
-          const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
-          const imagePositionY = getImagePositionY(itemRecord.imagen_posicion_y);
-          const imageStyle = imagePositionY === null ? undefined : { objectPosition: `center ${imagePositionY}%` };
-          const categoryLabel = item.translatedCategoria ?? translateCategory(item.categoria);
-          // Vocabulario único (`@/lib/alergenos`): "frutos_cascara" del panel y
-          // "frutos de cáscara" de la BD son el mismo alérgeno y se pintan con
-          // la misma etiqueta, traducida al idioma activo.
-          const alergenosItem = datosAlergenos(item);
-          const conAlergenos = tieneInformacionAlergenos(alergenosItem);
-          const infoAlergenos = Array.from(
-            new Set(
-              [...alergenosItem.oficiales, ...alergenosItem.inferidos]
-                .map((alergeno) => etiquetaAlergeno(alergeno, language))
-                .filter(Boolean)
-            )
-          );
-          const infoIngredientes = item.displayIngredientes || [];
-          // La foto se pinta en las dos caras: si el cliente la ha abierto y
-          // luego pulsa «información», la tarjeta gira pero la foto sigue.
-          const bloqueFoto = (
-            <div className="relative h-48 overflow-hidden">
-              {hasVisibleImage ? (
-                <img
-                  src={imagenOptimizada(imageUrl, 768) || undefined}
-                  alt={item.displayNombre}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  style={imageStyle}
-                  loading="lazy"
-                  decoding="async"
-                  onError={() =>
-                    setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
-                  }
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
-                  <UtensilsCrossed className="w-9 h-9 text-accent/70" />
+        <div
+          ref={gridRef}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          {filteredItems.map((item, index) => {
+            const itemRecord = item as PlatoRecord;
+            const cardKey =
+              itemRecord.id ||
+              `${itemRecord.nombre}|${itemRecord.precio_eur}|${itemRecord.categoria ?? ""}`;
+            const expanded = isCardExpanded(item);
+            const infoOpen = isInfoCardOpen(item);
+            const imageUrl = getDishImage(itemRecord);
+            const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
+            const imagePositionY = getImagePositionY(
+              itemRecord.imagen_posicion_y,
+            );
+            const imageStyle =
+              imagePositionY === null
+                ? undefined
+                : { objectPosition: `center ${imagePositionY}%` };
+            const categoryLabel =
+              item.translatedCategoria ?? translateCategory(item.categoria);
+            // Vocabulario único (`@/lib/alergenos`): "frutos_cascara" del panel y
+            // "frutos de cáscara" de la BD son el mismo alérgeno y se pintan con
+            // la misma etiqueta, traducida al idioma activo.
+            const alergenosItem = datosAlergenos(item);
+            const conAlergenos = tieneInformacionAlergenos(alergenosItem);
+            const infoAlergenos = Array.from(
+              new Set(
+                [...alergenosItem.oficiales, ...alergenosItem.inferidos]
+                  .map((alergeno) => etiquetaAlergeno(alergeno, language))
+                  .filter(Boolean),
+              ),
+            );
+            const infoIngredientes = item.displayIngredientes || [];
+            // La foto se pinta en las dos caras: si el cliente la ha abierto y
+            // luego pulsa «información», la tarjeta gira pero la foto sigue.
+            const bloqueFoto = (
+              <div className="relative h-48 overflow-hidden">
+                {hasVisibleImage ? (
+                  <img
+                    src={imagenOptimizada(imageUrl, 768) || undefined}
+                    alt={item.displayNombre}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    style={imageStyle}
+                    loading="lazy"
+                    decoding="async"
+                    onError={() =>
+                      setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
+                    }
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
+                    <UtensilsCrossed className="w-9 h-9 text-accent/70" />
+                  </div>
+                )}
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
+                    {categoryLabel}
+                  </Badge>
                 </div>
-              )}
-              <div className="absolute top-2 right-2">
-                <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                  {categoryLabel}
-                </Badge>
               </div>
-            </div>
-          );
-          return (
-            // Sin `layout`: con él, mostrar/ocultar la foto o la información
-            // de UNA tarjeta cambiaba su alto y Framer Motion recalculaba y
-            // volvía a animar la posición de TODAS las demás tarjetas del
-            // grid (el reflow que provoca ese cambio de alto), no solo la
-            // que se tocó. El propio giro/despliegue de la tarjeta ya anima
-            // suave por su cuenta (motion.div de abajo); las vecinas ahora
-            // solo se reacomodan con el reflow normal del grid, sin el coste
-            // de una animación de layout por cada tarjeta visible.
-            <motion.div
-              key={cardKey}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
-              className="h-full [perspective:1200px]"
-            >
-              <div
-                className={`relative transition-transform duration-500 [transform-style:preserve-3d] ${
-                  expanded || infoOpen ? "h-full" : "h-auto"
-                } ${
-                  infoOpen ? "[transform:rotateY(180deg)]" : ""
-                }`}
+            );
+            return (
+              // Sin `layout`: con él, mostrar/ocultar la foto o la información
+              // de UNA tarjeta cambiaba su alto y Framer Motion recalculaba y
+              // volvía a animar la posición de TODAS las demás tarjetas del
+              // grid (el reflow que provoca ese cambio de alto), no solo la
+              // que se tocó. El propio giro/despliegue de la tarjeta ya anima
+              // suave por su cuenta (motion.div de abajo); las vecinas ahora
+              // solo se reacomodan con el reflow normal del grid, sin el coste
+              // de una animación de layout por cada tarjeta visible.
+              <motion.div
+                key={cardKey}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.3,
+                  delay: Math.min(index * 0.03, 0.3),
+                }}
+                className="h-full [perspective:1200px]"
               >
-                <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
-                  <Card
-                    className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
-                      expanded || infoOpen ? "h-full" : "h-auto"
-                    } ${
-                      expanded ? "card--expanded" : "card--collapsed"
-                    }`}
+                <div
+                  className={`relative transition-transform duration-500 [transform-style:preserve-3d] ${
+                    expanded || infoOpen ? "h-full" : "h-auto"
+                  } ${infoOpen ? "[transform:rotateY(180deg)]" : ""}`}
+                >
+                  <div
+                    className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}
                   >
-                    <AnimatePresence initial={false}>
-                      {expanded && (
-                        <motion.div
-                          key={`image-${item.id}`}
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25, ease: "easeInOut" }}
-                          className="overflow-hidden bg-muted flex-shrink-0"
+                    <Card
+                      className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                        expanded || infoOpen ? "h-full" : "h-auto"
+                      } ${expanded ? "card--expanded" : "card--collapsed"}`}
+                    >
+                      <AnimatePresence initial={false}>
+                        {expanded && (
+                          <motion.div
+                            key={`image-${item.id}`}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden bg-muted flex-shrink-0"
+                          >
+                            {bloqueFoto}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <CardHeader
+                        className={`flex-shrink-0 transition-all duration-200 ${
+                          expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle
+                              className={`leading-tight whitespace-normal break-words line-clamp-2 ${
+                                expanded ? "text-lg" : "text-base min-h-12"
+                              }`}
+                            >
+                              {item.displayNombre}
+                            </CardTitle>
+                          </div>
+                          <div className="flex items-center gap-2 self-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleToggleCard(item.id, expanded)
+                              }
+                              aria-label={
+                                expanded
+                                  ? t.platos.hidePhoto
+                                  : t.platos.viewPhoto
+                              }
+                              className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                            >
+                              {expanded ? (
+                                <EyeOff className="w-5 h-5" />
+                              ) : (
+                                <Eye className="w-5 h-5" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleToggleInfoCard(item.id, infoOpen)
+                              }
+                              aria-label={
+                                infoOpen
+                                  ? "Ocultar información del plato"
+                                  : "Mostrar información del plato"
+                              }
+                              className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                            >
+                              <Info className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                        {!expanded && (
+                          <div className="flex items-center gap-2 pt-2">
+                            <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
+                              {categoryLabel}
+                            </Badge>
+                          </div>
+                        )}
+                      </CardHeader>
+                      <AnimatePresence initial={false}>
+                        {expanded && (
+                          <motion.div
+                            key={`content-${item.id}`}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.22, ease: "easeInOut" }}
+                          >
+                            <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
+                              {item.displayDescripcion && (
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {item.displayDescripcion}
+                                </p>
+                              )}
+                            </CardContent>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <CardFooter
+                        className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
+                          expanded
+                            ? "pt-3 bg-muted/30 px-6 py-3"
+                            : "pt-1 bg-transparent px-4 py-2"
+                        }`}
+                      >
+                        <span
+                          className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}
                         >
-                          {bloqueFoto}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <CardHeader
-                      className={`flex-shrink-0 transition-all duration-200 ${
-                        expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
+                          {item.precio_eur}€
+                          {item.unidad && (
+                            <span className="text-sm font-normal text-muted-foreground">
+                              {" "}
+                              / {normalizarUnidadPlato(item.unidad)}
+                            </span>
+                          )}
+                        </span>
+                        {showAddButton && (
+                          <Button
+                            size="sm"
+                            onClick={() => addToPedido(item)}
+                            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            {t.platos.add}
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  </div>
+
+                  <div
+                    className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
+                  >
+                    <Card
+                      className={`font-libre-baskerville flex flex-col overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
+                        infoOpen ? "h-auto" : "h-full"
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle
-                            className={`leading-tight whitespace-normal break-words line-clamp-2 ${
-                              expanded ? "text-lg" : "text-base min-h-12"
-                            }`}
-                          >
-                            {item.displayNombre}
-                          </CardTitle>
+                      {expanded && (
+                        <div className="bg-muted flex-shrink-0">
+                          {bloqueFoto}
                         </div>
-                        <div className="flex items-center gap-2 self-center">
+                      )}
+                      <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-lg leading-tight whitespace-normal break-words">
+                              {item.displayNombre}
+                            </CardTitle>
+                            <div className="pt-2">
+                              <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
+                                {categoryLabel}
+                              </Badge>
+                            </div>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => handleToggleCard(item.id, expanded)}
-                            aria-label={expanded ? t.platos.hidePhoto : t.platos.viewPhoto}
-                            className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                          >
-                            {expanded ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleInfoCard(item.id, infoOpen)}
-                            aria-label={infoOpen ? "Ocultar información del plato" : "Mostrar información del plato"}
+                            onClick={() =>
+                              handleToggleInfoCard(item.id, infoOpen)
+                            }
+                            aria-label={
+                              infoOpen
+                                ? "Ocultar información del plato"
+                                : "Mostrar información del plato"
+                            }
                             className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                           >
                             <Info className="w-5 h-5" />
                           </button>
                         </div>
-                      </div>
-                      {!expanded && (
-                        <div className="flex items-center gap-2 pt-2">
-                          <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
-                            {categoryLabel}
-                          </Badge>
-                        </div>
-                      )}
-                    </CardHeader>
-                    <AnimatePresence initial={false}>
-                      {expanded && (
-                        <motion.div
-                          key={`content-${item.id}`}
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.22, ease: "easeInOut" }}
-                        >
-                          <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
-                            {item.displayDescripcion && (
-                              <p className="text-sm text-muted-foreground line-clamp-2">{item.displayDescripcion}</p>
-                            )}
-                          </CardContent>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <CardFooter
-                      className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
-                        expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
-                      }`}
-                    >
-                      <span className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}>
-                        {item.precio_eur}€
-                        {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
-                      </span>
-                      {showAddButton && (
-                        <Button
-                          size="sm"
-                          onClick={() => addToPedido(item)}
-                          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          {t.platos.add}
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
-                </div>
+                      </CardHeader>
 
-                <div
-                  className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
-                >
-                  <Card
-                    className={`font-libre-baskerville flex flex-col overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
-                      infoOpen ? "h-auto" : "h-full"
-                    }`}
-                  >
-                    {expanded && <div className="bg-muted flex-shrink-0">{bloqueFoto}</div>}
-                    <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg leading-tight whitespace-normal break-words">
-                            {item.displayNombre}
-                          </CardTitle>
-                          <div className="pt-2">
-                            <Badge className="bg-accent/90 text-accent-foreground shadow-sm">{categoryLabel}</Badge>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleInfoCard(item.id, infoOpen)}
-                          aria-label={infoOpen ? "Ocultar información del plato" : "Mostrar información del plato"}
-                          className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                        >
-                          <Info className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
-                      {item.displayDescripcion?.trim() && (
-                        <p className="text-sm text-muted-foreground whitespace-pre-line">{item.displayDescripcion}</p>
-                      )}
-                      {item.sin_gluten_disponible === true && <OpcionSinGluten />}
-                      <div className="space-y-2">
-                        <p className="text-sm font-semibold text-foreground">
-                          {infoLabels.allergens}:
-                        </p>
-                        {conAlergenos ? (
-                          <div className="flex flex-wrap gap-1">
-                            {infoAlergenos.map((alergeno: string, idx: number) => (
-                              <Badge key={`info-alergeno-${idx}`} variant="secondary" className="text-xs">
-                                {alergeno}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          // "No disponible" se podía leer como "no tiene
-                          // alérgenos". Aquí se dice lo que pasa de verdad: no
-                          // consta el dato y hay que preguntar.
-                          <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-                            {AVISO_SIN_ALERGENOS[language]}
+                      <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
+                        {item.displayDescripcion?.trim() && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">
+                            {item.displayDescripcion}
                           </p>
                         )}
-                      </div>
+                        {item.sin_gluten_disponible === true && (
+                          <OpcionSinGluten />
+                        )}
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-foreground">
+                            {infoLabels.allergens}:
+                          </p>
+                          {conAlergenos ? (
+                            <div className="flex flex-wrap gap-1">
+                              {infoAlergenos.map(
+                                (alergeno: string, idx: number) => (
+                                  <Badge
+                                    key={`info-alergeno-${idx}`}
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {alergeno}
+                                  </Badge>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            // "No disponible" se podía leer como "no tiene
+                            // alérgenos". Aquí se dice lo que pasa de verdad: no
+                            // consta el dato y hay que preguntar.
+                            <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                              {AVISO_SIN_ALERGENOS[language]}
+                            </p>
+                          )}
+                        </div>
 
-                      <div className="space-y-2">
-                        <p className="text-sm font-semibold text-foreground">
-                          {infoLabels.ingredients}:
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {infoIngredientes.length > 0
-                            ? infoIngredientes.map((ingrediente: string) => capitalizeFirst(ingrediente)).join(", ")
-                            : infoLabels.noData}
-                        </p>
-                      </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-foreground">
+                            {infoLabels.ingredients}:
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {infoIngredientes.length > 0
+                              ? infoIngredientes
+                                  .map((ingrediente: string) =>
+                                    capitalizeFirst(ingrediente),
+                                  )
+                                  .join(", ")
+                              : infoLabels.noData}
+                          </p>
+                        </div>
 
-                      {item.displayAlergenosNotas && (
-                        <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
-                          {item.displayAlergenosNotas}
-                        </p>
-                      )}
-                    </CardContent>
+                        {item.displayAlergenosNotas && (
+                          <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
+                            {item.displayAlergenosNotas}
+                          </p>
+                        )}
+                      </CardContent>
 
-                    <CardFooter className="flex justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-6 py-3">
-                      <span className="font-bold text-accent text-2xl">
-                        {item.precio_eur}€
-                        {item.unidad && <span className="text-sm font-normal text-muted-foreground"> / {item.unidad}</span>}
-                      </span>
-                      {showAddButton && (
-                        <Button
-                          size="sm"
-                          onClick={() => addToPedido(item)}
-                          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          {t.platos.add}
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
+                      <CardFooter className="flex justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-6 py-3">
+                        <span className="font-bold text-accent text-2xl">
+                          {item.precio_eur}€
+                          {item.unidad && (
+                            <span className="text-sm font-normal text-muted-foreground">
+                              {" "}
+                              / {normalizarUnidadPlato(item.unidad)}
+                            </span>
+                          )}
+                        </span>
+                        {showAddButton && (
+                          <Button
+                            size="sm"
+                            onClick={() => addToPedido(item)}
+                            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            {t.platos.add}
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+              </motion.div>
+            );
+          })}
+        </div>
       )}
 
       {filteredItems.length === 0 && (

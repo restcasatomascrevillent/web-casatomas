@@ -1,3 +1,4 @@
+import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
 import { useCallback, useEffect, useState } from "react";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 
@@ -19,7 +20,8 @@ export interface LineaPedido {
 
 /** Cantidad con la que entra una línea nueva (y lo que suma cada "Añadir"). */
 export const cantidadInicialPedido = (unidad?: string | null): number => {
-  if (unidad === "100 g" || unidad === "100g") return 100;
+  const gramos = gramosDeUnidad(unidad);
+  if (gramos !== null) return gramos;
   return 1;
 };
 
@@ -28,10 +30,15 @@ export const cantidadInicialPedido = (unidad?: string | null): number => {
  * hay, y si no una combinación que identifica la línea. Así "Añadir" desde la
  * portada y desde `/carta/:categoria` suman sobre la MISMA línea del ticket.
  */
-export const clavePedido = (item: Pick<LineaPedido, "id" | "nombre" | "precio_eur" | "unidad" | "categoria">) =>
+export const clavePedido = (
+  item: Pick<
+    LineaPedido,
+    "id" | "nombre" | "precio_eur" | "unidad" | "categoria"
+  >,
+) =>
   item.id
     ? `id:${item.id}`
-    : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
+    : `fallback:${item.nombre}|${item.precio_eur}|${normalizarUnidadPlato(item.unidad)}|${item.categoria ?? ""}`;
 
 /** Lee el pedido sin romper si `sessionStorage` no está disponible (modo privado estricto, cookies bloqueadas). */
 const leerPedido = (): LineaPedido[] => {
@@ -76,7 +83,9 @@ export const usePedido = () => {
     if (indice >= 0) {
       const previa = siguiente[indice];
       const previaCantidad =
-        typeof previa.cantidad === "number" ? previa.cantidad : cantidadInicialPedido(previa.unidad);
+        typeof previa.cantidad === "number"
+          ? previa.cantidad
+          : cantidadInicialPedido(previa.unidad);
       cantidad = previaCantidad + suma;
       siguiente[indice] = { ...previa, ...item, cantidad };
     } else {
@@ -94,11 +103,18 @@ export const usePedido = () => {
   }, []);
 
   const cantidadDe = useCallback(
-    (item: Pick<LineaPedido, "id" | "nombre" | "precio_eur" | "unidad" | "categoria">): number => {
+    (
+      item: Pick<
+        LineaPedido,
+        "id" | "nombre" | "precio_eur" | "unidad" | "categoria"
+      >,
+    ): number => {
       const clave = clavePedido(item);
       const linea = pedido.find((l) => clavePedido(l) === clave);
       if (!linea) return 0;
-      return typeof linea.cantidad === "number" ? linea.cantidad : cantidadInicialPedido(linea.unidad);
+      return typeof linea.cantidad === "number"
+        ? linea.cantidad
+        : cantidadInicialPedido(linea.unidad);
     },
     [pedido],
   );

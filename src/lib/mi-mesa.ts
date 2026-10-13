@@ -1,3 +1,4 @@
+import { gramosDeUnidad, normalizarUnidadPlato } from "./unidades-platos";
 /**
  * "Mi mesa": cálculos puros (sin React, sin `window`) de lo que el visitante
  * prepara en la carta para compartirlo con su grupo y dividir la cuenta.
@@ -49,8 +50,18 @@ export const ESTADO_MESA_INICIAL: EstadoMesa = {
 };
 
 /** Entero dentro de [min, max]; cualquier cosa no numérica → `defecto`. */
-export const acotarEntero = (valor: unknown, min: number, max: number, defecto: number): number => {
-  const n = typeof valor === "number" ? valor : typeof valor === "string" ? Number(valor) : NaN;
+export const acotarEntero = (
+  valor: unknown,
+  min: number,
+  max: number,
+  defecto: number,
+): number => {
+  const n =
+    typeof valor === "number"
+      ? valor
+      : typeof valor === "string"
+        ? Number(valor)
+        : NaN;
   if (!Number.isFinite(n)) return defecto;
   return Math.min(max, Math.max(min, Math.round(n)));
 };
@@ -63,18 +74,30 @@ export const normalizarEstadoMesa = (crudo: unknown): EstadoMesa => {
   if (!crudo || typeof crudo !== "object") return { ...ESTADO_MESA_INICIAL };
   const o = crudo as Record<string, unknown>;
   const nombres = Array.isArray(o.nombres)
-    ? o.nombres.slice(0, COMENSALES_MAX).map((n) => (typeof n === "string" ? n.slice(0, 40) : ""))
+    ? o.nombres
+        .slice(0, COMENSALES_MAX)
+        .map((n) => (typeof n === "string" ? n.slice(0, 40) : ""))
     : [];
   const asignaciones: Record<string, number[]> = {};
   if (o.asignaciones && typeof o.asignaciones === "object") {
-    for (const [clave, valor] of Object.entries(o.asignaciones as Record<string, unknown>)) {
+    for (const [clave, valor] of Object.entries(
+      o.asignaciones as Record<string, unknown>,
+    )) {
       // Compatibilidad con el formato anterior (una persona por línea, sin
       // array): sessionStorage puede traer datos de antes de este cambio.
-      const bruto = Array.isArray(valor) ? valor : typeof valor === "number" ? [valor] : [];
+      const bruto = Array.isArray(valor)
+        ? valor
+        : typeof valor === "number"
+          ? [valor]
+          : [];
       const personas = Array.from(
         new Set(
           bruto.filter(
-            (p): p is number => typeof p === "number" && Number.isInteger(p) && p >= 0 && p < COMENSALES_MAX,
+            (p): p is number =>
+              typeof p === "number" &&
+              Number.isInteger(p) &&
+              p >= 0 &&
+              p < COMENSALES_MAX,
           ),
         ),
       ).sort((a, b) => a - b);
@@ -100,25 +123,39 @@ export interface LineaMesa {
   cantidad?: number;
 }
 
-export const esPorCienGramos = (unidad?: string | null) => unidad === "100 g" || unidad === "100g";
+export const esPorCienGramos = (unidad?: string | null) =>
+  gramosDeUnidad(unidad) === 100;
 
 /** Paso y mínimo de los botones +/- según cómo se vende el producto. */
 export const configUnidad = (unidad?: string | null) => {
-  if (unidad === "kg") return { defecto: 1, paso: 0.1, minimo: 0.1, decimales: 1 };
-  if (esPorCienGramos(unidad)) return { defecto: 100, paso: 50, minimo: 50, decimales: 0 };
+  if (normalizarUnidadPlato(unidad) === "kg")
+    return { defecto: 1, paso: 0.1, minimo: 0.1, decimales: 1 };
+  const gramos = gramosDeUnidad(unidad);
+  if (gramos !== null)
+    return {
+      defecto: gramos,
+      paso: Math.min(50, gramos),
+      minimo: Math.min(50, gramos),
+      decimales: 0,
+    };
   return { defecto: 1, paso: 1, minimo: 1, decimales: 0 };
 };
 
-export const cantidadDeLinea = (linea: Pick<LineaMesa, "unidad" | "cantidad">): number =>
-  typeof linea.cantidad === "number" && Number.isFinite(linea.cantidad) && linea.cantidad > 0
+export const cantidadDeLinea = (
+  linea: Pick<LineaMesa, "unidad" | "cantidad">,
+): number =>
+  typeof linea.cantidad === "number" &&
+  Number.isFinite(linea.cantidad) &&
+  linea.cantidad > 0
     ? linea.cantidad
     : configUnidad(linea.unidad).defecto;
 
-/** Importe de una línea: kg × precio/kg, gramos/100 × precio/100 g, o unidades × precio. */
+/** Importe de una línea: kg × precio/kg, gramos/peso de referencia × precio, o unidades × precio. */
 export const importeLinea = (linea: LineaMesa): number => {
   const precio = Number.isFinite(linea.precio_eur) ? linea.precio_eur : 0;
   const cantidad = cantidadDeLinea(linea);
-  if (esPorCienGramos(linea.unidad)) return (cantidad / 100) * precio;
+  const gramos = gramosDeUnidad(linea.unidad);
+  if (gramos !== null) return (cantidad / gramos) * precio;
   return cantidad * precio;
 };
 
@@ -159,7 +196,9 @@ export const repartoCadaUno = <L extends LineaMesa>(
   let compartido = 0;
   for (const linea of lineas) {
     const importe = importeLinea(linea);
-    const personas = (asignaciones[claveDe(linea)] ?? []).filter((p) => p >= 0 && p < n);
+    const personas = (asignaciones[claveDe(linea)] ?? []).filter(
+      (p) => p >= 0 && p < n,
+    );
     if (personas.length > 0) {
       const parte = importe / personas.length;
       for (const persona of personas) propio[persona] += parte;
@@ -177,7 +216,11 @@ export const repartoCadaUno = <L extends LineaMesa>(
 };
 
 /** Nombre visible de la persona `indice` (0-based). */
-export const nombrePersona = (nombres: string[], indice: number, plantilla: string): string => {
+export const nombrePersona = (
+  nombres: string[],
+  indice: number,
+  plantilla: string,
+): string => {
   const propio = nombres[indice]?.trim();
   return propio ? propio : plantilla.replace("{n}", String(indice + 1));
 };
@@ -210,26 +253,36 @@ export const formatearEuros = (valor: number, idioma: Language): string => {
 };
 
 /** "2", "1,5 kg", "350 g" — la cantidad tal y como se lee en el ticket. */
-export const formatearCantidadLinea = (linea: Pick<LineaMesa, "unidad" | "cantidad">, idioma: Language): string => {
+export const formatearCantidadLinea = (
+  linea: Pick<LineaMesa, "unidad" | "cantidad">,
+  idioma: Language,
+): string => {
   const cantidad = cantidadDeLinea(linea);
   const locale = LOCALE_POR_IDIOMA[idioma] ?? "es-ES";
-  if (linea.unidad === "kg") {
+  if (normalizarUnidadPlato(linea.unidad) === "kg") {
     return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(cantidad)} kg`;
   }
-  if (esPorCienGramos(linea.unidad)) return `${Math.round(cantidad)} g`;
+  if (gramosDeUnidad(linea.unidad) !== null) return `${Math.round(cantidad)} g`;
   return String(Math.max(1, Math.round(cantidad)));
 };
 
-/** Sufijo del precio unitario: "/kg", "/100 g" o nada. */
+/** Sufijo del precio unitario: "/kg", "/150 g" (el peso guardado) o nada. */
 export const sufijoPrecio = (unidad?: string | null): string =>
-  unidad === "kg" ? "/kg" : esPorCienGramos(unidad) ? "/100 g" : "";
+  normalizarUnidadPlato(unidad) === "kg"
+    ? "/kg"
+    : gramosDeUnidad(unidad) !== null
+      ? `/${normalizarUnidadPlato(unidad)}`
+      : "";
 
 // ---------------------------------------------------------------------------
 // Reservas
 // ---------------------------------------------------------------------------
 
 /** Enlace a reservas (en el idioma pedido; español por defecto) con los comensales de la mesa. */
-export const rutaReservaMesa = (comensales: number, lang: Language = "es"): string =>
+export const rutaReservaMesa = (
+  comensales: number,
+  lang: Language = "es",
+): string =>
   `${construirRutaIdioma(RESERVAS_PATH, lang)}?${PARAM_COMENSALES}=${acotarComensales(comensales)}`;
 
 export interface ComensalesReserva {
@@ -245,12 +298,14 @@ export interface ComensalesReserva {
  */
 export const leerComensalesReserva = (search: string): ComensalesReserva => {
   const crudo = new URLSearchParams(search).get(PARAM_COMENSALES);
-  if (crudo === null || crudo.trim() === "") return { comensales: null, grupoGrande: false };
+  if (crudo === null || crudo.trim() === "")
+    return { comensales: null, grupoGrande: false };
   const n = Number(crudo);
   if (!Number.isFinite(n)) return { comensales: null, grupoGrande: false };
   const entero = Math.floor(n);
   if (entero < 1) return { comensales: null, grupoGrande: false };
-  if (entero > MAX_COMENSALES_RESERVA_WEB) return { comensales: null, grupoGrande: true };
+  if (entero > MAX_COMENSALES_RESERVA_WEB)
+    return { comensales: null, grupoGrande: true };
   return { comensales: entero, grupoGrande: false };
 };
 
@@ -266,7 +321,9 @@ export const URL_CARTA_FALLBACK = "https://casa-tomas-story.vercel.app/carta";
  * SSG) cae en la URL pública.
  */
 export const urlCarta = (origen?: string | null, ruta = "/carta"): string =>
-  origen && /^https?:\/\//.test(origen) ? `${origen.replace(/\/+$/, "")}${ruta}` : URL_CARTA_FALLBACK;
+  origen && /^https?:\/\//.test(origen)
+    ? `${origen.replace(/\/+$/, "")}${ruta}`
+    : URL_CARTA_FALLBACK;
 
 export interface TextosResumen {
   summaryTitle: string;
@@ -285,13 +342,17 @@ export const resumenTextoMesa = (
 ): string => {
   const total = totalMesa(lineas);
   const n = acotarComensales(comensales);
-  const detalle = lineas.map((l) => `• ${formatearCantidadLinea(l, idioma)} × ${l.nombre}`);
+  const detalle = lineas.map(
+    (l) => `• ${formatearCantidadLinea(l, idioma)} × ${l.nombre}`,
+  );
   return [
     textos.summaryTitle,
     ...detalle,
     "",
     textos.summaryTotal.replace("{amount}", formatearEuros(total, idioma)),
-    textos.summaryPerPerson.replace("{amount}", formatearEuros(porPersona(total, n), idioma)).replace("{n}", String(n)),
+    textos.summaryPerPerson
+      .replace("{amount}", formatearEuros(porPersona(total, n), idioma))
+      .replace("{n}", String(n)),
     textos.summaryLink.replace("{url}", url),
   ].join("\n");
 };
@@ -323,19 +384,30 @@ export const construirPreguntaTomy = (
   textos: TextosPreguntaTomy,
   max = MAX_PREGUNTA_TOMY,
 ): string => {
-  const plantilla = textos.aiQuestion.replace("{n}", String(acotarComensales(comensales)));
+  const plantilla = textos.aiQuestion.replace(
+    "{n}",
+    String(acotarComensales(comensales)),
+  );
   const montar = (items: string) => plantilla.replace("{items}", items);
-  const platos = lineas.map((l) => `${formatearCantidadLinea(l, idioma)}× ${l.nombre.trim()}`);
+  const platos = lineas.map(
+    (l) => `${formatearCantidadLinea(l, idioma)}× ${l.nombre.trim()}`,
+  );
 
   const completa = montar(platos.join(", "));
   if (completa.length <= max) return completa;
 
   for (let incluidos = platos.length - 1; incluidos >= 0; incluidos--) {
-    const cola = textos.aiQuestionMore.replace("{n}", String(platos.length - incluidos));
-    const items = incluidos > 0 ? `${platos.slice(0, incluidos).join(", ")} ${cola}` : cola;
+    const cola = textos.aiQuestionMore.replace(
+      "{n}",
+      String(platos.length - incluidos),
+    );
+    const items =
+      incluidos > 0 ? `${platos.slice(0, incluidos).join(", ")} ${cola}` : cola;
     const texto = montar(items);
     if (texto.length <= max) return texto;
   }
   // Ni la cola sola cabe (plantilla enorme o `max` minúsculo): se corta en seco.
-  return montar(textos.aiQuestionMore.replace("{n}", String(platos.length))).slice(0, max);
+  return montar(
+    textos.aiQuestionMore.replace("{n}", String(platos.length)),
+  ).slice(0, max);
 };

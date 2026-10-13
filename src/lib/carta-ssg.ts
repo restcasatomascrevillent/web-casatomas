@@ -1,3 +1,4 @@
+import { normalizarUnidadPlato } from "./unidades-platos";
 /**
  * La carta de platos tal y como la descargó el build (`virtual:carta-ssg`).
  *
@@ -27,7 +28,8 @@ export const cartaSSG = carta;
  * que lo vuelve a leer en el navegador al cargar la página (el cambio se nota
  * sin esperar a un deploy). Para el JSON-LD manda este valor del build.
  */
-export const MOSTRAR_FOTOS_PLATOS = cartaSSG.config?.mostrarFotosPlatos !== false;
+export const MOSTRAR_FOTOS_PLATOS =
+  cartaSSG.config?.mostrarFotosPlatos !== false;
 
 /**
  * Los platos tal y como deben ir al JSON-LD (`Menu` de schema.org): con las
@@ -37,12 +39,14 @@ export const MOSTRAR_FOTOS_PLATOS = cartaSSG.config?.mostrarFotosPlatos !== fals
  * imagen podría acabar en un resultado enriquecido). Solo platos: vinos y
  * bebidas no dependen de este interruptor.
  */
-export function platosParaJsonLd<T extends { imagen_url?: string; imagen_posicion_y?: number }>(
-  platos: T[],
-  mostrarFotos: boolean = MOSTRAR_FOTOS_PLATOS,
-): T[] {
+export function platosParaJsonLd<
+  T extends { imagen_url?: string; imagen_posicion_y?: number },
+>(platos: T[], mostrarFotos: boolean = MOSTRAR_FOTOS_PLATOS): T[] {
   if (mostrarFotos) return platos;
-  return platos.map(({ imagen_url: _imagen, imagen_posicion_y: _encuadre, ...resto }) => resto as T);
+  return platos.map(
+    ({ imagen_url: _imagen, imagen_posicion_y: _encuadre, ...resto }) =>
+      resto as T,
+  );
 }
 
 /** Categoría que `CartaPlatos` selecciona al montarse (`CartaPlatos.tsx`). */
@@ -78,6 +82,7 @@ export function semillaCategoriaInicial(): Record<string, PlatoSSG[]> {
     .filter((p) => p.categoria === CATEGORIA_INICIAL)
     .map((p) => ({
       ...p,
+      unidad: normalizarUnidadPlato(p.unidad),
       alergenos_oficiales: normalizeAlergenos(p.alergenos_oficiales),
       alergenos_inferidos: normalizeAlergenos(p.alergenos_inferidos),
       expanded: Boolean(p.expanded),
@@ -113,7 +118,11 @@ export function agruparPorCategoria<T extends { categoria?: string }>(
     if (grupo) {
       grupo.items.push(item);
     } else {
-      grupos.set(clave, { clave, nombre: item.displayCategoria || clave, items: [item] });
+      grupos.set(clave, {
+        clave,
+        nombre: item.displayCategoria || clave,
+        items: [item],
+      });
     }
   }
 
@@ -123,7 +132,8 @@ export function agruparPorCategoria<T extends { categoria?: string }>(
   };
 
   return [...grupos.values()].sort(
-    (a, b) => indice(a.clave) - indice(b.clave) || a.clave.localeCompare(b.clave),
+    (a, b) =>
+      indice(a.clave) - indice(b.clave) || a.clave.localeCompare(b.clave),
   );
 }
 
@@ -131,7 +141,10 @@ export function agruparPorCategoria<T extends { categoria?: string }>(
  * Resuelve `imagen_url` a una URL pública absoluta.
  * Mismas reglas que `toPublicImageUrl` en `CartaPlatos.tsx`.
  */
-export function resolverImagen(valor: string | undefined, supabaseUrl?: string): string | null {
+export function resolverImagen(
+  valor: string | undefined,
+  supabaseUrl?: string,
+): string | null {
   if (!valor) return null;
   const trimmed = valor.trim();
   if (!trimmed) return null;
@@ -139,7 +152,8 @@ export function resolverImagen(valor: string | undefined, supabaseUrl?: string):
   const base = supabaseUrl?.replace(/\/+$/, "");
   if (!base) return null;
   if (trimmed.startsWith("/")) return `${base}${trimmed}`;
-  if (trimmed.includes("/")) return `${base}/storage/v1/object/public/${trimmed.replace(/^\/+/, "")}`;
+  if (trimmed.includes("/"))
+    return `${base}/storage/v1/object/public/${trimmed.replace(/^\/+/, "")}`;
   return null;
 }
 
@@ -157,7 +171,10 @@ const SUPABASE_STORAGE_HOST = "jeamoczmbfsnwkfjxcyo.supabase.co";
  * deja tal cual para no arriesgar un 400 del optimizador con un host que
  * no está en su lista permitida.
  */
-export function imagenOptimizada(url: string | null, ancho: number): string | null {
+export function imagenOptimizada(
+  url: string | null,
+  ancho: number,
+): string | null {
   if (!url) return null;
   let host: string;
   try {
