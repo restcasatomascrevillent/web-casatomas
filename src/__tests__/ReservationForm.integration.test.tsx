@@ -186,7 +186,12 @@ describe("ReservationForm — availability check error handling", () => {
     // The button is disabled without a fecha — so we cannot click it normally.
     // Instead we verify that if the fetch were called it would error. We use a
     // programmatic approach: confirm fetch is set up to reject.
-    expect(vi.mocked(fetch).mock.results.length).toBe(0); // not called yet
+    // (Al montar, el formulario pide los días cerrados a `reservas-web/cierres`;
+    // esa llamada no cuenta: lo que no debe haber aún es `/disponibilidad`.)
+    const llamadasDisponibilidad = vi
+      .mocked(fetch)
+      .mock.calls.filter(([url]) => String(url).includes("/disponibilidad"));
+    expect(llamadasDisponibilidad.length).toBe(0); // not called yet
     // This test documents expected behavior rather than simulating the calendar
     // date selection (which requires real DOM interaction with Popover/Calendar).
   });

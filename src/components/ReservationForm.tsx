@@ -40,6 +40,7 @@ import {
   type DisponibilidadHueco,
   type RechazoReserva,
 } from "@/lib/reservas-web";
+import { diasCerradosPorDefecto, fechaIso, leerDiasCerrados } from "@/lib/cierres-reserva";
 import { leerComensalesReserva, MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { construirRutaIdioma } from "@/i18n/routing";
 import {
@@ -110,6 +111,18 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
   const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
+  // Días sin reservas (lunes, jueves, cierres del panel): no se pueden elegir.
+  // Arranca con la regla por defecto y se afina con la de Supabase.
+  const [diasCerrados, setDiasCerrados] = useState<Set<string>>(() => diasCerradosPorDefecto(new Date(), 120));
+  useEffect(() => {
+    let vivo = true;
+    void leerDiasCerrados().then((dias) => {
+      if (vivo) setDiasCerrados(dias);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [rechazo, setRechazo] = useState<RechazoReserva | null>(null);
   const [reservationDetails, setReservationDetails] = useState<DatosTicket | null>(null);
@@ -476,7 +489,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                               field.onChange(date);
                               setCalendarOpen(false);
                             }}
-                            disabled={(date) => date < new Date()}
+                            disabled={(date) => date < new Date() || diasCerrados.has(fechaIso(date))}
                             locale={dateLocale}
                             initialFocus
                             className="pointer-events-auto rounded-xl"
