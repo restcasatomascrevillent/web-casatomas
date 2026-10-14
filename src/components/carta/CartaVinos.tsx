@@ -92,6 +92,12 @@ interface Vino {
 
 type VinoRecord = Vino & Record<string, unknown>;
 
+const INFORMACION_VINO = {
+  es: { ver: "Ver información", ocultar: "Ocultar información", sinFoto: "Sin foto disponible" },
+  en: { ver: "View information", ocultar: "Hide information", sinFoto: "No photo available" },
+  fr: { ver: "Voir les informations", ocultar: "Masquer les informations", sinFoto: "Aucune photo disponible" },
+};
+
 let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
 const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");
 
@@ -447,13 +453,6 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     return extractImageCandidate(item.imagen_url);
   };
 
-  const getImagePositionY = (value: unknown): number | null => {
-    if (value === null || value === undefined || value === "") return null;
-    const numeric = typeof value === "number" ? value : Number(value);
-    if (!Number.isFinite(numeric)) return null;
-    return Math.min(100, Math.max(0, numeric));
-  };
-
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     if (!vinosByCategory[category]) {
@@ -628,12 +627,10 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           {filteredItems.map((item, index) => {
             const itemRecord = item as VinoRecord;
             const cardKey = getCardKey(itemRecord);
-            const expanded = isCardExpanded(itemRecord);
             const infoOpen = isInfoCardOpen(itemRecord);
             const imageUrl = getWineImage(itemRecord);
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
-            const imagePositionY = getImagePositionY(itemRecord.imagen_posicion_y);
-            const imageStyle = imagePositionY === null ? undefined : { objectPosition: `center ${imagePositionY}%` };
+            const expanded = hasVisibleImage && isCardExpanded(itemRecord);
             const originLabel = [item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais]
               .filter(Boolean)
               .join(" · ");
@@ -651,13 +648,12 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             // La foto se pinta en las dos caras: si el cliente la ha abierto y
             // luego pulsa «información», la tarjeta gira pero la foto sigue.
             const bloqueFoto = (
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-full min-h-72 overflow-hidden">
                 {hasVisibleImage ? (
                   <img
                     src={imagenOptimizada(imageUrl, 768) || undefined}
                     alt={item.displayNombre || item.nombre}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    style={imageStyle}
+                    className="absolute inset-0 h-full w-full object-contain p-3"
                     loading="lazy"
                     decoding="async"
                     onError={() =>
@@ -669,11 +665,6 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                     <Wine className="w-9 h-9 text-accent/70" />
                   </div>
                 )}
-                <div className="absolute top-2 right-2">
-                  <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
-                    {translateCategory(item.categoria)}
-                  </Badge>
-                </div>
               </div>
             );
 
@@ -696,7 +687,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                 key={cardKey}
                 initial={false}
                 animate={{ opacity: 1, y: 0 }}
-                className="h-full [perspective:1200px]"
+                className={`h-full min-w-0 [perspective:1200px] ${expanded ? "md:col-span-2" : ""}`}
               >
                 {/* Envoltorio del giro 3D: mismo patrón que `CartaPlatos.tsx`
                     (la "i" gira la tarjeta con `rotateY`, no abre nada aparte).
@@ -710,29 +701,20 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                 >
                   <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
                     <Card
-                      className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
+                      className={`font-libre-baskerville ${expanded ? "grid grid-cols-[minmax(0,1fr)_clamp(5rem,30%,9rem)] grid-rows-[auto_1fr_auto]" : "flex flex-col"} transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
                         expanded || infoOpen ? "h-full" : "h-auto"
                       } ${expanded ? "card--expanded" : "card--collapsed"}`}
                     >
-                      {/* `scaleY` en vez de `height: "auto"`: animar `height`
-                          fuerza un reflow en cada fotograma, y con muchas
-                          tarjetas en la página el tirón se notaba al abrir la
-                          foto en móvil. `scaleY` + `opacity` las anima el
-                          compositor, sin layout de por medio — pero el alto
-                          real de la tarjeta no se achica con la foto: `exit`
-                          lleva su propia duración, más corta, para que no se
-                          note la tarjeta quieta a tamaño completo mientras la
-                          foto ya se encogió antes del cierre de golpe. */}
+                      {/* La botella ocupa un lateral, también en móvil: object-contain
+                          conserva cápsula y base sin recortar ni desplazar el texto hacia abajo. */}
                       <AnimatePresence initial={false}>
                         {expanded && (
                           <motion.div
                             key={`image-${cardKey}`}
-                            initial={{ scaleY: 0, opacity: 0 }}
-                            animate={{ scaleY: 1, opacity: 1 }}
-                            exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.12, ease: "easeInOut" } }}
+                            initial={{ x: 12, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 0.25, ease: "easeInOut" }}
-                            style={{ transformOrigin: "top" }}
-                            className="overflow-hidden bg-muted flex-shrink-0"
+                            className="col-start-2 row-start-1 row-span-3 overflow-hidden border-l bg-muted/30"
                           >
                             {bloqueFoto}
                           </motion.div>
@@ -741,14 +723,14 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
 
                       <CardHeader
                         className={`flex-shrink-0 transition-all duration-200 ${
-                          expanded ? "pb-3 px-6" : "py-2.5 px-4 pb-1.5"
+                          expanded ? "col-start-1 row-start-1 min-w-0 pb-3 px-4 pt-4" : "py-2.5 px-4 pb-1.5"
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-3">
+                        <div className={`flex gap-3 ${expanded ? "flex-col items-start sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between"}`}>
                           <div className="flex-1 min-w-0">
                             <CardTitle
                               className={`leading-tight whitespace-normal break-words line-clamp-2 ${
-                                expanded ? "text-lg" : "text-base min-h-12"
+                                expanded ? "text-base sm:text-lg" : "text-base min-h-12"
                               }`}
                             >
                               {item.displayNombre || item.nombre}
@@ -759,27 +741,28 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                               type="button"
                               onClick={() => handleToggleCard(itemRecord, expanded)}
                               aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
-                              className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
+                              aria-expanded={expanded}
+                              disabled={!hasVisibleImage}
+                              title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
+                              className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-muted/80 disabled:hover:scale-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                             >
                               {expanded ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                              aria-label={`${infoOpen ? t.vinos.hideInfo : t.vinos.viewInfo} — ${item.displayNombre || item.nombre}`}
+                              aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
                               className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                             >
                               <Info className="w-5 h-5" aria-hidden="true" />
                             </button>
                           </div>
                         </div>
-                        {!expanded && (
-                          <div className="flex items-center gap-2 pt-2">
-                            <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
-                              {translateCategory(item.categoria)}
-                            </Badge>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 pt-2">
+                          <Badge className="max-w-full whitespace-normal bg-accent/90 text-accent-foreground shadow-sm">
+                            {translateCategory(item.categoria)}
+                          </Badge>
+                        </div>
                       </CardHeader>
 
                       <AnimatePresence initial={false}>
@@ -791,9 +774,9 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                             exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.11, ease: "easeInOut" } }}
                             transition={{ duration: 0.22, ease: "easeInOut" }}
                             style={{ transformOrigin: "top" }}
-                            className="overflow-hidden"
+                            className="col-start-1 row-start-2 min-w-0 overflow-hidden"
                           >
-                            <CardContent className="space-y-3 pb-4 flex-grow overflow-hidden">
+                            <CardContent className="space-y-3 px-4 pb-4 flex-grow overflow-hidden">
                               {originLabel && (
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
@@ -809,11 +792,11 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                       </AnimatePresence>
 
                       <CardFooter
-                        className={`flex justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
-                          expanded ? "pt-3 bg-muted/30 px-6 py-3" : "pt-1 bg-transparent px-4 py-2"
+                        className={`flex flex-wrap gap-2 justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
+                          expanded ? "col-start-1 row-start-3 min-w-0 bg-muted/30 px-4 py-3" : "pt-1 bg-transparent px-4 py-2"
                         }`}
                       >
-                        <span className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}>
+                        <span className={`font-bold text-accent ${expanded ? "text-xl" : "text-lg"}`}>
                           {item.precio_eur}€
                         </span>
                         {showAddButton && (
@@ -838,19 +821,19 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                     className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
                   >
                     <Card
-                      className={`font-libre-baskerville flex flex-col overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
+                      className={`font-libre-baskerville ${expanded ? "grid grid-cols-[minmax(0,1fr)_clamp(5rem,30%,9rem)] grid-rows-[auto_1fr_auto]" : "flex flex-col"} overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
                         infoOpen ? "h-auto" : "h-full"
                       }`}
                     >
-                      {expanded && <div className="bg-muted flex-shrink-0">{bloqueFoto}</div>}
-                      <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
-                        <div className="flex items-center justify-between gap-3">
+                      {expanded && <div className="col-start-2 row-start-1 row-span-3 border-l bg-muted/30">{bloqueFoto}</div>}
+                      <CardHeader className={`${expanded ? "col-start-1 row-start-1 min-w-0" : ""} pb-3 px-4 flex-shrink-0 border-b bg-muted/20`}>
+                        <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg leading-tight whitespace-normal break-words">
+                            <CardTitle className="text-base sm:text-lg leading-tight whitespace-normal break-words">
                               {item.displayNombre || item.nombre}
                             </CardTitle>
                             <div className="pt-2">
-                              <Badge className="bg-accent/90 text-accent-foreground shadow-sm">
+                              <Badge className="max-w-full whitespace-normal bg-accent/90 text-accent-foreground shadow-sm">
                                 {translateCategory(item.categoria)}
                               </Badge>
                             </div>
@@ -858,7 +841,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                           <button
                             type="button"
                             onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                            aria-label={`${infoOpen ? t.vinos.hideInfo : t.vinos.viewInfo} — ${item.displayNombre || item.nombre}`}
+                            aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
                             className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                           >
                             <Info className="w-5 h-5" aria-hidden="true" />
@@ -866,7 +849,16 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                         </div>
                       </CardHeader>
 
-                      <CardContent className="space-y-4 pb-4 flex-grow overflow-auto px-6 pt-4">
+                      <CardContent className={`${expanded ? "col-start-1 row-start-2 min-w-0" : ""} space-y-4 pb-4 flex-grow overflow-auto px-4 pt-4`}>
+                        {originLabel && (
+                          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <MapPin className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
+                            <span>{originLabel}</span>
+                          </div>
+                        )}
+                        {item.descripcion?.trim() && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">{item.descripcion}</p>
+                        )}
                         <div className="space-y-2">
                           <p className="text-sm font-semibold text-foreground">{t.vinos.allergensTitle}:</p>
                           {conAlergenos ? (
@@ -907,7 +899,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                         )}
                       </CardContent>
 
-                      <CardFooter className="flex justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-6 py-3">
+                      <CardFooter className={`${expanded ? "col-start-1 row-start-3 min-w-0" : ""} flex flex-wrap gap-2 justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-4 py-3`}>
                         <span className="font-bold text-accent text-2xl">
                           {item.precio_eur}€
                         </span>

@@ -10,7 +10,9 @@ const vinos = [
     nombre: "Ribera del Duero Reserva",
     precio_eur: 24.5,
     categoria: "Tintos",
-    imagen_url: null,
+    imagen_url: "https://example.com/botella.jpg",
+    imagen_posicion_y: 90,
+    descripcion: "Fruta madura y una boca equilibrada. Acompaña carnes asadas.",
     denominacion_origen: "D.O. Ribera del Duero",
     alergenos_oficiales: ["sulfitos"],
     alergenos_inferidos: [],
@@ -19,6 +21,9 @@ const vinos = [
   {
     id: "v2",
     nombre: "Albariño Rías Baixas",
+    descripcion: "Fresco y cítrico, con una boca vivaz. Acompaña mariscos y pescados.",
+    denominacion_origen: "D.O. Rías Baixas",
+    expanded: true,
     precio_eur: 19,
     categoria: "Blancos",
     imagen_url: null,
@@ -119,7 +124,7 @@ describe("CartaVinos — botón de info (i) que gira la tarjeta", () => {
     expect(screen.getAllByRole("button", { name: /ver foto/i }).length).toBe(3);
     // La "i" vive en las dos caras (para poder cerrarla desde la trasera
     // también): dos por vino mientras ninguna está girada.
-    expect(screen.getAllByRole("button", { name: /ver alérgenos/i }).length).toBe(6);
+    expect(screen.getAllByRole("button", { name: /ver información/i }).length).toBe(6);
   });
 
   it("pulsar 'i' en un vino con alérgeno DECLARADO gira la tarjeta y lo muestra", async () => {
@@ -128,13 +133,13 @@ describe("CartaVinos — botón de info (i) que gira la tarjeta", () => {
     await confirmarEdad(user);
     await waitFor(() => expect(screen.getAllByText("Ribera del Duero Reserva").length).toBeGreaterThan(0));
 
-    const [infoBtn] = screen.getAllByRole("button", { name: /ver alérgenos.*ribera del duero/i });
+    const [infoBtn] = screen.getAllByRole("button", { name: /ver información.*ribera del duero/i });
     fireEvent.click(infoBtn);
 
-    // Tras girar, la cara frontal pasa a "Ocultar alérgenos" y el alérgeno
+    // Tras girar, la cara frontal pasa a "Ocultar información" y el alérgeno
     // declarado aparece (con su propio badge, distinto del de un inferido).
     await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: /ocultar alérgenos.*ribera del duero/i }).length).toBeGreaterThan(0),
+      expect(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i }).length).toBeGreaterThan(0),
     );
     // "Sulfitos" también sale en el vino v2 (inferido): basta con que aparezca.
     expect(screen.getAllByText("Sulfitos").length).toBeGreaterThan(0);
@@ -146,11 +151,11 @@ describe("CartaVinos — botón de info (i) que gira la tarjeta", () => {
     await confirmarEdad(user);
     await waitFor(() => expect(screen.getAllByText("Albariño Rías Baixas").length).toBeGreaterThan(0));
 
-    const [infoBtn] = screen.getAllByRole("button", { name: /ver alérgenos.*albariño/i });
+    const [infoBtn] = screen.getAllByRole("button", { name: /ver información.*albariño/i });
     fireEvent.click(infoBtn);
 
     await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: /ocultar alérgenos.*albariño/i }).length).toBeGreaterThan(0),
+      expect(screen.getAllByRole("button", { name: /ocultar información.*albariño/i }).length).toBeGreaterThan(0),
     );
     expect(screen.getAllByText("Sulfitos").length).toBeGreaterThan(0);
     expect(screen.getByText(/contiene trazas de frutos de cáscara/i)).toBeInTheDocument();
@@ -162,13 +167,79 @@ describe("CartaVinos — botón de info (i) que gira la tarjeta", () => {
     await confirmarEdad(user);
     await waitFor(() => expect(screen.getAllByText("Cava Brut Nature").length).toBeGreaterThan(0));
 
-    const [infoBtn] = screen.getAllByRole("button", { name: /ver alérgenos.*cava brut/i });
+    const [infoBtn] = screen.getAllByRole("button", { name: /ver información.*cava brut/i });
     fireEvent.click(infoBtn);
 
     await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: /ocultar alérgenos.*cava brut/i }).length).toBeGreaterThan(0),
+      expect(screen.getAllByRole("button", { name: /ocultar información.*cava brut/i }).length).toBeGreaterThan(0),
     );
     expect(screen.getAllByText(/sin información de alérgenos/i).length).toBeGreaterThan(0);
+  });
+
+  it("despliega la botella completa al lateral y la conserva al consultar alérgenos", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+
+    const eye = screen.getByRole("button", { name: /ver foto.*ribera del duero/i });
+    expect(eye).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    fireEvent.click(eye);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "true"));
+    const fotos = screen.getAllByAltText("Ribera del Duero Reserva");
+    expect(fotos).toHaveLength(2);
+    for (const foto of fotos) {
+      expect(foto).toHaveClass("object-contain");
+      expect(foto).not.toHaveClass("object-cover");
+      expect(foto.style.objectPosition).toBe("");
+      expect(foto.parentElement?.parentElement).toHaveClass("col-start-2", "row-span-3");
+    }
+    expect(screen.getAllByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toHaveLength(2);
+
+    fireEvent.click(screen.getAllByRole("button", { name: /ver información.*ribera del duero/i })[0]);
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i })).toHaveLength(2));
+    expect(screen.getAllByAltText("Ribera del Duero Reserva")).toHaveLength(2);
+
+    fireEvent.click(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i })[1]);
+    fireEvent.click(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i }));
+    await waitFor(() => expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("permite consultar descripción y origen sin foto y bloquea una expansión heredada vacía", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+
+    const foto = screen.getByRole("button", { name: /ver foto.*albariño/i });
+    expect(foto).toBeDisabled();
+    expect(foto).toHaveAttribute("title", "Sin foto disponible");
+    expect(foto).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(foto);
+    expect(screen.queryByAltText("Albariño Rías Baixas")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: /ver información.*albariño/i })[0]);
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /ocultar información.*albariño/i })).toHaveLength(2));
+    const descripcion = screen.getByText("Fresco y cítrico, con una boca vivaz. Acompaña mariscos y pescados.");
+    const caraInformacion = descripcion.closest("[class*='rotateY(180deg)']");
+    expect(caraInformacion).toHaveClass("relative");
+    expect(screen.getByText("D.O. Rías Baixas")).toBeInTheDocument();
+    expect(screen.getByText(/contiene trazas de frutos de cáscara/i)).toBeInTheDocument();
+  });
+
+  it("cierra el lateral y bloquea el ojo si la imagen falla sin perder la descripción", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
+    fireEvent.error(screen.getAllByAltText("Ribera del Duero Reserva")[0]);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toBeDisabled());
+    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /ver información.*ribera del duero/i })[0]);
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i })).toHaveLength(2));
+    expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();
   });
 
   it("el botón del ojo sigue funcionando igual (expandir/colapsar foto) tras el cambio", async () => {
