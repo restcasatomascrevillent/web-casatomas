@@ -164,7 +164,7 @@ describe("CartaVinos — información y fotografías", () => {
     fireEvent.click(eye);
     expect(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "true");
     const foto = screen.getByAltText("Ribera del Duero Reserva");
-    expect(foto).toHaveClass("object-cover");
+    expect(foto).toHaveClass("object-contain");
     expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /ver información.*ribera del duero/i }));
