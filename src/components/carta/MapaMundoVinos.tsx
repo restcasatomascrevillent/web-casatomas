@@ -253,7 +253,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   }, [selectedRegion, tipoRegion]);
 
   const origenesSinUbicar = sinUbicar;
-  const avisoUbicacion = language === "es" ? "Los puntos indican bodegas con ubicación documentada. Los demás vinos se pueden consultar debajo del mapa." : language === "en" ? "Pins show wineries with documented locations. The remaining wines are listed below the map." : "Les points indiquent des domaines dont la localisation est documentée. Les autres vins figurent sous la carte.";
+  const avisoUbicacion = language === "es" ? "Los puntos sitúan la zona de cada vino: la bodega exacta cuando está documentada, o el centro aproximado de su denominación." : language === "en" ? "Pins show each wine's area: the exact winery where documented, otherwise the approximate centre of its appellation." : "Les points situent la zone de chaque vin : le domaine exact quand il est documenté, sinon le centre approximatif de son appellation.";
 
   return (
     <div className="mb-8 w-full overflow-hidden">
