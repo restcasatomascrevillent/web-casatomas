@@ -5,7 +5,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import FiltrosTipoVino from "./FiltrosTipoVino";
 import { etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
 import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -13,12 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 /**
  * `mapbox-gl` pesa ~458 KB gzip — 2,7x toda la aplicación — y hasta ahora
  * entraba en el chunk de la carta de vinos por un import estático. Además el
@@ -53,7 +46,7 @@ import {
 interface CartaVinosProps {
   showAddButton?: boolean;
   /**
-   * Vinos de la categoría inicial ("Todos") descargados en build
+   * Vinos descargados en build, usados como semilla de la denominación inicial
    * (`virtual:carta-ssg/vinos`). Evitan el parpadeo de carga al entrar a la
    * página y son lo que ve el buscador antes de que llegue el refresco de
    * Supabase.
@@ -98,6 +91,14 @@ const INFORMACION_VINO = {
   fr: { ver: "Voir les informations", ocultar: "Masquer les informations", sinFoto: "Aucune photo disponible" },
 };
 
+function categoriaCorta(categoria: string): string {
+  const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?)\s*[—–-]\s*/i, "");
+  if (corta === "RIBERA DEL DUERO") return "Ribera del Duero";
+  return corta === corta.toUpperCase()
+    ? corta.toLocaleLowerCase("es").replace(/^\p{L}/u, letra => letra.toLocaleUpperCase("es"))
+    : corta;
+}
+
 let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
 const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");
 
@@ -122,16 +123,26 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   // aquí), no se le vuelve a preguntar.
   const [showAgeDialog, setShowAgeDialog] = useState(() => !getEdadVinosConfirmada());
   const [isAdult, setIsAdult] = useState<boolean | null>(() => (getEdadVinosConfirmada() ? true : null));
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
+  // La semilla SSG y el primer refresco abren la misma denominación.
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
+    const catalogo = initialMapVinos ?? Object.values(initialVinos ?? {}).flat();
+    return catalogo.find(vino => /tintos?.*ribera.*duero/i.test(vino.categoria ?? ""))?.categoria
+      ?? (initialMapVinos || initialVinos ? "Todos" : "VINOS TINTOS — RIBERA DEL DUERO");
+  });
   const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>(
-    () => initialVinos ?? {},
+    () => {
+      const semilla = initialVinos ?? {};
+      if (selectedCategory === "Todos" || semilla[selectedCategory]) return semilla;
+      const vinos = (initialMapVinos ?? Object.values(semilla).flat())
+        .filter(vino => vino.categoria === selectedCategory);
+      return { ...semilla, [selectedCategory]: vinos.slice(0, 24) };
+    },
   );
   const [loadingByCategory, setLoadingByCategory] = useState<Record<string, boolean>>({});
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [mapVinos, setMapVinos] = useState<Vino[]>(() => initialMapVinos ?? []);
   const [mapLoading, setMapLoading] = useState(() => !initialMapVinos);
   const mapFetchInFlight = useRef(false);
@@ -460,12 +471,6 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     }
   };
 
-  const handleCategorySelect = (category: string) => {
-    setCategoryMenuOpen(false);
-    if (category === selectedCategory) return;
-    requestAnimationFrame(() => handleCategoryChange(category));
-  };
-
   const loadMore = () => {
     if (hasMoreByCategory[selectedCategory] && !currentLoading) {
       fetchVinosByCategory(selectedCategory, true);
@@ -486,7 +491,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   };
 
   return (
-    <div className="space-y-8" ref={sectionRef}>
+    <div className="space-y-6" ref={sectionRef}>
       {/* Ventana de verificación de edad: se superpone al contenido, no lo
           sustituye (el contenido ya está en el HTML del SSG). Aparece un
           instante después de entrar a la página. */}
@@ -547,7 +552,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
       {mapVinos.length > 0 && (
         <FiltrosTipoVino
           vinos={mapVinos}
-          seleccionado={tipoDesdeCategoria(selectedCategory) ?? (selectedCategory === "Todos" ? "todos" : null)}
+          seleccionado={tipoDesdeCategoria(selectedCategory) ?? (selectedCategory === "Todos" ? "todos" : tipoVino(selectedCategory))}
           onChange={tipo => handleCategoryChange(tipo === "todos" ? "Todos" : `tipo:${tipo}`)}
         />
       )}
@@ -564,57 +569,32 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             placeholder={t.vinos.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 py-6 text-lg"
+            className="h-11 pl-10 text-base font-sans"
           />
         </div>
 
-        {/* Category Filter Dropdown */}
-        <div className="flex justify-center">
-          <DropdownMenu open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen} modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="w-72 min-h-12 h-auto justify-between items-start bg-gradient-to-r from-background to-muted/30 hover:from-muted/50 hover:to-muted/60 border-2 border-border hover:border-accent/50 rounded-xl shadow-md hover:shadow-lg transition duration-300 text-base font-semibold text-left touch-manipulation"
-              >
-                <span className="flex items-start gap-2 text-left whitespace-normal break-words leading-tight flex-1">
-                  <Wine className="w-5 h-5 text-accent" />
-                  {translateCategory(selectedCategory)}
-                </span>
-                <ChevronDown className="w-5 h-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180 flex-shrink-0 mt-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="center"
-              sideOffset={8}
-              onCloseAutoFocus={(event) => event.preventDefault()}
-              className="w-72 max-h-[60vh] overflow-y-auto overscroll-contain bg-background border-2 border-border shadow-2xl rounded-xl p-2"
-            >
-              {categories.map((category) => (
-                <DropdownMenuItem
-                  key={category}
-                  onSelect={(event) => {
-                    event.preventDefault();
-                    handleCategorySelect(category);
-                  }}
-                  className={`cursor-pointer rounded-lg px-4 py-3 my-1 text-base transition duration-200 touch-manipulation ${
-                    selectedCategory === category
-                      ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-bold shadow-md"
-                      : "hover:bg-muted/70 hover:translate-x-1"
-                  }`}
-                >
-                  <span className="flex items-start gap-3 text-left whitespace-normal break-words leading-tight">
-                    <span className={`w-2 h-2 rounded-full ${
-                      selectedCategory === category 
-                        ? "bg-accent-foreground" 
-                        : "bg-accent/40"
-                    }`} />
-                    {translateCategory(category)}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {/* Selector nativo: desplazamiento y selección propios de iOS/Android,
+            sin portales que capturen el gesto de scroll de la carta. */}
+        <label className="relative mx-auto block w-full max-w-md font-sans">
+          <span className="sr-only">{t.vinos.categoriesAll} · {language === "es" ? "Denominación del vino" : language === "en" ? "Wine region" : "Région du vin"}</span>
+          <Wine aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
+          <select
+            aria-label={language === "es" ? "Denominación del vino" : language === "en" ? "Wine region" : "Région du vin"}
+            value={selectedCategory}
+            onChange={event => handleCategoryChange(event.target.value)}
+            className="h-11 w-full min-w-0 appearance-none rounded-xl border border-border bg-background pl-10 pr-9 text-base font-medium sm:text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <option value="Todos">{t.vinos.categoriesAll}</option>
+            {tipoDesdeCategoria(selectedCategory) && <option value={selectedCategory}>{translateCategory(selectedCategory)}</option>}
+            {(["tinto", "blanco", "espumoso", "rosado", "otro"] as const).map(tipo => {
+              const opciones = categories.filter(category => category !== "Todos" && tipoVino(category) === tipo);
+              return opciones.length > 0 && <optgroup key={tipo} label={etiquetaTipoVino(tipo, language)}>
+                {opciones.map(category => <option key={category} value={category}>{categoriaCorta(category)}</option>)}
+              </optgroup>;
+            })}
+          </select>
+          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        </label>
       </div>
 
       {/* Items Grid */}
@@ -623,8 +603,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           <p className="text-xl text-muted-foreground">{t.vinos.loading}</p>
         </div>
       ) : (
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredItems.map((item, index) => {
+        <div ref={gridRef} className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
+          {filteredItems.map((item) => {
             const itemRecord = item as VinoRecord;
             const cardKey = getCardKey(itemRecord);
             const infoOpen = isInfoCardOpen(itemRecord);
@@ -645,280 +625,79 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             const alergenosInferidos = Array.from(
               new Set(alergenosItem.inferidos.map((a) => etiquetaAlergeno(a, language)).filter(Boolean)),
             ).filter((etiqueta) => !alergenosOficiales.includes(etiqueta));
-            // La foto se pinta en las dos caras: si el cliente la ha abierto y
-            // luego pulsa «información», la tarjeta gira pero la foto sigue.
-            const bloqueFoto = (
-              <div className="relative h-full min-h-72 overflow-hidden">
-                {hasVisibleImage ? (
-                  <img
-                    src={imagenOptimizada(imageUrl, 768) || undefined}
-                    alt={item.displayNombre || item.nombre}
-                    className="absolute inset-0 h-full w-full object-contain p-3"
-                    loading="lazy"
-                    decoding="async"
-                    onError={() =>
-                      setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
-                    }
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center">
-                    <Wine className="w-9 h-9 text-accent/70" />
-                  </div>
-                )}
-              </div>
-            );
-
             return (
-              // Sin `layout` (ver más abajo por qué) y con `initial={false}`:
-              // esta carta vive en su propia página SSG, con los vinos ya en
-              // el HTML — animar una entrada con `initial={{opacity:0}}`
-              // dejaría cada tarjeta invisible en ese HTML hasta que el JS
-              // hidrata (la advertencia de `CartaPageLayout` sobre por qué
-              // aquí no se usa `motion`/`whileInView`).
-              //
-              // Sin `layout`: con él, mostrar/ocultar la foto de UNA tarjeta
-              // cambiaba su alto y Framer Motion recalculaba y volvía a
-              // animar la posición de TODAS las demás tarjetas del grid (el
-              // reflow que provoca ese cambio de alto), no solo la que se
-              // tocó. El propio despliegue de la tarjeta ya anima suave por
-              // su cuenta (motion.div de abajo); las vecinas ahora solo se
-              // reacomodan con el reflow normal del grid.
-              <motion.div
-                key={cardKey}
-                initial={false}
-                animate={{ opacity: 1, y: 0 }}
-                className={`h-full min-w-0 [perspective:1200px] ${expanded ? "md:col-span-2" : ""}`}
-              >
-                {/* Envoltorio del giro 3D: mismo patrón que `CartaPlatos.tsx`
-                    (la "i" gira la tarjeta con `rotateY`, no abre nada aparte).
-                    La cara trasera va con `backface-visibility:hidden` y
-                    posicionada en `absolute` salvo cuando está boca arriba —
-                    ahí pasa a `relative` para que sí ocupe sitio en el grid. */}
-                <div
-                  className={`relative transition-transform duration-500 [transform-style:preserve-3d] ${
-                    expanded || infoOpen ? "h-full" : "h-auto"
-                  } ${infoOpen ? "[transform:rotateY(180deg)]" : ""}`}
-                >
-                  <div className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}>
-                    <Card
-                      className={`font-libre-baskerville ${expanded ? "grid grid-cols-[minmax(0,1fr)_clamp(5rem,30%,9rem)] grid-rows-[auto_1fr_auto]" : "flex flex-col"} transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
-                        expanded || infoOpen ? "h-full" : "h-auto"
-                      } ${expanded ? "card--expanded" : "card--collapsed"}`}
-                    >
-                      {/* La botella ocupa un lateral, también en móvil: object-contain
-                          conserva cápsula y base sin recortar ni desplazar el texto hacia abajo. */}
-                      <AnimatePresence initial={false}>
-                        {expanded && (
-                          <motion.div
-                            key={`image-${cardKey}`}
-                            initial={{ x: 12, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.25, ease: "easeInOut" }}
-                            className="col-start-2 row-start-1 row-span-3 overflow-hidden border-l bg-muted/30"
-                          >
-                            {bloqueFoto}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+              <div key={cardKey} className="min-w-0">
+                <Card className="overflow-hidden border-border/80 bg-background shadow-sm">
+                  <CardHeader className="gap-2 px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words sm:text-lg">
+                        {item.displayNombre || item.nombre}
+                      </CardTitle>
+                      <div className="flex shrink-0 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCard(itemRecord, expanded)}
+                          aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
+                          aria-expanded={expanded}
+                          aria-controls={`foto-vino-${cardKey}`}
+                          disabled={!hasVisibleImage}
+                          title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
+                          className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          {expanded ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
+                          aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
+                          aria-expanded={infoOpen}
+                          aria-controls={`info-vino-${cardKey}`}
+                          className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        >
+                          <Info className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="font-sans text-xs leading-relaxed text-muted-foreground">{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "")}</p>
+                  </CardHeader>
 
-                      <CardHeader
-                        className={`flex-shrink-0 transition-all duration-200 ${
-                          expanded ? "col-start-1 row-start-1 min-w-0 pb-3 px-4 pt-4" : "py-2.5 px-4 pb-1.5"
-                        }`}
-                      >
-                        <div className={`flex gap-3 ${expanded ? "flex-col items-start sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between"}`}>
-                          <div className="flex-1 min-w-0">
-                            <CardTitle
-                              className={`leading-tight whitespace-normal break-words line-clamp-2 ${
-                                expanded ? "text-base sm:text-lg" : "text-base min-h-12"
-                              }`}
-                            >
-                              {item.displayNombre || item.nombre}
-                            </CardTitle>
-                          </div>
-                          <div className="flex items-center gap-2 self-center">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleCard(itemRecord, expanded)}
-                              aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
-                              aria-expanded={expanded}
-                              disabled={!hasVisibleImage}
-                              title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
-                              className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-muted/80 disabled:hover:scale-100 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                            >
-                              {expanded ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                              aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
-                              className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                            >
-                              <Info className="w-5 h-5" aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 pt-2">
-                          <Badge className="max-w-full whitespace-normal bg-accent/90 text-accent-foreground shadow-sm">
-                            {translateCategory(item.categoria)}
-                          </Badge>
-                        </div>
-                      </CardHeader>
+                  {expanded && (
+                    <div id={`foto-vino-${cardKey}`} className="border-y border-border/60 bg-muted/20">
+                      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden">
+                      <img
+                        src={imagenOptimizada(imageUrl, 768) || undefined}
+                        alt={item.displayNombre || item.nombre}
+                        className="h-full w-full object-cover"
+                        style={{ objectPosition: `center ${Math.max(0, Math.min(100, item.imagen_posicion_y ?? 50))}%` }}
+                        loading="lazy"
+                        decoding="async"
+                        onError={() => setBrokenImages(prev => ({ ...prev, [cardKey]: true }))}
+                      />
+                      </div>
+                    </div>
+                  )}
 
-                      <AnimatePresence initial={false}>
-                        {expanded && (
-                          <motion.div
-                            key={`content-${cardKey}`}
-                            initial={{ scaleY: 0, opacity: 0 }}
-                            animate={{ scaleY: 1, opacity: 1 }}
-                            exit={{ scaleY: 0, opacity: 0, transition: { duration: 0.11, ease: "easeInOut" } }}
-                            transition={{ duration: 0.22, ease: "easeInOut" }}
-                            style={{ transformOrigin: "top" }}
-                            className="col-start-1 row-start-2 min-w-0 overflow-hidden"
-                          >
-                            <CardContent className="space-y-3 px-4 pb-4 flex-grow overflow-hidden">
-                              {originLabel && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
-                                  <span className="line-clamp-2">{originLabel}</span>
-                                </div>
-                              )}
-                              {item.descripcion && (
-                                <p className="text-sm text-muted-foreground">{item.descripcion}</p>
-                              )}
-                            </CardContent>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                  {infoOpen && (
+                    <CardContent id={`info-vino-${cardKey}`} className="space-y-3 px-4 pb-4 font-sans text-sm leading-relaxed">
+                      {originLabel && <p className="flex items-start gap-2 text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" /><span>{originLabel}</span></p>}
+                      {item.descripcion?.trim() && <p className="whitespace-pre-line text-muted-foreground">{item.descripcion}</p>}
+                      <div className="space-y-2">
+                        <p className="font-medium">{t.vinos.allergensTitle}:</p>
+                        {conAlergenos ? <div className="flex flex-wrap gap-1">
+                          {alergenosOficiales.map(alergeno => <Badge key={`oficial-${cardKey}-${alergeno}`} variant="destructive" className="text-xs">{alergeno}</Badge>)}
+                          {alergenosInferidos.map(alergeno => <Badge key={`inferido-${cardKey}-${alergeno}`} variant="secondary" className="text-xs">{alergeno}</Badge>)}
+                        </div> : <p className="rounded bg-destructive/10 p-2 text-destructive">{AVISO_SIN_ALERGENOS[language]}</p>}
+                      </div>
+                      {alergenosItem.notas && <p className="text-xs text-destructive">{alergenosItem.notas}</p>}
+                    </CardContent>
+                  )}
 
-                      <CardFooter
-                        className={`flex flex-wrap gap-2 justify-between items-center border-t mt-auto flex-shrink-0 transition-all ${
-                          expanded ? "col-start-1 row-start-3 min-w-0 bg-muted/30 px-4 py-3" : "pt-1 bg-transparent px-4 py-2"
-                        }`}
-                      >
-                        <span className={`font-bold text-accent ${expanded ? "text-xl" : "text-lg"}`}>
-                          {item.precio_eur}€
-                        </span>
-                        {showAddButton && (
-                          <Button
-                            size="sm"
-                            onClick={() => addToPedido(item)}
-                            aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`}
-                            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                          >
-                            <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
-                            {t.vinos.add}
-                          </Button>
-                        )}
-                      </CardFooter>
-                    </Card>
-                  </div>
-
-                  {/* Cara trasera: alérgenos, igual que la "i" de `CartaPlatos.tsx`.
-                      Sin `ingredientes` (los vinos no tienen esa columna), así
-                      que aquí solo va lo que sí hay: alérgenos y notas. */}
-                  <div
-                    className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
-                  >
-                    <Card
-                      className={`font-libre-baskerville ${expanded ? "grid grid-cols-[minmax(0,1fr)_clamp(5rem,30%,9rem)] grid-rows-[auto_1fr_auto]" : "flex flex-col"} overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
-                        infoOpen ? "h-auto" : "h-full"
-                      }`}
-                    >
-                      {expanded && <div className="col-start-2 row-start-1 row-span-3 border-l bg-muted/30">{bloqueFoto}</div>}
-                      <CardHeader className={`${expanded ? "col-start-1 row-start-1 min-w-0" : ""} pb-3 px-4 flex-shrink-0 border-b bg-muted/20`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-base sm:text-lg leading-tight whitespace-normal break-words">
-                              {item.displayNombre || item.nombre}
-                            </CardTitle>
-                            <div className="pt-2">
-                              <Badge className="max-w-full whitespace-normal bg-accent/90 text-accent-foreground shadow-sm">
-                                {translateCategory(item.categoria)}
-                              </Badge>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                            aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
-                            className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                          >
-                            <Info className="w-5 h-5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className={`${expanded ? "col-start-1 row-start-2 min-w-0" : ""} space-y-4 pb-4 flex-grow overflow-auto px-4 pt-4`}>
-                        {originLabel && (
-                          <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <MapPin className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
-                            <span>{originLabel}</span>
-                          </div>
-                        )}
-                        {item.descripcion?.trim() && (
-                          <p className="text-sm text-muted-foreground whitespace-pre-line">{item.descripcion}</p>
-                        )}
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-foreground">{t.vinos.allergensTitle}:</p>
-                          {conAlergenos ? (
-                            <div className="space-y-2">
-                              {alergenosOficiales.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {alergenosOficiales.map((alergeno) => (
-                                    <Badge key={`oficial-${cardKey}-${alergeno}`} variant="destructive" className="text-xs">
-                                      {alergeno}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                              {alergenosInferidos.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {alergenosInferidos.map((alergeno) => (
-                                    <Badge key={`inferido-${cardKey}-${alergeno}`} variant="secondary" className="text-xs">
-                                      {alergeno}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            // "No disponible" se podía leer como "no tiene
-                            // alérgenos". Aquí se dice lo que pasa de verdad:
-                            // no consta el dato y hay que preguntar.
-                            <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-                              {AVISO_SIN_ALERGENOS[language]}
-                            </p>
-                          )}
-                        </div>
-
-                        {alergenosItem.notas && (
-                          <p className="text-xs text-destructive italic bg-destructive/10 p-2 rounded">
-                            {alergenosItem.notas}
-                          </p>
-                        )}
-                      </CardContent>
-
-                      <CardFooter className={`${expanded ? "col-start-1 row-start-3 min-w-0" : ""} flex flex-wrap gap-2 justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-4 py-3`}>
-                        <span className="font-bold text-accent text-2xl">
-                          {item.precio_eur}€
-                        </span>
-                        {showAddButton && (
-                          <Button
-                            size="sm"
-                            onClick={() => addToPedido(item)}
-                            aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`}
-                            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
-                          >
-                            <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
-                            {t.vinos.add}
-                          </Button>
-                        )}
-                      </CardFooter>
-                    </Card>
-                  </div>
-                </div>
-              </motion.div>
+                  <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-muted/10 px-4 py-3">
+                    <span className="font-libre-baskerville text-xl font-bold text-accent">{item.precio_eur}€</span>
+                    {showAddButton && <Button size="sm" onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className="h-10 rounded-full bg-accent px-4 font-sans text-sm text-accent-foreground hover:bg-accent/90"><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
+                  </CardFooter>
+                </Card>
+              </div>
             );
           })}
         </div>
