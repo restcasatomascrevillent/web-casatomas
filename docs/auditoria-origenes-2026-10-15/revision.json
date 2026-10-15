@@ -691,30 +691,31 @@
         "ubicacion_pais": "Francia",
         "ubicacion_region": "Champagne (Grand Est)"
       },
-      "estado": "identidad_pendiente",
+      "estado": "cuvee_pendiente",
       "verificado": {
-        "denominacion_origen": null,
-        "ubicacion_region": null,
-        "ubicacion_pais": null
+        "denominacion_origen": "AOC Champagne",
+        "ubicacion_region": "Champagne",
+        "ubicacion_pais": "Francia"
       },
       "fuentes": [
         "https://fr.gaultmillau.com/fr/wineries/casters-liebart/cuvee-vincent-bsa",
-        "https://www.hachette-vins.com/guide-vins/les-vins/p-louis-martin-cuvee-vincent-2006-2012/20122930/"
+        "https://www.hachette-vins.com/guide-vins/les-vins/p-louis-martin-cuvee-vincent-2006-2012/20122930/",
+        "https://www.cellarprestige.com/products/paul-louis-martin-cuvee-vincent-millesime-champagne-aoc-2012-gift-box/"
       ],
       "notas": [
-        "Hay varias cuvées Vincent de productores diferentes. Falta productor y etiqueta."
+        "Sigue sin identificarse una única maison: existen \"Cuvée Vincent\" de Casters-Liébart y de Paul Louis Martin, ambas AOC Champagne. La ficha ya estaba en CHAMPAGNES antes de la auditoría (categoría propia del restaurante, no una estimación nuestra) y no se ha encontrado ninguna \"Cuvée Vincent\" que no sea Champagne. Se mantiene D.O./región, no la maison."
       ],
       "propuesta": {
-        "categoria": "VINOS ESPUMOSOS — ORIGEN PENDIENTE",
-        "categoria_en": "Sparkling wines — Origin pending",
-        "categoria_fr": "Vins effervescents — Origine à vérifier",
-        "denominacion_origen": null,
-        "ubicacion_pais": null,
-        "ubicacion_region": null,
-        "ubicacion_pais_en": null,
-        "ubicacion_pais_fr": null,
-        "ubicacion_region_en": null,
-        "ubicacion_region_fr": null
+        "categoria": "VINOS ESPUMOSOS — CHAMPAGNE",
+        "categoria_en": "Sparkling wines — Champagne",
+        "categoria_fr": "Vins effervescents — Champagne",
+        "denominacion_origen": "AOC Champagne",
+        "ubicacion_pais": "Francia",
+        "ubicacion_region": "Champagne",
+        "ubicacion_pais_en": "France",
+        "ubicacion_pais_fr": "France",
+        "ubicacion_region_en": "Champagne",
+        "ubicacion_region_fr": "Champagne"
       }
     },
     {
@@ -2288,29 +2289,30 @@
         "ubicacion_pais": "España",
         "ubicacion_region": "Castilla y León (El Bierzo, León)"
       },
-      "estado": "identidad_pendiente",
+      "estado": "cuvee_pendiente",
       "verificado": {
-        "denominacion_origen": null,
-        "ubicacion_region": null,
-        "ubicacion_pais": null
+        "denominacion_origen": "D.O. Bierzo",
+        "ubicacion_region": "El Bierzo, León",
+        "ubicacion_pais": "España"
       },
       "fuentes": [
-        "https://www.pagodelosabuelos.es/en/products/barreiros-godello"
+        "https://www.pagodelosabuelos.es/en/products/barreiros-godello",
+        "https://bierzoenoturismo.com/organiza-tu-viaje/"
       ],
       "notas": [
-        "De los Abuelos no identifica inequívocamente la referencia. Falta etiqueta/productor completo; no extrapolar D.O. Bierzo desde Barreiros a un vino sin cuvée."
+        "Sigue sin confirmarse si es el Godello base de Pago de los Abuelos o su viñedo \"Barreiros\": la bodega vende varias cuvées de Godello a precios muy distintos (desde ~16€ hasta ~100€ la de Paraje Teiró), y los 38€ de carta no permiten distinguir cuál. Las tres son de la misma bodega y D.O. Bierzo, así que se asigna la D.O. sin fijar la cuvée."
       ],
       "propuesta": {
-        "categoria": "VINOS BLANCOS — ORIGEN PENDIENTE",
-        "categoria_en": "White wines — Origin pending",
-        "categoria_fr": "Vins blancs — Origine à vérifier",
-        "denominacion_origen": null,
-        "ubicacion_pais": null,
-        "ubicacion_region": null,
-        "ubicacion_pais_en": null,
-        "ubicacion_pais_fr": null,
-        "ubicacion_region_en": null,
-        "ubicacion_region_fr": null
+        "categoria": "VINOS BLANCOS — BIERZO",
+        "categoria_en": "White wines — Bierzo",
+        "categoria_fr": "Vins blancs — Bierzo",
+        "denominacion_origen": "D.O. Bierzo",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "El Bierzo, León",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_en": "El Bierzo, León",
+        "ubicacion_region_fr": "El Bierzo, León"
       }
     },
     {
@@ -3008,29 +3010,30 @@
         "ubicacion_pais": "Francia",
         "ubicacion_region": "Borgoña (estimado)"
       },
-      "estado": "identidad_pendiente",
+      "estado": "cuvee_pendiente",
       "verificado": {
-        "denominacion_origen": null,
-        "ubicacion_region": null,
-        "ubicacion_pais": null
+        "denominacion_origen": "WO Stellenbosch",
+        "ubicacion_region": "Helderberg, Stellenbosch, Western Cape",
+        "ubicacion_pais": "Sudáfrica"
       },
       "fuentes": [
-        "https://longridge.co.za/product/clos-du-ciel/"
+        "https://longridge.co.za/product/clos-du-ciel/",
+        "https://petermichaelwinery.com/wines/clos-du-ciel"
       ],
       "notas": [
-        "Clos du Ciel no identifica de forma unívoca productor y vino. La atribución a Francia/Borgoña era estimada. Existe Longridge Clos du Ciel de Sudáfrica; no se sustituye por él sin etiqueta."
+        "Se resuelve la ambigüedad por el color: Longridge \"Clos du Ciel\" es 100% Chardonnay (blanco, Stellenbosch, Sudáfrica); Peter Michael \"Clos du Ciel\" es 100% Pinot Noir (tinto, Sonoma Coast, California). La ficha de Casa Tomás está en VINOS BLANCOS, lo que descarta la versión de Peter Michael. No se confirma la añada/cuvée exacta de Longridge."
       ],
       "propuesta": {
-        "categoria": "VINOS BLANCOS — ORIGEN PENDIENTE",
-        "categoria_en": "White wines — Origin pending",
-        "categoria_fr": "Vins blancs — Origine à vérifier",
-        "denominacion_origen": null,
-        "ubicacion_pais": null,
-        "ubicacion_region": null,
-        "ubicacion_pais_en": null,
-        "ubicacion_pais_fr": null,
-        "ubicacion_region_en": null,
-        "ubicacion_region_fr": null
+        "categoria": "VINOS BLANCOS — STELLENBOSCH",
+        "categoria_en": "White wines — Stellenbosch",
+        "categoria_fr": "Vins blancs — Stellenbosch",
+        "denominacion_origen": "WO Stellenbosch",
+        "ubicacion_pais": "Sudáfrica",
+        "ubicacion_region": "Helderberg, Stellenbosch, Western Cape",
+        "ubicacion_pais_en": "South Africa",
+        "ubicacion_pais_fr": "Afrique du Sud",
+        "ubicacion_region_en": "Helderberg, Stellenbosch, Western Cape",
+        "ubicacion_region_fr": "Helderberg, Stellenbosch, Western Cape"
       }
     },
     {
@@ -3884,29 +3887,30 @@
         "ubicacion_pais": "Por confirmar",
         "ubicacion_region": "Por confirmar"
       },
-      "estado": "identidad_pendiente",
+      "estado": "cuvee_pendiente",
       "verificado": {
-        "denominacion_origen": null,
-        "ubicacion_region": null,
-        "ubicacion_pais": null
+        "denominacion_origen": "D.O. Utiel-Requena",
+        "ubicacion_region": "Utiel-Requena, Valencia",
+        "ubicacion_pais": "España"
       },
       "fuentes": [
-        "https://www.vicentegandiashop.com/vicente-gandia-vino-dulce-bobal-rosado-botella-50-cl/"
+        "https://www.vicentegandiashop.com/vicente-gandia-vino-dulce-bobal-rosado-botella-50-cl/",
+        "https://distribucionvinos.com/do-utiel-requena-cuna-de-la-uva-bobal/"
       ],
       "notas": [
-        "Candidato oficial Vicente Gandía, pero falta productor y fotografía en inventario. Identidad sin demostrar."
+        "Sigue sin demostrarse el productor exacto (candidato: Vicente Gandía). Pero la Bobal es la uva autóctona de la D.O. Utiel-Requena, casi en exclusiva: cualquier \"Bobal Rosado Dulce\" comercial de esta zona es de esa D.O., aunque no se identifique la bodega concreta."
       ],
       "propuesta": {
-        "categoria": "VINOS ROSADOS — ORIGEN PENDIENTE",
-        "categoria_en": "Rosé wines — Origin pending",
-        "categoria_fr": "Vins rosés — Origine à vérifier",
-        "denominacion_origen": null,
-        "ubicacion_pais": null,
-        "ubicacion_region": null,
-        "ubicacion_pais_en": null,
-        "ubicacion_pais_fr": null,
-        "ubicacion_region_en": null,
-        "ubicacion_region_fr": null
+        "categoria": "VINOS ROSADOS — UTIEL-REQUENA",
+        "categoria_en": "Rosé wines — Utiel-Requena",
+        "categoria_fr": "Vins rosés — Utiel-Requena",
+        "denominacion_origen": "D.O. Utiel-Requena",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Utiel-Requena, Valencia",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_en": "Utiel-Requena, Valencia",
+        "ubicacion_region_fr": "Utiel-Requena, Valencia"
       }
     },
     {
