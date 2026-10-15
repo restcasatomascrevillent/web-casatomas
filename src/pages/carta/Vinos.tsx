@@ -162,7 +162,10 @@ const CartaVinosPagina = () => {
         {vinos.length > 0 ? (
           <CartaVinos
             showAddButton
-            initialVinos={{ Todos: vinosSemilla }}
+            // 24 = PAGE_SIZE en CartaVinos: el primer refresco a Supabase trae
+            // esa misma cantidad y sustituye esta semilla; sin el recorte se
+            // vería la carta entera encogiendo de golpe a 24 fichas.
+            initialVinos={{ Todos: vinosSemilla.slice(0, 24) }}
             initialMapVinos={vinosSemilla}
           />
         ) : (
