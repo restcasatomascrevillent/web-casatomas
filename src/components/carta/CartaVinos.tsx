@@ -2,9 +2,9 @@ import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } fro
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import FiltrosTipoVino from "./FiltrosTipoVino";
+import FiltrosTipoVino, { BarraFiltrosVino } from "./FiltrosTipoVino";
 import { etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
-import { Search, Wine, AlertCircle, ChevronDown, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
+import { Search, AlertCircle, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +93,14 @@ const INFORMACION_VINO = {
 
 function categoriaCorta(categoria: string): string {
   const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?)\s*[—–-]\s*/i, "");
-  if (corta === "RIBERA DEL DUERO") return "Ribera del Duero";
+  const nombres: Record<string, string> = {
+    "RIBERA DEL DUERO": "Ribera del Duero",
+    "ALBARIÑO (Rías Baixas)": "Albariño · Rías Baixas",
+    "NAVARRA / CHABLIS / RIOJA": "Navarra · Chablis · Rioja",
+    "RIBEIRO / CASTILLA Y LEÓN": "Ribeiro · Castilla y León",
+    "OTRAS DENOMINACIONES": "Otras D.O.",
+  };
+  if (nombres[corta]) return nombres[corta];
   return corta === corta.toUpperCase()
     ? corta.toLocaleLowerCase("es").replace(/^\p{L}/u, letra => letra.toLocaleUpperCase("es"))
     : corta;
@@ -312,17 +319,17 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     });
   };
 
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    mapVinos.forEach((vino) => {
-      if (vino.categoria) {
-        seen.add(vino.categoria);
+  const tipoSeleccionado = tipoDesdeCategoria(selectedCategory)
+    ?? (selectedCategory === "Todos" ? "todos" : tipoVino(selectedCategory));
+  const denominaciones = useMemo(() => {
+    const cantidades = new Map<string, number>();
+    mapVinos.forEach(vino => {
+      if (vino.categoria && tipoVino(vino.categoria) === tipoSeleccionado) {
+        cantidades.set(vino.categoria, (cantidades.get(vino.categoria) ?? 0) + 1);
       }
     });
-    const list = Array.from(seen);
-    list.push("Todos");
-    return list;
-  }, [mapVinos]);
+    return Array.from(cantidades, ([valor, cantidad]) => ({ valor, etiqueta: categoriaCorta(valor), cantidad }));
+  }, [mapVinos, tipoSeleccionado]);
 
   const getLocalizedField = (vino: Vino, key: string) => {
     const value = (vino as { [key: string]: unknown })[key];
@@ -477,11 +484,6 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     }
   };
 
-  const translateCategory = (category: string) => {
-    const tipo = tipoDesdeCategoria(category);
-    return tipo ? etiquetaTipoVino(tipo, language) : category === "Todos" ? t.vinos.categoriesAll : category;
-  };
-
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
     setShowAgeDialog(false);
@@ -549,13 +551,6 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
 
       {isAdult !== false && (
       <>
-      {mapVinos.length > 0 && (
-        <FiltrosTipoVino
-          vinos={mapVinos}
-          seleccionado={tipoDesdeCategoria(selectedCategory) ?? (selectedCategory === "Todos" ? "todos" : tipoVino(selectedCategory))}
-          onChange={tipo => handleCategoryChange(tipo === "todos" ? "Todos" : `tipo:${tipo}`)}
-        />
-      )}
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">
@@ -573,28 +568,23 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           />
         </div>
 
-        {/* Selector nativo: desplazamiento y selección propios de iOS/Android,
-            sin portales que capturen el gesto de scroll de la carta. */}
-        <label className="relative mx-auto block w-full max-w-md font-sans">
-          <span className="sr-only">{t.vinos.categoriesAll} · {language === "es" ? "Denominación del vino" : language === "en" ? "Wine region" : "Région du vin"}</span>
-          <Wine aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
-          <select
-            aria-label={language === "es" ? "Denominación del vino" : language === "en" ? "Wine region" : "Région du vin"}
-            value={selectedCategory}
-            onChange={event => handleCategoryChange(event.target.value)}
-            className="h-11 w-full min-w-0 appearance-none rounded-xl border border-border bg-background pl-10 pr-9 text-base font-medium sm:text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <option value="Todos">{t.vinos.categoriesAll}</option>
-            {tipoDesdeCategoria(selectedCategory) && <option value={selectedCategory}>{translateCategory(selectedCategory)}</option>}
-            {(["tinto", "blanco", "espumoso", "rosado", "otro"] as const).map(tipo => {
-              const opciones = categories.filter(category => category !== "Todos" && tipoVino(category) === tipo);
-              return opciones.length > 0 && <optgroup key={tipo} label={etiquetaTipoVino(tipo, language)}>
-                {opciones.map(category => <option key={category} value={category}>{categoriaCorta(category)}</option>)}
-              </optgroup>;
-            })}
-          </select>
-          <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        </label>
+        {mapVinos.length > 0 && <div className="flex min-w-0 flex-col gap-3">
+          <FiltrosTipoVino
+            vinos={mapVinos}
+            seleccionado={tipoSeleccionado}
+            onChange={tipo => handleCategoryChange(tipo === "todos" ? "Todos" : `tipo:${tipo}`)}
+          />
+          {tipoSeleccionado !== "todos" && denominaciones.length > 0 && <BarraFiltrosVino
+            key={tipoSeleccionado}
+            etiqueta={language === "es" ? "Filtrar vinos por denominación" : language === "en" ? "Filter wines by region" : "Filtrer les vins par région"}
+            seleccionado={selectedCategory}
+            onChange={handleCategoryChange}
+            opciones={[
+              { valor: `tipo:${tipoSeleccionado}`, etiqueta: t.vinos.categoriesAll, cantidad: denominaciones.reduce((total, denominacion) => total + denominacion.cantidad, 0) },
+              ...denominaciones,
+            ]}
+          />}
+        </div>}
       </div>
 
       {/* Items Grid */}
