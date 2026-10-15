@@ -1,5 +1,5 @@
 /**
- * Comportamiento del popup de región: al pulsar una chincheta del mapa, la
+ * Comportamiento del popup de región: al consultar un origen del mapa, la
  * información de esa región (denominación de origen, vinos) tiene que salir
  * en un diálogo modal — no en un panel fijo bajo el mapa que antes obligaba
  * a desplazar la página (y en móvil quedaba fuera de la vista).
@@ -61,7 +61,7 @@ const RIOJA_VINOS = [
   },
 ];
 
-const renderComponent = (vinos = RIOJA_VINOS) => {
+const renderComponent = (vinos: React.ComponentProps<typeof MapaMundoVinos>["vinos"] = RIOJA_VINOS) => {
   markerElements.length = 0;
   return render(
     <MemoryRouter>
@@ -72,17 +72,17 @@ const renderComponent = (vinos = RIOJA_VINOS) => {
   );
 };
 
-describe("MapaMundoVinos — popup de región al pulsar una chincheta", () => {
+describe("MapaMundoVinos — popup de región al consultar un origen", () => {
   it("no muestra el popup antes de pulsar ninguna chincheta", () => {
     renderComponent();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("abre un diálogo con la región y sus vinos al pulsar la chincheta", async () => {
+  it("abre un diálogo con la región y sus vinos al pulsar el origen", async () => {
     renderComponent();
-    expect(markerElements.length).toBeGreaterThan(0);
+    expect(markerElements.length).toBe(0);
 
-    act(() => { markerElements[0].click(); });
+    fireEvent.click(screen.getByRole("button", { name: "La Rioja (1)" }));
 
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("MapaMundoVinos — popup de región al pulsar una chincheta", () => {
   it("se puede cerrar el popup (no queda como panel fijo en la página)", async () => {
     const user = userEvent.setup();
     renderComponent();
-    act(() => { markerElements[0].click(); });
+    fireEvent.click(screen.getByRole("button", { name: "La Rioja (1)" }));
     await screen.findByRole("dialog");
 
     await user.keyboard("{Escape}");
@@ -111,7 +111,7 @@ it("filtra dentro de la chincheta y reinicia la paginación al cambiar de tipo",
     ...RIOJA_VINOS[0], nombre: `Blanco de Rioja ${i}`, categoria: "BLANCOS",
   })), { ...RIOJA_VINOS[0], nombre: "Espumoso de Rioja", categoria: "ESPUMOSOS" }];
   renderComponent(vinos);
-  act(() => { markerElements[0].click(); });
+  fireEvent.click(screen.getByRole("button", { name: "La Rioja (9)" }));
   const dialog = within(await screen.findByRole("dialog"));
   fireEvent.click(dialog.getByRole("button", { name: "Blancos" }));
   expect(dialog.queryByText("Marqués de Riscal Reserva")).not.toBeInTheDocument();
@@ -128,12 +128,12 @@ it("filtra dentro de la chincheta y reinicia la paginación al cambiar de tipo",
 
 it("actualiza el contador y los vinos de una región al añadir una referencia", async () => {
   const vista = renderComponent();
-  expect(markerElements.at(-1)?.textContent).toBe("1");
+  expect(screen.getByRole("button", { name: "La Rioja (1)" })).toBeInTheDocument();
   vista.rerender(<MemoryRouter><LanguageProvider><MapaMundoVinos vinos={[
     ...RIOJA_VINOS, { ...RIOJA_VINOS[0], nombre: "Vino recién añadido" },
   ]} /></LanguageProvider></MemoryRouter>);
-  expect(markerElements.at(-1)?.textContent).toBe("2");
-  act(() => markerElements.at(-1)!.click());
+  expect(screen.getByRole("button", { name: "La Rioja (2)" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "La Rioja (2)" }));
   expect(await screen.findByText("Vino recién añadido")).toBeInTheDocument();
 });
 
@@ -142,3 +142,13 @@ it("permite consultar los vinos cuyo origen aún no se ha podido situar", async 
   fireEvent.click(await screen.findByRole("button", { name: "Región nueva (1)" }));
   expect(await screen.findByText("Vino de origen nuevo")).toBeInTheDocument();
 });
+
+ it("solo dibuja la bodega documentada y permite consultar su fuente", async () => {
+  const registro = (await import("@/lib/bodegas-verificadas.json")).default;
+  const [id, bodega] = Object.entries(registro)[0];
+  renderComponent([{ ...RIOJA_VINOS[0], id, nombre: bodega.nombreVino, denominacion_origen: bodega.denominacion }]);
+  expect(markerElements).toHaveLength(1);
+  act(() => markerElements[0].click());
+  const dialog = within(await screen.findByRole("dialog"));
+  expect(dialog.getByRole("link")).toHaveAttribute("href", bodega.fuente);
+ });

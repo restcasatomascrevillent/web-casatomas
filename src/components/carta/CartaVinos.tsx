@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import FiltrosTipoVino, { BarraFiltrosVino } from "./FiltrosTipoVino";
+import { origenComprobable } from "@/lib/origenes-vino";
 import { etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
 import { Search, AlertCircle, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
 import {
@@ -92,9 +93,12 @@ const INFORMACION_VINO = {
 };
 
 function categoriaCorta(categoria: string): string {
-  const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?)\s*[—–-]\s*/i, "");
+  const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?|ESPUMOSOS?)\s*[—–-]\s*/i, "");
   const nombres: Record<string, string> = {
     "RIBERA DEL DUERO": "Ribera del Duero",
+    "IGP CASTILLA Y LEÓN": "IGP Castilla y León",
+    "IGP TRES RIBERAS": "IGP Tres Riberas",
+    "SIN D.O.": "Sin D.O.",
     "ALBARIÑO (Rías Baixas)": "Albariño · Rías Baixas",
     "NAVARRA / CHABLIS / RIOJA": "Navarra · Chablis · Rioja",
     "RIBEIRO / CASTILLA Y LEÓN": "Ribeiro · Castilla y León",
@@ -601,7 +605,10 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             const imageUrl = getWineImage(itemRecord);
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
             const expanded = hasVisibleImage && isCardExpanded(itemRecord);
-            const originLabel = [item.denominacion_origen, item.ubicacion_region, item.ubicacion_pais]
+            const originLabel = [
+              origenComprobable(item.denominacion_origen) || (language === "es" ? "D.O. pendiente de verificar" : language === "en" ? "Appellation awaiting verification" : "Appellation à vérifier"),
+              origenComprobable(item.ubicacion_region), origenComprobable(item.ubicacion_pais),
+            ]
               .filter(Boolean)
               .join(" · ");
             const alergenosItem = datosAlergenos(item);

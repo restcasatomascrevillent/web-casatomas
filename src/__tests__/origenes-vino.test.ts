@@ -1,29 +1,33 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { claveOrigen, coordenadasConocidas, localizarOrigen } from "@/lib/origenes-vino";
-
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { bodegaVerificada, claveOrigen, coordenadasConocidas, localizarOrigen, nombreOrigen, origenComprobable } from '@/lib/origenes-vino';
+import bodegas from '@/lib/bodegas-verificadas.json';
 afterEach(() => vi.unstubAllGlobals());
-
-describe("Orígenes de vinos nuevos", () => {
-  it("reconoce regiones existentes con espacios, mayúsculas y acentos distintos", () => {
-    expect(coordenadasConocidas({ ubicacion_region: "  LA RIOJA  ", ubicacion_pais: "España" })).toEqual([-2.5, 42.3]);
-    expect(coordenadasConocidas({ ubicacion_region: "Cataluna (Penedes)", ubicacion_pais: "España" })).toEqual([1.79, 41.43]);
+const [id, registro] = Object.entries(bodegas)[0];
+const aalto = { id, nombre: registro.nombreVino, denominacion_origen: registro.denominacion, ubicacion_pais: 'España', ubicacion_region: 'Castilla y León' };
+describe('Orígenes sin estimaciones', () => {
+  it('no convierte una D.O. ni el centro de una región en una bodega', () => {
+    for (const denominacion_origen of ['D.O. Ribera del Duero', 'D.O. Ribera del Duero (estimado)', 'D.O.Ca. Rioja']) {
+      expect(coordenadasConocidas({ denominacion_origen, ubicacion_pais: 'España', ubicacion_region: 'Castilla y León' })).toBeNull();
+    }
+    expect(origenComprobable('Borgoña (estimado)')).toBe('');
+    expect(origenComprobable('D.O. Rueda (según carta)')).toBe('');
   });
-  it("separa regiones del mismo nombre en países diferentes", () => {
-    expect(claveOrigen({ ubicacion_region: "La Rioja", ubicacion_pais: "España" })).not.toBe(claveOrigen({ ubicacion_region: "La Rioja", ubicacion_pais: "Argentina" }));
-    expect(coordenadasConocidas({ ubicacion_region: "La Rioja", ubicacion_pais: "Argentina" })).toBeNull();
+  it('solo utiliza puntos publicados para referencias identificadas', () => {
+    expect(coordenadasConocidas(aalto)).toEqual([-4.25687, 41.62417]);
+    expect(bodegaVerificada(aalto)?.fuente).toContain('www.riberadelduero.es');
+    expect(coordenadasConocidas({ ...aalto, nombre: 'Otro vino' })).toBeNull();
+    expect(coordenadasConocidas({ ...aalto, ubicacion_pais: 'Francia' })).toBeNull();
+    expect(coordenadasConocidas({ ...aalto, denominacion_origen: 'D.O. Rueda' })).toBeNull();
   });
-  it("busca una región nueva sin necesitar cambios en la lista fija", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [{ geometry: { coordinates: [-8.2, 42.1] }, properties: { name: "Nueva región", feature_type: "region", context: { country: { country_code: "ES" } } } }] }) });
-    vi.stubGlobal("fetch", fetchMock);
-    const signal = new AbortController().signal;
-    expect(await localizarOrigen({ ubicacion_region: "Nueva región", ubicacion_pais: "España" }, "token", signal)).toEqual([-8.2, 42.1]);
-    const url = new URL(fetchMock.mock.calls[0][0]);
-    expect(url.searchParams.get("q")).toBe("Nueva región, España");
-    expect(url.searchParams.get("country")).toBe("es");
-    expect(fetchMock.mock.calls[0][1].signal).toBe(signal);
+  it('conserva la zona declarada, incluso en D.O. compartidas', () => {
+    const vino = { denominacion_origen: 'D.O.Ca. Rioja', ubicacion_region: 'Páganos, Laguardia, Álava', ubicacion_pais: 'España' };
+    expect(nombreOrigen(vino)).toBe('Páganos, Laguardia, Álava');
+    expect(claveOrigen(vino)).not.toBe(claveOrigen({ ...vino, ubicacion_region: 'San Vicente de la Sonsierra, La Rioja' }));
+    expect(claveOrigen(vino)).not.toBe(claveOrigen({ ...vino, ubicacion_pais: 'Argentina' }));
   });
-  it("no inventa coordenadas cuando el origen no se puede localizar", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ features: [] }) }));
-    expect(await localizarOrigen({ ubicacion_region: "Desconocida" }, "token", new AbortController().signal)).toBeNull();
+  it('no llama a geocodificación aunque disponga de token', async () => {
+    const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+    expect(await localizarOrigen({ ubicacion_pais: 'España', ubicacion_region: 'Álava' }, 'token', new AbortController().signal)).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
