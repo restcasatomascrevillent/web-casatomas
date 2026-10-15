@@ -22,13 +22,22 @@ describe('Revisión completa del catálogo', () => {
     expect(tipoVino(vino('Tintoralba Noir (Garnacha)').propuesta.categoria)).toBe('blanco');
     expect(tipoVino(vino('Juvé & Camps Gran Juvé').propuesta.categoria)).toBe('espumoso');
   });
-  it('no asigna origen a referencias ambiguas ni traslada sellos a añadas sin identificar', () => {
-    for (const n of ['Clos du Ciel', 'Cuvée Vincent', 'De los Abuelos', 'Bobal Rosado Dulce']) {
-      expect(vino(n).propuesta.denominacion_origen).toBeNull();
-      expect(vino(n).propuesta.ubicacion_region).toBeNull();
-    }
+  it('no asigna origen a una referencia que de verdad no se puede identificar', () => {
     expect(vino('Artadi Valdeginés').propuesta.denominacion_origen).toBe('Sin D.O.');
     expect(vino('Artadi Viñas de Gaín').propuesta.denominacion_origen).toBeNull();
     expect(vino('Juvé & Camps Gran Juvé').propuesta.denominacion_origen).toBeNull();
+  });
+  it('asigna D.O./zona por eliminación o por uva, sin fijar la bodega o cuvée exactas (revisión 2026-10-15 ampliada)', () => {
+    for (const n of ['Clos du Ciel', 'Cuvée Vincent', 'De los Abuelos', 'Bobal Rosado Dulce']) {
+      const v = vino(n);
+      expect(v.estado).toBe('cuvee_pendiente');
+      expect(v.propuesta.denominacion_origen).not.toBeNull();
+      expect(v.propuesta.ubicacion_region).not.toBeNull();
+      expect(v.fuentes.length).toBeGreaterThan(0);
+    }
+    expect(vino('Clos du Ciel').propuesta.ubicacion_pais).toBe('Sudáfrica');
+    expect(vino('Cuvée Vincent').propuesta.denominacion_origen).toBe('AOC Champagne');
+    expect(vino('De los Abuelos').propuesta.denominacion_origen).toBe('D.O. Bierzo');
+    expect(vino('Bobal Rosado Dulce').propuesta.denominacion_origen).toBe('D.O. Utiel-Requena');
   });
 });

@@ -333,3 +333,33 @@ Para cerrar estas filas se necesita la identificación o contraetiqueta indicada
 | 242 | Viña Arana | Documentado | D.O.Ca. Rioja | Rioja / España | [riojawine.com](https://riojawine.com/es/bodegas-rioja/la-rioja-alta-sa/) · [www.riojalta.com](https://www.riojalta.com/vinos_rioja-alta/) |
 | 243 | Viña Ardanza | Documentado | D.O.Ca. Rioja | Rioja / España | [riojawine.com](https://riojawine.com/es/bodegas-rioja/la-rioja-alta-sa/) · [www.riojalta.com](https://www.riojalta.com/vinos_rioja-alta/) |
 | 244 | Vitium Reserva | Documentado | D.O.Ca. Rioja | Rioja / España | [pierola.com](https://pierola.com/vitium/) |
+
+## Addenda — 15 de octubre de 2026 (tarde): 4 referencias "identidad pendiente" resueltas a nivel de D.O.
+
+Tras aplicar esta auditoría a producción, se revisaron de nuevo las 4 referencias que
+seguían con denominación/zona vacías por ambigüedad de productor (`Clos du Ciel`,
+`Cuvée Vincent`, `De los Abuelos`, `Bobal Rosado Dulce`). El criterio de esta auditoría
+siempre exigió identificar la bodega/cuvée exacta antes de asignar cualquier dato; esta
+revisión separa ese requisito en dos niveles — igual que ya se hacía con, por ejemplo,
+`Laurent‑Perrier Magnum` o `Piper‑Heidsieck` (maison verificada, cuvée pendiente) — y
+asigna D.O./zona cuando esta es segura aunque la cuvée exacta no lo sea. Las cuatro pasan
+de `identidad_pendiente` a `cuvee_pendiente` en `revision.json`; la bodega/cuvée exacta
+sigue sin certificarse y no se ha tocado nombre, precio, foto ni descripción.
+
+| Referencia | D.O. asignada | Zona asignada | Motivo |
+|---|---|---|---|
+| Bobal Rosado Dulce | D.O. Utiel-Requena | Utiel-Requena, Valencia | La Bobal es la uva autóctona de esta D.O., cultivada ahí casi en exclusiva: cualquier "Bobal Rosado Dulce" comercial es de esta D.O., aunque el productor exacto (candidato: Vicente Gandía) siga sin demostrarse. |
+| Clos du Ciel | WO Stellenbosch | Helderberg, Stellenbosch, Western Cape | Se resuelve por color: Longridge "Clos du Ciel" es 100% Chardonnay (blanco); Peter Michael "Clos du Ciel" es 100% Pinot Noir (tinto). La ficha está en VINOS BLANCOS, lo que descarta la versión de Peter Michael. |
+| Cuvée Vincent | AOC Champagne | Champagne | La ficha ya estaba en CHAMPAGNES antes de esta auditoría (dato propio del restaurante). Existen varias "Cuvée Vincent" (Casters-Liébart, Paul Louis Martin), todas Champagne; no se ha encontrado ninguna que no lo sea. No se fija la maison. |
+| De los Abuelos | D.O. Bierzo | El Bierzo, León | Todo indicio apunta a la bodega Pago de los Abuelos (El Bierzo), que vende varias cuvées de Godello (base, Barreiros, Teiró) a precios muy distintos; los 38€ de carta no permiten distinguir cuál, pero las tres son de la misma D.O. |
+
+Fuentes consultadas en esta revisión: `distribucionvinos.com` (uva Bobal y D.O. Utiel-Requena),
+`longridge.co.za` y `petermichaelwinery.com` (Clos du Ciel, variedad y color de cada versión),
+`fr.gaultmillau.com`, `hachette-vins.com` y `cellarprestige.com` (Cuvée Vincent, productores
+distintos), `pagodelosabuelos.es` y `bierzoenoturismo.com` (De los Abuelos, bodega y comarca).
+Categorías y traducciones (`categoria_en`/`categoria_fr`) reutilizan exactamente el texto ya
+usado por otras referencias de la misma D.O. activas en la carta (p. ej. `VINOS BLANCOS —
+STELLENBOSCH` de Ou Steen, `VINOS ESPUMOSOS — CHAMPAGNE` del resto de champagnes, `VINOS TINTOS
+— BIERZO` de Corullón) para que se agrupen juntas en el filtro de denominación. Las coordenadas
+de zona para Utiel-Requena y El Bierzo se añaden a `src/lib/zonas-vino.json` con el mismo método
+que el resto del fichero (ver `docs/mapa-zonas-vino.md`).

@@ -62,6 +62,13 @@
     ],
     "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
   },
+  "espana|||el bierzo, leon": {
+    "coordenadas": [
+      -6.62318,
+      42.65265
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la comarca de El Bierzo, no la bodega exacta)"
+  },
   "espana|||finca can marti, gelida, alt penedes, cataluna": {
     "coordenadas": [
       1.86145,
@@ -362,6 +369,13 @@
       41.5217
     ],
     "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||utiel-requena, valencia": {
+    "coordenadas": [
+      -1.10016,
+      39.48808
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona: Requena, cabecera de la comarca D.O. Utiel-Requena, no la bodega exacta)"
   },
   "espana|||val do salnes, pontevedra": {
     "coordenadas": [
