@@ -167,12 +167,24 @@ describe("CartaVinos — información y fotografías", () => {
     expect(foto).toHaveClass("object-cover");
     expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /ver información.*ribera del duero/i }));
-    expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();
-    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /ocultar información.*ribera del duero/i }));
     fireEvent.click(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i }));
     expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+  });
+
+  it("la foto y la información son excluyentes: abrir una cierra la otra", async () => {
+    const user = userEvent.setup(); render(<Wrapped />); await confirmarEdad(user);
+    fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
+    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /ver información.*ribera del duero/i }));
+    expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();
+    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
+    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
+    expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ver información.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("permite consultar descripción y origen sin foto y bloquea una expansión heredada vacía", async () => {
