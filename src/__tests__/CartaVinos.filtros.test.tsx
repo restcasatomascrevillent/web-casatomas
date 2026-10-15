@@ -60,4 +60,29 @@ describe('Filtros rápidos de vinos bajo el mapa', () => {
     fireEvent.click(filtros.getByRole('button', { name: 'Todos' }));
     await waitFor(() => expect(screen.getAllByText('Tinto nacional').length).toBeGreaterThan(0));
   });
+  it('abre Ribera del Duero desde la semilla y permite cambiar de denominación con etiquetas cortas', async () => {
+    datos.vinos = [
+      { id: 'r', nombre: 'Tinto de Ribera', categoria: 'VINOS TINTOS — RIBERA DEL DUERO', precio_eur: 35 },
+      { id: 'j', nombre: 'Tinto de Rioja', categoria: 'VINOS TINTOS — RIOJA', precio_eur: 25 },
+      { id: 'b', nombre: 'Verdejo fresco', categoria: 'VINOS BLANCOS — VERDEJO', precio_eur: 20 },
+    ];
+    sessionStorage.setItem('edadVinosConfirmada', 'true');
+    render(<LanguageProvider><CartaVinos initialVinos={{ Todos: datos.vinos }} initialMapVinos={datos.vinos} /></LanguageProvider>);
+    fireEvent.click(await screen.findByRole('button', { name: /tengo 18/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    const selector = screen.getByRole('combobox', { name: 'Denominación del vino' });
+    expect(selector).toHaveValue('VINOS TINTOS — RIBERA DEL DUERO');
+    expect(screen.getByText('Tinto de Ribera')).toBeInTheDocument();
+    expect(screen.queryByText('Tinto de Rioja')).not.toBeInTheDocument();
+    expect(screen.queryByText('Verdejo fresco')).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Ribera del Duero' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Tinto de Ribera')).toBeInTheDocument());
+    fireEvent.change(selector, { target: { value: 'VINOS BLANCOS — VERDEJO' } });
+    await screen.findByText('Verdejo fresco');
+    expect(screen.queryByText('Tinto de Ribera')).not.toBeInTheDocument();
+    fireEvent.change(selector, { target: { value: 'Todos' } });
+    await screen.findByText('Tinto de Rioja');
+    expect(screen.getByText('Tinto de Ribera')).toBeInTheDocument();
+  });
+
 });
