@@ -1,4 +1,5 @@
 import bodegas from "./bodegas-verificadas.json";
+import zonasVino from "./zonas-vino.json";
 
 export interface OrigenVino {
   id?: string;
@@ -34,12 +35,28 @@ export function bodegaVerificada(vino: OrigenVino): BodegaVerificada | null {
   return registro;
 }
 
+// Región, y si no hay, denominación o país: el mismo orden que agrupa `claveOrigen`.
+const textoZona = (vino: OrigenVino) =>
+  origenComprobable(vino.ubicacion_region)
+    || origenComprobable(vino.denominacion_origen) || origenComprobable(vino.ubicacion_pais);
+
 export const nombreOrigen = (vino: OrigenVino) => {
   const bodega = bodegaVerificada(vino);
-  return bodega ? `${bodega.nombre} · ${bodega.localidad}`
-    : origenComprobable(vino.ubicacion_region)
-      || origenComprobable(vino.denominacion_origen) || origenComprobable(vino.ubicacion_pais);
+  return bodega ? `${bodega.nombre} · ${bodega.localidad}` : textoZona(vino);
 };
+
+type ZonaConocida = { coordenadas: number[]; fuente: string };
+
+// Centro aproximado de una D.O./comarca/país, geocodificado y revisado una
+// vez (ver docs/mapa-zonas-vino.md), no la ubicación exacta de una bodega.
+// Nunca se recalcula en el navegador: solo lee este fichero ya guardado.
+function zonaConocida(vino: OrigenVino): ZonaConocida | null {
+  const pais = origenComprobable(vino.ubicacion_pais);
+  const region = textoZona(vino);
+  if (!pais || !region) return null;
+  const clave = `${normalizarOrigen(pais)}|||${normalizarOrigen(region)}`;
+  return (zonasVino as Record<string, ZonaConocida>)[clave] ?? null;
+}
 
 export const claveOrigen = (vino: OrigenVino) => {
   const bodega = bodegaVerificada(vino);
@@ -49,7 +66,7 @@ export const claveOrigen = (vino: OrigenVino) => {
 };
 
 export function coordenadasConocidas(vino: OrigenVino): [number, number] | null {
-  const coords = bodegaVerificada(vino)?.coordenadas;
+  const coords = bodegaVerificada(vino)?.coordenadas ?? zonaConocida(vino)?.coordenadas;
   if (!coords || coords.length !== 2 || !coords.every(Number.isFinite)
     || Math.abs(coords[0]) > 180 || Math.abs(coords[1]) > 90) return null;
   return [coords[0], coords[1]];

@@ -1,0 +1,492 @@
+{
+  "alemania|||mosela": {
+    "coordenadas": [
+      7.07082,
+      49.91574
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||alella, barcelona, cataluna": {
+    "coordenadas": [
+      2.29353,
+      41.49556
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||alfaro, la rioja": {
+    "coordenadas": [
+      -1.74925,
+      42.17857
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||anguix, burgos": {
+    "coordenadas": [
+      -3.93245,
+      41.75369
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||barral, castrelo de mino, ourense": {
+    "coordenadas": [
+      -8.06568,
+      42.29656
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||cambados, pontevedra, galicia": {
+    "coordenadas": [
+      -8.79768,
+      42.51932
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||castilla y leon": {
+    "coordenadas": [
+      -5.13874,
+      41.55005
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||condado do tea, pontevedra": {
+    "coordenadas": [
+      -8.49903,
+      42.08267
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||condado do tea, pontevedra, galicia": {
+    "coordenadas": [
+      -8.49903,
+      42.08267
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||finca can marti, gelida, alt penedes, cataluna": {
+    "coordenadas": [
+      1.86145,
+      41.4325
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||finca el moralejo, alpera, albacete, castilla-la mancha": {
+    "coordenadas": [
+      -1.23089,
+      38.95966
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||finca ygay, rioja alta": {
+    "coordenadas": [
+      -2.43967,
+      42.46612
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||fuentelcesped, burgos": {
+    "coordenadas": [
+      -3.64017,
+      41.59106
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||fuentenebro, burgos": {
+    "coordenadas": [
+      -3.75452,
+      41.52745
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||gratallops, tarragona": {
+    "coordenadas": [
+      0.77687,
+      41.19341
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||higueruela, albacete, castilla-la mancha": {
+    "coordenadas": [
+      -1.44436,
+      38.96431
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||jumilla, murcia": {
+    "coordenadas": [
+      -1.32854,
+      38.47354
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||la horra, burgos": {
+    "coordenadas": [
+      -3.87523,
+      41.74023
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||laguardia y elvillar, alava, pais vasco": {
+    "coordenadas": [
+      -2.58054,
+      42.54298
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||laguardia, alava": {
+    "coordenadas": [
+      -2.58054,
+      42.54298
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||lanzarote, islas canarias": {
+    "coordenadas": [
+      -13.63629,
+      29.03971
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||lentille, cenlle, ourense": {
+    "coordenadas": [
+      -8.09401,
+      42.34177
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||nieva, segovia": {
+    "coordenadas": [
+      -4.42594,
+      41.08062
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||o rosal y cambados, pontevedra, galicia": {
+    "coordenadas": [
+      -8.82568,
+      41.93672
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||o rosal, pontevedra": {
+    "coordenadas": [
+      -8.82568,
+      41.93672
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||o salnes, pontevedra, galicia": {
+    "coordenadas": [
+      -8.79768,
+      42.51932
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||ollauri, haro y brinas, la rioja": {
+    "coordenadas": [
+      -2.83272,
+      42.54233
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||otazu, navarra": {
+    "coordenadas": [
+      -1.7901,
+      42.78487
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||paganos, laguardia, alava": {
+    "coordenadas": [
+      -2.61044,
+      42.56197
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||pago la jara, toro": {
+    "coordenadas": [
+      -5.39398,
+      41.5217
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||penafiel, valladolid": {
+    "coordenadas": [
+      -4.12157,
+      41.59664
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||penedes, cataluna": {
+    "coordenadas": [
+      1.69952,
+      41.34638
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||pinoso, alicante": {
+    "coordenadas": [
+      -1.04162,
+      38.40211
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||quintanilla de arriba, valladolid": {
+    "coordenadas": [
+      -4.21822,
+      41.61971
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||ribas de sil, lugo, galicia": {
+    "coordenadas": [
+      -7.70571,
+      42.40292
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||ribeira do ulla, galicia": {
+    "coordenadas": [
+      -8.42775,
+      42.78582
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||ribeiras do mino, o savinao, lugo": {
+    "coordenadas": [
+      -7.63951,
+      42.64488
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||ribeiro, ourense, galicia": {
+    "coordenadas": [
+      -8.14268,
+      42.28761
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||ribera del duero, castilla y leon": {
+    "coordenadas": [
+      -3.68512,
+      41.67151
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||rioja": {
+    "coordenadas": [
+      -2.43967,
+      42.46612
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||rioja alavesa y rioja alta": {
+    "coordenadas": [
+      -2.58054,
+      42.54298
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||rioja alavesa, alava": {
+    "coordenadas": [
+      -2.58054,
+      42.54298
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||rioja alta": {
+    "coordenadas": [
+      -2.84668,
+      42.57689
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||rubianes, vilagarcia de arousa, pontevedra": {
+    "coordenadas": [
+      -8.74305,
+      42.59505
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||rueda, castilla y leon": {
+    "coordenadas": [
+      -4.95975,
+      41.41298
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||san clodio, ribas de sil, lugo": {
+    "coordenadas": [
+      -7.28728,
+      42.46636
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||san vicente de la sonsierra, la rioja": {
+    "coordenadas": [
+      -2.75873,
+      42.56242
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||sardon de duero, valladolid": {
+    "coordenadas": [
+      -4.43393,
+      41.60852
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||soria, castilla y leon": {
+    "coordenadas": [
+      -2.72194,
+      41.60125
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||soto de san esteban, soria": {
+    "coordenadas": [
+      -3.2814,
+      41.58173
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||teulada-moraira, alicante": {
+    "coordenadas": [
+      0.10449,
+      38.72868
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||toro, castilla y leon": {
+    "coordenadas": [
+      -5.39398,
+      41.5217
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||val do salnes, pontevedra": {
+    "coordenadas": [
+      -8.79768,
+      42.51932
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||valbuena de duero, valladolid": {
+    "coordenadas": [
+      -4.29283,
+      41.64226
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||valdepenas, ciudad real": {
+    "coordenadas": [
+      -3.38474,
+      38.75946
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||valle del avia, ourense": {
+    "coordenadas": [
+      -8.14268,
+      42.28761
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||valle del salnes, pontevedra, galicia": {
+    "coordenadas": [
+      -8.79768,
+      42.51932
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||villabuena de alava, alava": {
+    "coordenadas": [
+      -2.66544,
+      42.54702
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||xagoaza, o barco de valdeorras, ourense": {
+    "coordenadas": [
+      -6.9801,
+      42.4301
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "espana|||xalo, marina alta, alicante": {
+    "coordenadas": [
+      -0.0116,
+      38.74083
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||alsacia": {
+    "coordenadas": [
+      7.35796,
+      48.07775
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||brossay y su entorno, saumurois, valle del loira": {
+    "coordenadas": [
+      -0.2122,
+      47.16441
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||chablis, yonne, borgona": {
+    "coordenadas": [
+      3.80017,
+      47.81521
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||champagne": {
+    "coordenadas": [
+      3.95287,
+      49.04256
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||cumieres y chouilly, champagne": {
+    "coordenadas": [
+      3.92653,
+      49.07208
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||eguisheim, alsacia": {
+    "coordenadas": [
+      7.30796,
+      48.0448
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||pouilly-sur-loire, nievre": {
+    "coordenadas": [
+      2.95845,
+      47.28141
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "francia|||vouvray, valle del loira": {
+    "coordenadas": [
+      0.79984,
+      47.41367
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "italia|||piamonte": {
+    "coordenadas": [
+      8.20269,
+      44.82601
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  },
+  "sudafrica|||helderberg, stellenbosch, western cape": {
+    "coordenadas": [
+      18.85925,
+      -33.94041
+    ],
+    "fuente": "OpenStreetMap/Nominatim (centro aproximado de la zona, no la bodega exacta)"
+  }
+}
