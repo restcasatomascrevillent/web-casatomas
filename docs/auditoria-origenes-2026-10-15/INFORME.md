@@ -83,7 +83,7 @@ Para cerrar estas filas se necesita la identificación o contraetiqueta indicada
 - Verificación automatizada: 28 pruebas aprobadas, incluyendo catálogo completo, errores concretos, filtros, actualización de lista, mapa y seguridad de renderizado.
 - Interfaz comprobada en navegador a 390 y 1440 px con las 244 propuestas: filtros Priorat, IGP Castilla y León, Almansa, Pago de Otazu y Rías Baixas; referencias pendientes visibles, sin desbordamiento horizontal ni errores de ejecución.
 - Precomprobación de base de datos, solo lectura: 244 filas encontradas, 0 conflictos, 0 cambios aplicados.
-- La compilación completa y el despliegue de producción quedan pendientes; el entorno local es una copia parcial. Se ha compilado el componente real de la carta para comprobar la interfaz con las 244 propuestas.
+- Vercel informa «Deployment has completed» para el commit `201b42bf99e0aa1f4f212eb8d66b47532f778a5a` de la propuesta. El despliegue de producción y la aplicación de los datos siguen pendientes. Localmente se compiló el componente real de la carta con las 244 propuestas; el mapa y Supabase se simularon en esa prueba de interfaz, y el comportamiento del mapa se comprobó por separado con pruebas automatizadas.
 
 ## Registro completo con fuentes
 
