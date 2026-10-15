@@ -134,12 +134,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   // aquí), no se le vuelve a preguntar.
   const [showAgeDialog, setShowAgeDialog] = useState(() => !getEdadVinosConfirmada());
   const [isAdult, setIsAdult] = useState<boolean | null>(() => (getEdadVinosConfirmada() ? true : null));
-  // La semilla SSG y el primer refresco abren la misma denominación.
-  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
-    const catalogo = initialMapVinos ?? Object.values(initialVinos ?? {}).flat();
-    return catalogo.find(vino => /tintos?.*ribera.*duero/i.test(vino.categoria ?? ""))?.categoria
-      ?? (initialMapVinos || initialVinos ? "Todos" : "VINOS TINTOS — RIBERA DEL DUERO");
-  });
+  // La semilla SSG siembra "Todos" (ver `Vinos.tsx`): abrir en la misma categoría.
+  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>(
     () => {
       const semilla = initialVinos ?? {};
