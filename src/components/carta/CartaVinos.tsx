@@ -377,16 +377,22 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     return Boolean(item.expanded);
   };
 
+  // Foto e información son excluyentes: abrir una cierra la otra, nunca las
+  // dos tarjetas (foto + texto) a la vez estirando la ficha el doble.
   const handleToggleCard = (item: VinoRecord, currentExpanded: boolean) => {
     const key = getCardKey(item);
-    setExpandedCards((prev) => ({ ...prev, [key]: !currentExpanded }));
+    const next = !currentExpanded;
+    setExpandedCards((prev) => ({ ...prev, [key]: next }));
+    if (next) setInfoCards((prev) => ({ ...prev, [key]: false }));
   };
 
   const isInfoCardOpen = (item: VinoRecord) => Boolean(infoCards[getCardKey(item)]);
 
   const handleToggleInfoCard = (item: VinoRecord, currentOpen: boolean) => {
     const key = getCardKey(item);
-    setInfoCards((prev) => ({ ...prev, [key]: !currentOpen }));
+    const next = !currentOpen;
+    setInfoCards((prev) => ({ ...prev, [key]: next }));
+    if (next) setExpandedCards((prev) => ({ ...prev, [key]: false }));
   };
 
   const toPublicImageUrl = (value: string) => {
@@ -659,7 +665,9 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                     // se alarga hacia abajo con un bloque a todo lo ancho, no
                     // una columna lateral. object-cover (no contain): se pidió
                     // que la foto rellene el marco sin huecos ni bandas vacías.
-                    <div id={`foto-vino-${cardKey}`} className="relative aspect-[4/5] w-full overflow-hidden border-y border-border/60 bg-muted/20">
+                    // aspect-[4/3], no [4/5]: que no estire la ficha más que
+                    // el panel de información.
+                    <div id={`foto-vino-${cardKey}`} className="relative aspect-[4/3] w-full overflow-hidden border-y border-border/60 bg-muted/20">
                       <img
                         src={imagenOptimizada(imageUrl, 768) || undefined}
                         alt={item.displayNombre || item.nombre}
