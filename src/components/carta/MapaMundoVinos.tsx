@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import FiltrosTipoVino from "./FiltrosTipoVino";
-import { claveOrigen, coordenadasConocidas, localizarOrigen, nombreOrigen } from "@/lib/origenes-vino";
+import { claveOrigen, coordenadasConocidas, nombreOrigen, origenComprobable, bodegaVerificada } from "@/lib/origenes-vino";
 import { tipoVino as getCategoryKey, type TipoVino } from "@/lib/tipos-vino";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,9 +14,9 @@ interface Vino {
   nombre: string;
   precio_eur: number;
   categoria?: string;
-  denominacion_origen?: string;
-  ubicacion_pais?: string;
-  ubicacion_region?: string;
+  denominacion_origen?: string | null;
+  ubicacion_pais?: string | null;
+  ubicacion_region?: string | null;
 }
 
 interface MapaMundoVinosProps {
@@ -57,35 +57,10 @@ const markerBackground = (categories: string[]) => {
   return `conic-gradient(${slices})`;
 };
 
-const getRegionInsight = (region: string, category: string, vinosRegion: Vino[]) => {
-  const text = (region + " " + (vinosRegion[0]?.denominacion_origen || "")).toLowerCase();
-  if (text.includes("rioja")) return "Rioja suele ofrecer tintos de tempranillo con paso por barrica, buena acidez y equilibrio fruta-madera.";
-  if (text.includes("ribera")) return "Ribera del Duero: tintos potentes de tempranillo, tanino marcado y crianza, ideales para carnes.";
-  if (text.includes("rueda") || text.includes("verdejo")) return "Verdejo de Rueda: blancos aromáticos, cítricos y con un punto herbal refrescante.";
-  if (text.includes("albariñ")) return "Rías Baixas: albariños salinos, frescos y muy gastronómicos, con buena acidez.";
-  if (text.includes("priorat")) return "Priorat: tintos de garnacha y cariñena, concentrados, minerales y con estructura.";
-  if (text.includes("penedès") || text.includes("cava")) return "Penedès/Cava: espumosos de método tradicional con burbuja fina y perfil fresco.";
-  if (text.includes("champagne")) return "Champagne: chardonnay y pinot noir con crianza sobre lías, burbuja fina y notas de brioche.";
-  if (text.includes("burdeos") || text.includes("bordeaux")) return "Burdeos: ensamblajes de cabernet/merlot con cuerpo medio-alto y potencial de guarda.";
-  if (text.includes("borgoña") || text.includes("bourgogne") || text.includes("burgundy")) return "Borgoña: chardonnay o pinot noir elegantes, con fineza y acidez viva.";
-  if (text.includes("toscana")) return "Toscana: sangiovese (Chianti/Brunello) con notas de cereza, especias y tanino amable.";
-  if (text.includes("napa")) return "Napa Valley: cabernet sauvignon con fruta madura, crianza en roble y volumen en boca.";
-  if (text.includes("sonoma")) return "Sonoma: estilos más frescos que Napa, chardonnay y pinot noir con buena acidez.";
-  if (text.includes("valle del rhône") || text.includes("ródano") || text.includes("rhone")) return "Ródano: syrah o garnacha con notas de especias y hierbas mediterráneas.";
-  if (text.includes("mendoza")) return "Mendoza: malbec jugoso, con fruta negra y tanino redondo; ideal para carnes.";
-  if (text.includes("portugal") || text.includes("douro") || text.includes("alentejo")) return "Portugal: mezclas locales con fruta madura y acidez equilibrada; gran relación calidad-precio.";
-  if (text.includes("alemania") || text.includes("mosela") || text.includes("rheingau")) return "Alemania: rieslings tensos, minerales y aromáticos, desde secos a sutilmente off-dry.";
-  if (category === "espumoso") return "Espumosos: burbuja fina, frescos y versátiles; van de la fruta blanca a notas de brioche según crianza.";
-  if (category === "blanco") return "Blancos: perfil fresco, buena acidez y notas cítricas o florales según la uva.";
-  if (category === "rosado") return "Rosados: fruta roja fresca, ligeros y perfectos para aperitivo o platos ligeros.";
-  if (category === "tinto") return "Tintos: desde perfiles afrutados y jóvenes hasta crianzas con cuerpo y especias de barrica.";
-  return "Selección diversa de la D.O.: estilos y uvas que expresan su origen con buena gastronomía de acompañamiento.";
-};
-
 const PAGE_SIZE = 5;
 
 const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<{ region: string; vinos: Vino[]; category?: string } | null>(null);
@@ -94,16 +69,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   const { toast } = useToast();
   const solicitudes = useRef<AbortController | null>(null);
   type Grupo = { region: string; count: number; vinos: Vino[]; category: string };
-  const [sinUbicar, setSinUbicar] = useState<Grupo[]>([]);
-
-  const addWineMarkers = useCallback(() => {
-    if (!map.current) return;
-
-    const mapaActual = map.current;
-    const signal = solicitudes.current!.signal;
+  const grupos = useMemo(() => {
     const regionCount: Record<string, Grupo> = {};
-    const isMobile = window.innerWidth < 768;
-
     vinos.forEach(vino => {
       const key = claveOrigen(vino);
       const region = nombreOrigen(vino) || t.map.noLocation;
@@ -113,6 +80,16 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       grupo.vinos.push(vino);
       if (grupo.category === "otro") grupo.category = getCategoryKey(vino.categoria);
     });
+
+    return Object.values(regionCount);
+  }, [vinos, t.map.noLocation]);
+  const sinUbicar = grupos.filter(grupo => !coordenadasConocidas(grupo.vinos[0]));
+
+  const addWineMarkers = useCallback(() => {
+    if (!map.current) return;
+    const mapaActual = map.current;
+    const signal = solicitudes.current!.signal;
+    const isMobile = window.innerWidth < 768;
 
     const colocar = (data: Grupo, coords: [number, number]) => {
       const region = data.region;
@@ -177,31 +154,11 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       }
     };
 
-    const pendientes: Grupo[] = [];
-    Object.values(regionCount).forEach(grupo => {
+    grupos.forEach(grupo => {
       const coords = coordenadasConocidas(grupo.vinos[0]);
       if (coords) colocar(grupo, coords);
-      else pendientes.push(grupo);
     });
-    setSinUbicar(pendientes);
-    // Limitar las búsquedas simultáneas y cancelar al actualizar/desmontar el mapa.
-    let siguiente = 0;
-    const buscar = async () => {
-      while (siguiente < pendientes.length && !signal.aborted) {
-        const grupo = pendientes[siguiente++];
-        try {
-          const coords = await localizarOrigen(grupo.vinos[0], MAPBOX_TOKEN, signal);
-          if (coords && !signal.aborted && map.current === mapaActual) {
-            colocar(grupo, coords);
-            setSinUbicar(prev => prev.filter(item => item !== grupo));
-          }
-        } catch {
-          // Si la búsqueda falla, el grupo sigue accesible bajo el mapa.
-        }
-      }
-    };
-    for (let i = 0; i < Math.min(3, pendientes.length); i++) void buscar();
-  }, [vinos, t.map.noLocation]);
+  }, [grupos]);
 
   const initializeMap = useCallback(() => {
     if (!mapContainer.current || map.current) return;
@@ -295,15 +252,14 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     setVisibleCount(PAGE_SIZE);
   }, [selectedRegion, tipoRegion]);
 
-  const origenesSinUbicar = sinUbicar.filter(grupo => grupo.vinos.some(vino =>
-    nombreOrigen(vino),
-  ));
+  const origenesSinUbicar = sinUbicar;
+  const avisoUbicacion = language === "es" ? "Los puntos indican bodegas con ubicación documentada. Los demás vinos se pueden consultar debajo del mapa." : language === "en" ? "Pins show wineries with documented locations. The remaining wines are listed below the map." : "Les points indiquent des domaines dont la localisation est documentée. Les autres vins figurent sous la carte.";
 
   return (
     <div className="mb-8 w-full overflow-hidden">
       <h3 className="text-xl md:text-2xl font-bold text-center mb-3 md:mb-4 px-4">{t.map.title}</h3>
       <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base px-4">
-        {t.map.subtitle}
+        {avisoUbicacion}
       </p>
       <div 
         ref={mapContainer} 
@@ -312,7 +268,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       />
       {origenesSinUbicar.length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-sm text-muted-foreground">{t.map.otherOrigins}</p>
+          <p className="text-sm text-muted-foreground">{language === "es" ? "Vinos sin ubicación puntual verificada" : language === "en" ? "Wines without a verified map location" : "Vins sans localisation précise vérifiée"}</p>
           <div className="flex flex-wrap gap-2">
             {origenesSinUbicar.map(grupo => (
               <Button key={claveOrigen(grupo.vinos[0])} variant="outline" size="sm" onClick={() => {
@@ -346,13 +302,12 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="flex flex-wrap gap-4">
-                <div className="text-sm text-muted-foreground max-w-xl">
-                  <p className="font-semibold text-foreground mb-1">{t.map.aboutDO ?? "Sobre esta D.O."}</p>
-                  <p className="leading-snug">{getRegionInsight(selectedRegion.region, selectedRegion.category || "otro", selectedRegion.vinos)}</p>
-                </div>
-              </div>
-
+              {bodegaVerificada(selectedRegion.vinos[0]) && <a
+                className="text-sm underline underline-offset-4"
+                href={bodegaVerificada(selectedRegion.vinos[0])!.fuente}
+                target="_blank" rel="noopener noreferrer">
+                {language === "es" ? "Consultar la ubicación en el Consejo Regulador" : language === "en" ? "View the location in the official wine council directory" : "Consulter la localisation auprès du conseil régulateur"}
+              </a>}
               <FiltrosTipoVino vinos={selectedRegion.vinos} seleccionado={tipoRegion} onChange={setTipoRegion} />
               {sortedSelectedVinos.length === 0 && (
                 <p role="status" className="py-6 text-center text-sm text-muted-foreground">{t.vinos.empty}</p>
@@ -371,8 +326,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                       style={{ backgroundColor: cardBg, borderColor }}
                     >
                       <p className="font-semibold text-foreground leading-tight">{vino.nombre}</p>
-                      {vino.denominacion_origen && (
-                        <p className="text-xs text-muted-foreground">{vino.denominacion_origen}</p>
+                      {origenComprobable(vino.denominacion_origen) && (
+                        <p className="text-xs text-muted-foreground">{origenComprobable(vino.denominacion_origen)}</p>
                       )}
                       <p className="text-xs font-semibold uppercase" style={{ color: cardColor }}>
                         {vino.categoria || categoryKey}

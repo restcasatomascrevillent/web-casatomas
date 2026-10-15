@@ -1,0 +1,57 @@
+{
+  "5bcf2f8f-f152-41f7-b583-45614728e928": {
+    "nombreVino": "Aalto 2021",
+    "denominacion": "D.O. Ribera del Duero",
+    "nombre": "AALTO",
+    "localidad": "Quintanilla de Arriba, Valladolid",
+    "coordenadas": [
+      -4.25687,
+      41.62417
+    ],
+    "fuente": "https://www.riberadelduero.es/bodegas/aalto-bodegas-y-vinedos"
+  },
+  "43187593-0677-4f4b-9583-a3838dabd7f2": {
+    "nombreVino": "Aalto PS",
+    "denominacion": "D.O. Ribera del Duero",
+    "nombre": "AALTO",
+    "localidad": "Quintanilla de Arriba, Valladolid",
+    "coordenadas": [
+      -4.25687,
+      41.62417
+    ],
+    "fuente": "https://www.riberadelduero.es/bodegas/aalto-bodegas-y-vinedos"
+  },
+  "28efb3dd-5ba8-478d-92f1-88294d43a44a": {
+    "nombreVino": "Briego Tempranillo Roble",
+    "denominacion": "D.O. Ribera del Duero",
+    "nombre": "Briego",
+    "localidad": "Fompedraza, Valladolid",
+    "coordenadas": [
+      -4.145627,
+      41.535403
+    ],
+    "fuente": "https://www.riberadelduero.es/bodegas/alberto-y-benito-sa"
+  },
+  "a59f886d-7dc8-4189-8277-8e3e3b398c63": {
+    "nombreVino": "Briego Tempranillo Roble (Magnum)",
+    "denominacion": "D.O. Ribera del Duero",
+    "nombre": "Briego",
+    "localidad": "Fompedraza, Valladolid",
+    "coordenadas": [
+      -4.145627,
+      41.535403
+    ],
+    "fuente": "https://www.riberadelduero.es/bodegas/alberto-y-benito-sa"
+  },
+  "5e6d042a-481d-4611-8ec0-1df456142d56": {
+    "nombreVino": "Briego Tiempo Crianza",
+    "denominacion": "D.O. Ribera del Duero",
+    "nombre": "Briego",
+    "localidad": "Fompedraza, Valladolid",
+    "coordenadas": [
+      -4.145627,
+      41.535403
+    ],
+    "fuente": "https://www.riberadelduero.es/bodegas/alberto-y-benito-sa"
+  }
+}
