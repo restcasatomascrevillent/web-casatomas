@@ -621,54 +621,59 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             return (
               <div key={cardKey} className="min-w-0">
                 <Card className="overflow-hidden border-border/80 bg-background shadow-sm">
-                  <CardHeader className="gap-2 px-4 py-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words sm:text-lg">
-                        {item.displayNombre || item.nombre}
-                      </CardTitle>
-                      <div className="flex shrink-0 gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleCard(itemRecord, expanded)}
-                          aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
-                          aria-expanded={expanded}
-                          aria-controls={`foto-vino-${cardKey}`}
-                          disabled={!hasVisibleImage}
-                          title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
-                          className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-35"
-                        >
-                          {expanded ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                          aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
-                          aria-expanded={infoOpen}
-                          aria-controls={`info-vino-${cardKey}`}
-                          className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                        >
-                          <Info className="h-4 w-4" aria-hidden="true" />
-                        </button>
+                  <div className="flex items-start gap-3 px-4 py-3">
+                    <CardHeader className="min-w-0 flex-1 gap-2 p-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words sm:text-lg">
+                          {item.displayNombre || item.nombre}
+                        </CardTitle>
+                        <div className="flex shrink-0 gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCard(itemRecord, expanded)}
+                            aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
+                            aria-expanded={expanded}
+                            aria-controls={`foto-vino-${cardKey}`}
+                            disabled={!hasVisibleImage}
+                            title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
+                            className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-35"
+                          >
+                            {expanded ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
+                            aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
+                            aria-expanded={infoOpen}
+                            aria-controls={`info-vino-${cardKey}`}
+                            className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                          >
+                            <Info className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <p className="font-sans text-xs leading-relaxed text-muted-foreground">{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "")}</p>
-                  </CardHeader>
+                      <p className="font-sans text-xs leading-relaxed text-muted-foreground">{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "")}</p>
+                    </CardHeader>
 
-                  {expanded && (
-                    <div id={`foto-vino-${cardKey}`} className="border-y border-border/60 bg-muted/20">
-                      <div className="relative mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden">
-                      <img
-                        src={imagenOptimizada(imageUrl, 768) || undefined}
-                        alt={item.displayNombre || item.nombre}
-                        className="h-full w-full object-cover"
-                        style={{ objectPosition: `center ${Math.max(0, Math.min(100, item.imagen_posicion_y ?? 50))}%` }}
-                        loading="lazy"
-                        decoding="async"
-                        onError={() => setBrokenImages(prev => ({ ...prev, [cardKey]: true }))}
-                      />
+                    {expanded && (
+                      <div
+                        id={`foto-vino-${cardKey}`}
+                        className="relative aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-md border border-border/60 bg-muted/20 sm:w-28"
+                      >
+                        {/* object-contain, no object-cover: aquí se pidió ver la
+                            botella entera, no recortada para rellenar el hueco. */}
+                        <img
+                          src={imagenOptimizada(imageUrl, 768) || undefined}
+                          alt={item.displayNombre || item.nombre}
+                          className="h-full w-full object-contain"
+                          style={{ objectPosition: `center ${Math.max(0, Math.min(100, item.imagen_posicion_y ?? 50))}%` }}
+                          loading="lazy"
+                          decoding="async"
+                          onError={() => setBrokenImages(prev => ({ ...prev, [cardKey]: true }))}
+                        />
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {infoOpen && (
                     <CardContent id={`info-vino-${cardKey}`} className="space-y-3 px-4 pb-4 font-sans text-sm leading-relaxed">
