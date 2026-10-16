@@ -43,12 +43,41 @@ import { enviarFacturaCheque } from "../_shared/enviar-factura-cheque.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
+// Solo para leer la comisión del cobro (balance_transaction.fee) después de
+// darlo por pagado — guardarComisionStripe() más abajo. Verificar la firma
+// del evento, que es lo crítico, sigue sin necesitarla.
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 
-// Sin cliente de Stripe ni `STRIPE_SECRET_KEY`: todo lo que hace falta viene
-// en el propio evento, y verificar la firma solo necesita el secreto del
-// webhook. Menos claves cargadas, menos que perder.
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { global: { headers: { "x-audit-source": "stripe-webhook-cheques-regalo" } } });
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
+let stripeClient: Stripe | null = null;
+function obtenerStripe(): Stripe | null {
+  if (!STRIPE_SECRET_KEY) return null;
+  return stripeClient ??= new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2026-09-30.endive", httpClient: Stripe.createFetchHttpClient() });
+}
+
+/**
+ * Comisión real que cobró Stripe por este cobro, para el panel de métricas de
+ * cheques regalo (pestaña "Stripe"). SIEMPRE "a mejor esfuerzo": si falla
+ * (clave no configurada, fallo de red, cobro sin balance_transaction todavía)
+ * se registra el error y se sigue sin más — el código y el email del cheque
+ * YA se entregaron antes de llamar a esto y no dependen de que esto funcione.
+ * Si queda sin guardar, el panel estima la comisión con la tarifa estándar.
+ */
+async function guardarComisionStripe(chequeId: string, paymentIntentId: string | null): Promise<void> {
+  const stripe = obtenerStripe();
+  if (!stripe || !paymentIntentId) return;
+  try {
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge.balance_transaction"] });
+    const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
+    const balance = charge && typeof charge.balance_transaction === "object" ? charge.balance_transaction : null;
+    if (!balance || typeof balance.fee !== "number") return;
+    const { error } = await supabase.from("cheques_regalo").update({ stripe_fee_eur: balance.fee / 100 }).eq("id", chequeId);
+    if (error) console.error("[stripe-webhook-cheques-regalo] no se pudo guardar stripe_fee_eur:", error);
+  } catch (error) {
+    console.error("[stripe-webhook-cheques-regalo] no se pudo obtener la comisión de Stripe:", error);
+  }
+}
 
 /**
  * Lanza si el email no sale, para que Stripe reintente: el reintento encuentra
@@ -104,6 +133,7 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
     // reenvía con el código ya guardado; si salió, no queda nada por hacer.
     if (fila.codigo && !fila.email_enviado_en) await enviarYMarcarEmail({ ...fila, codigo: fila.codigo });
     await enviarFacturaCheque(supabase, chequeId);
+    if (fila.stripe_fee_eur == null) await guardarComisionStripe(chequeId, fila.stripe_payment_intent_id);
     return;
   }
   if (fila.estado !== "pendiente") {
@@ -141,6 +171,7 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
 
   await enviarYMarcarEmail(chequeEmitido);
   await enviarFacturaCheque(supabase, chequeId);
+  await guardarComisionStripe(chequeId, paymentIntentId);
 }
 
 /** Sesión caducada sin pagar, o pago diferido que al final falló. */
