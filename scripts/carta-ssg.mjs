@@ -87,6 +87,14 @@ const CAMPOS_SALIDA = {
 const ORDEN = 'categoria.asc,orden.asc';
 
 /**
+ * Vinos lleva además `id` como desempate: casi todos comparten categoría y
+ * `orden`, y `/carta/vinos` siembra sus primeras 24 fichas con este orden y
+ * luego las sustituye por la primera página que pide `CartaVinos` (que ordena
+ * igual). Sin desempate, cada consulta podía devolver otras 24.
+ */
+const ORDEN_POR_TABLA = { Vinos: `${ORDEN},id.asc` };
+
+/**
  * El MISMO filtro en las tres tablas y en los dos caminos.
  *
  * `restaurante=true` es la carta de Casa Tomás; `touza=true` es la del bar. Las
@@ -138,7 +146,7 @@ async function descargarTabla(baseUrl, key, tabla) {
     `${baseUrl}/rest/v1/${tabla}` +
     `?select=${encodeURIComponent(select)}` +
     `&${FILTROS[tabla]}` +
-    `&order=${ORDEN}` +
+    `&order=${ORDEN_POR_TABLA[tabla] ?? ORDEN}` +
     `&limit=2000`;
 
   let respuesta;

@@ -160,11 +160,17 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   // visitante, no basta con que haya token — ver `src/lib/cookie-consent.ts`.
   const mapsConsent = useMapsConsent();
 
+  /**
+   * `cantidad`: cuántas filas pedir de una vez. Por defecto una página; el
+   * refresco pide las que ya estaban a la vista (si no, la lista se encogía a
+   * 24 fichas mientras se leía la 40) y el buscador pide la categoría entera.
+   */
   const fetchVinosByCategory = useCallback(
-    async (category: string, append = false, catalogo = mapVinos) => {
+    async (category: string, append = false, catalogo = mapVinos, cantidad = PAGE_SIZE) => {
       setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
       const offset = append ? (vinosByCategory[category]?.length || 0) : 0;
-      const to = offset + PAGE_SIZE - 1;
+      const pedidas = Math.max(PAGE_SIZE, cantidad);
+      const to = offset + pedidas - 1;
 
       try {
         // Import perezoso: así el resto del módulo (componente, UI de
@@ -180,6 +186,10 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           .is('restaurante', true)
           .order('categoria', { ascending: true })
           .order('orden', { ascending: true })
+          // Desempate único: casi todos los vinos comparten categoría y
+          // `orden`, y sin él Postgres puede ordenar distinto cada página
+          // («Mostrar más» repetía vinos y se saltaba otros).
+          .order('id', { ascending: true })
           .range(offset, to);
 
         const tipo = tipoDesdeCategoria(category);
@@ -208,7 +218,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           const existing = append ? prev[category] || [] : [];
           return { ...prev, [category]: [...existing, ...normalized] };
         });
-        setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === PAGE_SIZE }));
+        setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === pedidas }));
+        return true;
       } catch (error) {
         console.error('Error fetching vinos:', error);
         toast({
@@ -216,6 +227,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
           description: t.vinos.toasts.errorDescription,
           variant: "destructive",
         });
+        return false;
       } finally {
         setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
       }
@@ -262,7 +274,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   refreshRef.current = async () => {
     const catalogo = await fetchMap();
     if (catalogo) {
-      await fetchVinosByCategory(selectedCategory, false, catalogo);
+      // Tantas filas como hay a la vista, no solo la primera página.
+      await fetchVinosByCategory(selectedCategory, false, catalogo, vinosByCategory[selectedCategory]?.length);
     }
   };
 
@@ -490,6 +503,21 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     }
   };
 
+  // El buscador filtra lo ya cargado: con una búsqueda activa se trae el resto
+  // de la categoría (unas 200 referencias, una sola petición) para que un vino
+  // de la página 2 no «desaparezca». Si la petición falla no se reintenta en
+  // bucle: queda «Mostrar más», como siempre.
+  const busquedaIntentada = useRef(new Set<string>());
+  const completandoBusqueda = Boolean(debouncedSearchTerm.trim()) && Boolean(hasMoreByCategory[selectedCategory]);
+  useEffect(() => {
+    if (!completandoBusqueda || currentLoading || busquedaIntentada.current.has(selectedCategory)) return;
+    const categoria = selectedCategory;
+    busquedaIntentada.current.add(categoria);
+    void fetchVinosByCategory(categoria, true, mapVinos, 1000).then((ok) => {
+      if (ok) busquedaIntentada.current.delete(categoria);
+    });
+  }, [completandoBusqueda, currentLoading, selectedCategory, fetchVinosByCategory, mapVinos]);
+
   const handleAgeConfirm = (adult: boolean) => {
     setIsAdult(adult);
     setShowAgeDialog(false);
@@ -706,7 +734,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
         </div>
       )}
 
-      {!currentLoading && filteredItems.length === 0 && (
+      {!currentLoading && !(completandoBusqueda && !busquedaIntentada.current.has(selectedCategory)) && filteredItems.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-xl">{t.vinos.empty}</p>
         </div>
