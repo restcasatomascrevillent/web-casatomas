@@ -46,6 +46,7 @@ export const translations: Translations = {
       addMoreAria: "Ajouter encore {name} à Ma table (vous en avez {qty})",
       viewPhoto: "Voir la photo",
       hidePhoto: "Masquer la photo",
+      noPhoto: "Pas de photo",
       viewInfo: "Voir les ingrédients et allergènes",
       hideInfo: "Masquer les ingrédients et allergènes",
       allergensTitle: "Allergènes",

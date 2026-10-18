@@ -141,6 +141,38 @@ const PiePlato = ({
  * foto está plegada es la propia `<img>` — sin coste real aquí, porque
  * ninguno de los 128 platos tiene descripción (ver más abajo).
  */
+/** Botón del ojo (mostrar/ocultar foto): igual en las dos caras de la tarjeta. */
+function BotonOjoFoto({
+  tieneFoto,
+  expanded,
+  onToggle,
+  nombre,
+  t,
+}: {
+  tieneFoto: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  nombre: string;
+  t: Translations["platos"];
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={!tieneFoto}
+      aria-label={`${tieneFoto ? (expanded ? t.hidePhoto : t.viewPhoto) : t.noPhoto} — ${nombre}`}
+      title={tieneFoto ? undefined : t.noPhoto}
+      className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:scale-100 shrink-0"
+    >
+      {expanded ? (
+        <EyeOff className="w-5 h-5" aria-hidden="true" />
+      ) : (
+        <Eye className="w-5 h-5" aria-hidden="true" />
+      )}
+    </button>
+  );
+}
+
 const ProductoCard = ({
   plato,
   categoria,
@@ -287,18 +319,13 @@ const ProductoCard = ({
                 </CardTitle>
                 <div className="flex items-center gap-2 shrink-0">
                   {mostrarFoto && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded((valor) => !valor)}
-                      aria-label={`${expanded ? t.platos.hidePhoto : t.platos.viewPhoto} — ${plato.displayNombre}`}
-                      className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
-                    >
-                      {expanded ? (
-                        <EyeOff className="w-5 h-5" aria-hidden="true" />
-                      ) : (
-                        <Eye className="w-5 h-5" aria-hidden="true" />
-                      )}
-                    </button>
+                    <BotonOjoFoto
+                      tieneFoto={!!plato.imagen_url?.trim()}
+                      expanded={expanded}
+                      onToggle={() => setExpanded((valor) => !valor)}
+                      nombre={plato.displayNombre}
+                      t={t.platos}
+                    />
                   )}
                   <button
                     type="button"
@@ -369,14 +396,25 @@ const ProductoCard = ({
                     </Badge>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setInfoOpen((valor) => !valor)}
-                  aria-label={`${infoOpen ? t.platos.hideInfo : t.platos.viewInfo} — ${plato.displayNombre}`}
-                  className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03] shrink-0"
-                >
-                  <Info className="w-5 h-5" aria-hidden="true" />
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {mostrarFoto && (
+                    <BotonOjoFoto
+                      tieneFoto={!!plato.imagen_url?.trim()}
+                      expanded={expanded}
+                      onToggle={() => setExpanded((valor) => !valor)}
+                      nombre={plato.displayNombre}
+                      t={t.platos}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setInfoOpen((valor) => !valor)}
+                    aria-label={`${infoOpen ? t.platos.hideInfo : t.platos.viewInfo} — ${plato.displayNombre}`}
+                    className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03] shrink-0"
+                  >
+                    <Info className="w-5 h-5" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </CardHeader>
 

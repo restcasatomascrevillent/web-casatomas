@@ -126,8 +126,13 @@ const pintar = (mostrarFoto?: boolean) =>
 describe("ProductoCard — interruptor de fotos", () => {
   it("por defecto ofrece el ojo y enseña la foto al pulsarlo (lo de siempre)", () => {
     pintar();
-    fireEvent.click(screen.getByRole("button", { name: /ver foto/i }));
-    expect(screen.getByRole("img", { name: "Pulpo a la brasa" })).toHaveAttribute("src", FOTO);
+    // El ojo sale en las dos caras de la tarjeta (delante y en la de info, tras la "i"):
+    // con cualquiera de los dos se enseña la foto, basta con el primero. La imagen
+    // expandida también se pinta en las dos caras (para no perderla al girar a info).
+    fireEvent.click(screen.getAllByRole("button", { name: /ver foto/i })[0]);
+    const fotos = screen.getAllByRole("img", { name: "Pulpo a la brasa" });
+    expect(fotos.length).toBeGreaterThan(0);
+    for (const foto of fotos) expect(foto).toHaveAttribute("src", FOTO);
   });
 
   it("apagado no hay ojo ni foto, y la tarjeta sigue con nombre y precio", () => {
@@ -136,5 +141,28 @@ describe("ProductoCard — interruptor de fotos", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getAllByText("Pulpo a la brasa").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/18€/).length).toBeGreaterThan(0);
+  });
+
+  it("sin foto el ojo sigue saliendo, pero deshabilitado", () => {
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <ProductoCard
+            plato={resolveTranslatedItem({ ...plato, imagen_url: null }, "es")}
+            categoria="Pescados"
+          />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+    const ojo = screen.getAllByRole("button", { name: /sin foto/i })[0];
+    expect(ojo).toBeDisabled();
+  });
+
+  it("al abrir la información (la 'i') el ojo sigue disponible si hay foto", () => {
+    pintar();
+    // La "i" también sale en las dos caras (para poder volver desde la de info);
+    // cualquiera de las dos abre la información.
+    fireEvent.click(screen.getAllByRole("button", { name: /ver ingredientes y alérgenos/i })[0]);
+    expect(screen.getAllByRole("button", { name: /ver foto/i }).length).toBeGreaterThan(0);
   });
 });
