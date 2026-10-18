@@ -2,6 +2,42 @@ import "@testing-library/jest-dom";
 import { vi } from "vitest";
 
 // ---------------------------------------------------------------------------
+// Web Storage
+// ---------------------------------------------------------------------------
+
+// Node ≥ 25 trae su propio `localStorage` global (Web Storage) y, sin
+// `--localstorage-file`, es un objeto sin métodos que tapa al de jsdom: 235
+// tests caían con "window.localStorage.setItem is not a function" según la
+// versión de Node de quien los lanzara. Si el almacén no funciona, se pone uno
+// en memoria con la misma interfaz; con jsdom normal no se toca nada.
+for (const nombre of ["localStorage", "sessionStorage"] as const) {
+  let actual: Storage | undefined;
+  try {
+    actual = window[nombre];
+  } catch {
+    actual = undefined;
+  }
+  if (typeof actual?.setItem === "function") continue;
+  const datos = new Map<string, string>();
+  const almacen: Storage = {
+    get length() {
+      return datos.size;
+    },
+    clear: () => datos.clear(),
+    getItem: (clave) => datos.get(String(clave)) ?? null,
+    key: (indice) => [...datos.keys()][indice] ?? null,
+    removeItem: (clave) => {
+      datos.delete(String(clave));
+    },
+    setItem: (clave, valor) => {
+      datos.set(String(clave), String(valor));
+    },
+  };
+  Object.defineProperty(window, nombre, { configurable: true, value: almacen });
+  Object.defineProperty(globalThis, nombre, { configurable: true, value: almacen });
+}
+
+// ---------------------------------------------------------------------------
 // Browser APIs not available in jsdom
 // ---------------------------------------------------------------------------
 
