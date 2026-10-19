@@ -1,0 +1,62 @@
+# Comprobaciones automáticas de la web (propuesta de la auditoría de regresión
+# del 18/10/2026). Ningún paso necesita secretos ni habla con Supabase o
+# Stripe: los tests unitarios usan módulos virtuales vacíos y los E2E un build
+# contra un Supabase de mentira local (scripts/e2e-build.mjs).
+#
+# BLOQUEAN: instalación reproducible, tests unitarios y E2E (incluye el build
+# SSG completo). NO BLOQUEAN todavía (deuda previa): typecheck con 21 errores y
+# ESLint con 10. Quitar `continue-on-error` cuando lleguen a cero.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-y-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tests unitarios y de componentes
+        run: npm test
+      - name: Navegador para Playwright
+        run: npx playwright install --with-deps chromium
+      - name: E2E (build SSG + reservas, carta de vinos, cheques regalo, responsive)
+        run: npm run test:e2e
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  calidad-no-bloqueante:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck (21 errores previos)
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: ESLint (10 errores previos)
+        run: npm run lint
