@@ -78,10 +78,12 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
   const PAGE_SIZE = 24;
   const currentLoading = loadingByCategory[selectedCategory];
 
-  const fetchBebidas = useCallback(async (category: string, append = false) => {
+  /** `cantidad`: filas a pedir de una vez (el buscador pide la categoría entera). */
+  const fetchBebidas = useCallback(async (category: string, append = false, cantidad = PAGE_SIZE) => {
     setLoadingByCategory((prev) => ({ ...prev, [category]: true }));
     const offset = append ? (bebidasByCategory[category]?.length || 0) : 0;
-    const to = offset + PAGE_SIZE - 1;
+    const pedidas = Math.max(PAGE_SIZE, cantidad);
+    const to = offset + pedidas - 1;
     try {
       // Import perezoso: así el resto del módulo (componente, UI de
       // búsqueda) puede evaluarse y pintar su esqueleto sin esperar a que el
@@ -95,6 +97,9 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
         .eq('activado', true)
         .is('restaurante', true)
         .order('orden', { ascending: true })
+        // Desempate único: en «TODAS» la mayoría de bebidas comparten `orden`
+        // y sin él cada página podía venir en otro orden (repetidas/omitidas).
+        .order('id', { ascending: true })
         .range(offset, to);
 
       if (category !== "TODAS") {
@@ -108,7 +113,8 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
         const existing = append ? prev[category] || [] : [];
         return { ...prev, [category]: [...existing, ...mapped] };
       });
-      setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === PAGE_SIZE }));
+      setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === pedidas }));
+      return true;
     } catch (error) {
       console.error('Error fetching bebidas:', error);
       toast({
@@ -116,6 +122,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
         description: t.bebidas.toasts.errorDescription,
         variant: "destructive",
       });
+      return false;
     } finally {
       setLoadingByCategory((prev) => ({ ...prev, [category]: false }));
     }
@@ -144,6 +151,20 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
       fetchBebidas(selectedCategory, true);
     }
   };
+
+  // Mismo criterio que la carta de vinos: con una búsqueda activa se trae el
+  // resto de la categoría para que el buscador no se limite a las 24 primeras
+  // (en «Cervezas» hay 25). Si falla no se reintenta en bucle.
+  const busquedaIntentada = useRef(new Set<string>());
+  const completandoBusqueda = Boolean(debouncedSearchTerm.trim()) && Boolean(hasMoreByCategory[selectedCategory]);
+  useEffect(() => {
+    if (!completandoBusqueda || currentLoading || busquedaIntentada.current.has(selectedCategory)) return;
+    const categoria = selectedCategory;
+    busquedaIntentada.current.add(categoria);
+    void fetchBebidas(categoria, true, 1000).then((ok) => {
+      if (ok) busquedaIntentada.current.delete(categoria);
+    });
+  }, [completandoBusqueda, currentLoading, selectedCategory, fetchBebidas]);
 
   const categories = useMemo(() => {
     const conSeleccion =
@@ -337,7 +358,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
       </div>
       )}
 
-      {filteredItems.length === 0 && (
+      {filteredItems.length === 0 && !(completandoBusqueda && !busquedaIntentada.current.has(selectedCategory)) && (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-xl">{t.bebidas.empty}</p>
         </div>
