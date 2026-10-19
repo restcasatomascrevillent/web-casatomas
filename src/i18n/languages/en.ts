@@ -514,6 +514,7 @@ export const translations: Translations = {
         giftInvalidEmail: "Enter a valid email",
         giftPaymentErrorTitle: "Couldn't start the payment",
         giftPaymentErrorDescription: "Please try again in a few minutes or call the restaurant.",
+        giftAmountRange: "Gift vouchers must be between €10 and €1000.",
         giftSuccessTitle: "Thank you for your purchase!",
         giftSuccessDescription: "We'll email you the code as soon as the payment is confirmed, usually within moments.",
         giftCancelTitle: "Payment cancelled",

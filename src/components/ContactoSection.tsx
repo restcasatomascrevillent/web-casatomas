@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CompraChequePasos } from "@/components/CompraChequePasos";
 import { MapPin, Phone, Mail, Gift, PawPrint } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
@@ -41,6 +41,9 @@ const DATOS_COMPRADOR_VACIOS: DatosComprador = {
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Mismos límites que valida `cheques-regalo-web/crear` en el servidor. */
+const IMPORTE_MIN = 10;
+const IMPORTE_MAX = 1000;
 
 const ContactoSection = () => {
   const { t, language } = useTranslations();
@@ -48,6 +51,10 @@ const ContactoSection = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [datos, setDatos] = useState<DatosComprador>(DATOS_COMPRADOR_VACIOS);
   const [enviando, setEnviando] = useState(false);
+  // `enviando` es estado y no corta un doble clic en el mismo instante (el
+  // botón se deshabilita en el siguiente render): sin esto salían dos
+  // peticiones, dos cheques pendientes y dos sesiones de Stripe.
+  const enviandoRef = useRef(false);
   // Error del formulario DENTRO del diálogo, no un toast: el toast es
   // `fixed top-0` a todo el ancho en móvil (por encima del diálogo, que es
   // `z-50`), así que tapaba la cabecera y la "X" de cerrar justo cuando el
@@ -80,10 +87,21 @@ const ContactoSection = () => {
   }, []);
 
   const handleGiftPurchase = () => {
-    if (!giftAmount || parseFloat(giftAmount) <= 0) {
+    const importe = parseFloat(giftAmount);
+    if (!giftAmount || !Number.isFinite(importe) || importe <= 0) {
       toast({
         title: t.contacto.toasts.errorTitle,
         description: t.contacto.toasts.errorDescription,
+        variant: "destructive",
+      });
+      return;
+    }
+    // Antes solo se comprobaba > 0: con 5 € se rellenaba todo el formulario
+    // y el servidor lo rechazaba al final.
+    if (importe < IMPORTE_MIN || importe > IMPORTE_MAX) {
+      toast({
+        title: t.contacto.toasts.errorTitle,
+        description: t.contacto.toasts.giftAmountRange,
         variant: "destructive",
       });
       return;
@@ -110,6 +128,8 @@ const ContactoSection = () => {
       setErrorFormulario(t.contacto.giftInvoiceMissingData);
       return;
     }
+    if (enviandoRef.current) return;
+    enviandoRef.current = true;
     setErrorFormulario(null);
     setEnviando(true);
     try {
@@ -150,7 +170,11 @@ const ContactoSection = () => {
       // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
       window.location.href = cuerpo.url;
     } catch (error) {
-      setErrorFormulario(error instanceof Error && error.message ? error.message : `${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
+      // Un fallo de red llega como TypeError de `fetch` ("Failed to fetch",
+      // "Load failed"…): técnico y en inglés. Se cuenta con el texto propio.
+      const propio = error instanceof Error && !(error instanceof TypeError) && error.message;
+      setErrorFormulario(propio || `${t.contacto.toasts.giftPaymentErrorTitle}. ${t.contacto.toasts.giftPaymentErrorDescription}`);
+      enviandoRef.current = false;
       setEnviando(false);
     }
   };
@@ -289,7 +313,8 @@ const ContactoSection = () => {
                       placeholder={t.contacto.giftPlaceholder}
                       value={giftAmount}
                       onChange={(e) => setGiftAmount(e.target.value)}
-                      min="1"
+                      min={IMPORTE_MIN}
+                      max={IMPORTE_MAX}
                       step="1"
                     />
                   </div>

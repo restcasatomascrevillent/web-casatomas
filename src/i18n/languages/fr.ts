@@ -514,6 +514,7 @@ export const translations: Translations = {
         giftInvalidEmail: "Indiquez un email valide",
         giftPaymentErrorTitle: "Impossible de démarrer le paiement",
         giftPaymentErrorDescription: "Réessayez dans quelques minutes ou appelez le restaurant.",
+        giftAmountRange: "Le chèque cadeau doit être compris entre 10 € et 1000 €.",
         giftSuccessTitle: "Merci pour votre achat !",
         giftSuccessDescription: "Nous vous enverrons le code par email dès que le paiement sera confirmé, en général en quelques instants.",
         giftCancelTitle: "Paiement annulé",
