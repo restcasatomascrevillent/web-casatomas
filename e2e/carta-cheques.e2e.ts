@@ -240,7 +240,9 @@ test.describe("Compra de cheque regalo (Stripe simulado)", () => {
     await abrirCompra(page, "40");
     const dialogo = await rellenarHastaElPago(page);
     await dialogo.getByRole("button", { name: es.contacto.giftFormSubmit }).evaluate((boton: HTMLButtonElement) => { boton.click(); boton.click(); });
-    await page.waitForURL(/cheque_regalo|#contacto/);
+    // Espera a la primera petición y deja margen de sobra para que llegara una segunda.
+    await expect.poll(() => backend.compras.length).toBeGreaterThan(0);
+    await page.waitForTimeout(2000);
     expect(backend.compras).toHaveLength(1);
   });
 
