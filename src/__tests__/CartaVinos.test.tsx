@@ -1,0 +1,236 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { LanguageProvider } from "@/i18n/LanguageProvider";
+import CartaVinos from "@/components/carta/CartaVinos";
+
+const vinos = [
+  {
+    id: "v1",
+    nombre: "Ribera del Duero Reserva",
+    precio_eur: 24.5,
+    categoria: "Tintos",
+    imagen_url: "https://example.com/botella.jpg",
+    imagen_posicion_y: 90,
+    descripcion: "Fruta madura y una boca equilibrada. Acompaña carnes asadas.",
+    denominacion_origen: "D.O. Ribera del Duero",
+    alergenos_oficiales: ["sulfitos"],
+    alergenos_inferidos: [],
+    alergenos_notas: null,
+  },
+  {
+    id: "v2",
+    nombre: "Albariño Rías Baixas",
+    descripcion: "Fresco y cítrico, con una boca vivaz. Acompaña mariscos y pescados.",
+    denominacion_origen: "D.O. Rías Baixas",
+    expanded: true,
+    precio_eur: 19,
+    categoria: "Blancos",
+    imagen_url: null,
+    alergenos_oficiales: [],
+    alergenos_inferidos: ["sulfitos"],
+    alergenos_notas: "Contiene trazas de frutos de cáscara.",
+  },
+  {
+    id: "v3",
+    nombre: "Cava Brut Nature",
+    precio_eur: 15,
+    categoria: "Espumosos",
+    imagen_url: null,
+    alergenos_oficiales: [],
+    alergenos_inferidos: [],
+    alergenos_notas: null,
+  },
+];
+
+// `CartaVinos` refresca contra Supabase al montarse (import perezoso del
+// cliente). Sin este mock los tests hacían la petición DE VERDAD contra el
+// proyecto del `.env`, y según cuánto tardara la red la respuesta llegaba a
+// mitad de test: el refresco reescribe `vinosByCategory` (incluido el
+// `expanded` de cada vino), así que deshacía el clic que el test acababa de
+// hacer y los `waitFor` de «Ocultar …» fallaban de forma intermitente.
+// El mock devuelve los mismos vinos sembrados y cuenta cuántas consultas han
+// terminado, para que `confirmarEdad` espere a que el refresco acabe antes de
+// que el test toque nada.
+const supabaseMock = vi.hoisted(() => ({ terminadas: 0, datos: [] as unknown[] }));
+
+vi.mock("@/integrations/supabase/client", () => {
+  const consulta: Record<string, unknown> = {};
+  for (const metodo of ["select", "eq", "is", "order", "range"]) consulta[metodo] = () => consulta;
+  consulta.then = (resolver: (valor: unknown) => unknown, rechazar?: (motivo: unknown) => unknown) =>
+    Promise.resolve({ data: supabaseMock.datos, error: null })
+      .then((valor) => {
+        supabaseMock.terminadas += 1;
+        return valor;
+      })
+      .then(resolver, rechazar);
+  return { supabase: { from: () => consulta } };
+});
+
+supabaseMock.datos = vinos;
+
+const Wrapped = () => (
+  <LanguageProvider>
+    <CartaVinos showAddButton initialVinos={{ Todos: vinos }} initialMapVinos={vinos} />
+  </LanguageProvider>
+);
+
+/** La carta de vinos vive detrás del diálogo de edad; hay que confirmarlo antes de tocar nada. */
+const confirmarEdad = async (user: ReturnType<typeof userEvent.setup>) => {
+  const boton = await screen.findByRole("button", { name: /tengo 18\+/i });
+  await user.click(boton);
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  // El refresco del montaje (vinos de la categoría; el del mapa no se lanza
+  // porque `initialMapVinos` ya lo siembra) ha vuelto: a partir de aquí
+  // ningún refresco puede pisar un clic del test.
+  await waitFor(() => expect(supabaseMock.terminadas).toBeGreaterThanOrEqual(1));
+};
+
+describe("CartaVinos — información y fotografías", () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    supabaseMock.terminadas = 0;
+  });
+
+  it("muestra el nombre de los vinos sembrados sin esperar a Supabase", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    await waitFor(() => expect(screen.getAllByText("Ribera del Duero Reserva").length).toBeGreaterThan(0));
+    expect(screen.getAllByText("Albariño Rías Baixas").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Cava Brut Nature").length).toBeGreaterThan(0);
+  });
+
+  it("ofrece un botón de foto y uno de información por tarjeta", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    await waitFor(() => expect(screen.getAllByText("Ribera del Duero Reserva").length).toBeGreaterThan(0));
+
+    expect(screen.getAllByRole("button", { name: /ver foto/i }).length).toBe(3);
+    expect(screen.getAllByRole("button", { name: /ver información/i }).length).toBe(3);
+  });
+
+  it("pulsar 'i' en un vino con alérgeno DECLARADO muestra la información declarada", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    await waitFor(() => expect(screen.getAllByText("Ribera del Duero Reserva").length).toBeGreaterThan(0));
+
+    const [infoBtn] = screen.getAllByRole("button", { name: /ver información.*ribera del duero/i });
+    fireEvent.click(infoBtn);
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i }).length).toBeGreaterThan(0),
+    );
+    expect(screen.getAllByText("Sulfitos").length).toBeGreaterThan(0);
+  });
+
+  it("un vino con alérgeno solo INFERIDO muestra también la nota de alérgenos", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    await waitFor(() => expect(screen.getAllByText("Albariño Rías Baixas").length).toBeGreaterThan(0));
+
+    const [infoBtn] = screen.getAllByRole("button", { name: /ver información.*albariño/i });
+    fireEvent.click(infoBtn);
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: /ocultar información.*albariño/i }).length).toBeGreaterThan(0),
+    );
+    expect(screen.getAllByText("Sulfitos").length).toBeGreaterThan(0);
+    expect(screen.getByText(/contiene trazas de frutos de cáscara/i)).toBeInTheDocument();
+  });
+
+  it("un vino SIN datos de alérgenos muestra el aviso de 'no consta', no una lista vacía", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    await waitFor(() => expect(screen.getAllByText("Cava Brut Nature").length).toBeGreaterThan(0));
+
+    const [infoBtn] = screen.getAllByRole("button", { name: /ver información.*cava brut/i });
+    fireEvent.click(infoBtn);
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: /ocultar información.*cava brut/i }).length).toBeGreaterThan(0),
+    );
+    expect(screen.getAllByText(/sin información de alérgenos/i).length).toBeGreaterThan(0);
+  });
+
+  it("abre una foto grande sin duplicar la tarjeta ni mostrar su descripción", async () => {
+    const user = userEvent.setup(); render(<Wrapped />); await confirmarEdad(user);
+    const eye = screen.getByRole("button", { name: /ver foto.*ribera del duero/i });
+    expect(eye).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(eye);
+    expect(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "true");
+    const foto = screen.getByAltText("Ribera del Duero Reserva");
+    expect(foto).toHaveClass("object-cover");
+    expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i }));
+    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+  });
+
+  it("la foto y la información son excluyentes: abrir una cierra la otra", async () => {
+    const user = userEvent.setup(); render(<Wrapped />); await confirmarEdad(user);
+    fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
+    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /ver información.*ribera del duero/i }));
+    expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();
+    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
+    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
+    expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ver información.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("permite consultar descripción y origen sin foto y bloquea una expansión heredada vacía", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+
+    const foto = screen.getByRole("button", { name: /ver foto.*albariño/i });
+    expect(foto).toBeDisabled();
+    expect(foto).toHaveAttribute("title", "Sin foto disponible");
+    expect(foto).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(foto);
+    expect(screen.queryByAltText("Albariño Rías Baixas")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: /ver información.*albariño/i })[0]);
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /ocultar información.*albariño/i })).toHaveLength(1));
+    const descripcion = screen.getByText("Fresco y cítrico, con una boca vivaz. Acompaña mariscos y pescados.");
+    expect(descripcion).toBeInTheDocument();
+    expect(screen.getByText("D.O. Rías Baixas")).toBeInTheDocument();
+    expect(screen.getByText(/contiene trazas de frutos de cáscara/i)).toBeInTheDocument();
+  });
+
+  it("oculta la foto y bloquea el ojo si la imagen falla sin perder la descripción", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
+    fireEvent.error(screen.getAllByAltText("Ribera del Duero Reserva")[0]);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toBeDisabled());
+    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /ver información.*ribera del duero/i })[0]);
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i })).toHaveLength(1));
+    expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();
+  });
+
+  it("el botón del ojo sigue funcionando igual (expandir/colapsar foto) tras el cambio", async () => {
+    const user = userEvent.setup();
+    render(<Wrapped />);
+    await confirmarEdad(user);
+    await waitFor(() => expect(screen.getAllByText("Ribera del Duero Reserva").length).toBeGreaterThan(0));
+
+    const eyeBtn = screen.getByRole("button", { name: /ver foto.*ribera del duero/i });
+    fireEvent.click(eyeBtn);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i })).toBeInTheDocument(),
+    );
+  });
+});

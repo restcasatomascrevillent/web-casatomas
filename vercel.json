@@ -1,0 +1,65 @@
+{
+  "regions": ["fra1"],
+  "trailingSlash": false,
+  "cleanUrls": true,
+  "redirects": [
+    { "source": "/touza-cocktail", "destination": "https://touza-restaurant-website.vercel.app", "permanent": false }
+  ],
+  "images": {
+    "sizes": [640, 768, 1024],
+    "qualities": [75],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 2592000,
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "jeamoczmbfsnwkfjxcyo.supabase.co",
+        "pathname": "^/storage/v1/object/public/.*$"
+      }
+    ]
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "0" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' data: https://*.supabase.co https://api.mapbox.com https://events.mapbox.com; img-src 'self' data: blob: https:; worker-src blob:; object-src 'none'; base-uri 'self';" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), clipboard-write=(self), web-share=(self)" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/fonts/libre-baskerville/(.*).woff2",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/og-image.jpg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <!-- El `lang` NO va en esta etiqueta: cada página lo fija por su idioma real vía
+       `<Seo lang="…">` (src/components/Seo.tsx), que lo funde en ella a través de
+       react-helmet-async. Si llevara un `lang` fijo, el navegador se quedaría con el
+       PRIMERO de los dos atributos duplicados — el fijo, no el de la página.
+       OJO: no escribas aquí el nombre de la etiqueta con corchetes angulares. El
+       prerenderizado conserva los comentarios y cada página saldría con un
+       falso segundo elemento html (scripts/verificar-html.mjs lo detecta). -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="Casa Tomás Restaurante" />
+    <!-- Los meta tags de SEO (title, description, canonical, Open Graph, Twitter,
+         JSON-LD) los gestiona el componente <Seo /> por ruta vía vite-react-ssg
+         y quedan prerenderizados en el HTML de cada página. No los dupliques aquí. -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Fuente del cuerpo en todas las páginas: se precarga para no esperar al CSS.
+         La cursiva NO se precarga (solo la usan el lema del hero y la carta).
+         Si se regenera la fuente, actualizar el hash aquí y en src/index.css. -->
+    <link rel="preload" href="/fonts/libre-baskerville/LibreBaskerville-Variable-latin.c844cbb9.woff2" as="font" type="font/woff2" crossorigin />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

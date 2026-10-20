@@ -1,0 +1,269 @@
+{
+  "date": "2026-10-08",
+  "changes": [
+    {
+      "before": {
+        "id": "aeafff17-bd1d-4edd-8d48-948e29b94f5e",
+        "nombre": "Crémant de Chanceny Brut Rosé",
+        "denominacion_origen": null,
+        "ubicacion_pais": null,
+        "ubicacion_region": null,
+        "ubicacion_pais_en": null,
+        "ubicacion_region_en": null,
+        "ubicacion_pais_fr": null,
+        "ubicacion_region_fr": null
+      },
+      "after": {
+        "id": "aeafff17-bd1d-4edd-8d48-948e29b94f5e",
+        "nombre": "Crémant de Chanceny Brut Rosé",
+        "denominacion_origen": "AOC Crémant de Loire",
+        "ubicacion_pais": "Francia",
+        "ubicacion_region": "Valle del Loira (Saumur)",
+        "ubicacion_pais_en": "France",
+        "ubicacion_region_en": "Loire Valley (Saumur)",
+        "ubicacion_pais_fr": "France",
+        "ubicacion_region_fr": "Vallée de la Loire (Saumur)"
+      }
+    },
+    {
+      "before": {
+        "id": "14ac2968-8fa1-4002-ba9c-ff1d5740a118",
+        "nombre": "Edoné Cuvée de María",
+        "denominacion_origen": null,
+        "ubicacion_pais": null,
+        "ubicacion_region": null,
+        "ubicacion_pais_en": null,
+        "ubicacion_region_en": null,
+        "ubicacion_pais_fr": null,
+        "ubicacion_region_fr": null
+      },
+      "after": {
+        "id": "14ac2968-8fa1-4002-ba9c-ff1d5740a118",
+        "nombre": "Edoné Cuvée de María",
+        "denominacion_origen": null,
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Castilla-La Mancha (Alpera, Albacete)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Castile-La Mancha (Alpera, Albacete)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Castille-La Manche (Alpera, Albacete)"
+      }
+    },
+    {
+      "before": {
+        "id": "d6784096-48b4-44e4-a6e8-3423452bec8f",
+        "nombre": "Edoné Gran Cuvée (Magnum)",
+        "denominacion_origen": "Vino Espumoso de Calidad de C‑La Mancha",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Castilla‑La Mancha (Albacete)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Castile-La Mancha (Albacete)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Castille-La Manche (Albacete)"
+      },
+      "after": {
+        "id": "d6784096-48b4-44e4-a6e8-3423452bec8f",
+        "nombre": "Edoné Gran Cuvée (Magnum)",
+        "denominacion_origen": "Vino Espumoso de Calidad de C‑La Mancha",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Castilla-La Mancha (Alpera, Albacete)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Castile-La Mancha (Alpera, Albacete)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Castille-La Manche (Alpera, Albacete)"
+      }
+    },
+    {
+      "before": {
+        "id": "ab41204d-e28e-424f-ac40-dc57a6fe7dd9",
+        "nombre": "Edoné Grand Cuvée",
+        "denominacion_origen": null,
+        "ubicacion_pais": null,
+        "ubicacion_region": null,
+        "ubicacion_pais_en": null,
+        "ubicacion_region_en": null,
+        "ubicacion_pais_fr": null,
+        "ubicacion_region_fr": null
+      },
+      "after": {
+        "id": "ab41204d-e28e-424f-ac40-dc57a6fe7dd9",
+        "nombre": "Edoné Grand Cuvée",
+        "denominacion_origen": null,
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Castilla-La Mancha (Alpera, Albacete)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Castile-La Mancha (Alpera, Albacete)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Castille-La Manche (Alpera, Albacete)"
+      }
+    },
+    {
+      "before": {
+        "id": "b3a2d509-fb65-4400-8f24-35f1d705f0ce",
+        "nombre": "Molitor Haus Klosterberg",
+        "denominacion_origen": "Baden (Alemania)",
+        "ubicacion_pais": "Alemania",
+        "ubicacion_region": "Mosela (estimado)",
+        "ubicacion_pais_en": "Germany",
+        "ubicacion_region_en": "Mosela (estimado)",
+        "ubicacion_pais_fr": "Allemagne",
+        "ubicacion_region_fr": "Mosela (estimado)"
+      },
+      "after": {
+        "id": "b3a2d509-fb65-4400-8f24-35f1d705f0ce",
+        "nombre": "Molitor Haus Klosterberg",
+        "denominacion_origen": "Mosel",
+        "ubicacion_pais": "Alemania",
+        "ubicacion_region": "Mosela",
+        "ubicacion_pais_en": "Germany",
+        "ubicacion_region_en": "Mosel",
+        "ubicacion_pais_fr": "Allemagne",
+        "ubicacion_region_fr": "Moselle"
+      }
+    },
+    {
+      "before": {
+        "id": "86850a57-53f5-4b59-b0f6-9e7bdb82a42f",
+        "nombre": "Ou Steen",
+        "denominacion_origen": "WO Elgin, Sudáfrica (estimado)",
+        "ubicacion_pais": "Sudáfrica",
+        "ubicacion_region": "Western Cape (Elgin)",
+        "ubicacion_pais_en": "South Africa",
+        "ubicacion_region_en": "Western Cape (Elgin)",
+        "ubicacion_pais_fr": "Afrique du Sud",
+        "ubicacion_region_fr": "Western Cape (Elgin)"
+      },
+      "after": {
+        "id": "86850a57-53f5-4b59-b0f6-9e7bdb82a42f",
+        "nombre": "Ou Steen",
+        "denominacion_origen": "WO Stellenbosch",
+        "ubicacion_pais": "Sudáfrica",
+        "ubicacion_region": "Stellenbosch (Provincia Occidental del Cabo)",
+        "ubicacion_pais_en": "South Africa",
+        "ubicacion_region_en": "Stellenbosch (Western Cape)",
+        "ubicacion_pais_fr": "Afrique du Sud",
+        "ubicacion_region_fr": "Stellenbosch (Cap-Occidental)"
+      }
+    },
+    {
+      "before": {
+        "id": "7ef44ab8-19e2-43d3-9dca-7ee7c4a36969",
+        "nombre": "Pazo la Cuesta",
+        "denominacion_origen": "D.O. Ribeiro (estimado)",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Galicia (Valdeorras, Ourense)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Galicia (Valdeorras, Ourense)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Galice (Valdeorras, Ourense)"
+      },
+      "after": {
+        "id": "7ef44ab8-19e2-43d3-9dca-7ee7c4a36969",
+        "nombre": "Pazo la Cuesta",
+        "denominacion_origen": "D.O. Ribeira Sacra",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Galicia (Ribeira Sacra – Lugo)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Galicia (Ribeira Sacra – Lugo)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Galice (Ribeira Sacra – Lugo)"
+      }
+    },
+    {
+      "before": {
+        "id": "dcf256a0-80b6-4907-af4a-df2db1e3ba56",
+        "nombre": "Pazo la Cuesta",
+        "denominacion_origen": "D.O. Valdeorras (estimado)",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Galicia (Valdeorras, Ourense)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Galicia (Valdeorras, Ourense)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Galice (Valdeorras, Ourense)"
+      },
+      "after": {
+        "id": "dcf256a0-80b6-4907-af4a-df2db1e3ba56",
+        "nombre": "Pazo la Cuesta",
+        "denominacion_origen": "D.O. Ribeira Sacra",
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Galicia (Ribeira Sacra – Lugo)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Galicia (Ribeira Sacra – Lugo)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Galice (Ribeira Sacra – Lugo)"
+      }
+    },
+    {
+      "before": {
+        "id": "05bc99d4-00bf-4cf0-bb35-1bf93e784258",
+        "nombre": "Torelló",
+        "denominacion_origen": null,
+        "ubicacion_pais": null,
+        "ubicacion_region": null,
+        "ubicacion_pais_en": null,
+        "ubicacion_region_en": null,
+        "ubicacion_pais_fr": null,
+        "ubicacion_region_fr": null
+      },
+      "after": {
+        "id": "05bc99d4-00bf-4cf0-bb35-1bf93e784258",
+        "nombre": "Torelló",
+        "denominacion_origen": null,
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Cataluña (Penedès, Barcelona)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Catalonia (Penedès, Barcelona)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Catalogne (Penedès, Barcelone)"
+      }
+    },
+    {
+      "before": {
+        "id": "2196712d-f15f-4109-9bb4-85c0906519c7",
+        "nombre": "Torelló Rosé",
+        "denominacion_origen": null,
+        "ubicacion_pais": null,
+        "ubicacion_region": null,
+        "ubicacion_pais_en": null,
+        "ubicacion_region_en": null,
+        "ubicacion_pais_fr": null,
+        "ubicacion_region_fr": null
+      },
+      "after": {
+        "id": "2196712d-f15f-4109-9bb4-85c0906519c7",
+        "nombre": "Torelló Rosé",
+        "denominacion_origen": null,
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Cataluña (Penedès, Barcelona)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Catalonia (Penedès, Barcelona)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Catalogne (Penedès, Barcelone)"
+      }
+    },
+    {
+      "before": {
+        "id": "b8102e68-353b-4916-931b-8ad00783df8c",
+        "nombre": "Torelló Rosé Magnum",
+        "denominacion_origen": null,
+        "ubicacion_pais": null,
+        "ubicacion_region": null,
+        "ubicacion_pais_en": null,
+        "ubicacion_region_en": null,
+        "ubicacion_pais_fr": null,
+        "ubicacion_region_fr": null
+      },
+      "after": {
+        "id": "b8102e68-353b-4916-931b-8ad00783df8c",
+        "nombre": "Torelló Rosé Magnum",
+        "denominacion_origen": null,
+        "ubicacion_pais": "España",
+        "ubicacion_region": "Cataluña (Penedès, Barcelona)",
+        "ubicacion_pais_en": "Spain",
+        "ubicacion_region_en": "Catalonia (Penedès, Barcelona)",
+        "ubicacion_pais_fr": "Espagne",
+        "ubicacion_region_fr": "Catalogne (Penedès, Barcelone)"
+      }
+    }
+  ]
+}

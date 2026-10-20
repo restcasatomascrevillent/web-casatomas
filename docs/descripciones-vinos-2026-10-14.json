@@ -1,0 +1,2554 @@
+{
+  "fecha": "2026-10-14",
+  "criterio": "Descripción en español, 2–3 frases, 200–300 caracteres. Elaboración cuando está comprobada, nariz/boca y maridaje. Perfil prudente según tipo/origen/uva si no hay ficha o etiqueta concluyente. Sin cambiar nombres, precios, categorías, añadas ni alérgenos.",
+  "vinos": [
+    {
+      "id": "0cf4c689-85e8-465c-81c4-203cba11d412",
+      "nombre": "Agustí Torelló Mata",
+      "descripcion": "Espumoso de método tradicional, con un perfil fresco de fruta blanca, cítricos y suaves recuerdos de panadería. La burbuja acompaña una boca equilibrada y de final limpio. Una buena compañía para mariscos, pescados a la plancha y aperitivos.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "a8307832-5b26-4cd2-800e-744f38ffcaec",
+      "nombre": "Agustí Torelló Mata Kripta Gran Reserva",
+      "descripcion": "La larga crianza en botella aporta profundidad a la fruta blanca y a los delicados recuerdos de bollería y frutos secos. En boca combina estructura, frescura y una burbuja fina. Acompaña bien un rodaballo al horno o unas vieiras a la plancha.",
+      "fuentes": [
+        "https://agustitorellomata.com/kripta/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "aeafff17-bd1d-4edd-8d48-948e29b94f5e",
+      "nombre": "Crémant de Chanceny Brut Rosé",
+      "descripcion": "Rosado de método tradicional, con aromas de fresa, cereza y un delicado recuerdo floral. La boca es viva y equilibrada, con burbuja fina y un final fresco. Va muy bien con sardinas a la plancha, pulpo a la gallega o una tarta de frutos rojos.",
+      "fuentes": [
+        "https://www.allianceloire.com/PRAD3F"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": null
+    },
+    {
+      "id": "14ac2968-8fa1-4002-ba9c-ff1d5740a118",
+      "nombre": "Edoné Cuvée de María",
+      "descripcion": "Elaborado por el método tradicional, conserva una expresión fresca de fruta exótica con matices herbales. La burbuja fina acompaña un paso vivo, con estructura y buen recorrido. Disfrútalo con langostinos, pescado a la plancha o un arroz marinero.",
+      "fuentes": [
+        "https://vinedosbalmoral.com/es/coleccion/edone-de-maria/",
+        "https://vinedosbalmoral.com/es/tienda-online/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": null
+    },
+    {
+      "id": "d6784096-48b4-44e4-a6e8-3423452bec8f",
+      "nombre": "Edoné Gran Cuvée (Magnum)",
+      "descripcion": "La crianza sobre lías aporta recuerdos de brioche y nuez fresca a los aromas de flores y fruta blanca. La burbuja fina sostiene una boca con cuerpo, viva y persistente. Un buen acompañamiento para vieiras, pescados al horno y arroces de marisco.",
+      "fuentes": [
+        "https://vinedosbalmoral.com/es/coleccion/edone-gran-cuvee/",
+        "https://vinedosbalmoral.com/es/tienda-online/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "ab41204d-e28e-424f-ac40-dc57a6fe7dd9",
+      "nombre": "Edoné Grand Cuvée",
+      "descripcion": "La crianza sobre lías aporta recuerdos de brioche y nuez fresca a los aromas de flores y fruta blanca. La burbuja fina sostiene una boca con cuerpo, viva y persistente. Un buen acompañamiento para vieiras, pescados al horno y arroces de marisco.",
+      "fuentes": [
+        "https://vinedosbalmoral.com/es/coleccion/edone-gran-cuvee/",
+        "https://vinedosbalmoral.com/es/tienda-online/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": null
+    },
+    {
+      "id": "53d74758-da94-4d8d-84cb-35bbceee8204",
+      "nombre": "Gramona Brut Imperial Gran Reserva",
+      "descripcion": "Espumoso de larga crianza, de perfil cremoso, con fruta blanca madura y recuerdos de pan tostado y frutos secos. La frescura equilibra una boca amplia y de burbuja delicada. Acompaña bien un pescado al horno, unas vieiras o un arroz de marisco.",
+      "fuentes": [
+        "https://gramona.com/es/coleccion/gramona-imperial/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "4ecd5d61-cdae-4473-88d1-57127e8296b6",
+      "nombre": "Gramona Tres Lustros Gran Reserva",
+      "descripcion": "La larga crianza aporta capas de bollería, frutos secos y fruta madura, conservando una marcada frescura. En boca tiene cuerpo, burbuja fina y un final seco y persistente. Encuentra una buena compañía en pescados al horno, setas y mariscos a la plancha.",
+      "fuentes": [
+        "https://gramona.com/es/coleccion/gramona-iii-lustros/",
+        "https://www.gramona.com/docs_web/gramona_IIIlustros_esp.pdf"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "42b93d88-db5f-4b73-afd4-d21a0fb1938d",
+      "nombre": "Juvé & Camps Gran Juvé",
+      "descripcion": "Espumoso de larga crianza que combina fruta blanca madura con recuerdos de panadería y frutos secos. La boca es amplia, fresca y sostenida por una burbuja fina. Va bien con rodaballo al horno, cigalas a la plancha o arroces de sabor marinero.",
+      "fuentes": [
+        "https://www.juveycamps.com/familia/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "a8e259b6-6b55-40fd-b662-029975114dd8",
+      "nombre": "Juvé & Camps Milesimé",
+      "descripcion": "La crianza del chardonnay en botella aporta aromas de piña y melocotón con recuerdos de brioche y mantequilla. La burbuja cremosa acompaña una boca amplia, de frescura equilibrada y final largo. Va bien con pescados al horno, ahumados y platos de ave.",
+      "fuentes": [
+        "https://www.juveycamps.com/espumosos/milesime/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "89fd014b-4818-4463-a006-b63cba262a8d",
+      "nombre": "Juvé & Camps Reserva de la Familia",
+      "descripcion": "De larga crianza y estilo brut nature, reúne fruta blanca, suaves tostados y recuerdos de bollería. En boca resulta seco y fresco, con burbuja bien integrada y un final limpio. Acompaña mariscos, pescados a la plancha y jamón de curación delicada.",
+      "fuentes": [
+        "https://www.juveycamps.com/wp-content/uploads/2019/08/Reserva-de-la-Familia-Juve-y-Camps-Cava-Gran-Reserva-Brut-Nature.pdf"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "6aa45dbc-0f4a-48fc-aa9c-f3f42686b0ec",
+      "nombre": "Mirgin Gran Reserva (Alta Alella)",
+      "descripcion": "Espumoso de gran reserva, con un perfil de fruta blanca, cítricos y sutiles notas de panadería propias de la crianza. La burbuja fina y la frescura dan ligereza al paso por boca. Se disfruta con mariscos al natural, pescados y arroces marineros.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "4ba94d54-cb8e-49d1-b750-856011f5513a",
+      "nombre": "Moscato d'Asti",
+      "descripcion": "Dulce y ligeramente espumoso, despliega aromas de flores blancas, melocotón y azahar propios de la uva moscatel. La boca es suave, fresca y de burbuja delicada. Acompaña bien una tarta de Santiago, postres de fruta o un queso azul de sabor moderado.",
+      "fuentes": [
+        "https://astidocg.it/es/asti-docg-denominacion/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "05bc99d4-00bf-4cf0-bb35-1bf93e784258",
+      "nombre": "Torelló",
+      "descripcion": "Espumoso de método tradicional, de perfil fresco, con fruta blanca, cítricos y sutiles recuerdos de panadería. La burbuja fina acompaña una boca equilibrada y un final limpio. Una opción agradable con mariscos, pescados a la plancha y aperitivos.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": null
+    },
+    {
+      "id": "2196712d-f15f-4109-9bb4-85c0906519c7",
+      "nombre": "Torelló Rosé",
+      "descripcion": "Rosado espumoso de método tradicional, con un perfil de fruta roja fresca y suaves recuerdos florales. En boca la burbuja acompaña un paso vivo y equilibrado, de final refrescante. Disfrútalo con pulpo, pescados a la plancha o un arroz marinero.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": null
+    },
+    {
+      "id": "b8102e68-353b-4916-931b-8ad00783df8c",
+      "nombre": "Torelló Rosé Magnum",
+      "descripcion": "Rosado espumoso de método tradicional, con un perfil de fruta roja fresca y suaves recuerdos florales. En boca la burbuja acompaña un paso vivo y equilibrado, de final refrescante. Disfrútalo con pulpo, pescados a la plancha o un arroz marinero.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": null
+    },
+    {
+      "id": "48eb11af-735a-43b3-a28b-d39d0ff2b9e3",
+      "nombre": "Champagne Jean Philippe Trousset",
+      "descripcion": "De perfil fresco y equilibrado, combina fruta blanca y cítricos con suaves recuerdos de panadería propios de la crianza en botella. La burbuja acompaña una boca viva y de final limpio. Va bien con mariscos, pescados a la plancha y aperitivos.",
+      "fuentes": [
+        "https://champagnetrousset.fr/les-champagnes"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "12dfe941-3b12-4ba6-9ad4-f7b4433e1db3",
+      "nombre": "Collet Brut",
+      "descripcion": "De estilo brut y crianza en botella, ofrece un perfil de fruta blanca y cítricos con delicados matices de panadería. La boca equilibra frescura, cuerpo y una burbuja fina. Acompaña bien ostras, langostinos o un pescado de carne blanca a la plancha.",
+      "fuentes": [
+        "https://champagne-collet.com/en/wines"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "7c8df937-0938-4ce4-b35d-c2cbc20f9fc6",
+      "nombre": "Collet Rosé",
+      "descripcion": "Rosado de ensamblaje y crianza en botella, de perfil frutal, con recuerdos de frutos rojos y flores. La burbuja fina acompaña una boca fresca y redonda, de final delicado. Una buena compañía para salmón, pulpo a la plancha y platos de ave suaves.",
+      "fuentes": [
+        "https://champagne-collet.com/en/wines/rose-brut"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "a26eb60d-6430-4d7e-b654-fea34a8c8592",
+      "nombre": "Cuvée Vincent",
+      "descripcion": "Espumoso de perfil fresco, con recuerdos de fruta blanca y cítricos junto a suaves matices de panadería. En boca, la burbuja acompaña un paso equilibrado y un final limpio. Acompaña bien mariscos al natural, pescados a la plancha y aperitivos.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "1d2c19d4-9d36-4531-ad0a-4824109b43de",
+      "nombre": "Dom Pérignon Plénitude 2 (2002)",
+      "descripcion": "La prolongada maduración en botella aporta profundidad, con fruta madura, cítricos y recuerdos tostados. En boca combina amplitud, frescura y un final persistente. Se disfruta con rodaballo al horno, vieiras a la plancha o setas de sabor delicado.",
+      "fuentes": [
+        "https://www.prnewswire.com/news-releases/dom-perignon-presenta-p2-2002-la-plenitud-y-la-energia-del-champagne-866742249.html"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "5f98d412-135b-4f0d-979e-ba7c41162781",
+      "nombre": "Dom Pérignon Rosé Vintage 2005",
+      "descripcion": "Rosado de añada y crianza en botella, de perfil amplio, con fruta roja madura y suaves matices especiados. La burbuja fina acompaña una boca con estructura y frescura. Una buena compañía para pescado al horno, pato o platos de setas de sabor suave.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "246cd25d-cf75-4eca-b2cb-72d5b5f6fb06",
+      "nombre": "Dom Pérignon Vintage 2013",
+      "descripcion": "La crianza en botella acompaña un perfil de cítricos y fruta de hueso, con delicados recuerdos tostados. En boca combina textura envolvente, frescura y un final salino. Armoniza con vieiras a la plancha, pescado al horno y arroces de marisco.",
+      "fuentes": [
+        "https://www.millesima.es/dom-perignon-vintage-2013.html"
+      ],
+      "criterio": "Perfil de la añada publicada, con notas de la casa reproducidas por un distribuidor; sin tiempos exactos, redacción propia y maridaje sugerido.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "117af5f9-f613-4186-8efa-9a51af1c9651",
+      "nombre": "G.H. Martel Blanc de Blancs",
+      "descripcion": "El chardonnay ofrece aromas de fruta blanca y cítricos confitados, con un delicado fondo mineral. La boca es sabrosa y fresca, de burbuja fina y final vivo. Va bien con merluza al vapor, lubina al horno o mariscos de preparación sencilla.",
+      "fuentes": [
+        "https://champagnemartel.com/en/collections/cuvees-intemporelles/blanc-de-blancs"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "068223af-6913-43df-8781-eb7cd46b1705",
+      "nombre": "G.H. Martel Premier Cru",
+      "descripcion": "El ensamblaje de pinot noir y chardonnay reúne aromas de fruta de hueso, miel y suaves recuerdos de turrón. En boca es cremoso y vivo, con una frescura que alarga el final. Acompaña bien atún a la plancha, pescados al horno y arroces de marisco.",
+      "fuentes": [
+        "https://champagnemartel.com/en/collections/cuvees-intemporelles/premier-cru"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "52af6943-a587-4c05-bba7-e25d62c796c8",
+      "nombre": "G.H. Martel Prestige Brut",
+      "descripcion": "De estilo brut, abre con recuerdos de cítricos y un delicado fondo mineral. La boca es firme, fresca y de final salino, sostenida por una burbuja fina. Una buena compañía para mariscos al natural, lubina a la plancha o un carpaccio de pescado.",
+      "fuentes": [
+        "https://champagnemartel.com/en/collections/cuvees-intemporelles/prestige"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "64759009-eba7-4bf3-aa8d-47c257dbb4c5",
+      "nombre": "G.H. Martel Rosé Brut 75 cl",
+      "descripcion": "Rosado de ensamblaje, con aromas de fresa, mandarina y flores, acompañados de un suave matiz especiado. La boca resulta viva y refrescante, con un final largo y frutal. Va bien con salmón, pulpo a la plancha o una preparación ligera de frutos rojos.",
+      "fuentes": [
+        "https://champagnemartel.com/en/collections/cuvees-intemporelles/rose"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "43b2eb7f-9dd5-4270-9259-d66b0f2a651a",
+      "nombre": "Krug Grande Cuvée 170ème Édition",
+      "descripcion": "El ensamblaje de vinos de distintas cosechas aporta aromas de fruta madura, cítricos y avellana, con recuerdos de brioche. La boca es amplia y de burbuja fina, con frescura persistente. Acompaña rodaballo, mariscos a la plancha y quesos curados.",
+      "fuentes": [
+        "https://www.krug.com/en-int/champagne/krug-grande-cuvee-170eme-edition"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "dda98445-1106-466c-8020-6f9ca1c49cf5",
+      "nombre": "L. Roederer Brut Vintage Rosé 2012 (Magnum)",
+      "descripcion": "Rosado de añada, con aromas de frutos rojos y cítricos, junto a delicados recuerdos de crianza en botella. La boca combina cuerpo, frescura y una burbuja fina. Acompaña bien cigalas a la plancha, salmón al horno o un arroz de sabor marinero.",
+      "fuentes": [
+        "https://www.louis-roederer.com/sites/default/files/pdf/fr_lr-tech_sheet_rose_2012.pdf"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "abe8371f-60c9-45ca-8218-de51d04074ff",
+      "nombre": "L. Roederer Brut Vintage Rosé 2015",
+      "descripcion": "Rosado de añada, de perfil frutal, con recuerdos de frutos rojos maduros y suaves matices de panadería. La burbuja fina acompaña una boca amplia, fresca y equilibrada. Una buena compañía para salmón al horno, pulpo a la plancha o arroces marineros.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "d2663b49-8a8b-478b-b55a-da292c026df0",
+      "nombre": "L. Roederer Collection 243",
+      "descripcion": "El ensamblaje con vinos de reserva ofrece un perfil de fruta madura y cítricos, acompañado de suaves recuerdos de panadería. La boca equilibra amplitud, frescura y burbuja fina. Se disfruta con mariscos a la plancha, pescados al horno y arroces.",
+      "fuentes": [
+        "https://www.diprimsa.es/anada-producto/collection-243/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "4a5bf9d9-d33e-4c58-bc1c-06eff214824f",
+      "nombre": "Laurent‑Perrier Alexandra Rosé",
+      "descripcion": "Rosado de maceración y larga crianza, de perfil fino, con fruta roja y recuerdos cítricos. La burbuja delicada acompaña una boca elegante, fresca y persistente. Armoniza con pescados al horno, mariscos a la plancha o platos de ave de sabor suave.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/alexandra-rose-millesime-2/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "649ee78a-0e9e-4721-9868-01ac6ce89927",
+      "nombre": "Laurent‑Perrier Grand Siècle",
+      "descripcion": "El ensamblaje de distintas añadas y la larga crianza aportan profundidad a la fruta blanca y a los recuerdos de bollería. En boca combina finura, amplitud y frescura persistente. Acompaña bien un rodaballo al horno, vieiras o platos de setas.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/grand-siecle-2/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "7868ec03-9e7e-4d32-8e54-92d55964824a",
+      "nombre": "Laurent‑Perrier La Cuvée",
+      "descripcion": "La crianza en botella realza los aromas de cítricos y flores blancas, con recuerdos de melocotón en boca. La burbuja fina acompaña un paso fresco y equilibrado, de final frutal. Disfrútalo con langostinos, pescados a la plancha o platos de ave suaves.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/la-cuvee/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "bbe44e79-bab7-4050-8fd8-55d721ee782a",
+      "nombre": "Laurent‑Perrier Magnum",
+      "descripcion": "Espumoso de perfil fresco y fino, con fruta blanca, cítricos y suaves recuerdos de panadería. La burbuja acompaña una boca equilibrada y de final limpio, agradable a lo largo de la comida. Va bien con mariscos, pescados a la plancha y aperitivos.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "30cc8620-1c38-47fe-9204-b2ac7eb8eaa8",
+      "nombre": "Laurent‑Perrier Millésimé",
+      "descripcion": "De añada y crianza en botella, reúne fruta blanca y cítricos con recuerdos de panadería propios de su estilo. La boca combina frescura, textura y una burbuja fina. Armoniza con vieiras a la plancha, rodaballo al horno y arroces de marisco.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/brut-millesime-2/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "b4536fd4-befe-4eb7-abba-4c56431d5da2",
+      "nombre": "Laurent‑Perrier Rosé",
+      "descripcion": "Rosado de maceración de pinot noir, con aromas de frambuesa, fresa y grosella. En boca es redondo y fresco, con burbuja fina y un final de fruta roja nítida. Acompaña bien pescados marinados, pulpo a la plancha o platos de ave con una salsa suave.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/cuvee-rose-2/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "17783f91-d738-4c0c-8a41-c804691f37d8",
+      "nombre": "Laurent‑Perrier Rosé Magnum",
+      "descripcion": "Rosado de maceración de pinot noir, con aromas de frambuesa, fresa y grosella. En boca es redondo y fresco, con burbuja fina y un final de fruta roja nítida. Acompaña bien pescados marinados, pulpo a la plancha o platos de ave con una salsa suave.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/cuvee-rose-2/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "c4774b34-0897-415c-b2c5-4b3cc2cf7e3e",
+      "nombre": "Laurent‑Perrier Ultra Brut",
+      "descripcion": "De estilo muy seco, ofrece aromas de cítricos, fruta blanca y flores con un recuerdo marino. La boca es delicada, fresca y de final largo y limpio. Una buena compañía para ostras, mariscos al natural y pescados marinados.",
+      "fuentes": [
+        "https://www.laurent-perrier.com/es/champagnes/ultra-brut/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "b843d3c0-326e-489f-82b9-d9f42938521a",
+      "nombre": "Louis Martin Grand Cru",
+      "descripcion": "Espumoso de crianza en botella y perfil equilibrado, con fruta blanca, cítricos y suaves recuerdos de panadería. La burbuja fina acompaña una boca fresca y de final limpio. Marida con mariscos, pescados a la plancha y arroces de sabor delicado.",
+      "fuentes": [
+        "https://champagneplmartin.com/en/collections"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "1ba17862-47bb-418f-8743-94bdbaf39ffb",
+      "nombre": "Louis Martin Rosé Grand Cru",
+      "descripcion": "Rosado de crianza en botella, de perfil frutal, con recuerdos de fresa y otros frutos rojos. La burbuja fina acompaña una boca fresca y equilibrada, con un final delicado. Va bien con salmón al horno, pulpo a la plancha o platos de ave suaves.",
+      "fuentes": [
+        "https://champagneplmartin.com/en/collections"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "589fe171-e7f6-4f1c-8179-549d553e69f0",
+      "nombre": "Louis Roederer Cristal",
+      "descripcion": "De larga crianza en botella, combina un perfil de fruta blanca y cítricos con suaves recuerdos de bollería. La burbuja fina acompaña una boca amplia, fresca y de final persistente. Disfrútalo con mariscos, pescado al horno o un arroz marinero.",
+      "fuentes": [
+        "https://app.louis-roederer.com/the-wines/cristal"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "7bd2fba7-244e-497c-b9f0-311dc36ec973",
+      "nombre": "Moët & Chandon Grand Vintage",
+      "descripcion": "De añada y crianza en botella, reúne fruta blanca y cítricos con delicados recuerdos de panadería. La boca combina textura, frescura y una burbuja fina que alarga el final. Acompaña bien pescados al horno, mariscos a la plancha y arroces suaves.",
+      "fuentes": [
+        "https://www.moet.com/es-es/foodpairing"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "46f035f1-b2ca-4a69-b607-1806a93c6e8b",
+      "nombre": "Moët Grand Vintage Rosé",
+      "descripcion": "Rosado de añada, con un perfil de fruta roja madura y suaves matices florales y especiados. La crianza en botella aporta una textura envolvente, equilibrada por la frescura. Va bien con salmón al horno, pulpo a la plancha y platos de ave suaves.",
+      "fuentes": [
+        "https://www.moet.com/es-es/foodpairing"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "a265eca9-c0e6-44f4-8e6c-9d210bdeb284",
+      "nombre": "Philippe Gonet Rosé",
+      "descripcion": "El ensamblaje dominado por chardonnay combina aromas de frutos rojos, flores y un suave matiz especiado. La boca es fresca y sedosa, con un final delicadamente mineral. Una buena compañía para salmón, mariscos a la plancha y platos de ave suaves.",
+      "fuentes": [
+        "https://www.champagne-philippe-gonet.com/en/rose-3/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "4df94a34-d5fd-4764-af41-612f58a7c46b",
+      "nombre": "Philippe Gonet Signature",
+      "descripcion": "El chardonnay reúne frescura y estructura, con aromas de mantequilla fresca y brioche junto a la fruta blanca. La boca es viva y generosa, con un fondo mineral y una burbuja fina. Acompaña ostras, pescados al horno y mariscos a la plancha.",
+      "fuentes": [
+        "https://www.champagne-philippe-gonet.com/en/signature-3/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "aac5aa93-eaa1-4f8c-9dc7-29acf7d5b344",
+      "nombre": "Philippe Gonet Signature (Magnum)",
+      "descripcion": "El chardonnay reúne frescura y estructura, con aromas de mantequilla fresca y brioche junto a la fruta blanca. La boca es viva y generosa, con un fondo mineral y una burbuja fina. Acompaña ostras, pescados al horno y mariscos a la plancha.",
+      "fuentes": [
+        "https://www.champagne-philippe-gonet.com/en/signature-3/"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "87b17adb-c4bc-4b1a-a5d7-0665e4f118a0",
+      "nombre": "Piper‑Heidsieck",
+      "descripcion": "Espumoso de crianza en botella, de perfil fresco, con fruta blanca y cítricos junto a suaves recuerdos de panadería. La burbuja fina acompaña una boca equilibrada y de final limpio. Va bien con langostinos, pescados a la plancha y aperitivos.",
+      "fuentes": [],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "02c844fb-d0b9-4379-9736-33019a5b5457",
+      "nombre": "Piper‑Heidsieck Rosado",
+      "descripcion": "Rosado de perfil expresivo, con fruta roja y cítricos junto a suaves recuerdos de brioche. En boca combina cuerpo, frescura y una burbuja fina, con un final equilibrado. Acompaña bien salmón al horno, pulpo a la plancha o platos de ave suaves.",
+      "fuentes": [
+        "https://www.piper-heidsieck.com/es/vinos/brut-rose/"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "0bc74b8b-a40b-42ca-b892-976b5bfd5dc8",
+      "nombre": "Ruinart Blanc de Blancs",
+      "descripcion": "Elaborado con chardonnay, ofrece un perfil de cítricos y flores blancas con delicados recuerdos de fruta de hueso. La boca es fresca y redonda, de burbuja fina y final limpio. Armoniza con ostras, mariscos al natural y pescados a la plancha.",
+      "fuentes": [
+        "https://www.ruinart.com/fr-int/cpruinartblancdeblancs.html"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "0f7a209a-a794-449e-a9e1-ae882fc6053d",
+      "nombre": "Ruinart Brut",
+      "descripcion": "El ensamblaje de variedades y la crianza en botella dibujan un perfil de fruta blanca y suaves notas de panadería. La boca combina frescura, cuerpo y una burbuja delicada. Una buena compañía para langostinos, pescados al horno y arroces marineros.",
+      "fuentes": [
+        "https://www.ruinart.com/fr-fr/foire-aux-questions.html"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "10be6613-ada0-4f56-9040-397322dab14e",
+      "nombre": "Ruinart Rosé",
+      "descripcion": "Rosado de ensamblaje, de perfil frutal, con recuerdos de frutos rojos y un delicado fondo floral. La burbuja fina acompaña una boca fresca y redonda, con un final limpio. Va bien con salmón, pulpo a la plancha o platos de ave de sabor suave.",
+      "fuentes": [
+        "https://www.ruinart.com/en-us/noschampagnes.html"
+      ],
+      "criterio": "Perfil prudente por tipo y nombre disponibles; no se identifica añada o cuvée con foto, ni se atribuyen tiempos o técnicas no verificadas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "50e42c0f-8105-47f6-b94b-e2cfdb01ecfd",
+      "nombre": "Victoire Vintage 2012",
+      "descripcion": "De añada, con aromas florales y frutales que dan paso a recuerdos de fruta exótica. En boca resulta vivo y delicado, con una burbuja fina y un final amplio y armonioso. Una buena compañía para ostras, vieiras a la plancha y otros mariscos.",
+      "fuentes": [
+        "https://champagnevictoire.com/doc/VICTOIRE_CELEBRATION-2012_EN.pdf"
+      ],
+      "criterio": "Ficha oficial de la cuvée; redacción propia y maridaje sugerido, sin tiempos exactos ni añadas añadidas.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "a21f8826-79e1-4662-9d9a-a0ac445a2e11",
+      "nombre": "Fefiñanes",
+      "descripcion": "Elaborado en acero para conservar la expresión fresca del albariño. Flores blancas y cítricos acompañan una boca ágil, con acidez viva y un final limpio que invita a otro sorbo. Una buena compañía para almejas, ostras y pescado a la plancha.",
+      "fuentes": [
+        "https://www.fefinanes.com/es/vino/albarino-de-fefinanes/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.434+00"
+    },
+    {
+      "id": "869f78bc-2994-49a7-88b3-c5eec414b6df",
+      "nombre": "Fefiñanes (Magnum)",
+      "descripcion": "Elaborado en acero para conservar la expresión fresca del albariño. Flores blancas y cítricos acompañan una boca ágil, con acidez viva y un final limpio que invita a otro sorbo. Una buena compañía para almejas, ostras y pescado a la plancha.",
+      "fuentes": [
+        "https://www.fefinanes.com/es/vino/albarino-de-fefinanes/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.516+00"
+    },
+    {
+      "id": "3cc18639-ab51-49b4-93b2-695edde103ed",
+      "nombre": "Lagar de Cervera",
+      "descripcion": "El contacto con las lías finas aporta amplitud sin perder la frescura atlántica. Fruta blanca, piel de cítrico y delicados matices herbales se prolongan en una boca viva y envolvente. Acompaña marisco, arroces de pescado y quesos frescos.",
+      "fuentes": [
+        "https://www.riojalta.com/vinos_lagar-de-fornelos/lagar-de-cervera/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.877+00"
+    },
+    {
+      "id": "dc364646-e73b-4b4f-8a64-c611abb6cef1",
+      "nombre": "Lagar de Cervera (Magnum)",
+      "descripcion": "El contacto con las lías finas aporta amplitud sin perder la frescura atlántica. Fruta blanca, piel de cítrico y delicados matices herbales se prolongan en una boca viva y envolvente. Acompaña marisco, arroces de pescado y quesos frescos.",
+      "fuentes": [
+        "https://www.riojalta.com/vinos_lagar-de-fornelos/lagar-de-cervera/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.957+00"
+    },
+    {
+      "id": "4b7ebf1b-ca9e-4bd4-9697-7681c1a3e7ba",
+      "nombre": "Leirana Genoveva",
+      "descripcion": "Un albariño de perfil profundo, donde la fruta de hueso y los cítricos se unen a delicados recuerdos minerales. Su boca combina amplitud y tensión, con una frescura que sostiene el recorrido. Pruébalo con rodaballo, vieiras o pescado al horno.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "4cec3f8c-f811-41f7-88fa-41bdac4be951",
+      "nombre": "Pazo As Barreira (Edición Especial)",
+      "descripcion": "De carácter atlántico, ofrece el perfil floral y cítrico propio del albariño, con recuerdos de fruta blanca. En boca prima la frescura, con una acidez que realza los sabores de la mesa. Acompaña berberechos, mejillones y pescado a la plancha.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "813c4abb-4371-4dad-bc45-9360cf262e59",
+      "nombre": "Pazo Barrantes",
+      "descripcion": "Un albariño de perfil amplio y pausado, con fruta de hueso, flores y recuerdos cítricos. La boca combina textura y frescura, prolongándose en un final delicado y persistente. Ideal junto a vieiras, pescados al horno o arroces de marisco.",
+      "fuentes": [
+        "https://marquesdemurrieta.com/pages/pazo-de-barrantes"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "ca671f8b-6549-4e43-807e-78c7d7ac61e9",
+      "nombre": "Pazo de Rubianes",
+      "descripcion": "El albariño muestra aquí un perfil expresivo de flores blancas, cítricos y fruta de hueso. Su paso de boca es fresco y equilibrado, con una agradable amplitud que acompaña la comida sin imponerse. Disfrútalo con marisco, pulpo o pescado blanco.",
+      "fuentes": [
+        "https://www.pazoderubianes.com/la-bodega/nuestros-vinos/albarino-pazo-de-rubianes/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "b3074c7c-d4a8-4941-be6c-cbfb2fc01808",
+      "nombre": "Pazo de Rubianes 1411",
+      "descripcion": "Un albariño de parcela que combina intensidad aromática y una boca con relieve. Fruta blanca y cítricos dibujan un perfil fresco, de recorrido amplio y final persistente. Acompaña con naturalidad pescados al horno, vieiras y arroces marineros.",
+      "fuentes": [
+        "https://www.pazoderubianes.com/la-bodega/nuestros-vinos/albarino-1411/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:05:29.494782+00"
+    },
+    {
+      "id": "73692683-1da9-4d0c-9475-2e8c9122fbcd",
+      "nombre": "Pazo Vedoira Camelia",
+      "descripcion": "Un blanco de perfil atlántico, con la expresión floral y los recuerdos cítricos propios del albariño. La boca resulta fresca y vivaz, equilibrada por una agradable sensación de fruta. Buena elección para almejas, mejillones y pescado a la plancha.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.416+00"
+    },
+    {
+      "id": "482ba8da-5974-4fae-8a1a-c15d391d5245",
+      "nombre": "Terras Gauda",
+      "descripcion": "La mezcla de albariño, caíño y loureiro reúne fruta de hueso, mandarina y flores, con sutiles recuerdos herbales. En boca tiene volumen y una frescura que alarga el final sin resultar pesado. Acompaña marisco, arroces y pescados al horno.",
+      "fuentes": [
+        "https://www.terrasgauda.com/es/terras_gauda/fichas_de_cata/Terras%20Gauda%202021.pdf"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.507+00"
+    },
+    {
+      "id": "833403df-37eb-4ee1-a645-42d62969d46f",
+      "nombre": "Vila do Corpus",
+      "descripcion": "Un albariño de perfil fresco, con flores blancas, fruta de hueso y un delicado recuerdo de cítricos. La boca ágil y la acidez viva hacen que resulte fácil de compartir en la mesa. Va bien con marisco cocido, pescados blancos y aperitivos.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.344+00"
+    },
+    {
+      "id": "d6fe696b-59a3-4984-9ac5-28c15040e575",
+      "nombre": "De los Abuelos",
+      "descripcion": "Un blanco de perfil amplio, con fruta blanca y de hueso, flores y un delicado fondo herbal propio del godello. La boca reúne textura y frescura, con un final que acompaña sin dominar. Pruébalo con pescados al horno, aves o quesos suaves.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "7c4d6a37-e6f4-45ca-9b19-6426b4a3d1ec",
+      "nombre": "El Confidente Godello",
+      "descripcion": "El godello ofrece un perfil de fruta blanca y flores, con sutiles recuerdos herbales. En boca combina amplitud y frescura, dejando una sensación equilibrada que se prolonga con suavidad. Acompaña merluza, vieiras y arroces de pescado.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.271+00"
+    },
+    {
+      "id": "bc4b29d6-a9fa-40e4-8025-c7f12facc7e4",
+      "nombre": "Godeval (Magnum)",
+      "descripcion": "Un godello de expresión frutal, con manzana, melocotón y delicados matices florales y herbales. La boca combina frescura y volumen, con un final limpio que deja protagonismo a la comida. Una buena opción para marisco, pescado y aves.",
+      "fuentes": [
+        "https://godeval.com/nuestros-vinos/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.101+00"
+    },
+    {
+      "id": "d7791c00-11e2-44cd-ab1d-9784a251e791",
+      "nombre": "Godeval Cepas Vellas",
+      "descripcion": "Procedente de viñas viejas y trabajado sobre sus lías, muestra fruta madura, hinojo y un delicado fondo mineral. En boca es amplio y envolvente, con la acidez necesaria para mantener la frescura. Acompaña pescados al horno, setas y quesos cremosos.",
+      "fuentes": [
+        "https://godeval.com/nuestros-vinos/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "d221cd09-be3e-485a-881b-1f14f41ebcef",
+      "nombre": "Louro do Bolo",
+      "descripcion": "El godello combina fruta blanca y cítricos con una textura amplia y delicados recuerdos herbales. La boca mantiene una frescura que equilibra su volumen y prolonga el final con suavidad. Pruébalo con pescado al horno, vieiras o carnes blancas.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.127+00"
+    },
+    {
+      "id": "3a9e3337-bd01-4da8-9aac-38df7babd03f",
+      "nombre": "Louro do Bolo (Magnum)",
+      "descripcion": "El godello combina fruta blanca y cítricos con una textura amplia y delicados recuerdos herbales. La boca mantiene una frescura que equilibra su volumen y prolonga el final con suavidad. Pruébalo con pescado al horno, vieiras o carnes blancas.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.198+00"
+    },
+    {
+      "id": "dcf256a0-80b6-4907-af4a-df2db1e3ba56",
+      "nombre": "Pazo la Cuesta",
+      "descripcion": "Un godello de perfil fresco y delicado, donde la fruta blanca se acompaña de flores y suaves recuerdos herbales. La boca tiene amplitud sin perder agilidad, con un final equilibrado. Buena compañía para pescado blanco, marisco y arroces suaves.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "a664cf8a-22ac-4fcd-86e2-1cd5246ae09a",
+      "nombre": "Capellanía Reserva (Marqués de Murrieta)",
+      "descripcion": "Un blanco de guarda, con el perfil amplio y pausado que anuncia su condición de reserva. Fruta madura, frutos secos y suaves notas especiadas se unen en una boca de textura envolvente. Acompaña pescado al horno, aves y quesos curados.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "435c2b95-e7b7-42e7-9314-11d38d082f3f",
+      "nombre": "Conde de los Andes",
+      "descripcion": "Un blanco de perfil amplio, con recuerdos de fruta blanca, flores y un delicado fondo de frutos secos. La boca combina textura y una frescura que sostiene el recorrido sin imponerse. Pruébalo con pescados al horno, arroces y carnes blancas.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.828+00"
+    },
+    {
+      "id": "3b39fa20-7f2a-41f1-ade5-5d01e34c3092",
+      "nombre": "Conde de los Andes Blanco 2003",
+      "descripcion": "Un blanco de añada madura, de perfil reposado, donde la fruta evoluciona hacia recuerdos de frutos secos y matices especiados. La boca se disfruta despacio, buscando textura y equilibrio. Acompaña pescados al horno, aves y quesos suaves.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.544+00"
+    },
+    {
+      "id": "4d59ef4a-d7b3-45d3-af5a-54f67618f613",
+      "nombre": "Louis Latour Chablis La Chanfleure",
+      "descripcion": "Elaborado en acero, conserva una expresión nítida de flores y cítricos, con recuerdos de limón y pomelo. La boca combina amplitud, acidez viva y un final de perfil mineral. Una buena compañía para ostras, almejas y pescado blanco.",
+      "fuentes": [
+        "https://www.louislatour.com/en/wines/129/chablis-la-chanfleure/2025"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.035+00"
+    },
+    {
+      "id": "8bc5dd39-8b00-4f21-9856-def97f980141",
+      "nombre": "Montecillo Blanco Fermentado en Barrica",
+      "descripcion": "La fermentación en barrica y el trabajo sobre lías aportan una textura cremosa. Flores, fruta de hueso y delicadas notas especiadas se unen en una boca amplia y fresca. Acompaña pescados al horno, arroces melosos y carnes blancas.",
+      "fuentes": [
+        "https://www.bodegasmontecillo.com/vinos/gama-clasica/blanco/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.619+00"
+    },
+    {
+      "id": "f04c83eb-6f74-4cce-bb74-46b4c2a6155d",
+      "nombre": "Otazu (Chardonnay)",
+      "descripcion": "Un chardonnay de perfil frutal, con recuerdos de manzana, cítricos y flores blancas. En boca combina una textura amable con frescura, dejando un final equilibrado y fácil de compartir. Buena compañía para merluza, arroces y carnes blancas.",
+      "fuentes": [],
+      "criterio": "perfil prudente según tipo y denominación de la carta",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.897+00"
+    },
+    {
+      "id": "cb629ad3-5ea7-4498-8511-e38c0ff0b21d",
+      "nombre": "Otazu Altar",
+      "descripcion": "Tinto de cabernet sauvignon criado en roble, con aromas de frutos silvestres, monte bajo y especias. La boca es profunda y equilibrada, de final largo y envolvente. Pruébalo con carnes a la brasa, asados y quesos curados.",
+      "fuentes": [
+        "https://otazu.com/producto/vinos/altar/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.978+00"
+    },
+    {
+      "id": "af54c80e-f17e-4050-ab03-205cdccd8aed",
+      "nombre": "Pago de Otazu Chardonnay",
+      "descripcion": "El chardonnay trabajado en roble y sobre lías combina flores, cítricos y un delicado fondo especiado. Su boca amplia mantiene una frescura que alarga el final con equilibrio. Acompaña pescado a la brasa, arroces y carnes blancas.",
+      "fuentes": [
+        "https://otazu.com/producto/vinos/pago-de-otazu-chardonnay/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.765+00"
+    },
+    {
+      "id": "0f8279dc-0f3e-4c68-9309-0cd029c39241",
+      "nombre": "Qué Bonito Cacareaba",
+      "descripcion": "Un blanco de perfil amplio, con fruta madura, flores y delicados recuerdos especiados. La boca combina textura y una frescura que mantiene el conjunto equilibrado, con un final pausado. Ideal para pescados al horno, aves y quesos suaves.",
+      "fuentes": [
+        "https://www.bodegacontador.com/es/vinos/que-bonito-cacareaba/"
+      ],
+      "criterio": "fuente oficial para identidad/elaboración; perfil prudente de cata",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.693+00"
+    },
+    {
+      "id": "80a9559d-9994-41c5-9585-5a40394f3bd4",
+      "nombre": "Abadía da Cova Loia",
+      "descripcion": "Blanco de godello y albariño con crianza en barrica, de fruta de hueso y delicados matices tostados. En boca combina amplitud y una frescura que alarga el trago. Acompaña bien una merluza al horno, mariscos o carnes de ave.",
+      "fuentes": [
+        "https://www.adegasmoure.com/es/vinos/blancos/producto-abadia-da-cova-loia/23"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "ba574335-8727-406a-9180-8afc887f9544",
+      "nombre": "Abadía Retuerta Le Domaine",
+      "descripcion": "Blanco expresivo en el que la fruta madura y los cítricos se acompañan de notas de hierbas y una madera discreta. Su paso por boca es amplio, fresco y de textura envolvente. Una buena elección para pescados al horno o aves con salsa suave.",
+      "fuentes": [
+        "https://abadia-retuerta.com/bodega/"
+      ],
+      "criterio": "perfil prudente del blanco identificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "7962c4ca-25aa-4500-92d4-4c4b038fa269",
+      "nombre": "Bahía de Dénia",
+      "descripcion": "Moscatel seco de aroma floral, con recuerdos de uva fresca, cítricos y fruta blanca. En boca resulta ligero, amable y refrescante, sin la dulzura habitual de otros moscateles. Muy agradable con arroces marineros, pescados o unas tapas de marisco.",
+      "fuentes": [
+        "https://bodegasxalo.com/comprar-vino-en-yecla/"
+      ],
+      "criterio": "específico verificado; etiqueta inspeccionada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.541+00"
+    },
+    {
+      "id": "1214516e-edd2-4323-a044-12892572deb3",
+      "nombre": "Bermejos (Lanzarote)",
+      "descripcion": "Blanco de expresión volcánica, con aromas de cítricos, fruta blanca y flores que invitan a un trago fresco. Su perfil combina vivacidad y una textura suave, con un final limpio. Acompaña pescados a la plancha, mariscos y arroces de pescado.",
+      "fuentes": [
+        "https://www.losbermejos.com/vinos"
+      ],
+      "criterio": "perfil prudente del blanco de Lanzarote; variante no confirmada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "17d35c3a-ef4c-45ea-93b1-ed4a249a08d4",
+      "nombre": "Brédif Vouvray 2022",
+      "descripcion": "Blanco de chenin blanc, de aromas de manzana, pera y delicados recuerdos florales. En boca la fruta encuentra una acidez viva que mantiene el conjunto ágil y persistente. Buen compañero de pescados con salsa ligera, aves y quesos suaves.",
+      "fuentes": [
+        "https://bredif.deladoucette.fr/"
+      ],
+      "criterio": "perfil prudente de Vouvray; sin fijar dulzor ni crianza",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "11b8e3bd-6eac-404c-ae2b-5fb84c21556d",
+      "nombre": "Clos du Ciel",
+      "descripcion": "Blanco de perfil amplio, con recuerdos de fruta de hueso, cítricos maduros y una delicada nota floral. Su textura envolvente conserva una frescura que equilibra el conjunto. Una opción para pescados al horno, carnes blancas o platos con salsa suave.",
+      "fuentes": [
+        "https://longridge.co.za/product/clos-du-ciel/"
+      ],
+      "criterio": "perfil prudente de blanco; Longridge probable, identidad sin foto",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "b54dca1f-4030-4af3-94c4-733806de0b7d",
+      "nombre": "L. Beyer Gewurz Comtes d'Eguisheim",
+      "descripcion": "Gewurztraminer de expresión aromática, con recuerdos de rosas, lichis y especias delicadas. En boca ofrece una textura amplia y un final perfumado que invita a acompañarlo con comida. Armoniza con aves especiadas, patés o quesos de sabor intenso.",
+      "fuentes": [
+        "https://www.leonbeyer.fr/"
+      ],
+      "criterio": "perfil prudente de variedad; etiqueta Gewurztraminer inspeccionada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.565+00"
+    },
+    {
+      "id": "7fecf6c0-c005-4c11-896e-34dbc5f39f1a",
+      "nombre": "Ladoucette Baron de L 2019",
+      "descripcion": "Sauvignon blanc de perfil elegante, con cítricos, fruta blanca y matices herbales en la nariz. En boca reúne amplitud, acidez precisa y un final de recuerdo mineral. Encaja con pescados delicados, mariscos y un queso de cabra de textura cremosa.",
+      "fuentes": [
+        "https://www.deladoucette.fr/"
+      ],
+      "criterio": "específico verificado, sin atributos de añada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "6e0f4e55-cb21-4fd0-b112-acd103405948",
+      "nombre": "Ladoucette Pouilly‑Fumé",
+      "descripcion": "Sauvignon blanc fresco y aromático, con recuerdos de pomelo, fruta blanca y hierbas finas. Su paso por boca es limpio y vivo, con un final seco de sugerencia mineral. Muy apropiado para mariscos, pescados a la plancha y ensaladas con queso de cabra.",
+      "fuentes": [
+        "https://www.deladoucette.fr/"
+      ],
+      "criterio": "perfil prudente de Pouilly-Fumé/Sauvignon",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.8+00"
+    },
+    {
+      "id": "5b8e3bb3-ba9d-4369-8381-c9a49b60fd44",
+      "nombre": "Léon Beyer (Alsacia) 2019",
+      "descripcion": "Blanco alsaciano de expresión fina, con recuerdos de fruta blanca y flores, y un paso por boca de buena frescura. Su equilibrio permite disfrutarlo con platos delicados sin imponerse. Acompaña pescados, aves de preparación sencilla o quesos suaves.",
+      "fuentes": [
+        "https://www.leonbeyer.fr/"
+      ],
+      "criterio": "perfil prudente de blanco alsaciano; uva y variante no confirmadas",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "8578e151-787c-42da-b808-4239bda271b7",
+      "nombre": "M de Alejandría (Dulce)",
+      "descripcion": "Blanco dulce de moscatel elaborado con uvas congeladas para concentrar su expresión. Aromas de fruta madura y flores acompañan una boca dulce, equilibrada por un toque de acidez. Ideal con postres de fruta, quesos azules o un paté suave.",
+      "fuentes": [
+        "https://mdealejandria.com/producto/vino-blanco-dulce/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "b3a2d509-fb65-4400-8f24-35f1d705f0ce",
+      "nombre": "Molitor Haus Klosterberg",
+      "descripcion": "Blanco de perfil frutal y delicado, con recuerdos de manzana, cítricos y flores. La frescura característica del Mosela da ligereza al trago y prolonga la sensación de fruta. Acompaña pescados, aves de salsa ligera y platos con un toque especiado.",
+      "fuentes": [
+        "https://markusmolitor.com/shop/alle-weine"
+      ],
+      "criterio": "perfil prudente de Mosela; gama con varias uvas y dulzores",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "621d142c-5ee2-48d9-97fe-52107a644727",
+      "nombre": "Oremus Mandolás Furmint",
+      "descripcion": "Furmint seco fermentado en madera, con fruta blanca, cítricos y un fondo de especias suaves. Su boca combina textura, acidez viva y un final persistente. Resulta muy gastronómico con pescados al horno, aves o arroces de setas y verduras.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/es/vino/238/oremus-mandolas/2022"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.559+00"
+    },
+    {
+      "id": "86850a57-53f5-4b59-b0f6-9e7bdb82a42f",
+      "nombre": "Ou Steen",
+      "descripcion": "Chenin blanc de textura generosa, criado sobre lías en madera y con un delicado equilibrio entre fruta y frescura. Evoca manzana madura, membrillo y un toque especiado. Acompaña pescados con salsa, cocina suavemente picante y quesos cremosos.",
+      "fuentes": [
+        "https://longridge.co.za/product/longridge-ultra-premium-ou-steen-chenin-blanc-wine-box/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "15859f6f-97d4-46af-bec0-07c8e8b3f43f",
+      "nombre": "Pepe Carrasca",
+      "descripcion": "Treixadura de expresión reposada, con aromas de fruta de hueso y un delicado recuerdo floral. En boca se muestra redondo, sabroso y de final largo, conservando el frescor del conjunto. Una buena pareja para pescados al horno, mariscos o aves.",
+      "fuentes": [
+        "https://www.bodegascasaldearman.com/producto/pepe-carrasca-2020-caja-de-6-botellas/"
+      ],
+      "criterio": "específico verificado; origen del catálogo discrepante",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "d88a123c-7573-47f6-886e-9f39a966ae80",
+      "nombre": "Tintoralba Noir (Garnacha)",
+      "descripcion": "Blanco elaborado con garnacha tintorera, de fruta fresca y delicados matices florales. Su perfil combina una acidez viva con una textura amable que da volumen al trago. Acompaña arroces de pescado, verduras asadas y mariscos de preparación sencilla.",
+      "fuentes": [
+        "https://tintoralba.com/en/tienda/tintoralba-range/blanc-de-noir-sobre-lias/"
+      ],
+      "criterio": "Blanc de Noir probable según nombre y categoría; sin afirmar crianza de variante",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "b2f2f856-7458-4fe0-9468-b7a21a35559b",
+      "nombre": "Viña Corrales Fino",
+      "descripcion": "Fino de crianza bajo velo de flor, de carácter seco, con recuerdos de almendra, levadura y un matiz salino. En boca es vivo, preciso y persistente, pensado para acompañar la mesa. Muy apropiado con jamón, frituras de pescado o marisco cocido.",
+      "fuentes": [
+        "https://www.elcorteingles.es/club-de-vinos/seleccion-vinos-del-mes-peter-sisseck/ficha-del-vino-vina-corrales-fino-2023/"
+      ],
+      "criterio": "perfil verificado de fino; sin fechas de saca ni años de crianza",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.63+00"
+    },
+    {
+      "id": "e244f79d-d740-4bc1-a569-550f04d0939d",
+      "nombre": "Castro do Coto Caíño Blanco",
+      "descripcion": "Caíño blanco de perfil fresco y expresivo, con aromas de fruta blanca, cítricos y una delicada nota floral. En boca conserva viveza y una sensación ligera que acompaña bien la comida. Pruébalo con mariscos, pescado blanco o aperitivos de verduras.",
+      "fuentes": [
+        "https://bodegacastrorei.com/producto/castro-do-coto-caino-blanco-12-botellas/"
+      ],
+      "criterio": "variedad verificada; perfil prudente",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.053+00"
+    },
+    {
+      "id": "f9adda4e-cde2-4cc4-a660-d0e9f5f4dd2c",
+      "nombre": "Eduardo Peña",
+      "descripcion": "Blanco trabajado sobre lías, con parte de fermentación en barrica, de aromas cítricos, fruta de hueso y suaves notas balsámicas. En boca es amplio y untuoso, con buena frescura. Acompaña pescados con salsa, mariscos a la plancha y carnes blancas.",
+      "fuentes": [
+        "https://www.bodegaeduardopenha.es/nw/eduardo-pena/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.081+00"
+    },
+    {
+      "id": "db8188b3-d7ac-4826-af2e-6d1e9b125f5e",
+      "nombre": "El Paraguas",
+      "descripcion": "Blanco de expresión atlántica, con aromas de fruta blanca, cítricos y delicados matices florales. Su boca combina frescura y volumen, con un final sabroso que invita a la mesa. Armoniza con mariscos, pescados al horno y arroces de preparación suave.",
+      "fuentes": [
+        "https://www.bodegaselparaguas.com/es_ES/bodega/"
+      ],
+      "criterio": "perfil prudente del blanco identificado; cuvée abreviada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "020cc178-fe01-4503-b108-28b4c3e82dd5",
+      "nombre": "L'ombre",
+      "descripcion": "Treixadura de aromas delicados, con recuerdos de manzana, fruta de hueso y flores blancas. En boca combina textura suave y frescura, con un final que deja una agradable sensación de fruta. Buen compañero de mariscos, pescados y quesos frescos.",
+      "fuentes": [
+        "https://www.vinotecamercado.com/lombre-ribeiro-treixadura"
+      ],
+      "criterio": "perfil prudente de Treixadura; etiqueta inspeccionada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.488+00"
+    },
+    {
+      "id": "4b1d2247-12b9-4ffa-87b3-15df0a9c37f1",
+      "nombre": "Ossian",
+      "descripcion": "Verdejo de viñas viejas fermentado en madera, con recuerdos de fruta madura, hierbas finas y especias discretas. En boca combina profundidad, textura envolvente y una frescura sostenida. Acompaña rodaballo al horno, aves o un arroz de setas.",
+      "fuentes": [
+        "https://www.ossianvinos.com/wp-content/uploads/2022/09/Ficha-Ossian-2015-Espanol-1.pdf"
+      ],
+      "criterio": "específico verificado; sin atributos de añada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "8c047087-6870-43e7-8a15-752977481078",
+      "nombre": "Pousada",
+      "descripcion": "Blanco de albariño y treixadura, de aromas de fruta de hueso, cítricos y flores blancas. En boca reúne una textura amable y frescura que alarga el recuerdo frutal. Acompaña mariscos, pescado a la plancha y arroces marineros de sabor delicado.",
+      "fuentes": [
+        "https://jeamoczmbfsnwkfjxcyo.supabase.co/storage/v1/object/public/vinos/e743a8ff-841f-4b28-9289-9f9bc1bd3d5b.webp?t=1791360650913"
+      ],
+      "criterio": "perfil prudente de uvas verificadas en etiqueta; origen del catálogo discrepante",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.782+00"
+    },
+    {
+      "id": "4b111dd2-a09c-458a-9885-23638c072dcb",
+      "nombre": "Viña Mein",
+      "descripcion": "Blanco de variedades gallegas, con fruta blanca, cítricos y un delicado fondo floral. En boca resulta fresco y expresivo, con una textura que acompaña la fruta sin hacer pesado el trago. Armoniza con pescados, mariscos y verduras a la parrilla.",
+      "fuentes": [
+        "https://www.vinamein-emiliorojo.com/vinos/o-pequeno-mein-castes-brancas/?lang=en"
+      ],
+      "criterio": "perfil prudente de Viña Meín; cuvée sin concretar",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "0b790f1a-03da-4f83-9c24-a6f0ab600b5a",
+      "nombre": "Aaltos Blanco",
+      "descripcion": "Verdejo de parcela con crianza en madera, de aromas de fruta blanca y cítricos con suaves matices tostados. Su boca combina volumen, textura cremosa y un final fresco. Acompaña pescados al horno, carnes de ave o arroces con setas y verduras.",
+      "fuentes": [
+        "https://aalto.es/en/the-wines/"
+      ],
+      "criterio": "específico identificado por etiqueta Blanco de Parcela",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "500e4fef-6610-4f7e-8125-d9e22c4b6045",
+      "nombre": "Belondrade y Lurton",
+      "descripcion": "Verdejo de perfil amplio y crianza en madera, con aromas de fruta de hueso, cítricos y delicadas notas tostadas. La boca es envolvente y fresca, con un final largo y equilibrado. Ideal con pescados al horno, aves o platos de textura cremosa.",
+      "fuentes": [
+        "https://www.pibernat.es/es/vinos/blanco/belondrade-lurton"
+      ],
+      "criterio": "perfil verificado de vino, sin atribuir meses ni añada",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.84+00"
+    },
+    {
+      "id": "7c15a773-d357-401f-b5dd-8587cc6fe18c",
+      "nombre": "Fenomenal Verdejo",
+      "descripcion": "Verdejo fresco y aromático, con recuerdos de fruta blanca, cítricos y hierbas finas. En boca es ágil, de fruta nítida y con un delicado toque amargo en el final que acompaña bien la comida. Encaja con pescados, ensaladas o unos mariscos cocidos.",
+      "fuentes": [
+        "https://guiapenin.wine/guide/wine/fenomenal_verdejo_2024_b/es"
+      ],
+      "criterio": "variedad y DO verificadas; perfil prudente",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.91+00"
+    },
+    {
+      "id": "b8867cac-a5ae-4b9a-acad-6c498b538739",
+      "nombre": "José Pariente Sauvignon Blanc",
+      "descripcion": "Sauvignon blanc criado sobre lías, de aromas de cítricos, fruta fresca y matices herbales. En boca ofrece textura suave, buena frescura y un final persistente. Acompaña mariscos, pescados a la plancha y ensaladas con queso fresco o de cabra.",
+      "fuentes": [
+        "https://josepariente.com/producto/jose-pariente-sauvignon-blanc/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.253+00"
+    },
+    {
+      "id": "99ce9d00-fca8-4dba-ab27-9d8426520b38",
+      "nombre": "José Pariente Sauvignon Blanc (Magnum)",
+      "descripcion": "Blanco aromático de sauvignon blanc, con crianza sobre lías y recuerdos de cítricos, fruta blanca y hierbas finas. Su boca combina frescura y textura redonda, con un final limpio. En formato para compartir, acompaña mariscos, pescados y ensaladas.",
+      "fuentes": [
+        "https://josepariente.com/producto/jose-pariente-sauvignon-blanc/"
+      ],
+      "criterio": "específico verificado; sin afirmar evolución por formato",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.331+00"
+    },
+    {
+      "id": "8b8e631d-dd87-499a-a5b2-928d3fef0469",
+      "nombre": "Pandora Verdejo",
+      "descripcion": "Verdejo de aromas frutales, con recuerdos de cítricos y fruta tropical acompañados de un matiz de hierbas finas. En boca combina viveza, textura suave y un final sabroso. Buen compañero de mariscos, pulpo a la brasa o pescados de elaboración sencilla.",
+      "fuentes": [
+        "https://bodegaspandora.com/nuestros-vinos/pandora-verdejo-sobre-lias/"
+      ],
+      "criterio": "perfil prudente de variedad; no afirmar crianza de variante no fijada",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.981+00"
+    },
+    {
+      "id": "347bfb5b-3f16-49b1-a4c8-01652662f067",
+      "nombre": "Bobal Rosado Dulce",
+      "descripcion": "Rosado dulce de bobal, con aromas de fresa, frambuesa y delicados matices florales. En boca ofrece fruta y una sensación amable, con el dulzor como parte de su estilo. Acompaña postres de frutos rojos, aperitivos suaves y quesos de pasta blanda.",
+      "fuentes": [],
+      "criterio": "perfil prudente de tipo y variedad del nombre; DO no fijada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:06:18.672097+00"
+    },
+    {
+      "id": "00c5acb2-139b-4e3c-856a-0df0b298dd8f",
+      "nombre": "Château Sainte Marguerite Rosé",
+      "descripcion": "Rosado provenzal de aromas delicados, con fruta roja, cítricos y un fondo de flores. En boca se muestra fresco y suave, con un final limpio que invita a seguir la comida. Encaja con arroces, ensaladas, pescado a la plancha y verduras asadas.",
+      "fuentes": [
+        "https://www.chateausaintemarguerite.com/vins-de-provence/"
+      ],
+      "criterio": "perfil prudente de rosado provenzal; cuvée no fijada",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.767+00"
+    },
+    {
+      "id": "025139c6-042e-472b-9f3f-3e368c2012d0",
+      "nombre": "Milsetentayseis La Peña Rosado (Magnum)",
+      "descripcion": "Rosado de viña vieja de perfil fresco, con recuerdos de fruta roja y un delicado matiz mineral. Su boca reúne volumen, textura sedosa y un final largo de sensación salina. Para compartir con arroces, pescados al horno o carnes de ave.",
+      "fuentes": [
+        "https://www.milsetentayseis.com/vinos/milsetentayseis-la-pena-2021-2/"
+      ],
+      "criterio": "específico verificado; sin atributos de añada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.739+00"
+    },
+    {
+      "id": "0e14f46c-85fb-4f93-9890-ca8e7e15e869",
+      "nombre": "Otazu Rosado",
+      "descripcion": "Rosado de aromas florales y fruta roja, de expresión fresca y un paso por boca amable. Su textura suave y su final frutal lo convierten en una opción versátil para la mesa. Acompaña ensaladas, arroces, pasta y verduras a la plancha.",
+      "fuentes": [
+        "https://otazu.com/es/producto/vinos/ozu-by-otazu-rosado-merlot"
+      ],
+      "criterio": "perfil prudente del rosado; no fijar uva sin variante confirmada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.286+00"
+    },
+    {
+      "id": "08220bdb-7ecb-4b5f-be9a-c8ad01c107d7",
+      "nombre": "Unzu Rosé Garnacha",
+      "descripcion": "Rosado pálido de garnacha criado sobre lías, con recuerdos de fruta roja, cítricos y flores delicadas. En boca combina frescura y una textura sedosa que alarga el trago. Armoniza con pescados, arroces de marisco y aperitivos de sabor suave.",
+      "fuentes": [
+        "https://www.unzuwines.com/rose/"
+      ],
+      "criterio": "específico verificado; sin meses ni añada",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:12.697+00"
+    },
+    {
+      "id": "38d76f0d-7757-4f7f-bc84-05de04a3dbbc",
+      "nombre": "Abadía Retuerta Pago Garduña",
+      "descripcion": "Syrah de expresión madura, con recuerdos de fruta negra, violetas y un toque de especias. En boca combina profundidad, textura pulida y un final largo que conserva frescura. Acompaña carnes a la parrilla, cordero asado o un guiso de setas.",
+      "fuentes": [
+        "https://abadia-retuerta.com/producto/pago-garduna/"
+      ],
+      "criterio": "variedad y carácter verificados; perfil prudente",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.104+00"
+    },
+    {
+      "id": "2749a417-cfcf-4195-b747-85ac1c7f2c56",
+      "nombre": "Abadía Retuerta Pago Negralada",
+      "descripcion": "Tempranillo de carácter firme, con aromas de fruta negra y delicados recuerdos especiados. Su boca reúne estructura, taninos presentes y un final persistente que pide comida. Una buena elección para carnes rojas, cordero asado y quesos curados.",
+      "fuentes": [
+        "https://abadia-retuerta.com/producto/pago-negralada/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.969+00"
+    },
+    {
+      "id": "6cce52a0-2fc7-48d3-8801-29ea2073e3b2",
+      "nombre": "Abadía Retuerta Selección Especial",
+      "descripcion": "Tinto de perfil maduro y crianza en madera, con fruta roja y negra, especias suaves y un fondo tostado. En boca es amplio y equilibrado, con taninos de textura amable y buen recorrido. Acompaña carnes asadas, guisos de ternera y quesos curados.",
+      "fuentes": [
+        "https://abadia-retuerta.com/bodega/"
+      ],
+      "criterio": "perfil prudente de tinto conocido; sin fijar ensamblaje ni meses",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:51.886+00"
+    },
+    {
+      "id": "219dc294-c7cd-49f4-b2d2-73c5b48697b2",
+      "nombre": "Almirez",
+      "descripcion": "Tinta de Toro de fruta madura, con recuerdos de mora, ciruela y delicados matices especiados. En boca combina intensidad y frescura, con una textura firme que se acompasa bien con la comida. Ideal para carnes a la brasa, guisos y quesos curados.",
+      "fuentes": [
+        "https://sierracantabria.com/bodegas/teso-la-monja/almirez/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.18+00"
+    },
+    {
+      "id": "4763a3d1-6e66-4dc5-9101-649690958baf",
+      "nombre": "Artadi Valdeginés",
+      "descripcion": "Tinto de parcela de expresión delicada, con fruta roja nítida y un fondo sutil de hierbas y especias. En boca ofrece fluidez, frescura y taninos finos que prolongan el trago. Armoniza con aves asadas, setas salteadas y carnes rojas de preparación sencilla.",
+      "fuentes": [
+        "https://artadi.com/vinos/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.034+00"
+    },
+    {
+      "id": "be27e31f-e91c-4936-a0cd-a2fdd6576fc1",
+      "nombre": "Casal de Armán",
+      "descripcion": "Tinto atlántico de fruta roja y negra, con recuerdos de frambuesa, zarzamora y laurel. En boca es ágil y fresco, con una acidez viva que acompaña bien la mesa. Pruébalo con pulpo a la brasa, aves asadas o un plato de setas y verduras.",
+      "fuentes": [
+        "https://www.bodegascasaldearman.com/el-vino/casal-de-arman-tinto/"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.468+00"
+    },
+    {
+      "id": "63f6d239-6451-4200-aa3b-8f6136bd642f",
+      "nombre": "Casar de Burbia Hombros Mencía",
+      "descripcion": "Mencía de expresión frutal, con recuerdos de cereza, frutos del bosque y un fondo de hierbas y especias. En boca combina frescura y textura firme, con un final sabroso. Acompaña carnes de ave, setas a la plancha o un guiso suave de ternera.",
+      "fuentes": [
+        "https://casardeburbia.com/vino-del-bierzo/hombros/"
+      ],
+      "criterio": "perfil prudente de variedad y origen; sin fijar crianza",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.634+00"
+    },
+    {
+      "id": "1fef2647-9bd7-452a-a0f3-cc73acc09912",
+      "nombre": "Cerro del Buey",
+      "descripcion": "Garnacha tintorera afinada entre madera y depósitos ovoides, de fruta madura y suaves notas especiadas. En boca se muestra fresca y redonda, con taninos amables. Una opción versátil para arroces, verduras asadas o carnes de preparación sencilla.",
+      "fuentes": [
+        "https://tintoralba.com/vinos/alqueria/cerro-del-buey/"
+      ],
+      "criterio": "específico verificado; etiqueta Almansa inspeccionada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.645+00"
+    },
+    {
+      "id": "38786511-129f-4b4e-8396-5128d305f80b",
+      "nombre": "Château Pindefleurs",
+      "descripcion": "Tinto de perfil bordelés, con recuerdos de ciruela, fruta negra y delicadas especias. En boca combina volumen, taninos presentes y una frescura que da equilibrio al trago. Acompaña carnes asadas, platos de setas y quesos de media curación.",
+      "fuentes": [
+        "https://jeamoczmbfsnwkfjxcyo.supabase.co/storage/v1/object/public/vinos/78c02973-6139-43b5-83dd-01bb58a90e0b.webp?t=1791386707141"
+      ],
+      "criterio": "perfil prudente de Saint-Émilion; sin fijar ensamblaje ni añada",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.82+00"
+    },
+    {
+      "id": "7477d8f5-3c41-45a9-8bd0-77247ef2aeca",
+      "nombre": "Clio",
+      "descripcion": "Tinto concentrado de fruta madura, con matices balsámicos y especiados integrados con la madera. En boca es amplio, de textura envolvente y final persistente. Acompaña carnes rojas a la brasa, guisos de caza y quesos curados de sabor intenso.",
+      "fuentes": [
+        "https://gilfamily.es/bodegas_el_nido_clio"
+      ],
+      "criterio": "específico verificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.745+00"
+    },
+    {
+      "id": "3b0b59b7-ab96-4a4c-b886-22ac061eab79",
+      "nombre": "Comando G Las Umbrías",
+      "descripcion": "Garnacha de montaña de perfil delicado, con recuerdos de fruta roja, flores y hierbas silvestres. En boca combina ligereza, frescura y taninos finos, con un final sugerente. Armoniza con aves asadas, setas o platos de carne de preparación suave.",
+      "fuentes": [
+        "https://www.vilaviniteca.es/es/comando-g"
+      ],
+      "criterio": "perfil verificado de proyecto; no fijar crianza",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.403+00"
+    },
+    {
+      "id": "d18df3cc-6636-4534-af13-2c25740764f2",
+      "nombre": "Comando G Rumbo al Norte",
+      "descripcion": "Garnacha de montaña de aromas de fruta roja, flores y un matiz de hierbas y especias. En boca ofrece delicadeza, una frescura sostenida y profundidad sin pesar en el trago. Acompaña aves asadas, setas salteadas y carnes de preparación sencilla.",
+      "fuentes": [
+        "https://www.europeancellars.com/wp-content/uploads/2014/12/Comando-G-Rumbo-al-Norte.pdf"
+      ],
+      "criterio": "perfil verificado de proyecto; no fijar añada",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.329+00"
+    },
+    {
+      "id": "6a288d00-087a-428e-96ec-af801ba1fcb3",
+      "nombre": "Corullón",
+      "descripcion": "Tinto de expresión fresca, con fruta roja y negra, hierbas silvestres y una sugerencia mineral. En boca muestra equilibrio, taninos finos y un final persistente que acompaña la comida. Armoniza con cordero asado, setas o quesos de media curación.",
+      "fuentes": [
+        "https://www.pibernat.es/es/vinos/tinto/corullon-2021"
+      ],
+      "criterio": "perfil prudente del vino; sin fijar ensamblaje ni crianza",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.532+00"
+    },
+    {
+      "id": "320ea437-fe35-41e4-92d2-6cdfc35c0dc8",
+      "nombre": "Domaine Combe Queyzaire Côtes du Rhône",
+      "descripcion": "Tinto de perfil cálido, con recuerdos de fruta roja madura, hierbas de monte y especias. En boca resulta sabroso, de textura amable y un final que invita a acompañarlo con comida. Encaja con carnes a la parrilla, verduras asadas y quesos semicurados.",
+      "fuentes": [
+        "https://jeamoczmbfsnwkfjxcyo.supabase.co/storage/v1/object/public/vinos/26e65b2f-d784-40fa-ae08-a06e782bb30f.webp?t=1791386707141"
+      ],
+      "criterio": "perfil prudente de Côtes du Rhône; sin fijar uvas ni crianza",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.732+00"
+    },
+    {
+      "id": "a93997fc-7a24-44fa-856e-099a5a181901",
+      "nombre": "Dominio de Es",
+      "descripcion": "Tinto de perfil fino, con fruta roja y negra, hierbas y delicados matices especiados. En boca combina frescura, profundidad y una textura de taninos pulidos que alarga el trago. Buen compañero de aves asadas, carnes rojas o un guiso de setas.",
+      "fuentes": [
+        "https://www.vilaviniteca.es/es/dominio-de-es"
+      ],
+      "criterio": "perfil prudente de proyecto; cuvée abreviada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "71df1c08-defa-415c-861f-9daa4fb54762",
+      "nombre": "El Nido",
+      "descripcion": "Tinto de gran concentración, con fruta negra madura, matices de monte y especias que se funden con la madera. En boca es amplio, de textura envolvente y largo recorrido. Acompaña carnes rojas, caza guisada y quesos curados de sabor intenso.",
+      "fuentes": [
+        "https://gilfamily.es/bodegas_el_nido_vinos"
+      ],
+      "criterio": "perfil verificado del vino; sin porcentajes ni meses",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.322+00"
+    },
+    {
+      "id": "d65dcbd3-4a7a-402e-80b4-a79b562714c8",
+      "nombre": "El Sequé",
+      "descripcion": "Monastrell de expresión mediterránea, con fruta negra madura y recuerdos balsámicos y de especias. En boca combina cuerpo, textura envolvente y un final sabroso. Armoniza con carnes a la brasa, un guiso de cordero o quesos de buena curación.",
+      "fuentes": [
+        "https://artadi.com/vinos/"
+      ],
+      "criterio": "perfil prudente del Monastrell identificado",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "ae2f2950-716b-469a-ad33-42cac0c9066e",
+      "nombre": "El Titán del Bendito",
+      "descripcion": "Tinta de Toro de viñas viejas, con fruta negra madura y un fondo de especias y matices tostados. En boca ofrece cuerpo, textura firme y una larga persistencia. Acompaña carnes rojas a la parrilla, asados de cordero o guisos de sabor intenso.",
+      "fuentes": [
+        "https://www.bodegadominiodelbendito.com/vinos-de-toro/"
+      ],
+      "criterio": "viñas y variedad verificadas; perfil prudente",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "3fb5a37d-188e-417f-8016-b6e64acd2f9f",
+      "nombre": "José Manuel Corrales",
+      "descripcion": "Tempranillo de viñas viejas con crianza en roble, de fruta madura y recuerdos de especias y tostados suaves. En boca combina cuerpo y textura redonda, con un final sabroso. Acompaña carnes asadas, guisos de ternera y quesos de buena curación.",
+      "fuentes": [
+        "https://corralesespinosa.com/producto/jose-manuel-corrales-75cl/"
+      ],
+      "criterio": "específico verificado; origen del catálogo discrepante",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "440003a6-1ddf-4b39-987d-72f3d1935ee3",
+      "nombre": "Juan Gil Azul",
+      "descripcion": "Tinto de perfil concentrado, con fruta negra madura, especias y un delicado recuerdo balsámico. En boca es amplio y envolvente, con taninos presentes y un final largo. Buen compañero de carnes a la brasa, asados de cordero o quesos curados.",
+      "fuentes": [
+        "https://gilfamily.es/news/juan_gil_azul_y_juan_gil_moscatel_en_the_drink_business/en"
+      ],
+      "criterio": "perfil prudente de vino identificado; sin fijar ensamblaje",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "e42cea58-6547-42d5-9582-77f6e5f3d9ca",
+      "nombre": "Juan Gil Nácar",
+      "descripcion": "Tinto de fruta negra madura, con un fondo de hierbas de monte y especias suaves. En boca muestra volumen y una textura amable, con un final sabroso que acompaña bien la comida. Armoniza con guisos de legumbres, carnes asadas y setas a la parrilla.",
+      "fuentes": [
+        "https://bar-mercat.degustodigital.com/es/producto-juan-gil-nacar-492733-84745.html"
+      ],
+      "criterio": "perfil prudente del tinto identificado; etiqueta inspeccionada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.407+00"
+    },
+    {
+      "id": "13fed87b-c3b3-40ed-be13-a42d4c8df2e9",
+      "nombre": "Mikado Road Nº8",
+      "descripcion": "Tempranillo de finca con crianza en roble, de fruta negra, matices balsámicos y un delicado recuerdo de cacao. En boca es amplio y de final largo, con buena presencia de fruta. Armoniza con carnes asadas, guisos de ternera y quesos curados.",
+      "fuentes": [
+        "https://nueveuvas.com/portfolio/mikado-no-8/"
+      ],
+      "criterio": "específico verificado; no repetir posible error Road",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.892+00"
+    },
+    {
+      "id": "64a1e485-69b4-4e50-a671-546cdcbf9cb9",
+      "nombre": "Milsetentayseis Tinto",
+      "descripcion": "Tinto de viñedos de altura, con fruta roja y negra, un fondo especiado y delicados matices de hierbas. En boca reúne frescura, volumen y taninos finos que prolongan el trago. Acompaña carnes asadas, setas y quesos de media curación.",
+      "fuentes": [
+        "https://www.milsetentayseis.com/los-vinos-de-milsetentayseis/"
+      ],
+      "criterio": "perfil prudente del tinto y origen verificados",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "9c360d96-9ff9-48dc-b2f8-de5694acb00f",
+      "nombre": "Otazu Premium Cuvée",
+      "descripcion": "Tinto con crianza en roble francés, de aromas de fruta roja, frutos silvestres y especias delicadas. En boca combina elegancia y frescura, con una textura amable. Acompaña carnes asadas, risottos de setas, embutidos o quesos de media curación.",
+      "fuentes": [
+        "https://otazu.com/es/producto/vinos/ozu-by-otazu-premium-cuvee"
+      ],
+      "criterio": "específico verificado; sin fijar porcentajes ni meses",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.205+00"
+    },
+    {
+      "id": "7ef44ab8-19e2-43d3-9dca-7ee7c4a36969",
+      "nombre": "Pazo la Cuesta",
+      "descripcion": "Tinto de perfil atlántico, con aromas de fruta roja, flores y un delicado recuerdo de hierbas. En boca combina viveza y una textura ligera que acompaña la fruta sin imponerse. Armoniza con aves asadas, pulpo a la brasa o platos de setas.",
+      "fuentes": [
+        "https://pazodelacuesta.com/"
+      ],
+      "criterio": "perfil prudente de tinto de Ribeira Sacra; cuvée y uvas sin fijar",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:29.012289+00"
+    },
+    {
+      "id": "d6f6124a-e6e9-4824-9e25-b5d42ca334ba",
+      "nombre": "Pintia",
+      "descripcion": "Tinta de Toro de perfil profundo, con fruta negra madura, especias y matices de la crianza bien integrados. En boca combina cuerpo, textura pulida y un final persistente. Acompaña carnes a la brasa, cordero al horno y guisos de sabor intenso.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/es/vino/233/pintia"
+      ],
+      "criterio": "variedad verificada; perfil prudente del vino",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:11.258+00"
+    },
+    {
+      "id": "72429caa-160e-4ab9-9fae-62e8f56734c8",
+      "nombre": "Rosa Zarza",
+      "descripcion": "Tinto de autora elaborado con tinta de Toro, de recuerdos de fruta negra madura y delicadas especias. En boca ofrece profundidad, textura firme y un final sabroso. Acompaña carnes rojas a la parrilla, asados y quesos de buena curación.",
+      "fuentes": [
+        "https://bodegaspandora.com/bodegas-pandora-celebra-el-exito-de-nuestros-vinos-en-los-wines-from-spain-awards-2025/"
+      ],
+      "criterio": "variedad y proyecto verificados; perfil prudente",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "d9739ae1-244c-44d1-98e4-8c80fde44a5d",
+      "nombre": "Victorino 2023",
+      "descripcion": "Tinta de Toro de viñas viejas, de fruta concentrada con un fondo de hierbas y especias. Su boca combina intensidad, estructura y frescura, dejando un final largo y equilibrado. Ideal con carnes asadas, guisos de caza o quesos curados.",
+      "fuentes": [
+        "https://sierracantabria.com/bodegas/teso-la-monja/victorino/"
+      ],
+      "criterio": "específico verificado; sin atributos de añada",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.981+00"
+    },
+    {
+      "id": "56b33d30-e029-4208-b06d-2c5b47762240",
+      "nombre": "912 de Altitud",
+      "descripcion": "Tinto de perfil fresco y frutal, con recuerdos de cereza y mora y un fondo suavemente especiado; en boca combina cuerpo y una acidez viva. Acompaña bien carnes a la brasa, embutidos de calidad y guisos de cocina tradicional.",
+      "fuentes": [
+        "https://www.bodegasveganzones.com/nuestra-historia/?v=366b7fa7b1fc"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:07.949+00"
+    },
+    {
+      "id": "5bcf2f8f-f152-41f7-b583-45614728e928",
+      "nombre": "Aalto 2021",
+      "descripcion": "La crianza en barrica arropa la fruta roja con recuerdos de regaliz y especias, manteniendo un paso sedoso y una acidez que aligera el conjunto. Se disfruta con ternera a la parrilla, cordero asado o unas setas salteadas.",
+      "fuentes": [
+        "https://aalto.es/wp-content/uploads/2023/08/aalto-2021-online.pdf"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:50.913+00"
+    },
+    {
+      "id": "43187593-0677-4f4b-9583-a3838dabd7f2",
+      "nombre": "Aalto PS",
+      "descripcion": "Tinto concentrado y de textura envolvente, con un perfil de fruta madura y especias que invita a beber despacio; la crianza aporta profundidad sin sustituir a la fruta. Buen compañero de carnes rojas, caza y quesos curados.",
+      "fuentes": [
+        "https://aalto.es/vino-aalto-ps-2022/"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "701d9b3a-35c2-43a5-a613-b041886538a5",
+      "nombre": "Alión",
+      "descripcion": "La crianza en roble francés acompaña un perfil de fruta negra y suaves notas tostadas; en boca destaca por su amplitud y una textura aterciopelada. Va bien con un buen corte de vacuno a la brasa, asados y guisos de carne.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/es/vino/232/alion/2015"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "aee0f9a6-4587-4690-b8a0-d188c1e4f736",
+      "nombre": "Arzuaga",
+      "descripcion": "Tinto de estilo amplio, con fruta madura, recuerdos de regaliz y un fondo especiado que acompaña un paso redondo y sabroso. Su carácter invita a servirlo con carnes a la parrilla, cordero al horno o quesos de media curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.163+00"
+    },
+    {
+      "id": "4171e534-9b36-400f-8304-925460ed3a89",
+      "nombre": "Arzuaga Gran Reserva",
+      "descripcion": "Un gran reserva de expresión pausada, con fruta madura y un fondo de especias y madera fina; su estructura se despliega con calma en la boca. Acompaña carnes rojas asadas, caza de pluma y guisos cocinados a fuego lento.",
+      "fuentes": [
+        "https://www.arzuaganavarro.com/vinos/arzuaga-gran-reserva"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "75bb1e5e-ae7d-4ded-bf22-878858e00355",
+      "nombre": "Áster El Espino",
+      "descripcion": "De estilo fresco y aromático, combina una fruta expresiva con una textura de cuerpo medio y un final persistente que mantiene la copa ágil. Acompaña pollo asado, carnes a la parrilla y platos de setas sin salsas demasiado pesadas.",
+      "fuentes": [
+        "https://sienteaster.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:59.059+00"
+    },
+    {
+      "id": "93aa5d5f-97de-494a-9266-4bcf9bc07b74",
+      "nombre": "Áster El Otero",
+      "descripcion": "Tinto de perfil intenso y carnoso, con fruta madura y un fondo especiado; en boca se muestra profundo, con estructura y un final de sabor sostenido. Para disfrutar con un chuletón a la brasa, cordero asado o estofados de carne.",
+      "fuentes": [
+        "https://sienteaster.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "c0d22e63-dfea-45d1-a6c4-080a16a6b8f2",
+      "nombre": "Áster Otero (Magnum)",
+      "descripcion": "Tinto de perfil intenso y carnoso, con fruta madura y un fondo especiado; en boca se muestra profundo, con estructura y un final de sabor sostenido. Para disfrutar con un chuletón a la brasa, cordero asado o estofados de carne.",
+      "fuentes": [
+        "https://sienteaster.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:59.227+00"
+    },
+    {
+      "id": "57cf57dc-6ce5-4407-adbb-d3d337bf1544",
+      "nombre": "Ausàs Interpretación",
+      "descripcion": "Tinto de perfil preciso, con aromas de fruta negra y un fondo balsámico; en boca busca el equilibrio entre frescura y una estructura de tanino fino. Acompaña vacuno a la parrilla, caza de pluma y guisos de elaboración pausada.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.424+00"
+    },
+    {
+      "id": "3ed3595b-89e5-4e05-b844-0b6ccf535f14",
+      "nombre": "Avan Viñedos Viejos",
+      "descripcion": "Nacido de viñedos viejos, propone un perfil de fruta madura con recuerdos de especias y monte bajo; en boca resulta sabroso, con cuerpo y una buena sensación de frescura. Armoniza con asados, setas y guisos de carne tradicionales.",
+      "fuentes": [
+        "https://avanvinos.com/vinos-avan/avan-vinedos-viejos/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "53671e64-4ef1-4264-875d-e66b106018c4",
+      "nombre": "Balbás Ancestral",
+      "descripcion": "La elaboración recupera una mirada tradicional, con un perfil de fruta madura y recuerdos especiados que se unen a una boca de buena estructura. Acompaña carnes al horno, estofados y quesos curados, servido sin exceso de temperatura.",
+      "fuentes": [
+        "https://balbas.es/grandes-pagos-gama/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.626+00"
+    },
+    {
+      "id": "bf3fcbe2-d680-4b01-b500-83fcffd9dbcc",
+      "nombre": "Balbás Crianza",
+      "descripcion": "La crianza acompaña la fruta roja y negra con notas de especias y suaves tostados; en boca ofrece un paso redondo, con cuerpo y taninos amables. Va bien con cordero asado, carnes a la parrilla y platos de setas de temporada.",
+      "fuentes": [
+        "https://balbas.es/blog/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "388f1d45-e5d6-4259-8a5a-e1da5be366af",
+      "nombre": "Balbás Crianza (Magnum)",
+      "descripcion": "La crianza acompaña la fruta roja y negra con notas de especias y suaves tostados; en boca ofrece un paso redondo, con cuerpo y taninos amables. Va bien con cordero asado, carnes a la parrilla y platos de setas de temporada.",
+      "fuentes": [
+        "https://balbas.es/blog/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:07.142779+00"
+    },
+    {
+      "id": "c542f87a-4df4-4a4f-9d86-e7f921c04a97",
+      "nombre": "Balbás La Retama",
+      "descripcion": "Blanco de Albillo Mayor con un perfil de fruta de hueso y matices delicados; combina profundidad y una sensación mineral, con una boca amplia que conserva frescura. Acompaña pescados al horno, arroces marineros y carnes blancas.",
+      "fuentes": [
+        "https://balbas.es/ficha-vinos/la-retama/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "8b2d10a2-c778-4233-980d-ebb94db71ce4",
+      "nombre": "Bosque de Matasnos",
+      "descripcion": "Tinto de perfil maduro, con fruta negra y un fondo de especias y monte bajo; en boca combina volumen, estructura y una frescura que prolonga el sabor. Acompaña vacuno a la brasa, asados y guisos de carne de elaboración lenta.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "387d18c4-a561-4524-9dbe-c53ea3d202f5",
+      "nombre": "Bosque de Matasnos (Magnum)",
+      "descripcion": "Tinto de perfil maduro, con fruta negra y un fondo de especias y monte bajo; en boca combina volumen, estructura y una frescura que prolonga el sabor. Acompaña vacuno a la brasa, asados y guisos de carne de elaboración lenta.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.891+00"
+    },
+    {
+      "id": "28efb3dd-5ba8-478d-92f1-88294d43a44a",
+      "nombre": "Briego Tempranillo Roble",
+      "descripcion": "El paso por roble acompaña una fruta de perfil joven con recuerdos de especias y suaves tostados; en boca resulta sabroso y fácil de llevar a la mesa. Se disfruta con embutidos, carnes a la plancha y un arroz de setas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:52.987+00"
+    },
+    {
+      "id": "a59f886d-7dc8-4189-8277-8e3e3b398c63",
+      "nombre": "Briego Tempranillo Roble (Magnum)",
+      "descripcion": "El paso por roble acompaña una fruta de perfil joven con recuerdos de especias y suaves tostados; en boca resulta sabroso y fácil de llevar a la mesa. Se disfruta con embutidos, carnes a la plancha y un arroz de setas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.085+00"
+    },
+    {
+      "id": "5e6d042a-481d-4611-8ec0-1df456142d56",
+      "nombre": "Briego Tiempo Crianza",
+      "descripcion": "La crianza en roble francés y americano acompaña aromas de cereza, mora, cacao y un toque de regaliz; la boca es redonda, estructurada y de final persistente. Va bien con cordero, carnes a la parrilla y setas salteadas.",
+      "fuentes": [
+        "https://bodegasbriego.com/vino/briego-tiempo-crianza-2021/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "1cedc19a-32e3-4af8-81e4-bee2303db6db",
+      "nombre": "Carmelo Rodero Reserva",
+      "descripcion": "Tinto reserva de perfil maduro, con fruta negra y recuerdos especiados que se funden con los matices de la madera; en boca muestra cuerpo y un paso envolvente. Acompaña carnes rojas a la brasa, asados y quesos curados.",
+      "fuentes": [
+        "https://bodegasrodero.com/reserva-2019-una-perla-de-carmelo-rodero/"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "540c1075-8c8e-4a70-9fe7-d499b293741d",
+      "nombre": "Carraovejas (Magnum)",
+      "descripcion": "La fruta madura se acompaña de recuerdos especiados y un fondo balsámico, con una boca amplia donde la estructura y la frescura buscan equilibrio. Un tinto para compartir con cordero asado, cochinillo o vacuno a la parrilla.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.273+00"
+    },
+    {
+      "id": "474b23ff-1c6e-4f6d-b25c-736e0640525d",
+      "nombre": "Carraovejas Cuesta de las Liebres",
+      "descripcion": "Tinto de perfil profundo, con fruta madura y recuerdos de especias y monte bajo; en boca propone una estructura firme y una sensación de sabor prolongado. Acompaña caza de pluma, carnes rojas asadas y guisos de elaboración lenta.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "bf7a0cc1-9eaa-46b5-8c32-4fa4bca55cf1",
+      "nombre": "Carraovejas El Anejón",
+      "descripcion": "La crianza en roble francés acompaña un perfil delicado e intenso, con fondo balsámico y un matiz mineral que recorre una boca armoniosa. Buen compañero de cochinillo asado, carnes rojas y platos de setas con sabor profundo.",
+      "fuentes": [
+        "https://www.pagodecarraovejas.com/vinos/el-anejon-2021/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.367+00"
+    },
+    {
+      "id": "6278535b-bf41-4387-b017-9d77e51d4ab8",
+      "nombre": "Carraovejas El Anejón (Magnum)",
+      "descripcion": "La crianza en roble francés acompaña un perfil delicado e intenso, con fondo balsámico y un matiz mineral que recorre una boca armoniosa. Buen compañero de cochinillo asado, carnes rojas y platos de setas con sabor profundo.",
+      "fuentes": [
+        "https://www.pagodecarraovejas.com/vinos/el-anejon-2021/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "14b4f8e8-7a0f-486c-a802-9de69c785b53",
+      "nombre": "Castillo de Peñafiel Vendimia Seleccionada",
+      "descripcion": "Tinto de perfil maduro, con recuerdos de cereza, mora y especias; en boca combina una estructura sabrosa con frescura suficiente para acompañar la comida. Encaja con carnes asadas, un arroz de setas y quesos de media curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:09.016+00"
+    },
+    {
+      "id": "528ba68d-9cd9-4916-ae2b-af73233a25f3",
+      "nombre": "Díaz Bayo 4U",
+      "descripcion": "De perfil frutal y accesible, sugiere aromas de mora y ciruela con un fondo suavemente especiado; la boca es sabrosa, de cuerpo medio y con una acidez agradable. Va bien con embutidos, carnes a la plancha y pollo asado.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:08.777+00"
+    },
+    {
+      "id": "b550e328-7b1b-4e5b-8442-1d8b5161e771",
+      "nombre": "Dominio de Calogía",
+      "descripcion": "La crianza en roble francés acompaña un tinto de profundidad y concentración, con un perfil de fruta madura y una boca que reúne estructura y finura. Para servir con vacuno a la brasa, asados y guisos de carne intensos.",
+      "fuentes": [
+        "https://calogia.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.904+00"
+    },
+    {
+      "id": "c845e388-6954-4b1f-b5dc-36064f06043f",
+      "nombre": "Dominio de Calogía (Magnum)",
+      "descripcion": "La crianza en roble francés acompaña un tinto de profundidad y concentración, con un perfil de fruta madura y una boca que reúne estructura y finura. Para servir con vacuno a la brasa, asados y guisos de carne intensos.",
+      "fuentes": [
+        "https://calogia.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.998+00"
+    },
+    {
+      "id": "c46d83de-a368-4378-877d-58606d1a8219",
+      "nombre": "Dominio de Calogía Cuvée S",
+      "descripcion": "Procedente de un viejo viñedo y criado en roble francés, combina intensidad aromática con una boca densa, envolvente y de tacto fino. Su perfil profundo y especiado acompaña caza, carnes rojas asadas y quesos de larga curación.",
+      "fuentes": [
+        "https://calogia.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:09.438+00"
+    },
+    {
+      "id": "d9803ec6-fff8-4ea8-a6d6-04d04da64404",
+      "nombre": "Dominio de Calogía Doble M",
+      "descripcion": "La crianza en roble francés acompaña una fruta negra nítida, con matices de madera discretos; en boca reúne frescura, equilibrio y una textura envolvente. Acompaña carnes a la parrilla, asados y unas setas de temporada.",
+      "fuentes": [
+        "https://calogia.com/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:08.661+00"
+    },
+    {
+      "id": "a62be9fe-cea2-49d1-9dcf-b0a988510afd",
+      "nombre": "Dominio del Águila Reserva",
+      "descripcion": "Tinto reserva de perfil delicado, con recuerdos de fruta roja y negra, especias y un fondo de monte bajo; en boca une profundidad con una frescura que alarga el sabor. Para disfrutar con aves asadas, setas y carnes rojas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "27696aa0-c54f-4baa-a65a-cd0442de84bb",
+      "nombre": "Dominio del Pidio",
+      "descripcion": "Tinto de perfil fresco y expresivo, con recuerdos de fruta roja y especias; en boca ofrece una textura de tanino fino y un paso sabroso que invita a acompañarlo de comida. Va bien con carnes asadas, setas y quesos semicurados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "5a6e9fa1-4a16-48e9-9201-0c9452ac35ba",
+      "nombre": "El Canto de la Alondra",
+      "descripcion": "Tinto de perfil frutal, con recuerdos de cereza, mora y un fondo suavemente especiado; en boca propone cuerpo y frescura, sin perder una sensación de equilibrio. Acompaña carnes a la parrilla, asados y un arroz de setas.",
+      "fuentes": [
+        "https://www.riberadelduero.es/mx/bodegas/el-canto-de-la-alondra"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.161+00"
+    },
+    {
+      "id": "fddf1981-ac0e-406f-9172-536b92f79a19",
+      "nombre": "El Corral de Taruguín",
+      "descripcion": "Tempranillo de un viñedo de altura, con crianza en roble francés y un perfil de fruta y especias; en boca combina estructura con una frescura de carácter vivo. Buen compañero de asados, carnes a la brasa y guisos de setas.",
+      "fuentes": [
+        "https://vinotaruguin.com/producto/corral-de-taruguin-2020/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.242+00"
+    },
+    {
+      "id": "0eef37ce-a487-4f40-bc2e-9f651289e897",
+      "nombre": "Figuero Noble",
+      "descripcion": "Tinto de perfil profundo, con fruta negra madura y recuerdos de cacao y especias; la boca combina cuerpo con un tanino que pide comida de sabor intenso. Acompaña vacuno a la brasa, caza de pluma y quesos bien curados.",
+      "fuentes": [
+        "https://figuero.es/tinto-figuero-un-ano-mas-en-el-top-100-ribera-del-duero-by-tim-atkin/"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.594+00"
+    },
+    {
+      "id": "40c9babc-0929-46b8-a98d-6ba4416fa2bc",
+      "nombre": "Figuero Tinus",
+      "descripcion": "Tinto de expresión concentrada, con un perfil de fruta madura, especias y un fondo tostado; en boca propone amplitud y una textura que invita a beber con calma. Para acompañar carnes rojas asadas, caza y guisos de larga cocción.",
+      "fuentes": [
+        "https://figuero.es/tinto-figuero-un-ano-mas-en-el-top-100-ribera-del-duero-by-tim-atkin/"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.707+00"
+    },
+    {
+      "id": "52eefbc4-b1e4-490a-872d-80647b067f6a",
+      "nombre": "Finca Dofí 2017",
+      "descripcion": "Tinto de perfil mediterráneo, con recuerdos de fruta roja madura, hierbas y un fondo mineral; en boca combina intensidad, calidez y una frescura que sostiene el conjunto. Acompaña cordero, carnes a la brasa y guisos de setas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "0717a96e-35b5-4e61-8b6d-3b63ff685b14",
+      "nombre": "Finca Villacreces Specimen Nº1",
+      "descripcion": "Tinto de perfil complejo, con fruta madura, regaliz y matices balsámicos; en boca combina volumen y un tanino de sensación pulida que prolonga el sabor. Acompaña carnes rojas asadas, guisos de caza y quesos curados.",
+      "fuentes": [
+        "https://www.villacreces.com/vinos/specimen-n3"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:08.892+00"
+    },
+    {
+      "id": "82a51e05-5a64-47cc-92eb-b0fba170310c",
+      "nombre": "Flor de Pingus",
+      "descripcion": "Tinto de perfil concentrado, con fruta negra madura y recuerdos de especias y monte bajo; en boca reúne cuerpo y un tanino de tacto envolvente. Un buen acompañante de vacuno a la parrilla, cordero asado y estofados de carne.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "7cb433e0-0a16-44e2-9a67-01b3b75ea3b4",
+      "nombre": "Francisco Barona",
+      "descripcion": "Tinto de carácter frutal, con recuerdos de mora, ciruela y hierbas aromáticas; en boca combina una estructura firme con frescura que invita a llevarlo a la mesa. Armoniza con carnes a la brasa, asados y guisos de setas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "40297e09-ca98-499f-bad5-c8fa36afdaf1",
+      "nombre": "La Hormiga (Antídoto)",
+      "descripcion": "La crianza en roble francés acompaña un tinto de corte clásico y textura voluptuosa, con un perfil de fruta madura y suaves especias; en boca resulta expresivo y gustoso. Acompaña cordero asado, carnes a la parrilla y guisos de setas.",
+      "fuentes": [
+        "https://www.bodegasantidoto.com/vinos/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "61739fd3-7623-405f-b0d9-573a476df532",
+      "nombre": "La Hormiga (Magnum)",
+      "descripcion": "La crianza en roble francés acompaña un tinto de corte clásico y textura voluptuosa, con un perfil de fruta madura y suaves especias; en boca resulta expresivo y gustoso. Acompaña cordero asado, carnes a la parrilla y guisos de setas.",
+      "fuentes": [
+        "https://www.bodegasantidoto.com/vinos/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "2caabdff-987d-4b46-9005-64c8536d8334",
+      "nombre": "Mauro",
+      "descripcion": "Tinto de carácter frutal y textura sedosa, con un perfil de fruta madura y suaves matices especiados; en boca resulta amplio y envolvente, sin perder una sensación de equilibrio. Acompaña carnes rojas, asados y guisos tradicionales.",
+      "fuentes": [
+        "https://www.bodegasmauro.com/vinos/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.661+00"
+    },
+    {
+      "id": "6064cef2-c768-4c7c-9853-2409ff2b6270",
+      "nombre": "Pago de Carraovejas",
+      "descripcion": "La fruta madura se acompaña de recuerdos especiados y un fondo balsámico, con una boca amplia donde la estructura y la frescura buscan equilibrio. Un tinto para compartir con cordero asado, cochinillo o vacuno a la parrilla.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.614+00"
+    },
+    {
+      "id": "3a443d48-c2b1-4d4b-ba0e-01ef3652caa4",
+      "nombre": "Pago de los Capellanes Crianza",
+      "descripcion": "La crianza acompaña una fruta negra de perfil maduro con recuerdos de especias y suaves tostados; la boca ofrece estructura y un paso redondo que mantiene el sabor. Se disfruta con asados, carnes a la parrilla y quesos curados.",
+      "fuentes": [
+        "https://www.gourmets.net/salon-gourmets/2025/catalogo-expositores/pago-de-los-capellanes"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:09.232+00"
+    },
+    {
+      "id": "e895f569-8a83-4f1d-ab48-03f86a4d9c6b",
+      "nombre": "Pago de los Capellanes Crianza (Magnum)",
+      "descripcion": "La crianza acompaña una fruta negra de perfil maduro con recuerdos de especias y suaves tostados; la boca ofrece estructura y un paso redondo que mantiene el sabor. Se disfruta con asados, carnes a la parrilla y quesos curados.",
+      "fuentes": [
+        "https://www.gourmets.net/salon-gourmets/2025/catalogo-expositores/pago-de-los-capellanes"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:09.322+00"
+    },
+    {
+      "id": "dc67ee11-502b-4b43-8486-ef5ef848af46",
+      "nombre": "Pago Santa Cruz",
+      "descripcion": "Tinto de perfil maduro, con fruta negra y un fondo de especias y madera fina; en boca propone amplitud, estructura y un final de sabor sostenido. Va bien con cordero al horno, carnes rojas a la brasa y guisos de caza.",
+      "fuentes": [
+        "https://www.vinasastre.com/es/node/141"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.526+00"
+    },
+    {
+      "id": "050a3e6d-a114-421e-bd09-d6288441653f",
+      "nombre": "Pagos de Anguix",
+      "descripcion": "Tinto de perfil frutal, con recuerdos de mora y ciruela y un fondo especiado; en boca combina cuerpo, frescura y una estructura que agradece la compañía de la comida. Acompaña carnes asadas, setas y quesos de media curación.",
+      "fuentes": [
+        "https://www.riberadelduero.es/mx/bodegas/pagos-de-anguix"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.703+00"
+    },
+    {
+      "id": "0628c633-b086-40f6-bcb7-125f64081d4b",
+      "nombre": "Pícaro del Águila",
+      "descripcion": "Tinto de perfil fresco y sabroso, con recuerdos de fruta roja, flores y especias; la boca propone un tanino fino y una acidez que da agilidad al conjunto. Acompaña aves asadas, carnes a la parrilla y platos de setas de temporada.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "9848ae25-9051-4a7f-bbfc-1474445f39db",
+      "nombre": "Pícaro del Águila (Magnum)",
+      "descripcion": "Tinto de perfil fresco y sabroso, con recuerdos de fruta roja, flores y especias; la boca propone un tanino fino y una acidez que da agilidad al conjunto. Acompaña aves asadas, carnes a la parrilla y platos de setas de temporada.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:57.939+00"
+    },
+    {
+      "id": "2e6a2e86-db54-4f26-937c-77f7f0708fac",
+      "nombre": "Pingus",
+      "descripcion": "Tinto de perfil profundo y concentrado, con recuerdos de fruta negra madura, especias y un fondo balsámico; en boca combina amplitud con una textura envolvente. Para disfrutar sin prisa con vacuno a la brasa, caza y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:09.529+00"
+    },
+    {
+      "id": "e59baae8-5310-4264-80f0-31bb3f1e7bfb",
+      "nombre": "PSI",
+      "descripcion": "Tinto de perfil frutal, con recuerdos de cereza, mora y hierbas de monte; en boca busca un equilibrio entre frescura y una estructura sabrosa que acompaña la comida. Va bien con carnes asadas, setas y quesos de media curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "c9903817-6d30-4d69-a96f-0cdc8bbf8495",
+      "nombre": "PSI (Magnum)",
+      "descripcion": "Tinto de perfil frutal, con recuerdos de cereza, mora y hierbas de monte; en boca busca un equilibrio entre frescura y una estructura sabrosa que acompaña la comida. Va bien con carnes asadas, setas y quesos de media curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "ee9846b8-06cd-4116-9480-371e4f115e80",
+      "nombre": "Quinta Sardonia",
+      "descripcion": "Tinto de perfil amplio, con fruta negra madura y recuerdos de especias y hierbas; en boca combina cuerpo, frescura y una estructura de sabor persistente. Acompaña carnes rojas asadas, guisos de caza y quesos de buena curación.",
+      "fuentes": [
+        "https://www.aecoctrade.es/es/empresa/liMs3Qakwyo8PDuoLdyXeI"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "453220b5-59f9-4f44-b472-dc7d61be506c",
+      "nombre": "Ritus",
+      "descripcion": "Tinto de perfil fresco y delicado, con recuerdos de fruta roja y negra y un fondo de especias; en boca combina estructura con una sensación viva que prolonga el sabor. Acompaña cordero asado, carnes a la brasa y setas salteadas.",
+      "fuentes": [
+        "https://balbas.es/grandes-pagos-gama/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.268+00"
+    },
+    {
+      "id": "8ae1eafd-7999-4180-93dc-362364091af0",
+      "nombre": "Terreus",
+      "descripcion": "Tinto de paraje de expresión profunda, con un perfil de fruta madura y especias; su boca intensa combina cuerpo y una textura que invita a darle tiempo en la copa. Para disfrutar con carnes rojas asadas, caza y guisos de sabor concentrado.",
+      "fuentes": [
+        "https://www.bodegasmauro.com/vinos/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "06bf9660-61b1-48ae-8032-5cbaf982d894",
+      "nombre": "Tomás Postigo",
+      "descripcion": "Tinto de perfil amplio, con fruta madura, recuerdos de especias y un fondo balsámico; en boca propone cuerpo y una textura envolvente que acompaña una estructura firme. Armoniza con vacuno a la brasa, asados y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.59+00"
+    },
+    {
+      "id": "8cfcfafc-fcef-4ba5-ac7f-f5fcc850c23e",
+      "nombre": "Tomás Postigo (Magnum)",
+      "descripcion": "Tinto de perfil amplio, con fruta madura, recuerdos de especias y un fondo balsámico; en boca propone cuerpo y una textura envolvente que acompaña una estructura firme. Armoniza con vacuno a la brasa, asados y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.669+00"
+    },
+    {
+      "id": "de8f93b9-5ad5-4097-8878-3e1357340d5a",
+      "nombre": "Tomás Postigo 5º Año",
+      "descripcion": "Tinto de perfil profundo, con fruta madura y recuerdos de especias y suaves tostados; en boca reúne cuerpo, una textura envolvente y un final prolongado. Buen compañero de carnes rojas asadas, caza y guisos de elaboración lenta.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:07.141+00"
+    },
+    {
+      "id": "55c0d225-bb5a-424f-a3cb-a7ca81face5f",
+      "nombre": "Único 2010 (Vega Sicilia)",
+      "descripcion": "La larga crianza acompaña una añada de perfil potente y concentrado, con recuerdos de fruta madura y especias; en boca ofrece amplitud y una textura de evolución pausada. Para servir con carnes rojas asadas, caza o quesos curados.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/f/en/wine/unico-en-1659.pdf"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "a8b39469-df9b-41bd-89a5-4b9c56c95775",
+      "nombre": "Único Reserva Especial",
+      "descripcion": "El ensamblaje de distintas añadas y la larga crianza aportan un perfil de gran complejidad, con fruta madura y matices especiados; en boca se despliega con calma y finura. Acompaña caza de pluma, asados y quesos de buena curación.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/es/vino/235/unico-reserva-especial/2016"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:59.305+00"
+    },
+    {
+      "id": "a80aee94-39bd-474c-95d8-d9a5f0c6ac7a",
+      "nombre": "Valtravieso VT Tinta Fina",
+      "descripcion": "Tinto de Tinta Fina de perfil frutal, con recuerdos de mora, ciruela y un fondo especiado; en boca combina una estructura sabrosa con la frescura de un viñedo de altura. Para acompañar carnes a la parrilla, asados y guisos de setas.",
+      "fuentes": [
+        "https://valtravieso.com/en/shop/vt-tinto-fino/"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "64a0b92a-2903-406c-bee5-4ee40a0333f3",
+      "nombre": "Vega Sicilia Valbuena 2018",
+      "descripcion": "La crianza acompaña una expresión fresca y llena de matices, con un perfil de fruta madura y especias; en boca destaca una textura untuosa y una sensación viva que da equilibrio. Acompaña carnes rojas, aves asadas y setas de temporada.",
+      "fuentes": [
+        "https://temposvegasicilia.com/es/vino/236/valbuena-5/2018"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.746+00"
+    },
+    {
+      "id": "de338bf4-f6e9-47b0-b933-fd3ab0e33e92",
+      "nombre": "Vega Sicilia Valbuena 2018 (Magnum)",
+      "descripcion": "La crianza acompaña una expresión fresca y llena de matices, con un perfil de fruta madura y especias; en boca destaca una textura untuosa y una sensación viva que da equilibrio. Acompaña carnes rojas, aves asadas y setas de temporada.",
+      "fuentes": [
+        "https://temposvegasicilia.com/es/vino/236/valbuena-5/2018"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.826+00"
+    },
+    {
+      "id": "bee12e20-f39c-4941-bf06-3d41802d06c2",
+      "nombre": "Vega Sicilia Valbuena 2019",
+      "descripcion": "Tinto de crianza de perfil armonioso, con recuerdos de fruta madura, especias y madera fina; en boca combina amplitud y una textura sedosa que prolonga el sabor. Para disfrutar con cordero asado, vacuno a la brasa y guisos de carne.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/es/vino/236/valbuena-5/2019"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.904+00"
+    },
+    {
+      "id": "55713b26-fb21-40f0-80e6-2cb8884f6311",
+      "nombre": "200 Monges Reserva",
+      "descripcion": "Tinto reserva de perfil maduro, con fruta roja y negra y recuerdos de especias y suave madera; en boca combina una textura redonda con cuerpo y sabor persistente. Acompaña cordero al horno, carnes a la parrilla y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.284+00"
+    },
+    {
+      "id": "7e02d098-2f4b-4674-ab1b-b70b45293d20",
+      "nombre": "Artadi Viñas de Gaín",
+      "descripcion": "La fruta roja y negra se acompaña de recuerdos de regaliz y chocolate; en boca mantiene un carácter frutal vivo, con un tanino de tacto amable y un final persistente. Acompaña aves asadas, carnes a la parrilla y platos de setas.",
+      "fuentes": [
+        "https://artadi.com/vinos/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "6890926d-575c-4919-a807-61ae2698b208",
+      "nombre": "Calados de Puntido Tempranillo 2015",
+      "descripcion": "Tinto de Tempranillo de perfil maduro, con recuerdos de fruta negra, especias y un fondo balsámico; en boca propone cuerpo y una estructura sabrosa. Para llevar a la mesa con carnes asadas, un guiso de setas o quesos de media curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.176+00"
+    },
+    {
+      "id": "ec7978fd-a0e0-4168-86bc-4b80b46fd6cf",
+      "nombre": "Castillo de Ygay Gran Reserva",
+      "descripcion": "Gran reserva de perfil clásico y pausado, con recuerdos de fruta madura, especias y madera fina; en boca busca armonía entre una textura sedosa y un sabor profundo. Va bien con cordero asado, caza de pluma y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:53.549+00"
+    },
+    {
+      "id": "7bc144b1-15f5-4140-b5cd-4b0bc2501ea8",
+      "nombre": "Conde de los Andes Histórico 2004",
+      "descripcion": "Tinto de perfil evolucionado, con recuerdos de fruta madura, especias y suaves matices de madera; en boca invita a apreciar una textura afinada y un sabor de carácter pausado. Acompaña aves asadas, cordero y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "f281132c-898d-4ddd-ab40-f94cd3883db6",
+      "nombre": "Conde de los Andes Histórico 2005",
+      "descripcion": "Tinto de perfil evolucionado, con recuerdos de fruta madura, especias y suaves matices de madera; en boca invita a apreciar una textura afinada y un sabor de carácter pausado. Acompaña aves asadas, cordero y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "bdd5d694-b33c-4299-862f-575b439b4f48",
+      "nombre": "Contino Reserva",
+      "descripcion": "La crianza acompaña un perfil de fruta roja y negra con recuerdos de especias y suaves tostados; la boca combina cuerpo, frescura y una textura de tanino amable. Va bien con asados, carnes a la parrilla y guisos tradicionales.",
+      "fuentes": [
+        "https://contino.es/vinos/contino-reserva/"
+      ],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.101+00"
+    },
+    {
+      "id": "f92a9727-9d2e-41da-9466-dd9bd9044a2a",
+      "nombre": "El Puntido",
+      "descripcion": "Tinto de perfil maduro y profundo, con recuerdos de fruta negra y especias y un fondo balsámico; en boca une estructura y una textura que prolonga el sabor. Acompaña vacuno a la brasa, cordero asado y quesos de buena curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:09.901+00"
+    },
+    {
+      "id": "9ae67aad-56ae-48e7-8c93-0c13614e51ec",
+      "nombre": "Finca Dofí",
+      "descripcion": "Tinto de perfil mediterráneo, con recuerdos de fruta roja madura, hierbas y un fondo mineral; en boca combina intensidad, calidez y una frescura que sostiene el conjunto. Acompaña cordero, carnes a la brasa y guisos de setas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "068f7c8f-4402-45db-9423-cc60884f153c",
+      "nombre": "Finca el Bosque 2021",
+      "descripcion": "Tinto de perfil intenso, con recuerdos de fruta negra madura, especias y madera fina; en boca propone amplitud y una estructura firme que pide comida de sabor profundo. Va bien con vacuno a la brasa, caza y guisos de carne.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:54.947+00"
+    },
+    {
+      "id": "6a8430a1-9bdc-4809-9cb9-f294ff768fa6",
+      "nombre": "Finca Monteviejo 2016",
+      "descripcion": "La crianza en roble francés acompaña la expresión de un viñedo viejo, con un perfil de fruta roja, hierbas y especias; en boca reúne amplitud y una sensación de frescura. Armoniza con carnes rojas asadas, cordero y guisos tradicionales.",
+      "fuentes": [
+        "https://bodegasdelamarquesa.com/producto/valserrano-finca-monteviejo/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "b0d47317-673b-4cb2-a787-48081719ba9e",
+      "nombre": "Gran Reserva 904 (La Rioja Alta)",
+      "descripcion": "Un gran reserva de crianza pausada, con fruta madura y recuerdos de especias y madera fina; la boca propone frescura, un tanino redondeado y un final prolongado. Acompaña cordero asado, caza de pluma y quesos bien curados.",
+      "fuentes": [
+        "https://www.riojalta.com/vinos_rioja-alta/gran-reserva-904/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.177+00"
+    },
+    {
+      "id": "696ca439-8bba-4e8a-9de5-f1a4e6dc5f8f",
+      "nombre": "La Cueva del Contador",
+      "descripcion": "Tinto de perfil profundo, con fruta roja y negra y un fondo especiado y balsámico; en boca combina una textura envolvente con estructura y una sensación de frescura. Para disfrutar con carnes rojas a la parrilla, asados y guisos.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.391+00"
+    },
+    {
+      "id": "465516c9-e18b-40d7-b94b-e0467d9931bf",
+      "nombre": "La Nieta",
+      "descripcion": "Tinto de perfil concentrado y delicado, con recuerdos de fruta madura y especias y un fondo balsámico; en boca reúne amplitud y una textura de tanino fino. Acompaña carnes rojas asadas, caza de pluma y quesos de buena curación.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:08:19.923382+00"
+    },
+    {
+      "id": "345729aa-0a2e-464a-bca8-05409784f668",
+      "nombre": "La Rioja Alta Gran Reserva 890",
+      "descripcion": "La larga crianza aporta un perfil pausado de fruta madura, especias y madera fina; en boca destaca la armonía entre frescura, una textura redonda y un sabor persistente. Buen compañero de cordero asado, caza y quesos curados.",
+      "fuentes": [
+        "https://www.riojalta.com/vinos_rioja-alta/gran-reserva-890/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.645+00"
+    },
+    {
+      "id": "8b7e528f-7d6b-413b-9100-8671ae590d05",
+      "nombre": "La Rioja Alta Gran Reserva 890 (Magnum)",
+      "descripcion": "La larga crianza aporta un perfil pausado de fruta madura, especias y madera fina; en boca destaca la armonía entre frescura, una textura redonda y un sabor persistente. Buen compañero de cordero asado, caza y quesos curados.",
+      "fuentes": [
+        "https://www.riojalta.com/vinos_rioja-alta/gran-reserva-890/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:55.724+00"
+    },
+    {
+      "id": "b92c7303-2518-49d3-9d5c-c4a8c3035d0d",
+      "nombre": "Macán 2020",
+      "descripcion": "Tinto de crianza de perfil poderoso y sutil, con recuerdos de fruta madura y especias; en boca combina una textura untuosa y un tanino aterciopelado que da profundidad. Acompaña vacuno a la brasa, asados y guisos de carne.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/en/wine/231/macan/2020"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.118+00"
+    },
+    {
+      "id": "db3a2a1c-861e-4ca2-aaf6-4dba66d3cdb6",
+      "nombre": "Macán Clásico 2020",
+      "descripcion": "Tinto de perfil vivo y frutal, con recuerdos de cereza y mora y un fondo suavemente especiado; en boca resulta ágil, con frescura y una textura amable. Para compartir con carnes asadas, embutidos y platos de setas de temporada.",
+      "fuentes": [
+        "https://www.temposvegasicilia.com/es/vino/230/macan-clasico/2020"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.195+00"
+    },
+    {
+      "id": "2564cf67-b7d9-4425-9ef5-cb2d39d5bc60",
+      "nombre": "Marqués de Murrieta Reserva",
+      "descripcion": "Tinto reserva de perfil clásico, con recuerdos de fruta roja madura, especias y suave madera; en boca combina una textura redonda con frescura y un sabor que acompaña bien la comida. Va bien con cordero, aves asadas y guisos.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.274+00"
+    },
+    {
+      "id": "27f941e0-9a95-492d-b939-12f2d7abdcb4",
+      "nombre": "Marqués de Murrieta Reserva (Magnum)",
+      "descripcion": "Tinto reserva de perfil clásico, con recuerdos de fruta roja madura, especias y suave madera; en boca combina una textura redonda con frescura y un sabor que acompaña bien la comida. Va bien con cordero, aves asadas y guisos.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.351+00"
+    },
+    {
+      "id": "0aeba489-b6d1-4d25-884f-dee60eba581b",
+      "nombre": "Marqués de Riscal 150 Aniversario",
+      "descripcion": "Tinto de crianza de perfil maduro, con recuerdos de fruta negra, especias y matices tostados; en boca combina cuerpo y una textura pulida de sabor persistente. Para disfrutar con cordero asado, vacuno a la brasa y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "8a70d0ed-39df-4f42-86b7-55c74c84872b",
+      "nombre": "Marqués de Riscal Barón de Chirel",
+      "descripcion": "La crianza acompaña aromas de fruta negra, regaliz y un fondo balsámico; en boca propone profundidad y una textura firme que agradece una comida de sabor intenso. Acompaña carnes rojas asadas, caza y quesos de buena curación.",
+      "fuentes": [
+        "https://www.marquesderiscal.com/public/Attachment/2025/10/barndechirel2020_cas.pdf"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "1c5569cd-f889-42b9-905c-0c7d80d6c5a3",
+      "nombre": "Marqués de Vargas Reserva",
+      "descripcion": "Tinto reserva de perfil maduro, con fruta roja y negra y recuerdos de especias y madera fina; en boca ofrece una textura redonda y una estructura sabrosa. Acompaña carnes a la parrilla, cordero asado y guisos de cocina tradicional.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.177+00"
+    },
+    {
+      "id": "0bf32fa1-51aa-45af-9882-a11fc391b509",
+      "nombre": "Martelo",
+      "descripcion": "Tinto de perfil fresco, con recuerdos de fruta roja, hierbas y suaves especias; en boca busca una textura de tanino fino y un paso sabroso que mantiene la copa ágil. Buen compañero de aves asadas, carnes a la parrilla y setas.",
+      "fuentes": [
+        "https://www.riojalta.com/vinos_torre-de-ona/finca-martelo/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:56.586+00"
+    },
+    {
+      "id": "88d2f1ab-f25f-4088-957d-413e197643f3",
+      "nombre": "Petra de Valpiedra Garnacha",
+      "descripcion": "La Garnacha propone un perfil de fruta roja y delicados recuerdos florales, con un fondo especiado; en boca ofrece amplitud, una textura amable y una sensación de frescura. Acompaña cordero, aves asadas y guisos de setas.",
+      "fuentes": [
+        "https://familiamartinezbujanda.com/en/petra-de-valpiedra-a-wine-with-all-the-flavor-of-ancient-rioja/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": null,
+      "updated_at_anterior": "2026-10-07 15:25:10.464+00"
+    },
+    {
+      "id": "b0e1e435-ce02-4a0d-97f8-88ccaf480acc",
+      "nombre": "Quiñón de Valmira",
+      "descripcion": "Tinto de perfil delicado, con recuerdos de fruta roja y flores y un fondo suavemente especiado; en boca busca finura, frescura y una textura que se despliega con calma. Acompaña aves asadas, cordero y platos de setas de temporada.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.023+00"
+    },
+    {
+      "id": "487db83a-c938-42d9-b91c-c94bd8045d3d",
+      "nombre": "Remelluri Reserva",
+      "descripcion": "Tinto reserva de perfil profundo, con fruta madura y recuerdos de hierbas, especias y suave madera; en boca combina cuerpo y una frescura que alarga el sabor. Armoniza con carnes rojas asadas, cordero y guisos tradicionales.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "ff35c279-bddb-49c5-800a-1b3f47ded052",
+      "nombre": "Riscal XR",
+      "descripcion": "Tinto de crianza de perfil clásico, con recuerdos de fruta madura, especias y un fondo de madera fina; en boca combina frescura con una textura amable y un sabor persistente. Va bien con carnes asadas, guisos y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.107+00"
+    },
+    {
+      "id": "bbb74810-0849-459c-8ed8-4406caa78773",
+      "nombre": "Riscal XR (Magnum)",
+      "descripcion": "Tinto de crianza de perfil clásico, con recuerdos de fruta madura, especias y un fondo de madera fina; en boca combina frescura con una textura amable y un sabor persistente. Va bien con carnes asadas, guisos y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.188+00"
+    },
+    {
+      "id": "f6a51933-16bb-4056-bfe6-71ac2f6b92e7",
+      "nombre": "San Vicente 2022",
+      "descripcion": "Tinto de perfil maduro, con recuerdos de fruta negra, especias y un fondo balsámico; en boca combina cuerpo con una textura de tanino fino y un final prolongado. Acompaña vacuno a la brasa, cordero asado y quesos bien curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-10 13:11:51.981845+00"
+    },
+    {
+      "id": "4f2bdba3-9850-4a7d-aa56-fb406a2f3424",
+      "nombre": "Sierra Cantabria Colección Privada",
+      "descripcion": "Tinto de perfil frutal y expresivo, con recuerdos de cereza, mora y especias; en boca propone una textura envolvente y una frescura que equilibra su carácter sabroso. Para acompañar carnes asadas, guisos y platos de setas.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2026-10-07 08:10:58.429+00"
+    },
+    {
+      "id": "1afe9a7d-c4c1-4dea-9d52-c6df8cd13f08",
+      "nombre": "Viña Arana",
+      "descripcion": "Tinto de crianza de perfil clásico, con fruta roja madura y recuerdos de especias y madera fina; en boca ofrece frescura y una textura redonda que acompaña el sabor sin pesar. Va bien con cordero, aves asadas y guisos tradicionales.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "bd089798-4d9a-4f4c-b9f0-6046e372a07e",
+      "nombre": "Viña Ardanza",
+      "descripcion": "Tinto de crianza de perfil aromático, con fruta roja madura y recuerdos de especias y monte bajo; en boca combina una textura amable con frescura y un final sabroso. Armoniza con cordero asado, carnes a la parrilla y quesos curados.",
+      "fuentes": [],
+      "criterio": "Descripción prudente de tipo y origen; sin atribuir elaboración concreta no verificada.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    },
+    {
+      "id": "bb734317-b305-4c89-8218-a61d7b4e8ffa",
+      "nombre": "Vitium Reserva",
+      "descripcion": "La fruta roja y negra se acompaña de recuerdos de tabaco, toffee y especias dulces; en boca destaca un paso sedoso, con la madera integrada y un final de sabor largo. Acompaña carnes rojas asadas, guisos y quesos curados.",
+      "fuentes": [
+        "https://riojawine.com/es/vinos-rioja/vitium-reserva/"
+      ],
+      "criterio": "Perfil específico verificado; maridaje propuesto editorialmente.",
+      "descripcion_anterior": "",
+      "updated_at_anterior": "2025-11-12 12:07:47.822014+00"
+    }
+  ]
+}

@@ -1,0 +1,449 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Libre Baskerville (variable, wght 400–700) servida como WOFF2 con subset
+ * Latin + Latin-1 + Latin Extended-A + puntuación general + €. Los nombres
+ * llevan hash del contenido porque vercel.json sirve /fonts/* como `immutable`:
+ * si se regeneran, cambia el hash y hay que actualizar estas URLs y el preload
+ * de index.html. Los .ttf originales (fuente del subset) viven fuera de public/,
+ * en assets-src/fonts/libre-baskerville/, para no publicarlos.
+ */
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/libre-baskerville/LibreBaskerville-Variable-latin.c844cbb9.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/fonts/libre-baskerville/LibreBaskerville-Italic-Variable-latin.c44cc02a.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 206 11% 25%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 206 11% 25%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 206 11% 25%;
+
+    --primary: 206 11% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 25 13% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 25 13% 85%;
+    --muted-foreground: 15 4% 39%;
+
+    --accent: 38 59% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 25 13% 85%;
+    --input: 25 13% 85%;
+    --ring: 38 59% 45%;
+
+    --radius: 0.5rem;
+    
+    /* Custom design tokens */
+    --stone: 25 13% 55%;
+    --dark-slate: 206 11% 25%;
+    --mid-gray: 15 4% 39%;
+    --gold: 38 59% 45%;
+
+    /*
+     * Ticket (resguardo de solicitud de reserva).
+     *
+     * Misma gramática que el ticket de "Mi mesa" (components/carta/TicketMesa),
+     * que fija los colores a mano porque se captura como imagen. Aquí sí son
+     * tokens: este ticket es DOM vivo y tiene que responder al tema.
+     *
+     * `--ticket-stamp` NO es `--gold`: el oro (38 59% 45%) sobre el papel da
+     * 3,1:1 de contraste — vale para una filigrana, no para el texto del sello,
+     * que es justo el dato que no se puede perder. Este oro oscurecido da
+     * 5,4:1 (AA) y sigue leyéndose como la misma familia de tinta ámbar.
+     */
+    --ticket-paper: 36 50% 97%;
+    --ticket-tray: 28 22% 90%;
+    --ticket-ink: 206 11% 25%;
+    --ticket-ink-soft: 15 4% 39%;
+    --ticket-rule: 38 59% 45%;
+    --ticket-stamp: 38 62% 32%;
+    
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(206 11% 25% / 0.95), hsl(15 4% 39% / 0.9));
+    --gradient-section: linear-gradient(180deg, hsl(0 0% 100%), hsl(25 13% 95%));
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 20px hsl(206 11% 25% / 0.1);
+    --shadow-elegant: 0 10px 40px hsl(206 11% 25% / 0.15);
+    
+    /* Transitions */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    /* Animations */
+    --pulse-duration: 5s;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 206 11% 15%;
+    --foreground: 0 0% 98%;
+
+    --card: 206 11% 20%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 206 11% 20%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 38 59% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 25 13% 35%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 206 11% 25%;
+    --muted-foreground: 25 13% 70%;
+
+    --accent: 38 59% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 206 11% 30%;
+    --input: 206 11% 30%;
+    --ring: 38 59% 45%;
+
+    /* El papel se mantiene claro en tema oscuro (un ticket es un ticket), pero
+       la bandeja se hunde para que el recibo siga pareciendo un objeto encima. */
+    --ticket-paper: 36 28% 94%;
+    --ticket-tray: 206 11% 22%;
+    --ticket-ink: 206 14% 20%;
+    --ticket-ink-soft: 15 6% 36%;
+    --ticket-rule: 38 59% 40%;
+    --ticket-stamp: 38 62% 30%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    /* Scroll suave en toda la aplicación */
+    scroll-behavior: smooth;
+    /* Prevenir scroll horizontal */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Libre Baskerville", "Bodoni MT", serif;
+    /* Prevenir scroll horizontal */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+  }
+
+  input,
+  button,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  /* Prevenir scroll horizontal en todos los contenedores */
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+
+  /* Optimizar interacciones táctiles */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Mejorar rendimiento del mapa en móvil */
+  .mapboxgl-map {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    /* Prevenir overflow */
+    max-width: 100% !important;
+  }
+
+  /* Asegurar que el canvas del mapa no cause overflow */
+  .mapboxgl-canvas-container,
+  .mapboxgl-canvas {
+    max-width: 100% !important;
+  }
+
+  /* Estilos mejorados para popups en móvil */
+  .mapboxgl-popup {
+    max-width: 90vw !important;
+  }
+
+  .mapboxgl-popup-content {
+    padding: 0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  }
+
+  .mapboxgl-popup-close-button {
+    font-size: 24px !important;
+    padding: 8px 12px !important;
+    color: hsl(var(--accent)) !important;
+  }
+
+  @media (max-width: 768px) {
+    .mapboxgl-popup-close-button {
+      font-size: 28px !important;
+      padding: 10px 14px !important;
+    }
+  }
+
+  /* Mejorar controles de navegación del mapa en móvil */
+  .mapboxgl-ctrl-group button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  @media (max-width: 768px) {
+    .mapboxgl-ctrl-group button {
+      width: 40px !important;
+      height: 40px !important;
+    }
+  }
+
+  /* Asegurar que ningún elemento cause overflow horizontal */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Prevenir que elementos en grid o flex causen overflow */
+  .container, section, div {
+    max-width: 100%;
+  }
+  
+  /* Animación de pulso orgánico personalizada */
+  @keyframes pulse-organic {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
+    }
+    35% {
+      opacity: 0.9;
+      transform: scale(1.12);
+      box-shadow: 0 0 0 14px hsl(var(--accent) / 0.18);
+    }
+    60% {
+      opacity: 0.85;
+      transform: scale(1.08);
+      box-shadow: 0 0 0 8px hsl(var(--accent) / 0.12);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--accent) / 0);
+    }
+  }
+  
+  .animate-pulse-organic {
+    animation: pulse-organic var(--pulse-duration, 5s) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+}
+
+@layer utilities {
+  .font-libre-baskerville {
+    font-family: "Libre Baskerville", "Bodoni MT", serif;
+  }
+
+  /* Oculta la barra de scroll SIN quitar el scroll. Para superficies donde la
+     barra nativa rompe el diseño —el ticket de reserva, que imita un papel
+     troquelado y no puede llevar un raíl gris pegado al borde—. El contenido
+     se sigue pudiendo desplazar con rueda, dedo y teclado, que es lo que
+     importa para accesibilidad: sin `overflow` no habría forma de llegar
+     al final del papel en una pantalla baja. */
+  .scrollbar-oculta {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Edge antiguo */
+  }
+
+  .scrollbar-oculta::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  .scroll-reveal-scale {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .scroll-reveal-scale.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* ---------------------------------------------------------------------
+   * Ticket de reserva (components/reservas/TicketReserva)
+   * ------------------------------------------------------------------ */
+
+  /*
+   * Borde troquelado: dos capas de máscara que muerden semicírculos en el
+   * canto superior e inferior. Cada capa cubre el 51 % del alto (la unión
+   * pasa del 100 %, así que no queda banda sin pintar por el medio) y se
+   * repite en horizontal cada `--muesca-paso`.
+   *
+   * Va con `-webkit-mask` además de `mask` por Safari < 15.4. Donde no haya
+   * soporte de máscaras el papel sale rectangular: se pierde el troquel, no
+   * el contenido. OJO: enmascarar recorta también `box-shadow`, así que la
+   * elevación la pone la bandeja (el DialogContent), nunca este elemento.
+   */
+  .ticket-paper {
+    --muesca: 7px;
+    --muesca-paso: 22px;
+    -webkit-mask:
+      radial-gradient(var(--muesca) at 50% 0, #0000 98%, #000 100%) 0 0 / var(--muesca-paso) 51% repeat-x,
+      radial-gradient(var(--muesca) at 50% 100%, #0000 98%, #000 100%) 0 100% / var(--muesca-paso) 51% repeat-x;
+    mask:
+      radial-gradient(var(--muesca) at 50% 0, #0000 98%, #000 100%) 0 0 / var(--muesca-paso) 51% repeat-x,
+      radial-gradient(var(--muesca) at 50% 100%, #0000 98%, #000 100%) 0 100% / var(--muesca-paso) 51% repeat-x;
+  }
+
+  /*
+   * Grano del papel: un `feTurbulence` en un SVG embebido (≈300 B, cero
+   * peticiones). Es `background-image`, NO un `filter`: una textura teselada
+   * se rasteriza una vez, mientras que un filtro dentro de un contenedor que
+   * hace scroll repinta en cada frame.
+   */
+  .ticket-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  /* El recibo "sale de la impresora": baja a su sitio y se asienta. */
+  @keyframes ticket-print {
+    from {
+      opacity: 0;
+      transform: translateY(-14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /*
+   * El sello se estampa. Se anima `scale` (propiedad individual) y no
+   * `transform`, porque el giro del sello vive en `rotate` y un keyframe con
+   * `transform` lo pisaría y dejaría el sello recto.
+   */
+  @keyframes ticket-stamp {
+    0% {
+      opacity: 0;
+      scale: 1.3;
+    }
+    55% {
+      opacity: 1;
+      scale: 0.97;
+    }
+    100% {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  .animate-ticket-print {
+    animation: ticket-print 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-ticket-stamp {
+    animation: ticket-stamp 460ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ticket-print,
+    .animate-ticket-stamp {
+      animation: none;
+    }
+  }
+}
+
+
+/* Stable mobile viewport: browser toolbar changes must not resize the hero. */
+.hero-section {
+  height: 100vh;
+  height: 100svh;
+  min-height: 38rem;
+}
+
+/* Soft colour without animated, blurred offscreen layers. */
+.hero-backdrop {
+  background:
+    radial-gradient(ellipse at 10% 20%, hsl(var(--accent) / 0.16), transparent 55%),
+    radial-gradient(ellipse at 90% 80%, hsl(var(--primary) / 0.10), transparent 60%);
+}
+
+section[id] { scroll-margin-top: 5rem; }
+
+@media (hover: none), (pointer: coarse) {
+  .hero-section .animate-float { animation: none; }
+  .hero-section img { filter: none; }
+  .hero-section a { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-float, .animate-pulse-organic { animation: none; }
+  .scroll-reveal-scale { opacity: 1; transform: none; transition: none; }
+}

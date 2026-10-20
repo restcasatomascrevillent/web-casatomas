@@ -1,0 +1,13 @@
+project_id = "jeamoczmbfsnwkfjxcyo"
+
+
+[functions.cheques-regalo-web]
+verify_jwt = true
+
+# Stripe firma el cuerpo; no utiliza JWT de Supabase.
+[functions.stripe-webhook-cheques-regalo]
+verify_jwt = false
+
+# Gestión autenticada de compras manuales y envío del PDF.
+[functions.cheques-regalo-admin]
+verify_jwt = true
