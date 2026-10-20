@@ -10,8 +10,8 @@ describe("idleImport", () => {
 
   it("sin window (SSG), resuelve al momento", async () => {
     const original = globalThis.window;
-    // @ts-expect-error — simula el prerenderizado en Node.
-    delete globalThis.window;
+    // Simula el prerenderizado en Node sin usar supresiones TypeScript.
+    Reflect.deleteProperty(globalThis, "window");
     try {
       const cargar = vi.fn().mockResolvedValue("modulo");
       await expect(idleImport(cargar)()).resolves.toBe("modulo");

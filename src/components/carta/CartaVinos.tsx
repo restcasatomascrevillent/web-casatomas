@@ -71,7 +71,7 @@ interface Vino {
   denominacion_origen?: string;
   ubicacion_region?: string;
   ubicacion_pais?: string;
-  orden?: number;
+  orden?: string | number | null;
   activado?: boolean;
   alergenos_oficiales?: string[] | null;
   alergenos_inferidos?: string[] | null;
@@ -311,7 +311,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
     const pedido = getUserPedido();
     const nextPedido = [...pedido];
     const key = getPedidoItemKey(pedidoItem);
-    const existingIndex = nextPedido.findIndex((existingItem: any) => getPedidoItemKey(existingItem) === key);
+    const existingIndex = nextPedido.findIndex((existingItem) => getPedidoItemKey(existingItem) === key);
 
     if (existingIndex >= 0) {
       const existingItem = nextPedido[existingIndex];
@@ -345,7 +345,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   }, [mapVinos, tipoSeleccionado]);
 
   const getLocalizedField = (vino: Vino, key: string) => {
-    const value = (vino as { [key: string]: unknown })[key];
+    const value = vino[key as keyof Vino];
     return typeof value === "string" ? value : undefined;
   };
 

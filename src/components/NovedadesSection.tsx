@@ -75,18 +75,25 @@ const fallbackImages: NombreImagen[] = ["pulpo-plato", "carne-plato", "champan"]
 const SIZES_NOVEDAD = "(min-width: 768px) 33vw, calc(100vw - 32px)";
 
 const getLocalizedContent = (novedad: Novedad, language: Language) => {
-  const titleKey = language === "es" ? "titulo" : `titulo_${language}`;
-  const descKey = language === "es" ? "descripcion" : `descripcion_${language}`;
-  const badgeKey = language === "es" ? "badge_text" : `badge_text_${language}`;
-  const bulletsKey = language === "es" ? "bullets" : `bullets_${language}`;
-  const tagsKey = language === "es" ? "tags" : `tags_${language}`;
+  const sufijo = language === "es" ? "" : `_${language}`;
+  // Los nombres dinamicos siguen restringidos a las claves declaradas de Novedad.
+  const texto = (campo: keyof Novedad): string | undefined => {
+    const valor = novedad[campo];
+    return typeof valor === "string" ? valor : undefined;
+  };
+  const lista = (campo: keyof Novedad): string[] | undefined => {
+    const valor = novedad[campo];
+    return Array.isArray(valor)
+      ? valor.filter((item): item is string => typeof item === "string")
+      : undefined;
+  };
 
   return {
-    titulo: (novedad as Record<string, string | null | undefined>)[titleKey] || novedad.titulo,
-    descripcion: (novedad as Record<string, string | null | undefined>)[descKey] || novedad.descripcion || "",
-    badge: (novedad as Record<string, string | null | undefined>)[badgeKey] || novedad.badge_text || "",
-    bullets: ((novedad as Record<string, string[] | null | undefined>)[bulletsKey] || novedad.bullets || []) as string[],
-    tags: ((novedad as Record<string, string[] | null | undefined>)[tagsKey] || novedad.tags || []) as string[],
+    titulo: texto(`titulo${sufijo}` as keyof Novedad) || novedad.titulo,
+    descripcion: texto(`descripcion${sufijo}` as keyof Novedad) || novedad.descripcion || "",
+    badge: texto(`badge_text${sufijo}` as keyof Novedad) || novedad.badge_text || "",
+    bullets: lista(`bullets${sufijo}` as keyof Novedad) || novedad.bullets || [],
+    tags: lista(`tags${sufijo}` as keyof Novedad) || novedad.tags || [],
   };
 };
 

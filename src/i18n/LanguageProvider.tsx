@@ -126,7 +126,7 @@ export const LanguageProvider = ({ children, initialLanguage }: LanguageProvider
     };
 
     const delayedPreload = () => {
-      if ("requestIdleCallback" in window) {
+      if (typeof window.requestIdleCallback === "function") {
         const idleId = window.requestIdleCallback(preloadRemainingLanguages);
         return () => window.cancelIdleCallback(idleId);
       }
