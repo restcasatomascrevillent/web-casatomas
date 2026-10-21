@@ -197,6 +197,9 @@ export const routes: RouteRecord[] = [
       // el token/firma se lee en el navegador, nunca en el build.
       { path: "reserva/respuesta", lazy: lazyRoute(() => import("./pages/RespuestaReserva")) },
       { path: "newsletter/baja", lazy: lazyRoute(() => import("./pages/NewsletterBaja")) },
+      // Aviso legal (LSSI): solo en español, `noindex`. Lo enlaza el pie de
+      // las tres ramas a esta misma URL (ver `AVISO_LEGAL_PATH`).
+      { path: "aviso-legal", lazy: lazyRoute(() => import("./pages/AvisoLegal")) },
       // Ruta literal para que el SSG prerenderice `404.html` (vite-react-ssg
       // descarta la ruta "*" al recolectar paths). Vercel sirve ese fichero con
       // status 404 para cualquier URL que no resuelva en el filesystem. Uno

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 import { openCookiePreferences } from "@/lib/cookie-consent";
-import { CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH } from "@/lib/condiciones";
+import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH } from "@/lib/condiciones";
 
 const Footer = () => {
   const { t, language } = useTranslations();
@@ -109,6 +109,13 @@ const Footer = () => {
               className="text-xs text-stone hover:text-accent transition-colors"
             >
               {t.footer.bookingTerms}
+            </Link>
+            {/* Solo existe en español (ver `AVISO_LEGAL_PATH`): sin prefijo de idioma. */}
+            <Link
+              to={AVISO_LEGAL_PATH}
+              className="text-xs text-stone hover:text-accent transition-colors"
+            >
+              {t.footer.legalNotice}
             </Link>
             <button
               type="button"

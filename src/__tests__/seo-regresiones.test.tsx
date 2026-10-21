@@ -51,7 +51,7 @@ it("las páginas antiguas tienen equivalentes en los tres idiomas", () => {
 
 it("la migración conserva la carta antigua y no bloquea el dominio definitivo", () => {
   const config = JSON.parse(readFileSync("vercel.json", "utf8"));
-  expect(config.redirects).toContainEqual({ source: "/carta-casa-tomas-restaurante", destination: "/carta", statusCode: 301 });
+  expect(config.redirects).toContainEqual({ source: "/carta-casa-tomas-restaurante{/}?", destination: "/carta", statusCode: 301 });
   const regla = config.headers.find((r: { headers: { key: string }[] }) => r.headers.some(h => h.key === "X-Robots-Tag"));
   const host = new RegExp(`^${regla.has[0].value}$`);
   expect(host.test("casa-tomas-story.vercel.app")).toBe(true);

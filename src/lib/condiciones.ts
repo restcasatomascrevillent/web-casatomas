@@ -14,3 +14,10 @@ export const ANCLA_CONDICIONES_NEWSLETTER = "newsletter";
  */
 export const POLITICA_PRIVACIDAD_PATH = "/politica-privacidad";
 export const RESERVAS_PATH = "/reservas";
+
+/**
+ * Aviso legal (LSSI-CE, art. 10). Solo en español: es el texto vigente que
+ * firma el titular (migrado del WordPress antiguo) y no hay versión traducida
+ * aprobada. El pie de las tres ramas enlaza a esta misma ruta.
+ */
+export const AVISO_LEGAL_PATH = "/aviso-legal";
