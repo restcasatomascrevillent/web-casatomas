@@ -273,7 +273,7 @@ const Header = () => {
                   <NavLink
                     to={`${home}#${item.id}`}
                     onClick={(event) => { event.preventDefault(); handleNavClick(item.id); }}
-                    className="w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
+                    className="block w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
                   >
                     {item.label}
                   </NavLink>

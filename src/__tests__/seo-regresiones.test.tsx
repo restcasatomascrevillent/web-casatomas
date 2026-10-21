@@ -33,11 +33,11 @@ describe("precios desconocidos", () => {
     expect(precioConocido(precio)).toBe(false);
     expect(mostrarPrecio(precio, "es")).toBe("Consultar precio");
     const item = { nombre: "Vino", categoria: "Vinos", precio_eur: precio };
-    const schema = menuSchema(agruparPorCategoria([item] as never, "es"), "es");
+    const schema = menuSchema(agruparPorCategoria([item], "es"), "es");
     expect(JSON.stringify(schema)).not.toContain('"offers"');
   });
   it("conserva los precios reales en JSON-LD", () => {
-    const schema = menuSchema(agruparPorCategoria([{ nombre: "Vino", categoria: "Vinos", precio_eur: 24.5 }] as never, "es"), "es");
+    const schema = menuSchema(agruparPorCategoria([{ nombre: "Vino", categoria: "Vinos", precio_eur: 24.5 }], "es"), "es");
     expect(JSON.stringify(schema)).toContain('"price":"24.50"');
   });
 });

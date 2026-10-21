@@ -422,9 +422,8 @@ All colors MUST be HSL.
 
 /* Stable mobile viewport: browser toolbar changes must not resize the hero. */
 .hero-section {
-  height: 100vh;
-  height: 100svh;
-  min-height: 38rem;
+  min-height: max(38rem, 100vh);
+  min-height: max(38rem, 100svh);
 }
 
 /* Soft colour without animated, blurred offscreen layers. */

@@ -3,7 +3,7 @@ import { precioConocido } from "@/lib/precios";
  * Datos del negocio y constructores de datos estructurados (schema.org).
  *
  * Todo lo que hay aquí está verificado. Lo que no se ha podido verificar
- * (coordenadas exactas, perfiles sociales) se omite: un dato inventado en el
+ * (coordenadas exactas) se omite: un dato inventado en el
  * JSON-LD es motivo de acción manual de Google, no un detalle menor.
  */
 import type { ItemTraducido } from "./carta-i18n";

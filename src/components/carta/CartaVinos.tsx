@@ -95,7 +95,8 @@ const INFORMACION_VINO = {
   fr: { ver: "Voir les informations", ocultar: "Masquer les informations", sinFoto: "Aucune photo disponible" },
 };
 
-function categoriaCorta(categoria: string): string {
+function categoriaCorta(categoria: string, language: "es" | "en" | "fr"): string {
+  if (/pendiente|por confirmar/i.test(categoria)) return { es: "Consultar origen", en: "Ask about origin", fr: "Origine sur demande" }[language];
   const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?|ESPUMOSOS?)\s*[—–-]\s*/i, "");
   const nombres: Record<string, string> = {
     "RIBERA DEL DUERO": "Ribera del Duero",
@@ -341,8 +342,8 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
         cantidades.set(vino.categoria, (cantidades.get(vino.categoria) ?? 0) + 1);
       }
     });
-    return Array.from(cantidades, ([valor, cantidad]) => ({ valor, etiqueta: categoriaCorta(valor), cantidad }));
-  }, [mapVinos, tipoSeleccionado]);
+    return Array.from(cantidades, ([valor, cantidad]) => ({ valor, etiqueta: categoriaCorta(valor, language), cantidad }));
+  }, [mapVinos, tipoSeleccionado, language]);
 
   const getLocalizedField = (vino: Vino, key: string) => {
     const value = (vino as { [key: string]: unknown })[key];
@@ -685,7 +686,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                         </button>
                       </div>
                     </div>
-                    <p className="font-sans text-xs leading-relaxed text-muted-foreground">{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "")}</p>
+                    <p className="font-sans text-xs leading-relaxed text-muted-foreground">{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "", language)}</p>
                   </CardHeader>
 
                   {expanded && (
