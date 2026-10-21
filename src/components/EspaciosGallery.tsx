@@ -4,6 +4,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Expand, Sun, X } from "lucide-react";
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { NEGOCIO } from "@/lib/negocio";
 import "./espacios-gallery.css";
 
 const photos: NombreImagen[][] = [
@@ -101,6 +102,11 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
     if (scrollFrame.current !== null) cancelAnimationFrame(scrollFrame.current);
   }, []);
   const name = labels.names[space];
+  // Con la marca y la localidad: el nombre del espacio solo ("Salón —
+  // fotografía 1") no dice en qué restaurante ni dónde, para quien llega
+  // a la foto desde una búsqueda de imágenes.
+  const altFoto = (index: number) =>
+    `${name} de ${NEGOCIO.nombre}, ${NEGOCIO.localidad} — ${labels.photo.toLowerCase()} ${index + 1}`;
 
   return (
     <div className="ct-spaces">
@@ -120,7 +126,7 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
                   tabIndex={index === current ? 0 : -1}
                   aria-label={`${labels.expand}: ${name}, ${index + 1}`}
                   onClick={(event) => open(index, event.currentTarget)}>
-                  <ImagenResponsive nombre={photo} alt={`${name} — ${labels.photo.toLowerCase()} ${index + 1}`} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 820px" loading="lazy" decoding="async" draggable={false} />
+                  <ImagenResponsive nombre={photo} alt={altFoto(index)} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 820px" loading="lazy" decoding="async" draggable={false} />
                   <span className="ct-expand"><Expand size={18} aria-hidden="true" /></span>
                   <span className="ct-photo-label">{name}<span>{String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
                 </button>
@@ -130,7 +136,7 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
               {[1, 2].map((offset) => {
                 const index = (current + offset) % images.length;
                 return <button type="button" key={offset} aria-label={`${labels.expand}: ${name}, ${index + 1}`} onClick={(event) => open(index, event.currentTarget)}>
-                  <ImagenResponsive nombre={images[index]} alt={`${name} — ${labels.photo.toLowerCase()} ${index + 1}`} sizes="(max-width: 1200px) 30vw, 360px" loading="lazy" decoding="async" />
+                  <ImagenResponsive nombre={images[index]} alt={altFoto(index)} sizes="(max-width: 1200px) 30vw, 360px" loading="lazy" decoding="async" />
                   {offset === 2 && <span className="ct-all-label">{labels.view} <ArrowUpRight size={16} aria-hidden="true" /></span>}
                 </button>;
               })}
@@ -177,7 +183,7 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
               <div className="ct-viewport" ref={viewport}>
                 <div className="ct-track">
                   {images.map((photo, index) => <div className="ct-slide" key={photo} aria-hidden={index !== current}>
-                    {viewed.has(index) && <ImagenResponsive nombre={photo} alt={`${name} — ${labels.photo.toLowerCase()} ${index + 1}`} sizes="(max-width: 700px) 100vw, 900px" loading={index === current ? "eager" : "lazy"} decoding="async" />}
+                    {viewed.has(index) && <ImagenResponsive nombre={photo} alt={altFoto(index)} sizes="(max-width: 700px) 100vw, 900px" loading={index === current ? "eager" : "lazy"} decoding="async" />}
                   </div>)}
                 </div>
               </div>

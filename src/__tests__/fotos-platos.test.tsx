@@ -130,7 +130,7 @@ describe("ProductoCard — interruptor de fotos", () => {
     // con cualquiera de los dos se enseña la foto, basta con el primero. La imagen
     // expandida también se pinta en las dos caras (para no perderla al girar a info).
     fireEvent.click(screen.getAllByRole("button", { name: /ver foto/i })[0]);
-    const fotos = screen.getAllByRole("img", { name: "Pulpo a la brasa" });
+    const fotos = screen.getAllByRole("img", { name: "Pulpo a la brasa — Pescados, Casa Tomás Restaurante" });
     expect(fotos.length).toBeGreaterThan(0);
     for (const foto of fotos) expect(foto).toHaveAttribute("src", FOTO);
   });

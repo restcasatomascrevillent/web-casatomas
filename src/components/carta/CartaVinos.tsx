@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
 import { openCookiePreferences, useMapsConsent } from "@/lib/cookie-consent";
 import { imagenOptimizada } from "@/lib/carta-ssg";
+import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import BackToTopButton from "./BackToTopButton";
@@ -699,7 +700,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                     <div id={`foto-vino-${cardKey}`} className="relative aspect-[4/3] w-full overflow-hidden border-y border-border/60 bg-muted/20">
                       <img
                         src={imagenOptimizada(imageUrl, 768) || undefined}
-                        alt={item.displayNombre || item.nombre}
+                        alt={`${item.displayNombre || item.nombre} — ${categoriaCorta(item.categoria ?? "", language)}, ${NEGOCIO.nombre}`}
                         className="h-full w-full object-cover"
                         style={{ objectPosition: `center ${Math.max(0, Math.min(100, item.imagen_posicion_y ?? 50))}%` }}
                         loading="lazy"
