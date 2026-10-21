@@ -10,6 +10,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 import MenuDiarioCards from "@/components/espacios/MenuDiarioCards";
+import { NEGOCIO } from "@/lib/negocio";
 import novedadesSSG from "virtual:novedades-ssg";
 
 type IconKey = "utensils" | "wine" | "gift" | "calendar" | "star" | "sparkles" | "coffee" | "cake";
@@ -131,7 +132,7 @@ const NovedadesSection = () => {
     const image = novedad.imagen_url || fallbackImages[idx % fallbackImages.length];
     const imageStyle = novedad.imagen_posicion_y ? { objectPosition: `center ${novedad.imagen_posicion_y}%` } : undefined;
     const imgProps = {
-      alt: localized.titulo,
+      alt: `${localized.titulo} — ${NEGOCIO.nombre}`,
       className: "w-full h-full object-cover",
       style: imageStyle,
       loading: "lazy" as const,

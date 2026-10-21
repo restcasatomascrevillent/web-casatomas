@@ -55,6 +55,14 @@ export const NEGOCIO = {
 } as const;
 
 /**
+ * Describe lo que de verdad muestra `og-image.jpg` (carne a la brasa con
+ * patatas asadas) — fuente única para el `alt`/`caption` de esa foto en
+ * `Seo.tsx` y en el JSON-LD del restaurante, para no repetir el texto ni
+ * dejar que diverja.
+ */
+export const OG_IMAGE_CAPTION = `Carne a la brasa servida con patatas asadas — ${NEGOCIO.nombre}, ${NEGOCIO.localidad}`;
+
+/**
  * Horario de apertura.
  *
  * ⚠️ En el repo conviven CUATRO fuentes que se contradicen:
@@ -94,7 +102,7 @@ const ALERGENOS_PREFIJO: Record<Language, string> = {
  * `item.alergenos_oficiales` (la columna cruda, siempre en castellano) y el
  * JSON-LD de una página en inglés/francés listaba los alérgenos en español.
  */
-function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, lang: Language, supabaseUrl?: string) {
+function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, lang: Language, categoria: string, supabaseUrl?: string) {
   const imagen = resolverImagen(item.imagen_url, supabaseUrl);
   // Por el vocabulario común: el panel guarda `frutos_cascara` y en el JSON-LD
   // tiene que leerse "Frutos de cáscara", igual que en la tarjeta. El `Set`
@@ -109,7 +117,15 @@ function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, lang: Language, supaba
     name: item.displayNombre,
     // Las descripciones están vacías en los tres idiomas (0 de 128): no se inventa ninguna.
     ...(item.displayDescripcion ? { description: item.displayDescripcion } : {}),
-    ...(imagen ? { image: imagen } : {}),
+    ...(imagen
+      ? {
+          image: {
+            "@type": "ImageObject",
+            url: imagen,
+            caption: `${item.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`,
+          },
+        }
+      : {}),
     ...(precioConocido(item.precio_eur)
       ? {
           offers: {
@@ -158,7 +174,7 @@ export function menuSchema(
       "@type": "MenuSection",
       name: seccion.nombre,
       numberOfItems: seccion.items.length,
-      hasMenuItem: seccion.items.map((item) => menuItem(item, lang, supabaseUrl)),
+      hasMenuItem: seccion.items.map((item) => menuItem(item, lang, seccion.nombre, supabaseUrl)),
     })),
   };
 }
@@ -210,7 +226,11 @@ export function restaurantSchema(opts: {
     "@id": ID_RESTAURANTE,
     name: NEGOCIO.nombre,
     alternateName: NEGOCIO.nombreAlternativo,
-    image: `${SITE_URL}/og-image.jpg`,
+    image: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/og-image.jpg`,
+      caption: OG_IMAGE_CAPTION,
+    },
     telephone: NEGOCIO.telefono,
     email: NEGOCIO.email,
     url: `${SITE_URL}/`,
