@@ -58,6 +58,15 @@ it("la migración conserva la carta antigua y no bloquea el dominio definitivo",
   expect(host.test("restaurantecasatomascrevillente.es")).toBe(false);
 });
 
+it("las URL con barra final redirigen en un solo salto", () => {
+  // `trailingSlash: false` normaliza la barra (308) ANTES de evaluar `redirects`,
+  // así que `/reservar/` daba 308 → `/reservar` y luego 301 → `/reservas`.
+  // La barra la quita la última regla, después de las específicas.
+  const config = JSON.parse(readFileSync("vercel.json", "utf8"));
+  expect(config).not.toHaveProperty("trailingSlash");
+  expect(config.redirects.at(-1)).toEqual({ source: "/:path(.+)/", destination: "/:path", statusCode: 301 });
+});
+
 it("el restaurante identifica sus perfiles y cocina gallega", () => {
   const schema = restaurantSchema({ lang: "es" });
   expect(schema.sameAs).toContain("https://www.instagram.com/casatomascrevillent/");

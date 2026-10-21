@@ -1,6 +1,5 @@
 {
   "regions": ["fra1"],
-  "trailingSlash": false,
   "cleanUrls": true,
   "redirects": [
     {"source": "/touza-cocktail{/}?", "destination": "/touza", "statusCode": 301},
@@ -13,11 +12,11 @@
     {"source": "/producto/:slug{/}?", "destination": "/regala", "statusCode": 301},
     {"source": "/carrito{/}?", "destination": "/regala", "statusCode": 301},
     {"source": "/finalizar-compra{/}?", "destination": "/regala", "statusCode": 301},
-    {"source": "/aviso-legal/", "destination": "/aviso-legal", "statusCode": 301},
     {"source": "/touza-3{/}?", "destination": "/touza", "statusCode": 301},
     {"source": "/bases-legales-sorteo{/}?", "destination": "/", "statusCode": 301},
     {"source": "/reembolso_devoluciones{/}?", "destination": "/condiciones", "statusCode": 301},
-    {"source": "/under-construction{/}?", "destination": "/", "statusCode": 301}
+    {"source": "/under-construction{/}?", "destination": "/", "statusCode": 301},
+    {"source": "/:path(.+)/", "destination": "/:path", "statusCode": 301}
   ],
   "images": {
     "sizes": [640, 768, 1024],
