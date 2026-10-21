@@ -162,6 +162,7 @@ const paginasComunes = (): RouteRecord[] => [
   buildReservasRoute(),
   buildPoliticaPrivacidadRoute(),
   buildCondicionesRoute(),
+  ...["el-restaurante", "contacto", "regala", "touza"].map(path => ({ path, lazy: lazyRoute(() => import("./pages/Informacion")) })),
 ];
 
 // Ruta compartida por las tres ramas: sin ella, un enlace roto a

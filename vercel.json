@@ -3,7 +3,12 @@
   "trailingSlash": false,
   "cleanUrls": true,
   "redirects": [
-    { "source": "/touza-cocktail", "destination": "https://touza-restaurant-website.vercel.app", "permanent": false }
+    {"source": "/touza-cocktail", "destination": "/touza", "statusCode": 301},
+    {"source": "/carta-casa-tomas-restaurante", "destination": "/carta", "statusCode": 301},
+    {"source": "/politica-de-privacidad-y-accesibilidad", "destination": "/politica-privacidad", "statusCode": 301},
+    {"source": "/politica-de-cookies", "destination": "/politica-privacidad#cookies", "statusCode": 301},
+    {"source": "/sitemap_index.xml", "destination": "/sitemap.xml", "statusCode": 301},
+    {"source": "/page-sitemap.xml", "destination": "/sitemap.xml", "statusCode": 301}
   ],
   "images": {
     "sizes": [640, 768, 1024],
@@ -19,6 +24,11 @@
     ]
   },
   "headers": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": ".*\\.vercel\\.app" }],
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }]
+    },
     {
       "source": "/(.*)",
       "headers": [

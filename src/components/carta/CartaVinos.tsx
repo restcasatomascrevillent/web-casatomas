@@ -1,3 +1,5 @@
+import { precioConocido, mostrarPrecio, CONSULTAR_PRECIO } from "@/lib/precios";
+import ListadoCompletoVinos from "./ListadoCompletoVinos";
 import { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,6 +48,7 @@ import {
 
 interface CartaVinosProps {
   showAddButton?: boolean;
+  showCompleteList?: boolean;
   /**
    * Vinos descargados en build, usados como semilla de la denominación inicial
    * (`virtual:carta-ssg/vinos`). Evitan el parpadeo de carga al entrar a la
@@ -113,7 +116,7 @@ function categoriaCorta(categoria: string): string {
 let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
 const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");
 
-const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: CartaVinosProps) => {
+const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVinos, initialMapVinos }: CartaVinosProps) => {
   const { t, language } = useTranslations();
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -122,18 +125,14 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
   // lo que filtra la cuadrícula —y dispara sus animaciones de entrada/salida—
   // va con retraso, para no recalcular y re-animar en cada pulsación.
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 250);
-  // El aviso de edad es una ventana ENCIMA del contenido, no una condición
-  // que decide si ese contenido se pinta: `Dialog` se porta a `<body>` y en
-  // el HTML del SSG no llega a existir (Node no tiene `document`), así que
-  // arrancar en `true` no deja nada invisible ni detrás de una interacción
-  // — la carta ya está en el HTML; esta ventana solo se superpone en el
-  // navegador, un instante después de entrar.
-  //
-  // Si el visitante ya confirmó su edad en esta sesión del navegador (p. ej.
-  // al pulsar "Carta de vinos" en la portada, que pregunta antes de navegar
-  // aquí), no se le vuelve a preguntar.
-  const [showAgeDialog, setShowAgeDialog] = useState(() => !getEdadVinosConfirmada());
-  const [isAdult, setIsAdult] = useState<boolean | null>(() => (getEdadVinosConfirmada() ? true : null));
+  // El primer render coincide con el SSG; la sesión se consulta después de hidratar.
+  const [showAgeDialog, setShowAgeDialog] = useState(false);
+  const [isAdult, setIsAdult] = useState<boolean | null>(null);
+  useEffect(() => {
+    const confirmado = getEdadVinosConfirmada();
+    setShowAgeDialog(!confirmado);
+    setIsAdult(confirmado ? true : null);
+  }, []);
   // La semilla SSG siembra "Todos" (ver `Vinos.tsx`): abrir en la misma categoría.
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [vinosByCategory, setVinosByCategory] = useState<Record<string, Vino[]>>(
@@ -302,6 +301,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
       : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
 
   const addToPedido = (item: Vino & { displayNombre?: string }) => {
+    if (!precioConocido(item.precio_eur)) return;
     const cantidadInicial = item.cantidad ?? 1;
     const pedidoItem = {
       ...item,
@@ -636,7 +636,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
             const expanded = hasVisibleImage && isCardExpanded(itemRecord);
             const originLabel = [
-              origenComprobable(item.denominacion_origen) || (language === "es" ? "D.O. pendiente de verificar" : language === "en" ? "Appellation awaiting verification" : "Appellation à vérifier"),
+              origenComprobable(item.denominacion_origen),
               origenComprobable(item.ubicacion_region), origenComprobable(item.ubicacion_pais),
             ]
               .filter(Boolean)
@@ -724,8 +724,8 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
                   )}
 
                   <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-muted/10 px-4 py-3">
-                    <span className="font-libre-baskerville text-xl font-bold text-accent">{item.precio_eur}€</span>
-                    {showAddButton && <Button size="sm" onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className="h-10 rounded-full bg-accent px-4 font-sans text-sm text-accent-foreground hover:bg-accent/90"><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
+                    <span className="font-libre-baskerville text-xl font-bold text-accent">{mostrarPrecio(item.precio_eur, language)}</span>
+                    {showAddButton && <Button size="sm" disabled={!precioConocido(item.precio_eur)} title={!precioConocido(item.precio_eur) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className="h-10 rounded-full bg-accent px-4 font-sans text-sm text-accent-foreground hover:bg-accent/90"><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
                   </CardFooter>
                 </Card>
               </div>
@@ -754,6 +754,7 @@ const CartaVinos = ({ showAddButton = false, initialVinos, initialMapVinos }: Ca
       )}
       </>
       )}
+      {showCompleteList && isAdult !== false && <ListadoCompletoVinos vinos={mapVinos} language={language} />}
       <BackToTopButton targetRef={sectionRef} containerRef={gridRef} />
     </div>
   );

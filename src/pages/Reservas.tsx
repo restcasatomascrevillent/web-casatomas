@@ -27,7 +27,7 @@ const Reservas = () => {
       />
       <JsonLd data={breadcrumbSchema([{ nombre: p.breadcrumb, path: RESERVAS_PATH }], language)} />
       <Header />
-      <ReservasSection forceShowForm showBackButton />
+      <ReservasSection headingLevel="h1" forceShowForm showBackButton />
     </div>
   );
 };

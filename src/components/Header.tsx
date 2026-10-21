@@ -184,7 +184,7 @@ const Header = () => {
             {navItems.map((item) => (
               <NavLink
                 key={item.id}
-                to={`#${item.id}`}
+                to={`${home}#${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
                   handleNavClick(item.id);
@@ -270,12 +270,13 @@ const Header = () => {
                 <div
                   key={item.id}
                 >
-                  <button
-                    onClick={() => handleNavClick(item.id)}
+                  <NavLink
+                    to={`${home}#${item.id}`}
+                    onClick={(event) => { event.preventDefault(); handleNavClick(item.id); }}
                     className="w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
                   >
                     {item.label}
-                  </button>
+                  </NavLink>
                 </div>
               ))}
               <div

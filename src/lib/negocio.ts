@@ -1,3 +1,4 @@
+import { precioConocido } from "@/lib/precios";
 /**
  * Datos del negocio y constructores de datos estructurados (schema.org).
  *
@@ -109,7 +110,7 @@ function menuItem(item: ItemTraducido<Partial<PlatoSSG>>, lang: Language, supaba
     // Las descripciones están vacías en los tres idiomas (0 de 128): no se inventa ninguna.
     ...(item.displayDescripcion ? { description: item.displayDescripcion } : {}),
     ...(imagen ? { image: imagen } : {}),
-    ...(typeof item.precio_eur === "number"
+    ...(precioConocido(item.precio_eur)
       ? {
           offers: {
             "@type": "Offer",
@@ -232,7 +233,10 @@ export function restaurantSchema(opts: {
       opens: h.abre,
       closes: h.cierra,
     })),
+    sameAs: ["https://www.instagram.com/casatomascrevillent/", "https://www.facebook.com/barracasatomas/"],
     servesCuisine: [
+      "Cocina gallega",
+      "Cocina mediterránea",
       "Cocina tradicional española",
       "Gastronomía alicantina",
       "Arroces",

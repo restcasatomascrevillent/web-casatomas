@@ -161,6 +161,7 @@ const CartaVinosPagina = () => {
 
         {vinos.length > 0 ? (
           <CartaVinos
+            showCompleteList
             showAddButton
             // 24 = PAGE_SIZE en CartaVinos: el primer refresco a Supabase trae
             // esa misma cantidad y sustituye esta semilla; sin el recorte se

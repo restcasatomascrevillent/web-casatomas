@@ -71,7 +71,8 @@ export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
     /^\/carta\/[^/]+$/.test(ruta) ||
     ruta === "/reservas" ||
     ruta === "/politica-privacidad" ||
-    ruta === "/condiciones"
+    ruta === "/condiciones" ||
+    ["/el-restaurante", "/contacto", "/regala", "/touza"].includes(ruta)
   );
 }
 

@@ -20,8 +20,8 @@ interface SeoProps {
   languageAlternates?: AlternateIdioma[];
 }
 
-const DEFAULT_TITLE = "Casa Tomás Restaurante - Tradición y Calidad en Crevillent";
-const DEFAULT_DESC = "Casa Tomás Restaurante en Crevillent, Alicante. Más de 30 años de tradición culinaria. Cocina de calidad con productos frescos y ambiente familiar. Reserva tu mesa.";
+const DEFAULT_TITLE = "Casa Tomás | Restaurante gallego en Crevillente";
+const DEFAULT_DESC = "Cocina gallega y mediterránea en Crevillente, Alicante, desde 1998. Descubre la carta de Casa Tomás y reserva tu mesa.";
 const DEFAULT_IMAGE = "https://restaurantecasatomascrevillente.es/og-image.jpg";
 
 const OG_LOCALES: Record<Language, string> = { es: "es_ES", en: "en_US", fr: "fr_FR" };
