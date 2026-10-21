@@ -10,6 +10,7 @@ import { menuSchema, restaurantSchema } from "@/lib/negocio";
 import { agruparPorCategoria } from "@/lib/carta-ssg";
 import { precioConocido, mostrarPrecio } from "@/lib/precios";
 import { PAGINAS_INFORMACION } from "@/lib/paginas-informacion";
+import { SEO_CATEGORIA } from "@/lib/carta-seo";
 import { existeEnTodosLosIdiomas, rutaEquivalente } from "@/i18n/routing";
 
 it("los enlaces de sección apuntan a la portada desde páginas interiores", () => {
@@ -70,5 +71,18 @@ it("las URL con barra final redirigen en un solo salto", () => {
 it("el restaurante identifica sus perfiles y cocina gallega", () => {
   const schema = restaurantSchema({ lang: "es" });
   expect(schema.sameAs).toContain("https://www.instagram.com/casatomascrevillent/");
-  expect(schema.servesCuisine).toContain("Cocina gallega");
+  expect(schema.servesCuisine).toEqual(["Gallega", "Marisco", "Mediterránea", "Arroces"]);
+});
+
+it("las categorías con SEO propio tienen title corto, Crevillente e introducción de 110-200 palabras", () => {
+  for (const [slug, idiomas] of Object.entries(SEO_CATEGORIA)) {
+    for (const [lang, seo] of Object.entries(idiomas)) {
+      expect(seo.title.length, `${slug}/${lang}`).toBeLessThanOrEqual(60);
+      expect(seo.description.length, `${slug}/${lang}`).toBeLessThanOrEqual(160);
+      expect(`${seo.title} ${seo.intro.join(" ")}`).toContain("Crevillente");
+      const palabras = seo.intro.join(" ").split(/\s+/).length;
+      expect(palabras, `${slug}/${lang}`).toBeGreaterThanOrEqual(110);
+      expect(palabras, `${slug}/${lang}`).toBeLessThanOrEqual(200);
+    }
+  }
 });

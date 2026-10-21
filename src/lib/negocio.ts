@@ -254,14 +254,7 @@ export function restaurantSchema(opts: {
       closes: h.cierra,
     })),
     sameAs: ["https://www.instagram.com/casatomascrevillent/", "https://www.facebook.com/barracasatomas/"],
-    servesCuisine: [
-      "Cocina gallega",
-      "Cocina mediterránea",
-      "Cocina tradicional española",
-      "Gastronomía alicantina",
-      "Arroces",
-      "Mariscos",
-    ],
+    servesCuisine: ["Gallega", "Marisco", "Mediterránea", "Arroces"],
     priceRange: "€€", // nunca "$$": el replace() de helmet lo corrompe a "$"
     currenciesAccepted: "EUR",
     paymentAccepted: "Efectivo, Tarjeta de crédito",

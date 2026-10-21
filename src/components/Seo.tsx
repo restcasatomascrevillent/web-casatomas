@@ -23,7 +23,7 @@ interface SeoProps {
   languageAlternates?: AlternateIdioma[];
 }
 
-const DEFAULT_TITLE = "Casa Tomás | Restaurante gallego en Crevillente";
+const DEFAULT_TITLE = "Casa Tomás | Restaurante y marisquería en Crevillente";
 const DEFAULT_DESC = "Cocina gallega y mediterránea en Crevillente, Alicante, desde 1998. Descubre la carta de Casa Tomás y reserva tu mesa.";
 const DEFAULT_IMAGE = "https://restaurantecasatomascrevillente.es/og-image.jpg";
 

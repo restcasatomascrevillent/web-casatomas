@@ -1,10 +1,17 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Crown, Users, ChefHat } from "lucide-react";
+import { Fragment } from "react";
+import { Link } from "react-router-dom";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { ENLACES_ESPECIALIDADES } from "@/lib/carta-seo";
+import { categoriaPorSlug, rutaCategoria } from "@/lib/carta-rutas";
 
 const NosotrosSection = () => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
+  // Enlaces de texto a las especialidades, solo a categorías que existen en el build.
+  const especialidades = ENLACES_ESPECIALIDADES[language];
+  const enlaces = especialidades.enlaces.filter((enlace) => categoriaPorSlug(enlace.slug));
   const equipo = t.nosotros.team.map((persona, index) => ({
     ...persona,
     icon: index === 0 ? Crown : index === 1 ? Users : ChefHat,
@@ -42,6 +49,20 @@ const NosotrosSection = () => {
                 {paragraph}
               </p>
             ))}
+            {enlaces.length > 0 && (
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {especialidades.antes}
+                {enlaces.map((enlace, indice) => (
+                  <Fragment key={enlace.slug}>
+                    {indice > 0 && (indice === enlaces.length - 1 ? especialidades.ultimo : especialidades.separador)}
+                    <Link to={rutaCategoria(enlace.slug, language)} className="text-accent underline underline-offset-4 hover:text-primary">
+                      {enlace.texto}
+                    </Link>
+                  </Fragment>
+                ))}
+                {especialidades.despues}
+              </p>
+            )}
 
             <div className="pt-6">
               <h3 className="text-2xl font-bold text-primary mb-4">{t.nosotros.moreTitle}</h3>

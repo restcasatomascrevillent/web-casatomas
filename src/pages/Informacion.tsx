@@ -24,7 +24,7 @@ export default function Informacion() {
     <Header />
     <main className="min-h-screen pt-32 pb-16 bg-background">
       <div className="max-w-4xl mx-auto px-4 text-center">
-        <h1 className="text-3xl md:text-5xl font-bold text-primary mb-6">{texto.title}</h1>
+        <h1 className="text-3xl md:text-5xl font-bold text-primary mb-6">{texto.h1}</h1>
         <p className="text-lg text-muted-foreground">{texto.description}</p>
       </div>
       {ruta === "/el-restaurante" && <><NosotrosSection /><div className="max-w-7xl mx-auto px-4"><EspaciosGallery /></div></>}

@@ -57,7 +57,7 @@ const Hero = () => {
               decoding="async"
             />
             <h1 className="text-xl md:text-2xl font-semibold text-primary max-w-2xl mx-auto mb-4">
-              {{ es: "Cocina gallega y mediterránea en Crevillente", en: "Galician and Mediterranean cuisine in Crevillente", fr: "Cuisine galicienne et méditerranéenne à Crevillente" }[language]}
+              {{ es: "Restaurante de cocina gallega y marisco en Crevillente", en: "Galician cuisine and seafood restaurant in Crevillente", fr: "Restaurant de cuisine galicienne et fruits de mer à Crevillente" }[language]}
             </h1>
             <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
               {t.hero.motto}

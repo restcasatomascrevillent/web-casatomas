@@ -17,6 +17,7 @@ import { agruparPorCategoria, platosParaJsonLd } from "@/lib/carta-ssg";
 import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { SEO_CATEGORIA } from "@/lib/carta-seo";
 import { usePedido } from "@/hooks/usePedido";
 import { useToast } from "@/hooks/use-toast";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
@@ -136,12 +137,13 @@ const CartaCategoria = () => {
   // también para pintar la rejilla — no hace falta resolver dos veces.
   const secciones = agruparPorCategoria(platos, language);
   const platosTraducidos = filtrarPlatos(secciones[0]?.items ?? [], filtros);
+  const seoPropio = SEO_CATEGORIA[categoria.slug]?.[language];
 
   return (
     <>
       <Seo
-        title={`${etiqueta}: ${textos.tituloSufijo}`}
-        description={textos.descripcion(platos.length, etiqueta)}
+        title={seoPropio?.title ?? `${etiqueta}: ${textos.tituloSufijo}`}
+        description={seoPropio?.description ?? textos.descripcion(platos.length, etiqueta)}
         canonical={url}
         lang={language}
         languageAlternates={alternatesDePagina(rutaEs, SITE_URL)}
@@ -174,10 +176,17 @@ const CartaCategoria = () => {
       )}
 
       <CartaPageLayout
-        titulo={etiqueta}
+        titulo={seoPropio?.h1 ?? etiqueta}
         detalle={`${platosTraducidos.length} ${textos.plato(platosTraducidos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
+        {seoPropio && (
+          <div className="max-w-3xl space-y-4 mb-10 text-base md:text-lg text-muted-foreground leading-relaxed">
+            {seoPropio.intro.map((parrafo) => (
+              <p key={parrafo}>{parrafo}</p>
+            ))}
+          </div>
+        )}
         <MenuDietario compacto />
         {platosTraducidos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">

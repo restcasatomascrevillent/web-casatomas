@@ -33,7 +33,7 @@ const TEXTOS: Record<
   }
 > = {
   es: {
-    title: "Carta de vinos y precios | Casa Tomás Crevillent",
+    title: "Carta de vinos | Casa Tomás Crevillente",
     description: (n) => `Bodega de Casa Tomás en Crevillent (Alicante): ${n} referencias con su denominación de origen y su precio. Tintos, blancos, cavas y generosos.`,
     keywords: ["carta de vinos Crevillent", "bodega restaurante Alicante", "vinos Casa Tomás", "denominación de origen"],
     migaCarta: "Carta",
@@ -47,7 +47,7 @@ const TEXTOS: Record<
     verBebidas: "Ver las bebidas sin alcohol",
   },
   en: {
-    title: "Wine List & Prices | Casa Tomás Crevillent",
+    title: "Wine List | Casa Tomás Crevillente",
     description: (n) => `Casa Tomás wine cellar in Crevillent (Alicante): ${n} wines with their designation of origin and price. Reds, whites, cava and fortified wines.`,
     keywords: ["wine list Crevillent", "restaurant wine cellar Alicante", "Casa Tomás wines", "designation of origin"],
     migaCarta: "Menu",
@@ -61,7 +61,7 @@ const TEXTOS: Record<
     verBebidas: "See our soft drinks",
   },
   fr: {
-    title: "Carte des vins et prix | Casa Tomás Crevillent",
+    title: "Carte des vins | Casa Tomás Crevillente",
     description: (n) => `Cave à vins de Casa Tomás à Crevillent (Alicante) : ${n} références avec leur appellation d'origine et leur prix. Rouges, blancs, cavas et vins doux.`,
     keywords: ["carte des vins Crevillent", "cave à vins restaurant Alicante", "vins Casa Tomás", "appellation d'origine"],
     migaCarta: "Carte",
