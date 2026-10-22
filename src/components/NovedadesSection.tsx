@@ -130,7 +130,13 @@ const NovedadesSection = () => {
     const Icon = iconMap[novedad.icono || "star"];
     const localized = getLocalizedContent(novedad, language);
     const image = novedad.imagen_url || fallbackImages[idx % fallbackImages.length];
-    const imageStyle = novedad.imagen_posicion_y ? { objectPosition: `center ${novedad.imagen_posicion_y}%` } : undefined;
+    // `0` (encuadre arriba del todo) es un valor válido del panel: con una
+    // comprobación de verdad/falsedad se descartaba y la foto salía centrada.
+    // Mismo criterio que `ProductoCard`: solo se omite si no hay número.
+    const imageStyle =
+      typeof novedad.imagen_posicion_y === "number"
+        ? { objectPosition: `center ${Math.min(100, Math.max(0, novedad.imagen_posicion_y))}%` }
+        : undefined;
     const imgProps = {
       alt: `${localized.titulo} — ${NEGOCIO.nombre}`,
       className: "w-full h-full object-cover",
