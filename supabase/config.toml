@@ -11,3 +11,8 @@ verify_jwt = false
 # Gestión autenticada de compras manuales y envío del PDF.
 [functions.cheques-regalo-admin]
 verify_jwt = true
+
+# La llama el trigger de `novedades` por pg_net, sin sesión. Solo procesa la
+# cola `novedades_fotos_por_borrar` (ver la cabecera de la función).
+[functions.limpiar-fotos-novedades]
+verify_jwt = false
