@@ -86,7 +86,11 @@ El panel y Touza no necesitan cambios: ya leen Supabase de las variables de ento
 `migrar.sh` duplica el proyecto viejo en prod o demo. **Del origen solo lee.**
 Se ejecuta desde GitHub Actions
 ([`github-actions/migracion-supabase.yml`](github-actions/migracion-supabase.yml)),
-porque este entorno no llega al puerto de Postgres. También funciona en un Mac
+porque este entorno no llega al puerto de Postgres. **No necesita contraseñas
+de base de datos**: cada conexión pide a la Management API un rol temporal de
+5 minutos, el mismo mecanismo que usa el CLI de Supabase. En el origen ese rol
+es de **solo lectura** (`supabase_read_only_user`, que salta RLS para que los
+recuentos salgan completos); probado que un `INSERT` con él falla. También funciona en un Mac
 con Docker, `psql` 17, Node y el CLI de Supabase.
 
 | Paso | Qué hace |
@@ -191,25 +195,23 @@ enlaces de correos ya enviados (bajas de newsletter, confirmaciones) apuntan a
 
 ## 7. Lo que necesita el dueño
 
-Hecho el 26-10-2026: app de Claude instalada en `restcasatomascrevillent`,
-repo de Touza creado y repos en privado.
+Hecho el 26-10-2026:
+- App de Claude instalada en `restcasatomascrevillent` y repos en privado.
+- Repo de Touza creado (`restcasatomascrevillent/touza-casatomas`).
+- Claves *legacy* activas en los dos proyectos nuevos (comprobado por API).
+- Conector de Vercel con la cuenta del restaurante.
+
+Secretos del proyecto viejo: son 31 propios. Supabase no deja leer sus
+valores. La copia directa de servidor a servidor, con una función temporal en
+el proyecto viejo, la ha bloqueado el control de permisos de la sesión. Queda
+la plantilla [`secretos-funciones.plantilla.env`](secretos-funciones.plantilla.env)
+con esos 31 nombres exactos; los internos los genera el kit.
 
 Pendiente:
 
-1. El nombre exacto del repo de Touza, y que esté incluido en la instalación de
-   la app de Claude.
-2. Secrets de GitHub Actions en `admin-casatomas` (Settings → Secrets and
-   variables → Actions → *New repository secret*):
-
-   | Secret | De dónde sale |
-   |---|---|
-   | `ORIGEN_DB_URL` | Supabase, proyecto viejo → *Connect* → *Session pooler*, con la contraseña de la base |
-   | `PROD_DB_URL`, `DEMO_DB_URL` | Lo mismo en cada proyecto nuevo |
-   | `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens, con la cuenta del restaurante |
-   | `SUPABASE_ACCESS_TOKEN_ORIGEN` | Lo mismo con la cuenta oficiososia |
-   | `SECRETOS_FUNCIONES_PROD`, `SECRETOS_FUNCIONES_DEMO` | [`secretos-funciones.plantilla.env`](secretos-funciones.plantilla.env), rellena |
-   | `GH_TOKEN_LECTURA` | Token *fine-grained* de GitHub con solo lectura de `web-casatomas` |
-
-3. Claves *legacy* activas en los dos proyectos nuevos.
-4. Vercel: reconectar el conector con la cuenta del restaurante, o configurarlo
-   a mano con la tabla de la fase 4.
+1. Dar acceso a la app de Claude a `touza-casatomas`.
+2. Aprobar el acceso de Vercel al equipo "casa-tomas" (enlace de un solo uso).
+3. Secrets de GitHub Actions en `admin-casatomas`: `SUPABASE_ACCESS_TOKEN`,
+   `SUPABASE_ACCESS_TOKEN_ORIGEN` y `GH_TOKEN_LECTURA`. Opcional:
+   `SECRETOS_FUNCIONES_PROD` y `SECRETOS_FUNCIONES_DEMO`.
+4. Al terminar la migración: revocar los tokens que se pegaron en el chat y crear otros.
