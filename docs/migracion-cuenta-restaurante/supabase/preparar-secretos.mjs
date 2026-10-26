@@ -84,7 +84,11 @@ const corregir = (valor) => pares.reduce((v, [a, d]) => v.split(a).join(d), valo
 
 const secretos = leerEnv(SECRETOS_FUNCIONES);
 // La plataforma inyecta las suyas; no se pueden (ni deben) definir a mano.
-for (const nombre of [...secretos.keys()]) if (nombre.startsWith("SUPABASE_")) secretos.delete(nombre);
+// Las líneas vacías de la plantilla (NOMBRE=) significan "no lo tengo": no se
+// mandan, y el código usa su valor por defecto.
+for (const [nombre, valor] of [...secretos]) {
+  if (nombre.startsWith("SUPABASE_") || valor === "") secretos.delete(nombre);
+}
 for (const [nombre, valor] of secretos) secretos.set(nombre, corregir(valor));
 
 const generados = [];

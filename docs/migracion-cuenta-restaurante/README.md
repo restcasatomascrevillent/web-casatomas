@@ -53,10 +53,11 @@ Variables de Vercel actuales (sin valores):
 
 Estado de lo nuevo a 26-10-2026:
 
-- Los repos nuevos son **públicos** (los viejos son privados) y tienen un único
-  commit, "Initial import", del 20-10. Al panel solo le falta el último commit;
-  a la web le faltan 48 ficheros de cambios posteriores. No contienen secretos:
-  solo la clave anon pública del proyecto viejo, que es pública por diseño.
+- Repos nuevos: ya son **privados** y tienen el historial completo de `main` y
+  `staging` de los viejos (26-10-2026). Se unieron con un merge sobre el
+  "Initial import" del 20-10, sin `push --force`. El `staging` de la web
+  conserva tus arreglos de TypeScript/ESLint del 20-10 (`1ff0821`). Falta el
+  repo de Touza.
 - `web-casatomas.vercel.app` y `admin-casatomas-o9ep.vercel.app` responden
   **`DEPLOYMENT_NOT_FOUND`**: no hay ningún despliegue servido, y por eso no salen
   los favicons (los ficheros sí están en los repos). La web aborta el build a
@@ -117,6 +118,16 @@ los proyectos reales.**
 
 **Fase 0 — accesos (los da el dueño).** Ver la sección 7.
 
+Decisiones del 26-10-2026:
+- La demo lleva **copia completa** de los datos. No se ejecuta el paso
+  `clientes`, y el cron de la demo va en modo `internos`. Recomendado: no poner
+  las claves de Resend en `SECRETOS_FUNCIONES_DEMO`, para que la demo no pueda
+  escribir a clientes reales.
+- La base de métricas `yfnrkmxnmtrqmdtfvqix` **no se migra**: la cuenta nueva
+  sigue usando la misma, con los mismos valores en `VITE_SUPABASE_METRICS_*` y
+  `METRICS_SUPABASE_*`.
+- Servicios externos: **las mismas cuentas y claves** de ahora.
+
 **Fase 1 — GitHub.**
 - Llevar a `web-casatomas` y `admin-casatomas` el historial completo de `main` y
   `staging`. Se hace con un merge (sin `push --force`) cuyo contenido queda
@@ -136,7 +147,7 @@ foto: hasta el corte, las reservas nuevas solo existen en el proyecto viejo.
 | Proyecto | Production (`main`) → prod | Preview (`staging`) → demo |
 |---|---|---|
 | `web-casatomas` | `VITE_SUPABASE_URL=https://haqmmdfdzzatdnrrcgez.supabase.co`, `VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Q6SY…`, `VITE_SUPABASE_PROJECT_ID=haqmmdfdzzatdnrrcgez`, `VITE_MAPBOX_TOKEN` (el mismo de ahora), `VITE_TOUZA_URL` (la URL nueva de Touza) | lo mismo con `sfonaclosuafvlhutkon` y `sb_publishable_Vs5s…` |
-| `admin-casatomas` | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (vale la publishable) y, si sigue en uso, `VITE_SUPABASE_METRICS_*` | ídem demo |
+| `admin-casatomas` | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (vale la publishable) y `VITE_SUPABASE_METRICS_*` con los mismos valores de ahora (esa base no se migra) | ídem demo |
 | Touza (nuevo) | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SITE_URL` (la URL viva de ahora hasta el corte, para no duplicar el canonical) | ídem demo |
 
 También en esta fase:
@@ -174,25 +185,31 @@ enlaces de correos ya enviados (bajas de newsletter, confirmaciones) apuntan a
 - **Secretos.** Supabase no deja leer el valor de ningún secreto, tampoco al
   dueño. Los externos (Stripe, Resend, OpenAI, Google, VAPI, Mapbox…) tienen que
   salir de sus paneles o de donde estén guardados.
-- **Base de métricas `yfnrkmxnmtrqmdtfvqix`.** La usa el panel
-  (`VITE_SUPABASE_METRICS_*`, `METRICS_SUPABASE_*`) y no está en esta cuenta.
-  Hay que decidir si se migra.
-- **Repos públicos.** Los logs de GitHub Actions de un repo público los ve
-  cualquiera. El kit no imprime datos, pero un error de Postgres puede citar un
-  valor. Hay que pasarlos a privados antes de ejecutar nada.
+- **Demo con datos reales.** Al ser copia completa, cualquier acción en la demo
+  que mande correos (confirmar o cancelar una reserva, newsletter) llegaría a
+  clientes reales si la demo tiene las claves de Resend.
 
 ## 7. Lo que necesita el dueño
 
-Ver el mensaje de la sesión; resumen:
+Hecho el 26-10-2026: app de Claude instalada en `restcasatomascrevillent`,
+repo de Touza creado y repos en privado.
 
-1. Instalar la app **Claude** de GitHub en `restcasatomascrevillent` (repos
-   `web-casatomas`, `admin-casatomas` y el nuevo de Touza).
-2. Crear el repo vacío de Touza.
-3. Pasar los tres repos a privados.
-4. En `admin-casatomas` → Settings → Secrets → Actions, crear:
-   - `ORIGEN_DB_URL`, `PROD_DB_URL`, `DEMO_DB_URL`
-   - `SUPABASE_ACCESS_TOKEN`, `SUPABASE_ACCESS_TOKEN_ORIGEN`
-   - `SECRETOS_FUNCIONES_PROD`, `SECRETOS_FUNCIONES_DEMO`
-   - si hace falta, `SMTP_PASS` y `GH_TOKEN_LECTURA`
-5. Vercel: reconectar el conector con la cuenta del restaurante, o configurarlo a mano con la tabla de la fase 4.
-6. Decisiones: datos de la demo, base de métricas, servicios externos y fecha del corte.
+Pendiente:
+
+1. El nombre exacto del repo de Touza, y que esté incluido en la instalación de
+   la app de Claude.
+2. Secrets de GitHub Actions en `admin-casatomas` (Settings → Secrets and
+   variables → Actions → *New repository secret*):
+
+   | Secret | De dónde sale |
+   |---|---|
+   | `ORIGEN_DB_URL` | Supabase, proyecto viejo → *Connect* → *Session pooler*, con la contraseña de la base |
+   | `PROD_DB_URL`, `DEMO_DB_URL` | Lo mismo en cada proyecto nuevo |
+   | `SUPABASE_ACCESS_TOKEN` | supabase.com/dashboard/account/tokens, con la cuenta del restaurante |
+   | `SUPABASE_ACCESS_TOKEN_ORIGEN` | Lo mismo con la cuenta oficiososia |
+   | `SECRETOS_FUNCIONES_PROD`, `SECRETOS_FUNCIONES_DEMO` | [`secretos-funciones.plantilla.env`](secretos-funciones.plantilla.env), rellena |
+   | `GH_TOKEN_LECTURA` | Token *fine-grained* de GitHub con solo lectura de `web-casatomas` |
+
+3. Claves *legacy* activas en los dos proyectos nuevos.
+4. Vercel: reconectar el conector con la cuenta del restaurante, o configurarlo
+   a mano con la tabla de la fase 4.
