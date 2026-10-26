@@ -532,6 +532,7 @@ export const translations: Translations = {
       admin: "Admin",
       terms: "Privacy policy",
       bookingTerms: "Booking and newsletter terms",
+      legalNotice: "Legal notice (Spanish)",
       cookieSettings: "Cookie settings",
     },
     cookie: {

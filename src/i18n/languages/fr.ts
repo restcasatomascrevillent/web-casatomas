@@ -532,6 +532,7 @@ export const translations: Translations = {
       admin: "Administration",
       terms: "Politique de confidentialité",
       bookingTerms: "Conditions de réservation et newsletter",
+      legalNotice: "Mentions légales (en espagnol)",
       cookieSettings: "Configurer les cookies",
     },
     cookie: {

@@ -21,6 +21,7 @@ import {
 } from "@/lib/alergenos";
 import { imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
+import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { Translations } from "@/i18n/languages/es";
 
@@ -271,7 +272,7 @@ const ProductoCard = ({
                     <div className="relative h-48 overflow-hidden">
                       <img
                         src={imagenOptimizada(imagen, 768)}
-                        alt={plato.displayNombre}
+                        alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         style={encuadre}
                         loading={prioridad ? "eager" : "lazy"}
@@ -374,7 +375,7 @@ const ProductoCard = ({
               <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
                 <img
                   src={imagenOptimizada(imagen, 768)}
-                  alt={plato.displayNombre}
+                  alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
                   className="w-full h-full object-cover"
                   style={encuadre}
                   loading="lazy"

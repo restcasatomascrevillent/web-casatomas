@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format, isSameDay, isValid, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { ChefHat, Clock, Sparkles } from "lucide-react";
@@ -171,13 +171,28 @@ const MenuDiarioCards = () => {
     [rawTapasSemanales],
   );
 
-  const today = new Date();
-  const todayDay = today.getDay();
+  // El build puede ser del domingo y la visita del jueves. Una fecha inicial
+  // neutra mantiene idénticos el HTML estático y la primera hidratación.
+  const [today, setToday] = useState<Date | null>(null);
+  useEffect(() => {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
+    });
+    const actualizar = () => {
+      const fecha = parseISO(formatter.format(new Date()));
+      setToday(anterior => anterior && isSameDay(anterior, fecha) ? anterior : fecha);
+    };
+    actualizar();
+    const intervalo = window.setInterval(actualizar, 60_000);
+    window.addEventListener("focus", actualizar);
+    return () => { window.clearInterval(intervalo); window.removeEventListener("focus", actualizar); };
+  }, []);
+  const todayDay = today?.getDay() ?? -1;
   const isMenuDayToday = visibilidad.menu && todayDay >= 2 && todayDay <= 4;
   const isTapasDayToday = visibilidad.tapas && todayDay === 4;
 
-  const todayMenu = menusDelDia.find((menu) => isSameDay(menu.date, today)) ?? null;
-  const todayTapas = tapasSemanales.find((tapas) => isSameDay(tapas.date, today)) ?? null;
+  const todayMenu = menusDelDia.find((menu) => today && isSameDay(menu.date, today)) ?? null;
+  const todayTapas = tapasSemanales.find((tapas) => today && isSameDay(tapas.date, today)) ?? null;
 
   const menuDaysLabel = `${format(new Date(2025, 0, 21), "EEE", { locale: dateLocale })} - ${format(new Date(2025, 0, 23), "EEE", { locale: dateLocale })}`;
   const tapasDayLabel = format(new Date(2025, 0, 23), "EEE", { locale: dateLocale });

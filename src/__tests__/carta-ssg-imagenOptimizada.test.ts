@@ -21,6 +21,13 @@ describe("imagenOptimizada", () => {
     expect(resultado).toBe(`/_vercel/image?url=${encodeURIComponent(FOTO_SUPABASE)}&w=768&q=75`);
   });
 
+  it("envuelve también las fotos de los proyectos de la cuenta del restaurante (prod y demo)", () => {
+    for (const ref of ["haqmmdfdzzatdnrrcgez", "sfonaclosuafvlhutkon"]) {
+      const foto = `https://${ref}.supabase.co/storage/v1/object/public/vinos/x.webp`;
+      expect(imagenOptimizada(foto, 640)).toBe(`/_vercel/image?url=${encodeURIComponent(foto)}&w=640&q=75`);
+    }
+  });
+
   it("deja tal cual una URL de otro host, en vez de arriesgar un 400 del optimizador", () => {
     const externa = "https://cdn.otraweb.com/foto.jpg";
     expect(imagenOptimizada(externa, 768)).toBe(externa);

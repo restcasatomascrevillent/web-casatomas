@@ -62,12 +62,12 @@ const TEXTOS: Record<
   }
 > = {
   es: {
-    title: "Carta y precios | Casa Tomás Restaurante en Crevillent",
+    title: "Carta y precios | Casa Tomás, restaurante en Crevillente",
     description: (p, v, b) =>
       `Carta completa de Casa Tomás (Crevillent, Alicante): ${p} platos con precios y alérgenos, ${v} vinos y ${b} bebidas. Arroces, mariscos, pescados y carnes.`,
     keywords: ["carta Casa Tomás", "menú restaurante Crevillent", "precios restaurante Crevillent", "carta de vinos Crevillent"],
     miga: "Carta",
-    titulo: "Nuestra carta",
+    titulo: "Carta de Casa Tomás: marisco, carnes y arroces",
     platosTitulo: "Platos",
     platosResumen: (p, c) => `${plural(p, "plato", "platos")} en ${plural(c, "categoría", "categorías")}.`,
     vaciaPlatos: "La carta de platos no está disponible en este momento.",
@@ -82,12 +82,12 @@ const TEXTOS: Record<
     categoria: (n) => (n === 1 ? "categoría" : "categorías"),
   },
   en: {
-    title: "Menu & Prices | Casa Tomás Restaurant in Crevillent",
+    title: "Menu & Prices | Casa Tomás, restaurant in Crevillente",
     description: (p, v, b) =>
       `Full menu at Casa Tomás (Crevillent, Alicante): ${p} dishes with prices and allergens, ${v} wines and ${b} drinks. Rice dishes, seafood, fish and meat.`,
     keywords: ["Casa Tomás menu", "restaurant menu Crevillent", "restaurant prices Crevillent", "wine list Crevillent"],
     miga: "Menu",
-    titulo: "Our menu",
+    titulo: "Casa Tomás menu: seafood, meat and rice dishes",
     platosTitulo: "Dishes",
     platosResumen: (p, c) => `${p} ${p === 1 ? "dish" : "dishes"} across ${c} ${c === 1 ? "category" : "categories"}.`,
     vaciaPlatos: "The food menu isn't available right now.",
@@ -102,12 +102,12 @@ const TEXTOS: Record<
     categoria: (n) => (n === 1 ? "category" : "categories"),
   },
   fr: {
-    title: "Carte et prix | Restaurant Casa Tomás à Crevillent",
+    title: "Carte et prix | Casa Tomás, restaurant à Crevillente",
     description: (p, v, b) =>
       `Carte complète de Casa Tomás (Crevillent, Alicante) : ${p} plats avec prix et allergènes, ${v} vins et ${b} boissons. Riz, fruits de mer, poissons et viandes.`,
     keywords: ["carte Casa Tomás", "menu restaurant Crevillent", "prix restaurant Crevillent", "carte des vins Crevillent"],
     miga: "Carte",
-    titulo: "Notre carte",
+    titulo: "La carte de Casa Tomás : fruits de mer, viandes et riz",
     platosTitulo: "Plats",
     platosResumen: (p, c) => `${p} ${p === 1 ? "plat" : "plats"} dans ${c} ${c === 1 ? "catégorie" : "catégories"}.`,
     vaciaPlatos: "La carte des plats n'est pas disponible pour le moment.",

@@ -1,12 +1,15 @@
 import { Head } from "vite-react-ssg";
 import type { Language } from "@/i18n/types";
 import type { AlternateIdioma } from "@/i18n/routing";
+import { OG_IMAGE_CAPTION } from "@/lib/negocio";
 
 interface SeoProps {
   title?: string;
   description?: string;
   canonical?: string;
   ogImage?: string;
+  /** Describe lo que muestra `ogImage`, para el lector de pantalla de quien recibe el enlace compartido. */
+  ogImageAlt?: string;
   keywords?: readonly string[];
   noindex?: boolean;
   /** Idioma de ESTA página. Fija el `lang` real de `<html>` (ver `index.html`). */
@@ -20,8 +23,8 @@ interface SeoProps {
   languageAlternates?: AlternateIdioma[];
 }
 
-const DEFAULT_TITLE = "Casa Tomás Restaurante - Tradición y Calidad en Crevillent";
-const DEFAULT_DESC = "Casa Tomás Restaurante en Crevillent, Alicante. Más de 30 años de tradición culinaria. Cocina de calidad con productos frescos y ambiente familiar. Reserva tu mesa.";
+const DEFAULT_TITLE = "Casa Tomás | Restaurante y marisquería en Crevillente";
+const DEFAULT_DESC = "Cocina gallega y mediterránea en Crevillente, Alicante, desde 1998. Descubre la carta de Casa Tomás y reserva tu mesa.";
 const DEFAULT_IMAGE = "https://restaurantecasatomascrevillente.es/og-image.jpg";
 
 const OG_LOCALES: Record<Language, string> = { es: "es_ES", en: "en_US", fr: "fr_FR" };
@@ -34,6 +37,7 @@ export function Seo({
   description = DEFAULT_DESC,
   canonical,
   ogImage = DEFAULT_IMAGE,
+  ogImageAlt = OG_IMAGE_CAPTION,
   keywords = ["restaurante Crevillent", "Casa Tomás", "cocina tradicional", "restaurante Alicante"],
   noindex = false,
   lang = "es",
@@ -62,6 +66,7 @@ export function Seo({
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={ogImageAlt} />
       {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:type" content="website" />
       <meta property="og:locale" content={OG_LOCALES[lang]} />
@@ -78,6 +83,7 @@ export function Seo({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image:alt" content={ogImageAlt} />
 
       {/* Los datos estructurados NO van aquí: helmet los inyecta por delante del
           <meta charset> y además los pasa por String.replace(), que interpreta

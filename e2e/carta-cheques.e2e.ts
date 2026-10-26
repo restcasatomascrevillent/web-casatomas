@@ -140,7 +140,7 @@ test.describe("Carta de vinos con el catálogo completo", () => {
     await page.reload();
     await expect(fichas(page)).toHaveCount(24);
     await page.getByRole("searchbox", { name: es.vinos.searchPlaceholder }).fill("albariño 05");
-    await expect(page.getByText("Albariño 05", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Albariño 05", exact: true })).toBeVisible();
     await expect(fichas(page)).toHaveCount(1);
     await expect(page.getByText(es.vinos.empty)).toBeHidden();
   });
@@ -154,14 +154,14 @@ test.describe("Carta de vinos con el catálogo completo", () => {
     await expect(dos.getByRole("button", { name: "Todas" })).toHaveAttribute("aria-pressed", "true");
     await dos.getByRole("button", { name: "Rioja" }).click();
     await expect(fichas(page)).toHaveCount(6);
-    await expect(page.getByText("Ribera 01", { exact: true })).toBeHidden();
+    await expect(page.getByRole("heading", { name: "Ribera 01", exact: true })).toBeHidden();
     await tipos.getByRole("button", { name: "Blancos" }).click();
     await expect(dos.getByRole("button", { name: "Todas" })).toHaveAttribute("aria-pressed", "true");
     await expect(dos.getByRole("button", { name: "Rioja" })).toHaveCount(0);
     await expect(fichas(page)).toHaveCount(6);
     await page.getByRole("searchbox", { name: es.vinos.searchPlaceholder }).fill("03");
     await expect(fichas(page)).toHaveCount(1);
-    await expect(page.getByText("Albariño 03", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Albariño 03", exact: true })).toBeVisible();
   });
 
   test("foto e información son excluyentes y la foto carga", async ({ page, backend: _ }) => {

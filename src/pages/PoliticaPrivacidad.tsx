@@ -119,7 +119,7 @@ const PoliticaPrivacidad = () => {
                 </section>
 
                 {/* 5. Cookies */}
-                <section>
+                <section id="cookies" className="scroll-mt-28">
                     <h2 className="text-xl font-bold mb-3 text-accent">{p.cookies.heading}</h2>
                     <p className="text-sm text-muted-foreground mb-4">{p.cookies.intro}</p>
                     <div className="space-y-2 text-sm text-muted-foreground">

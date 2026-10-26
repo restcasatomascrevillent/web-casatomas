@@ -15,19 +15,19 @@ import type { Language } from "@/i18n/types";
 
 const SEO_HOME: Record<Language, { title: string; description: string }> = {
   es: {
-    title: "Casa Tomás Restaurante - Tradición y Calidad en Crevillent",
+    title: "Casa Tomás | Restaurante y marisquería en Crevillente",
     description:
-      "Casa Tomás Restaurante en Crevillent, Alicante. Más de 30 años de tradición culinaria. Cocina de calidad con productos frescos y ambiente familiar. Reserva tu mesa.",
+      "Cocina gallega y marisco en Crevillente, Alicante, desde 1998. Mariscos, arroces melosos, carnes y vinos, con terraza. Mira la carta y reserva mesa.",
   },
   en: {
-    title: "Casa Tomás Restaurant – Traditional Spanish Cuisine in Crevillent",
+    title: "Casa Tomás | Restaurant & Seafood in Crevillente",
     description:
-      "Casa Tomás Restaurant in Crevillent, Alicante (Spain). Over 30 years of traditional cooking with fresh, local ingredients and a family atmosphere. Book your table today.",
+      "Galician cuisine and seafood in Crevillente, Alicante, since 1998. Shellfish, creamy rice dishes, meat and wines, with a terrace. See the menu and book.",
   },
   fr: {
-    title: "Restaurant Casa Tomás – Cuisine traditionnelle à Crevillent",
+    title: "Casa Tomás | Restaurant et fruits de mer à Crevillente",
     description:
-      "Restaurant Casa Tomás à Crevillent (Alicante, Espagne). Plus de 30 ans de tradition culinaire, des produits frais et une ambiance familiale. Réservez votre table.",
+      "Cuisine galicienne et fruits de mer à Crevillente, Alicante, depuis 1998. Fruits de mer, riz crémeux, viandes et vins, avec terrasse. Carte et réservation.",
   },
 };
 

@@ -229,7 +229,7 @@ describe("/carta (página de verdad)", () => {
 
   it("sin state: la carta y ningún pop-up", () => {
     pintarCarta("/carta");
-    expect(screen.getByRole("heading", { level: 1, name: "Nuestra carta" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Carta de Casa Tomás: marisco, carnes y arroces" })).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
@@ -239,7 +239,7 @@ describe("/carta (página de verdad)", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Ver la carta" }));
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByRole("heading", { level: 1, name: "Nuestra carta" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Carta de Casa Tomás: marisco, carnes y arroces" })).toBeInTheDocument();
     expect(ultima?.state).toBeNull();
   });
 });
