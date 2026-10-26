@@ -18,7 +18,7 @@ it("does not interrupt anchor scrolling on the initial resize notification", () 
   let top = 700;
   section.getBoundingClientRect = vi.fn(() => ({ top } as DOMRect));
   section.scrollIntoView = vi.fn();
-  fireEvent.click(screen.getByRole("link", { name: "Carta", exact: true }));
+  fireEvent.click(screen.getByRole("link", { name: /^Carta$/ }));
   expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
   act(() => resize([], {} as ResizeObserver));
   expect(section.scrollIntoView).toHaveBeenCalledTimes(1);

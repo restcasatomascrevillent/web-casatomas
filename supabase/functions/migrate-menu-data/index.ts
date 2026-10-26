@@ -31,8 +31,8 @@ Deno.serve(async (req) => {
           nombre: item.name,
           categoria: category.category,
           precio_eur: item.price_eur,
-          unidad: (item as any).unit || null,
-          descripcion: (item as any).description || null,
+          unidad: (item as { unit?: string | null }).unit || null,
+          descripcion: (item as { description?: string | null }).description || null,
           alergenos_oficiales: item.alergenos?.oficiales || [],
           alergenos_inferidos: item.alergenos?.inferidos || [],
           alergenos_notas: item.alergenos?.notas || null,
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     });
 
     const vinosToInsert = [];
-    const vinosMenu = (vinosData.default as any).menu;
+    const vinosMenu = (vinosData.default as { menu?: unknown }).menu;
     
     if (Array.isArray(vinosMenu)) {
       for (const category of vinosMenu) {

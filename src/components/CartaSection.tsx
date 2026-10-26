@@ -125,14 +125,14 @@ const CartaSection = () => {
     etiqueta: [etiquetas.snacks, etiquetas.calientes, etiquetas.frios][indice],
     categoria: buscarCategoria(clave),
   })).filter(
-    (item): item is { clave: string; etiqueta: string; categoria: CategoriaCarta } => Boolean(item.categoria),
+    (item): item is typeof item & { categoria: CategoriaCarta } => Boolean(item.categoria),
   );
   const ensaladas = CLAVES_ENSALADAS.map((clave, indice) => ({
     clave,
     etiqueta: [etiquetas.verde, etiquetas.salazones][indice],
     categoria: buscarCategoria(clave),
   })).filter(
-    (item): item is { clave: string; etiqueta: string; categoria: CategoriaCarta } => Boolean(item.categoria),
+    (item): item is typeof item & { categoria: CategoriaCarta } => Boolean(item.categoria),
   );
   const simples = CLAVES_SIMPLES.map((clave) => buscarCategoria(clave)).filter(
     (categoria): categoria is CategoriaCarta => Boolean(categoria),

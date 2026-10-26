@@ -12,7 +12,7 @@ type AnyProps = Record<string, unknown> & { children?: React.ReactNode };
 const makeMotionComponent = (tag: string) =>
   React.forwardRef<HTMLElement, AnyProps>(
     ({ children, initial: _i, animate: _a, exit: _e, transition: _t, variants: _v, whileHover: _wh, whileTap: _wt, layout: _l, layoutId: _li, ...rest }, ref) =>
-      React.createElement(tag, { ...rest, ref }, children)
+      React.createElement(tag, { ...rest, ref }, children as React.ReactNode)
   );
 
 export const motion = new Proxy({} as Record<string, ReturnType<typeof makeMotionComponent>>, {
