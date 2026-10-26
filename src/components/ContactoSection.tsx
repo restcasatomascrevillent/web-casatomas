@@ -45,7 +45,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const IMPORTE_MIN = 10;
 const IMPORTE_MAX = 1000;
 
-const ContactoSection = () => {
+const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto" | "regalo" }) => {
   const { t, language } = useTranslations();
   const [giftAmount, setGiftAmount] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -188,7 +188,7 @@ const ContactoSection = () => {
         viewport={{ once: true }}
         className="max-w-7xl mx-auto"
       >
-        <div className="text-center mb-12">
+        {modo === "completo" && <div className="text-center mb-12">
           <motion.h2
             initial={false}
             whileInView={{ opacity: 1, y: 0 }}
@@ -207,11 +207,11 @@ const ContactoSection = () => {
           >
             {t.contacto.subtitle}
           </motion.p>
-        </div>
+        </div>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className={modo === "completo" ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "max-w-3xl mx-auto"}>
           {/* Contact information */}
-          <motion.div
+          {modo !== "regalo" && <motion.div
             initial={false}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
@@ -253,7 +253,7 @@ const ContactoSection = () => {
                   <div>
                     <p className="font-medium">{t.contacto.emailLabel}</p>
                     <p className="text-sm text-muted-foreground">
-                      casatomascrevillent@gmail.com
+                      <a href="mailto:casatomascrevillent@gmail.com" className="hover:underline">casatomascrevillent@gmail.com</a>
                     </p>
                   </div>
                 </div>
@@ -281,10 +281,10 @@ const ContactoSection = () => {
                 ))}
               </CardContent>
             </Card>
-          </motion.div>
+          </motion.div>}
 
           {/* Regalar Experiencia */}
-          <motion.div
+          {modo !== "contacto" && <motion.div
             initial={false}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
@@ -348,7 +348,7 @@ const ContactoSection = () => {
                 </p>
               </CardContent>
             </Card>
-          </motion.div>
+          </motion.div>}
         </div>
       </motion.div>
 

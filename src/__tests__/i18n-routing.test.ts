@@ -159,8 +159,9 @@ describe("existeEnTodosLosIdiomas — espejo de las rutas reales de App.tsx", ()
   it("toda ruta que solo está en la rama española NO cuenta como multiidioma", () => {
     const enIngles = new Set(rutasDeRama("/en"));
     const soloEs = rutasDeRama("/").filter((ruta) => !enIngles.has(ruta));
-    // Solo las páginas de los enlaces de los correos (que van en español) y el 404.
-    expect([...soloEs].sort()).toEqual(["/404", "/newsletter/baja", "/reserva/respuesta"]);
+    // Las páginas de los enlaces de los correos (que van en español), el aviso
+    // legal (texto vigente solo en español) y el 404.
+    expect([...soloEs].sort()).toEqual(["/404", "/aviso-legal", "/newsletter/baja", "/reserva/respuesta"]);
     for (const ruta of soloEs) expect(existeEnTodosLosIdiomas(ruta), ruta).toBe(false);
   });
 

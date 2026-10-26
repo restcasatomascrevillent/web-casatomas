@@ -1,0 +1,47 @@
+# Edge Functions desplegadas en el proyecto origen (jeamoczmbfsnwkfjxcyo) el 26-10-2026.
+# slug<TAB>repo con el código (panel|web|ninguno)<TAB>verify_jwt tal y como está desplegada en el origen
+# migrar.sh las despliega en este orden y después fija verify_jwt con la API para
+# que quede idéntico al origen (config.toml no coincide en todas).
+admin-create-user	panel	true
+admin-delete-user	panel	true
+admin-set-super-admin	panel	true
+admin-set-user-access	panel	true
+admin-update-user-password	panel	true
+auditoria-revertir	panel	true
+chat-facturas	panel	true
+chat-web	panel	false
+clasificar-productos	panel	false
+emails-reserva	panel	false
+enviar-newsletter	panel	true
+extraer-vino-foto	panel	true
+format-novedad	panel	true
+leer-metricas	panel	false
+list-users	panel	true
+newsletter-baja	panel	false
+newsletter-sync-resend	panel	false
+notify-config-bot-change	panel	true
+notify-reservation-change	panel	true
+ocr-trabajo	panel	false
+panel-auth	panel	false
+procesar-dibujo-perimetro	panel	true
+procesar-factura	panel	true
+rebuild-webs	panel	true
+registrar-metrica	panel	false
+reservas-web	panel	false
+resend-webhook	panel	false
+sincronizar-costes-openai	panel	false
+stripe-estado-cuenta	panel	true
+sync-google-reviews	panel	false
+sync-trafico-web	panel	false
+traducir-carta	panel	false
+traducir-carta-auto	panel	false
+traducir-contenido	panel	true
+traducir-novedad	panel	false
+traducir-novedad-auto	panel	false
+cheques-regalo-admin	web	true
+cheques-regalo-web	web	true
+limpiar-fotos-novedades	web	false
+stripe-webhook-cheques-regalo	web	false
+# Sin código en ningún repo y sin llamadas desde ninguna app (la web usa
+# VITE_MAPBOX_TOKEN). Se descarga del origen solo si hay SUPABASE_ACCESS_TOKEN_ORIGEN.
+get-mapbox-token	ninguno	false

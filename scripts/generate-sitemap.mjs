@@ -52,6 +52,41 @@ function rutaSinPrefijo(ruta) {
   return resto === '' ? '/' : resto;
 }
 
+/**
+ * Imágenes de una página ya renderizada, para el sitemap de imágenes
+ * (`xmlns:image`, ver `generarSitemapYRobots`). Solo cuenta el `<img>` real
+ * (dentro o fuera de un `<picture>`: `<source>` no es la imagen que ve quien
+ * no tiene JS ni el bot de imágenes), y solo si tiene `alt` — una imagen
+ * puramente decorativa (`alt=""`) no es la clase de imagen que Google
+ * recomienda listar en un sitemap de imágenes.
+ *
+ * `src`/`alt` se copian tal cual del HTML, sin volver a escapar: React ya
+ * los deja listos como atributo (`&`, `<`, `>` escapados) y esas mismas tres
+ * entidades son válidas como contenido de un elemento XML — escaparlas otra
+ * vez dejaría un "Juvé &amp;amp; Camps" visible en Google.
+ *
+ * Única excepción: el espacio de no separación (p. ej. el que lleva "especial !"
+ * en francés) se serializa en HTML5 como la entidad con nombre `&nbsp;` —lo exige
+ * la propia especificación, tanto en texto como en atributos— y esa entidad no
+ * existe en XML a pelo. Se decodifica a su carácter real (U+00A0, válido tal cual
+ * en XML) antes de usarla como `<image:caption>`.
+ */
+function imagenesDe(html, base) {
+  const imagenes = [];
+  const vistas = new Set();
+  for (const etiqueta of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = etiqueta[0];
+    const src = /\ssrc="([^"]*)"/i.exec(tag)?.[1];
+    const alt = /\salt="([^"]*)"/i.exec(tag)?.[1];
+    if (!src || !alt) continue;
+    const loc = /^https?:\/\//i.test(src) ? src : `${base}${src.startsWith('/') ? '' : '/'}${src}`;
+    if (vistas.has(loc)) continue;
+    vistas.add(loc);
+    imagenes.push({ loc, caption: alt.replace(/&nbsp;/gi, ' ') });
+  }
+  return imagenes;
+}
+
 /** `/carta/vinos` + "en" -> `/en/carta/vinos`. `/` + "en" -> `/en`. */
 function conPrefijo(rutaEs, lang) {
   if (lang === 'es') return rutaEs;
@@ -90,14 +125,17 @@ export async function generarSitemapYRobots(dir, siteUrl, { ignorar = [] } = {})
   const omitidos = new Set(ignorar);
   const archivos = (await listarHtml(dir)).filter((archivo) => !omitidos.has(archivo));
 
-  const rutas = [];
+  // El HTML de cada ruta se queda en memoria (son páginas, no son pesadas):
+  // hace falta otra vez más abajo para sacar las imágenes de esa misma página.
+  const htmlPorRuta = new Map();
   for (const archivo of archivos) {
     if (archivo === '404.html') continue;
     const html = await readFile(join(dir, archivo), 'utf8');
     // Una página con `noindex` en el sitemap es una señal contradictoria.
     if (/name="robots"[^>]*content="[^"]*noindex/i.test(html)) continue;
-    rutas.push(aRutaPublica(archivo));
+    htmlPorRuta.set(aRutaPublica(archivo), html);
   }
+  const rutas = [...htmlPorRuta.keys()];
   rutas.sort((a, b) => (a === '/' ? -1 : b === '/' ? 1 : a.localeCompare(b)));
 
   if (rutas.length === 0) {
@@ -118,7 +156,7 @@ export async function generarSitemapYRobots(dir, siteUrl, { ignorar = [] } = {})
   const lastmod = new Date().toISOString().slice(0, 10);
   const sitemap =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n` +
     rutas
       .map((ruta) => {
         const rutaEs = rutaSinPrefijo(ruta);
@@ -133,6 +171,15 @@ export async function generarSitemapYRobots(dir, siteUrl, { ignorar = [] } = {})
                 `    <xhtml:link rel="alternate" hreflang="x-default" href="${base}${rutaEs}"/>\n`,
               ].join('')
             : '';
+        const imagenes = imagenesDe(htmlPorRuta.get(ruta), base)
+          .map(
+            (img) =>
+              `    <image:image>\n` +
+              `      <image:loc>${img.loc}</image:loc>\n` +
+              `      <image:caption>${img.caption}</image:caption>\n` +
+              `    </image:image>\n`,
+          )
+          .join('');
         return (
           `  <url>\n` +
           `    <loc>${base}${ruta}</loc>\n` +
@@ -140,6 +187,7 @@ export async function generarSitemapYRobots(dir, siteUrl, { ignorar = [] } = {})
           `    <changefreq>${FRECUENCIAS[rutaEs] ?? (esCarta(rutaEs) ? 'weekly' : 'monthly')}</changefreq>\n` +
           `    <priority>${PRIORIDADES[rutaEs] ?? (esCarta(rutaEs) ? '0.85' : '0.8')}</priority>\n` +
           alternates +
+          imagenes +
           `  </url>\n`
         );
       })

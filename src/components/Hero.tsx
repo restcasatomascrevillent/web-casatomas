@@ -42,7 +42,7 @@ const Hero = () => {
         className="hero-section relative overflow-hidden bg-gradient-to-br from-background via-muted to-background"
       >
         <div aria-hidden="true" className="hero-backdrop absolute inset-0" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center pb-28 sm:pb-24 lg:pb-0 text-center px-4 z-10">
+        <div className="relative min-h-[inherit] flex flex-col items-center justify-center pt-24 pb-32 sm:pb-24 lg:pb-20 text-center px-4 z-10">
           <div className="mb-8">
             <img
               src={logoHero.src}
@@ -56,8 +56,11 @@ const Hero = () => {
               fetchPriority="high"
               decoding="async"
             />
-            <h1 className="sr-only">
-              Casa Tomás — Restaurante de cocina tradicional en Crevillent (Alicante)
+            {/* Sigue siendo el H1 de la portada (lo que Google lee como título de
+                la página), pero discreto: una línea pequeña en versalitas en vez
+                de una frase grande que compita con el logo y el lema. */}
+            <h1 className="text-[11px] sm:text-xs md:text-sm font-medium uppercase tracking-[0.12em] sm:tracking-[0.2em] md:tracking-[0.3em] text-muted-foreground max-w-2xl mx-auto mb-4 text-balance">
+              {{ es: "Cocina gallega · Marisco · Crevillente", en: "Galician cuisine · Seafood · Crevillente", fr: "Cuisine galicienne · Fruits de mer · Crevillente" }[language]}
             </h1>
             <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
               {t.hero.motto}

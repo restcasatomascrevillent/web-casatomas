@@ -43,6 +43,9 @@ const vinos = [
   },
 ];
 
+// Alt enriquecido para SEO (ver CartaVinos.tsx): nombre — categoría corta, negocio.
+const ALT_RIBERA = "Ribera del Duero Reserva — Tintos, Casa Tomás Restaurante";
+
 // `CartaVinos` refresca contra Supabase al montarse (import perezoso del
 // cliente). Sin este mock los tests hacían la petición DE VERDAD contra el
 // proyecto del `.env`, y según cuánto tardara la red la respuesta llegaba a
@@ -163,26 +166,26 @@ describe("CartaVinos — información y fotografías", () => {
     expect(eye).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(eye);
     expect(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "true");
-    const foto = screen.getByAltText("Ribera del Duero Reserva");
+    const foto = screen.getByAltText(ALT_RIBERA);
     expect(foto).toHaveClass("object-cover");
     expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /ocultar foto.*ribera del duero/i }));
-    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    expect(screen.queryByAltText(ALT_RIBERA)).not.toBeInTheDocument();
   });
 
   it("la foto y la información son excluyentes: abrir una cierra la otra", async () => {
     const user = userEvent.setup(); render(<Wrapped />); await confirmarEdad(user);
     fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
-    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
+    expect(screen.getByAltText(ALT_RIBERA)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /ver información.*ribera del duero/i }));
     expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();
-    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    expect(screen.queryByAltText(ALT_RIBERA)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
 
     fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
-    expect(screen.getByAltText("Ribera del Duero Reserva")).toBeInTheDocument();
+    expect(screen.getByAltText(ALT_RIBERA)).toBeInTheDocument();
     expect(screen.queryByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /ver información.*ribera del duero/i })).toHaveAttribute("aria-expanded", "false");
   });
@@ -212,10 +215,10 @@ describe("CartaVinos — información y fotografías", () => {
     render(<Wrapped />);
     await confirmarEdad(user);
     fireEvent.click(screen.getByRole("button", { name: /ver foto.*ribera del duero/i }));
-    fireEvent.error(screen.getAllByAltText("Ribera del Duero Reserva")[0]);
+    fireEvent.error(screen.getAllByAltText(ALT_RIBERA)[0]);
 
     await waitFor(() => expect(screen.getByRole("button", { name: /ver foto.*ribera del duero/i })).toBeDisabled());
-    expect(screen.queryByAltText("Ribera del Duero Reserva")).not.toBeInTheDocument();
+    expect(screen.queryByAltText(ALT_RIBERA)).not.toBeInTheDocument();
     fireEvent.click(screen.getAllByRole("button", { name: /ver información.*ribera del duero/i })[0]);
     await waitFor(() => expect(screen.getAllByRole("button", { name: /ocultar información.*ribera del duero/i })).toHaveLength(1));
     expect(screen.getByText("Fruta madura y una boca equilibrada. Acompaña carnes asadas.")).toBeInTheDocument();

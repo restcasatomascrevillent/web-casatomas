@@ -11,9 +11,10 @@ import { construirRutaIdioma } from "@/i18n/routing";
 type ReservasSectionProps = {
   forceShowForm?: boolean;
   showBackButton?: boolean;
+  headingLevel?: "h1" | "h2";
 };
 
-const ReservasSection = ({ forceShowForm = false, showBackButton = false }: ReservasSectionProps) => {
+const ReservasSection = ({ forceShowForm = false, showBackButton = false, headingLevel: Heading = "h2" }: ReservasSectionProps) => {
   const { t, language } = useTranslations();
   const navigate = useNavigate();
   const { elementRef, isVisible } = useScrollReveal();
@@ -37,9 +38,9 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false }: Rese
         )}
       >
         <div className="container mx-auto max-w-5xl">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center mb-4 text-foreground">
+          <Heading className="text-4xl md:text-5xl font-bold tracking-tight text-center mb-4 text-foreground">
             {t.reservas.title}
-          </h2>
+          </Heading>
           <p className="text-center text-muted-foreground/80 text-lg mb-12 max-w-2xl mx-auto">
             {t.reservas.subtitle}
           </p>
