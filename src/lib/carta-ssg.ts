@@ -157,8 +157,19 @@ export function resolverImagen(
   return null;
 }
 
-/** Host real de Supabase Storage, confirmado contra la base de datos — ver `vercel.json` → `images.remotePatterns`. */
-const SUPABASE_STORAGE_HOST = "jeamoczmbfsnwkfjxcyo.supabase.co";
+/**
+ * Hosts de Supabase Storage que acepta el optimizador: los mismos, uno a uno,
+ * que `vercel.json` → `images.remotePatterns`. Si se añade un proyecto aquí
+ * hay que añadirlo allí, o el optimizador responde 400.
+ *   - jeamoczmbfsnwkfjxcyo: proyecto original (cuenta oficiososia).
+ *   - haqmmdfdzzatdnrrcgez: producción en la cuenta del restaurante.
+ *   - sfonaclosuafvlhutkon: demo/staging en la cuenta del restaurante.
+ */
+const SUPABASE_STORAGE_HOSTS = new Set([
+  "jeamoczmbfsnwkfjxcyo.supabase.co",
+  "haqmmdfdzzatdnrrcgez.supabase.co",
+  "sfonaclosuafvlhutkon.supabase.co",
+]);
 
 /**
  * El panel sube las fotos de platos/vinos tal cual salen del móvil, sin
@@ -182,6 +193,6 @@ export function imagenOptimizada(
   } catch {
     return url;
   }
-  if (host !== SUPABASE_STORAGE_HOST) return url;
+  if (!SUPABASE_STORAGE_HOSTS.has(host)) return url;
   return `/_vercel/image?url=${encodeURIComponent(url)}&w=${ancho}&q=75`;
 }

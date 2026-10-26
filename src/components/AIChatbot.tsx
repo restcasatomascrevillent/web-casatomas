@@ -34,7 +34,13 @@ type ChatMessage = {
 const MAX_MENSAJE_LEN = 500;
 /** A partir de aqui se ensena el contador "432/500" junto al campo. */
 const AVISO_MENSAJE_LEN = 400;
-const SUPABASE_CONFIG_BOT_WEB_URL = "https://jeamoczmbfsnwkfjxcyo.supabase.co/rest/v1/configBotWeb";
+/**
+ * Mismo proyecto que el cliente de Supabase: la clave publishable de abajo
+ * solo vale contra su propio proyecto, así que la URL no puede ir fija.
+ */
+const SUPABASE_CONFIG_BOT_WEB_URL = `${(
+    (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://jeamoczmbfsnwkfjxcyo.supabase.co"
+).replace(/\/+$/, "")}/rest/v1/configBotWeb`;
 const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 const SUPABASE_CONFIG_BOT_KEY = import.meta.env.VITE_SUPABASE_CONFIG_BOT_KEY;

@@ -28,6 +28,16 @@
         "protocol": "https",
         "hostname": "jeamoczmbfsnwkfjxcyo.supabase.co",
         "pathname": "^/storage/v1/object/public/.*$"
+      },
+      {
+        "protocol": "https",
+        "hostname": "haqmmdfdzzatdnrrcgez.supabase.co",
+        "pathname": "^/storage/v1/object/public/.*$"
+      },
+      {
+        "protocol": "https",
+        "hostname": "sfonaclosuafvlhutkon.supabase.co",
+        "pathname": "^/storage/v1/object/public/.*$"
       }
     ]
   },
