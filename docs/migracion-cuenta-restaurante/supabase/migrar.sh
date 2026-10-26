@@ -30,10 +30,12 @@
 #   audit_log que el origen no tiene.
 #
 # Variables (en GitHub Actions llegan como secrets; ver README.md):
-#   ORIGEN_DB_URL, DESTINO_DB_URL       cadenas de conexión "Session pooler" (puerto 5432)
 #   DESTINO_REF                         haqmmdfdzzatdnrrcgez (prod) | sfonaclosuafvlhutkon (demo)
 #   SUPABASE_ACCESS_TOKEN               token personal de la cuenta del RESTAURANTE
 #   SUPABASE_ACCESS_TOKEN_ORIGEN        token personal de la cuenta OFICIOSOSIA
+#   ORIGEN_DB_URL, DESTINO_DB_URL       opcionales. Sin ellas no hacen falta contraseñas:
+#                                       cada conexión pide a la Management API un rol
+#                                       temporal (5 min), de SOLO LECTURA en el origen.
 #   SECRETOS_FUNCIONES                  .env con las claves externas (Stripe, Resend, OpenAI…)
 #   REEMPLAZOS                          "url_vieja=>url_nueva;..." para las webs y el panel
 #   REPO_PANEL, REPO_WEB                checkouts de admin-casatomas y web-casatomas
@@ -64,27 +66,78 @@ falta() {
 ocultar() { [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${1:-}" ] && echo "::add-mask::$1"; return 0; }
 
 comprobar_destino() {
-  falta DESTINO_DB_URL DESTINO_REF
+  falta DESTINO_REF
+  [ -n "${DESTINO_DB_URL:-}" ] || falta SUPABASE_ACCESS_TOKEN
   case "$DESTINO_REF" in
     "$PROD_REF"|"$DEMO_REF") ;;
     *) echo "DESTINO_REF debe ser $PROD_REF (prod) o $DEMO_REF (demo)" >&2; exit 2 ;;
   esac
-  if [[ "$DESTINO_DB_URL" == *"$ORIGEN_REF"* ]]; then
-    echo "DESTINO_DB_URL apunta al proyecto ORIGEN: no se escribe nada ahí." >&2
-    exit 2
-  fi
-  if [[ "$DESTINO_DB_URL" != *"$DESTINO_REF"* ]]; then
-    echo "DESTINO_DB_URL no es del proyecto $DESTINO_REF (¿secret cambiado?)." >&2
-    exit 2
+  if [ -n "${DESTINO_DB_URL:-}" ]; then
+    if [[ "$DESTINO_DB_URL" == *"$ORIGEN_REF"* ]]; then
+      echo "DESTINO_DB_URL apunta al proyecto ORIGEN: no se escribe nada ahí." >&2
+      exit 2
+    fi
+    if [[ "$DESTINO_DB_URL" != *"$DESTINO_REF"* ]]; then
+      echo "DESTINO_DB_URL no es del proyecto $DESTINO_REF (¿secret cambiado?)." >&2
+      exit 2
+    fi
   fi
 }
 
 comprobar_origen() {
-  falta ORIGEN_DB_URL
-  if [[ "$ORIGEN_DB_URL" != *"$ORIGEN_REF"* ]]; then
-    echo "ORIGEN_DB_URL no es del proyecto $ORIGEN_REF." >&2
-    exit 2
+  if [ -n "${ORIGEN_DB_URL:-}" ]; then
+    if [[ "$ORIGEN_DB_URL" != *"$ORIGEN_REF"* ]]; then
+      echo "ORIGEN_DB_URL no es del proyecto $ORIGEN_REF." >&2
+      exit 2
+    fi
+  else
+    falta SUPABASE_ACCESS_TOKEN_ORIGEN
   fi
+}
+
+# Deja en URL_TEMPORAL una conexión Session pooler con un rol temporal de la
+# Management API (el mismo mecanismo que usa el CLI; la contraseña sirve 5 min
+# para entrar). <ref> <token> <solo_lectura: true|false>
+URL_TEMPORAL=""
+url_temporal() {
+  local ref="$1" token="$2" solo_lectura="$3" rol clave host
+  read -r rol clave < <(curl -fsS -X POST "$API/projects/$ref/cli/login-role" \
+      -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
+      -d "{\"read_only\": $solo_lectura}" | jq -r '"\(.role) \(.password | @uri)"')
+  host="$(curl -fsS "$API/projects/$ref/config/database/pooler" -H "Authorization: Bearer $token" |
+    jq -r '([.[] | select(.database_type == "PRIMARY")][0] // .[0]).db_host')"
+  [ -n "$rol" ] && [ -n "$clave" ] && [ -n "$host" ] || { echo "No se pudo obtener el rol temporal de $ref." >&2; exit 1; }
+  ocultar "$clave"
+  URL_TEMPORAL="postgresql://$rol.$ref:$clave@$host:5432/postgres?sslmode=require"
+}
+
+# psql contra el origen: SOLO LECTURA (supabase_read_only_user salta RLS, así
+# que los recuentos son completos, y no puede escribir).
+sql_origen() {
+  if [ -n "${ORIGEN_DB_URL:-}" ]; then "${PSQL[@]}" "$@" "$ORIGEN_DB_URL"; return; fi
+  url_temporal "$ORIGEN_REF" "$SUPABASE_ACCESS_TOKEN_ORIGEN" true
+  "${PSQL[@]}" -c 'SET ROLE supabase_read_only_user' "$@" "$URL_TEMPORAL"
+}
+
+# psql contra el destino, como postgres (igual que la guía de Supabase).
+sql_destino() {
+  if [ -n "${DESTINO_DB_URL:-}" ]; then "${PSQL[@]}" "$@" "$DESTINO_DB_URL"; return; fi
+  url_temporal "$DESTINO_REF" "$SUPABASE_ACCESS_TOKEN" false
+  "${PSQL[@]}" -c 'SET ROLE postgres' "$@" "$URL_TEMPORAL"
+}
+
+# supabase db dump del origen: con ORIGEN_DB_URL, o enlazando el proyecto con
+# el token (el CLI gestiona él mismo su rol temporal).
+volcado_origen() {
+  if [ -n "${ORIGEN_DB_URL:-}" ]; then supabase db dump --db-url "$ORIGEN_DB_URL" "$@"; return; fi
+  local enlace="$TRABAJO/enlace"
+  if [ ! -f "$enlace/supabase/.temp/project-ref" ]; then
+    mkdir -p "$enlace/supabase"
+    printf 'project_id = "%s"\n' "$ORIGEN_REF" > "$enlace/supabase/config.toml"
+    SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN_ORIGEN" \
+      supabase link --project-ref "$ORIGEN_REF" --workdir "$enlace" </dev/null
+  fi
+  SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN_ORIGEN" supabase db dump --linked --workdir "$enlace" "$@"
 }
 
 clave_servicio() { # <ref> <token>: clave secreta del proyecto (sb_secret_ o service_role)
@@ -98,30 +151,35 @@ paso_volcar() {
   mkdir -p "$TRABAJO"
   chmod 700 "$TRABAJO"
   log "Volcando el origen $ORIGEN_REF (solo lectura)"
-  supabase db dump --db-url "$ORIGEN_DB_URL" -f "$TRABAJO/roles.sql" --role-only
-  supabase db dump --db-url "$ORIGEN_DB_URL" -f "$TRABAJO/schema.sql"
+  volcado_origen -f "$TRABAJO/roles.sql" --role-only
+  volcado_origen -f "$TRABAJO/schema.sql"
   # storage.objects va por la API de Storage (con los ficheros); vault.secrets
   # está cifrado con la clave del proyecto origen y no se puede descifrar en
   # otro; cron y pg_net se rehacen aparte con las URLs nuevas.
-  supabase db dump --db-url "$ORIGEN_DB_URL" -f "$TRABAJO/data.sql" --use-copy --data-only \
+  volcado_origen -f "$TRABAJO/data.sql" --use-copy --data-only \
     -x storage.objects -x storage.buckets -x storage.buckets_vectors -x storage.vector_indexes \
     -x vault.secrets -x cron.job -x cron.job_run_details \
     -x net.http_request_queue -x net._http_response
-  supabase db dump --db-url "$ORIGEN_DB_URL" -f "$TRABAJO/historial_schema.sql" --schema supabase_migrations
-  supabase db dump --db-url "$ORIGEN_DB_URL" -f "$TRABAJO/historial_data.sql" --use-copy --data-only --schema supabase_migrations
+  volcado_origen -f "$TRABAJO/historial_schema.sql" --schema supabase_migrations
+  volcado_origen -f "$TRABAJO/historial_data.sql" --use-copy --data-only --schema supabase_migrations
 
   # Arreglos documentados por Supabase para restaurar en otro proyecto.
-  sed -i -E 's/^(GRANT "postgres" TO "cli_login_postgres".*)$/-- \1/' "$TRABAJO/roles.sql"
+  # El rol temporal del CLI (cli_login_*) ya existe en el destino y es con el
+  # que se restaura: ni se crea ni se toca.
+  sed -i -E 's/^(.*"cli_login_[a-z_]+".*)$/-- \1/' "$TRABAJO/roles.sql"
+  # supabase/cli#7315 (corregido el 26-10-2026, puede no estar publicado aún):
+  # permisos sobre parámetros a roles reservados, que postgres no puede dar.
+  sed -i -E 's/^(GRANT [A-Z ,]+ ON PARAMETER .* TO "supabase_[a-z_]+".*)$/-- \1/' "$TRABAJO/roles.sql"
   sed -i -E 's/^(ALTER .* OWNER TO "supabase_admin";)$/-- \1/' "$TRABAJO/schema.sql"
 
   log "Extensiones, políticas y triggers de auth/storage, realtime y cron del origen"
-  "${PSQL[@]}" -At "$ORIGEN_DB_URL" > "$TRABAJO/extensiones.sql" <<'SQL'
+  sql_origen -At -f - > "$TRABAJO/extensiones.sql" <<'SQL'
 select format('create extension if not exists %I with schema %I;', extname, extnamespace::regnamespace)
   from pg_extension
  where extname <> 'plpgsql'
  order by extname;
 SQL
-  "${PSQL[@]}" -At "$ORIGEN_DB_URL" > "$TRABAJO/gestionados.sql" <<'SQL'
+  sql_origen -At -f - > "$TRABAJO/gestionados.sql" <<'SQL'
 select format('drop policy if exists %I on %I.%I;', policyname, schemaname, tablename) || E'\n' ||
        format('create policy %I on %I.%I as %s for %s to %s%s%s;',
               policyname, schemaname, tablename, permissive, cmd,
@@ -158,7 +216,7 @@ end $$;$f$, pubname, schemaname, tablename, pubname, schemaname, tablename)
  where pubname = 'supabase_realtime'
  order by schemaname, tablename;
 SQL
-  "${PSQL[@]}" -At "$ORIGEN_DB_URL" > "$TRABAJO/cron.sql" <<'SQL'
+  sql_origen -At -f - > "$TRABAJO/cron.sql" <<'SQL'
 select format('insert into _cron values (%L, %L, %L);', jobname, schedule, command)
   from cron.job
  where active
@@ -173,7 +231,7 @@ SQL
 paso_restaurar() {
   comprobar_destino
   local tablas
-  tablas="$("${PSQL[@]}" -At "$DESTINO_DB_URL" -c \
+  tablas="$(sql_destino -At -c \
     "select count(*) from pg_tables where schemaname in ('public', 'private', 'inventory')")"
   if [ "$tablas" != "0" ]; then
     echo "El destino ya tiene $tablas tablas: 'restaurar' es solo para un proyecto vacío." >&2
@@ -181,15 +239,15 @@ paso_restaurar() {
     exit 1
   fi
   log "Restaurando en $DESTINO_REF"
-  "${PSQL[@]}" "$DESTINO_DB_URL" -f "$TRABAJO/extensiones.sql"
+  sql_destino -f "$TRABAJO/extensiones.sql"
   # -o /dev/null: el volcado trae SELECT set_config(...) cuya salida no aporta;
   # los errores siguen saliendo por stderr.
-  "${PSQL[@]}" "$DESTINO_DB_URL" --single-transaction -o /dev/null \
+  sql_destino --single-transaction -o /dev/null \
     -f "$TRABAJO/roles.sql" \
     -f "$TRABAJO/schema.sql" \
     -c 'SET session_replication_role = replica' \
     -f "$TRABAJO/data.sql"
-  "${PSQL[@]}" "$DESTINO_DB_URL" --single-transaction -o /dev/null \
+  sql_destino --single-transaction -o /dev/null \
     -f "$TRABAJO/historial_schema.sql" \
     -f "$TRABAJO/historial_data.sql"
   echo "Restaurado."
@@ -198,14 +256,14 @@ paso_restaurar() {
 paso_gestionados() {
   comprobar_destino
   log "Políticas y triggers de auth/storage + publicación realtime en $DESTINO_REF"
-  "${PSQL[@]}" "$DESTINO_DB_URL" --single-transaction -f "$TRABAJO/gestionados.sql"
+  sql_destino --single-transaction -f "$TRABAJO/gestionados.sql"
   echo "Hecho."
 }
 
 paso_ajustar() {
   comprobar_destino
   log "Corrigiendo URLs del proyecto origen en datos y funciones SQL de $DESTINO_REF"
-  "${PSQL[@]}" "$DESTINO_DB_URL" \
+  sql_destino \
     -v origen_ref="$ORIGEN_REF" -v destino_ref="$DESTINO_REF" -v reemplazos="$REEMPLAZOS" \
     -f "$AQUI/ajustes-post-restauracion.sql"
 }
@@ -213,7 +271,7 @@ paso_ajustar() {
 paso_cron() {
   comprobar_destino
   log "pg_cron en $DESTINO_REF (modo $CRON_MODO)"
-  "${PSQL[@]}" "$DESTINO_DB_URL" \
+  sql_destino \
     -v origen_ref="$ORIGEN_REF" -v destino_ref="$DESTINO_REF" -v reemplazos="$REEMPLAZOS" \
     -v cron_modo="$CRON_MODO" -v cron_origen="$TRABAJO/cron.sql" \
     -f "$AQUI/programar-cron.sql"
@@ -227,7 +285,7 @@ paso_secretos() {
   local vault="$TRABAJO/vault.sql"
   DESTINO_REF="$DESTINO_REF" ORIGEN_REF="$ORIGEN_REF" VAULT_SQL="$vault" \
     node "$AQUI/preparar-secretos.mjs"
-  "${PSQL[@]}" "$DESTINO_DB_URL" -f "$vault"
+  sql_destino -f "$vault"
   rm -f "$vault"
 }
 
@@ -318,7 +376,7 @@ paso_clientes() {
     exit 2
   fi
   log "Vaciando datos de clientes en la demo"
-  "${PSQL[@]}" "$DESTINO_DB_URL" -f "$AQUI/vaciar-datos-clientes.sql"
+  sql_destino -f "$AQUI/vaciar-datos-clientes.sql"
   echo "Hecho."
 }
 
@@ -334,7 +392,7 @@ paso_recargar() {
   # misma transacción: si algo falla, el destino queda como estaba.
   local borrar="$TRABAJO/borrar-antes-de-recargar.sql"
   grep -oE '^COPY "[^"]+"\."[^"]+"' "$TRABAJO/data.sql" | sed -E 's/^COPY (.*)$/delete from \1;/' > "$borrar"
-  "${PSQL[@]}" "$DESTINO_DB_URL" --single-transaction -o /dev/null \
+  sql_destino --single-transaction -o /dev/null \
     -c 'SET session_replication_role = replica' \
     -f "$borrar" \
     -f "$TRABAJO/data.sql"
@@ -363,8 +421,8 @@ union all select 'objetos vault ' || count(*) from vault.secrets
 union all select 'objetos extensiones ' || string_agg(extname, ',' order by extname) from pg_extension
 order by 1;
 SQL
-  "${PSQL[@]}" -At "$ORIGEN_DB_URL" -c "$consulta" > "$TRABAJO/verificar-origen.txt"
-  "${PSQL[@]}" -At "$DESTINO_DB_URL" -c "$consulta" > "$TRABAJO/verificar-destino.txt"
+  sql_origen -At -c "$consulta" > "$TRABAJO/verificar-origen.txt"
+  sql_destino -At -c "$consulta" > "$TRABAJO/verificar-destino.txt"
   if diff "$TRABAJO/verificar-origen.txt" "$TRABAJO/verificar-destino.txt"; then
     echo "Origen y destino coinciden en recuentos y objetos."
   else

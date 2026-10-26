@@ -91,12 +91,25 @@ for (const [nombre, valor] of [...secretos]) {
 }
 for (const [nombre, valor] of secretos) secretos.set(nombre, corregir(valor));
 
+// Un interno que ya existe en el destino se deja como está (y su Vault
+// también): regenerarlo invalidaría los enlaces de correos ya enviados.
+const yaEnDestino = await fetch(`${API}/projects/${DESTINO_REF}/secrets`, {
+  headers: { Authorization: `Bearer ${SUPABASE_ACCESS_TOKEN}` },
+}).then((r) => {
+  if (!r.ok) throw new Error(`No se pudo leer la lista de secretos del destino: HTTP ${r.status}`);
+  return r.json();
+}).then((lista) => new Set(lista.map((s) => s.name)));
+
 const generados = [];
+const conservados = [];
 for (const nombre of INTERNOS) {
-  if (!secretos.get(nombre)) {
-    secretos.set(nombre, randomBytes(36).toString("base64url"));
-    generados.push(nombre);
+  if (secretos.get(nombre)) continue;
+  if (yaEnDestino.has(nombre)) {
+    conservados.push(nombre);
+    continue;
   }
+  secretos.set(nombre, randomBytes(36).toString("base64url"));
+  generados.push(nombre);
 }
 
 // RESERVAS_WEB_SHARED_SECRET tira el formulario de reservas de la web si se
@@ -116,6 +129,7 @@ if (!respuesta.ok) {
 }
 console.log(`Secretos guardados en ${DESTINO_REF}: ${[...secretos.keys()].sort().join(", ")}`);
 if (generados.length) console.log(`Generados ahora (no venían): ${generados.join(", ")}`);
+if (conservados.length) console.log(`Ya existían en el destino y se conservan: ${conservados.join(", ")}`);
 
 if (SUPABASE_ACCESS_TOKEN_ORIGEN) {
   const r = await fetch(`${API}/projects/${ORIGEN_REF}/secrets`, {
@@ -136,7 +150,9 @@ const literal = (v) => `'${v.replaceAll("'", "''")}'`;
 const sql = [
   "\\set ON_ERROR_STOP on",
   "begin;",
-  ...Object.entries(VAULT).map(([nombreVault, secreto]) => {
+  // Solo los del Vault cuyo secreto se ha escrito en esta pasada; los
+  // conservados ya tienen su Vault con el mismo valor.
+  ...Object.entries(VAULT).filter(([, secreto]) => secretos.has(secreto)).map(([nombreVault, secreto]) => {
     const valor = literal(secretos.get(secreto));
     return (
       `select case when exists (select 1 from vault.secrets where name = '${nombreVault}')\n` +
@@ -148,4 +164,5 @@ const sql = [
   "",
 ].join("\n");
 writeFileSync(VAULT_SQL, sql, { mode: 0o600 });
-console.log(`Vault: ${Object.keys(VAULT).join(", ")} preparados.`);
+const vaultEscrito = Object.entries(VAULT).filter(([, secreto]) => secretos.has(secreto)).map(([n]) => n);
+console.log(vaultEscrito.length ? `Vault: ${vaultEscrito.join(", ")} preparados.` : "Vault: sin cambios.");
