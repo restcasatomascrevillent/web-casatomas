@@ -11,9 +11,11 @@
 #   SUPABASE_ACCESS_TOKEN_ORIGEN  token personal de la cuenta oficiososia
 #   SECRETOS_FUNCIONES_PROD       .env con las claves externas de producción
 #   SECRETOS_FUNCIONES_DEMO       .env con las claves de pruebas (Stripe test…)
+#   GH_TOKEN_LECTURA              token "fine-grained" de solo lectura (Contents: Read)
+#                                 de web-casatomas: el repo es privado y ahí viven el kit
+#                                 y 4 Edge Functions. El token propio del workflow
+#                                 (github.token) solo ve este repo.
 #   SMTP_PASS                     opcional, si Auth usa SMTP propio
-#   GH_TOKEN_LECTURA              opcional: solo si web-casatomas es privado
-#                                 (token de solo lectura de ese repo)
 #
 # Los volcados (con datos personales) se quedan en el runner y desaparecen con
 # él: no se suben como artefacto. Los scripts no imprimen filas ni secretos.
@@ -59,7 +61,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: restcasatomascrevillent/web-casatomas
-          token: ${{ secrets.GH_TOKEN_LECTURA || github.token }}
+          token: ${{ secrets.GH_TOKEN_LECTURA }}
           path: web
           persist-credentials: false
 
@@ -112,6 +114,8 @@ jobs:
             export DESTINO_REF=sfonaclosuafvlhutkon DESTINO_DB_URL="$DEMO_DB_URL" SECRETOS_FUNCIONES="$SECRETOS_FUNCIONES_DEMO"
             export CRON_MODO=internos
             export REEMPLAZOS=""
-            por_defecto="volcar restaurar storage gestionados ajustar cron secretos funciones auth clientes verificar"
+            # Demo con copia completa de los datos (decisión del 26-10-2026). Para
+            # vaciar los datos de clientes, añadir el paso "clientes" a mano.
+            por_defecto="volcar restaurar storage gestionados ajustar cron secretos funciones auth verificar"
           fi
           bash "$REPO_WEB/docs/migracion-cuenta-restaurante/supabase/migrar.sh" ${PASOS:-$por_defecto}
