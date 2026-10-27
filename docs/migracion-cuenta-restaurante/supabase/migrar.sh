@@ -98,9 +98,19 @@ comprobar_origen() {
 # Deja en URL_TEMPORAL una conexión Session pooler con un rol temporal de la
 # Management API (el mismo mecanismo que usa el CLI; la contraseña sirve 5 min
 # para entrar). <ref> <token> <solo_lectura: true|false>
+#
+# El pooler tarda unos segundos en aceptar una contraseña recién creada
+# ("password authentication failed" justo después de pedirla): se prueba con
+# reintentos antes de devolverla, y se reutiliza 4 minutos para no pedir una
+# nueva en cada consulta.
 URL_TEMPORAL=""
+declare -A URL_CACHE=() URL_CACHE_DESDE=()
 url_temporal() {
-  local ref="$1" token="$2" solo_lectura="$3" rol clave host
+  local ref="$1" token="$2" solo_lectura="$3" clave_cache="$1:$3" rol clave host intento
+  if [ -n "${URL_CACHE[$clave_cache]:-}" ] && (( $(date +%s) - URL_CACHE_DESDE[$clave_cache] < 240 )); then
+    URL_TEMPORAL="${URL_CACHE[$clave_cache]}"
+    return
+  fi
   read -r rol clave < <(curl -fsS -X POST "$API/projects/$ref/cli/login-role" \
       -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
       -d "{\"read_only\": $solo_lectura}" | jq -r '"\(.role) \(.password | @uri)"')
@@ -109,6 +119,17 @@ url_temporal() {
   [ -n "$rol" ] && [ -n "$clave" ] && [ -n "$host" ] || { echo "No se pudo obtener el rol temporal de $ref." >&2; exit 1; }
   ocultar "$clave"
   URL_TEMPORAL="postgresql://$rol.$ref:$clave@$host:5432/postgres?sslmode=require"
+  for intento in 1 2 3 4 5 6 7 8 9 10; do
+    if psql -X -q -At -c 'select 1' "$URL_TEMPORAL" >/dev/null 2>&1; then
+      URL_CACHE[$clave_cache]="$URL_TEMPORAL"
+      URL_CACHE_DESDE[$clave_cache]=$(date +%s)
+      return
+    fi
+    sleep $((intento * 2))
+  done
+  echo "El rol temporal de $ref no consigue entrar tras 10 intentos:" >&2
+  psql -X -q -At -c 'select 1' "$URL_TEMPORAL" >/dev/null
+  exit 1
 }
 
 # psql contra el origen: SOLO LECTURA (supabase_read_only_user salta RLS, así
