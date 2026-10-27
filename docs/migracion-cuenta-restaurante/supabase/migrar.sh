@@ -165,11 +165,18 @@ volcado_origen() {
   SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN_ORIGEN" supabase db dump --linked --workdir "$enlace" "$@"
 }
 
-clave_servicio() { # <ref> <token>: clave secreta del proyecto (sb_secret_ o service_role)
+clave_servicio() { # <ref> <token>: clave service_role del proyecto
+  # La service_role (JWT) primero: Storage la valida también en
+  # Authorization: Bearer, y una sb_secret_ no es un JWT.
   curl -fsS "$API/projects/$1/api-keys?reveal=true" -H "Authorization: Bearer $2" |
-    jq -r '([.[] | select(.type == "secret" and (.api_key // "") != "")][0].api_key)
-           // ([.[] | select(.name == "service_role")][0].api_key) // empty'
+    jq -r '([.[] | select(.name == "service_role" and (.api_key // "") != "")][0].api_key)
+           // ([.[] | select(.type == "secret" and (.api_key // "") != "")][0].api_key) // empty'
 }
+
+# Fallos que no deben cortar el resto de pasos (funciones, Auth): se cuentan
+# y el script termina con error al final, con todo lo demás ya hecho.
+FALLOS=0
+fallo() { echo "FALLO: $*" >&2; FALLOS=$((FALLOS + 1)); }
 
 paso_volcar() {
   comprobar_origen
@@ -342,7 +349,8 @@ paso_funciones() {
   fi
 
   log "Desplegando Edge Functions en $DESTINO_REF"
-  local slug repo vj dir flags tmp fallos=0
+  local slug repo vj dir flags tmp omitidas=""
+
   while IFS=$'\t' read -r slug repo vj; do
     [[ -z "$slug" || "$slug" == \#* ]] && continue
     flags=(--project-ref "$DESTINO_REF" --use-api)
@@ -353,6 +361,7 @@ paso_funciones() {
       ninguno)
         if [ -z "${SUPABASE_ACCESS_TOKEN_ORIGEN:-}" ]; then
           echo "  $slug: sin código en los repos y sin token del origen; se omite (no la llama ninguna app)."
+          omitidas+=" $slug"
           continue
         fi
         tmp="$(mktemp -d)"
@@ -361,6 +370,7 @@ paso_funciones() {
         if ! SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN_ORIGEN" \
              supabase functions download "$slug" --project-ref "$ORIGEN_REF" --workdir "$tmp" --use-api >/dev/null 2>&1; then
           echo "  AVISO $slug: no se pudo descargar del origen; se omite (no la llama ninguna app)."
+          omitidas+=" $slug"
           continue
         fi
         dir="$tmp"
@@ -370,28 +380,26 @@ paso_funciones() {
     if supabase functions deploy "$slug" "${flags[@]}" --workdir "$dir" >/dev/null; then
       echo "  $slug (verify_jwt=$vj)"
     else
-      echo "  FALLO al desplegar $slug" >&2
-      fallos=$((fallos + 1))
+      fallo "no se pudo desplegar $slug"
     fi
   done < "$AQUI/funciones.tsv"
 
   log "Comprobando verify_jwt contra el origen"
   curl -fsS "$API/projects/$DESTINO_REF/functions" -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" |
     jq -r '.[] | "\(.slug)\t\(.verify_jwt)"' | sort > "$TRABAJO/funciones-destino.tsv"
-  grep -v '^#' "$AQUI/funciones.tsv" | awk -F'\t' 'NF==3 {print $1"\t"$3}' | sort > "$TRABAJO/funciones-esperadas.tsv"
+  grep -v '^#' "$AQUI/funciones.tsv" | awk -F'\t' -v omitidas="$omitidas " \
+    'NF==3 && index(omitidas, " "$1" ") == 0 {print $1"\t"$3}' | sort > "$TRABAJO/funciones-esperadas.tsv"
   if diff "$TRABAJO/funciones-esperadas.tsv" "$TRABAJO/funciones-destino.tsv"; then
     echo "Las $(wc -l < "$TRABAJO/funciones-esperadas.tsv") funciones coinciden con el origen."
   else
-    echo "Diferencias arriba (< esperado en el origen, > lo que hay en el destino)." >&2
-    fallos=$((fallos + 1))
+    fallo "verify_jwt o funciones distintos del origen (diferencias arriba: < origen, > destino)"
   fi
-  [ "$fallos" -eq 0 ]
 }
 
 paso_auth() {
   falta DESTINO_REF SUPABASE_ACCESS_TOKEN SUPABASE_ACCESS_TOKEN_ORIGEN
   log "Configuración de Auth $ORIGEN_REF -> $DESTINO_REF"
-  ORIGEN_REF="$ORIGEN_REF" DESTINO_REF="$DESTINO_REF" node "$AQUI/copiar-auth.mjs"
+  ORIGEN_REF="$ORIGEN_REF" DESTINO_REF="$DESTINO_REF" node "$AQUI/copiar-auth.mjs" || fallo "configuración de Auth"
 }
 
 paso_clientes() {
@@ -464,3 +472,7 @@ for paso in "$@"; do
     *) echo "Paso desconocido: $paso" >&2; exit 2 ;;
   esac
 done
+if [ "$FALLOS" -gt 0 ]; then
+  echo "Terminado con $FALLOS fallo(s): ver los mensajes FALLO de arriba." >&2
+  exit 1
+fi
