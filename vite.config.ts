@@ -6,6 +6,7 @@ import { fetchCartaSSG, CARTA_SSG_VACIA } from "./scripts/carta-ssg.mjs";
 import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
+import { calcularVersion } from "./scripts/version.mjs";
 
 /**
  * Un `fetch` a Supabase, TRES módulos virtuales.
@@ -112,6 +113,27 @@ interface NovedadesDescargadas {
   novedades: unknown[];
 }
 
+/**
+ * Publica /version.json con la versión M.N de la web (docs/PROCESO-DE-CAMBIOS.md), para
+ * saber qué versión tiene la demo y cuál producción. Solo en el build del cliente: el SSG
+ * compila también para servidor y ahí no hace falta.
+ */
+function versionJsonPlugin(): Plugin {
+  let ssr = false;
+  const version = calcularVersion();
+  return {
+    name: "version-json",
+    apply: "build",
+    configResolved(config) {
+      ssr = !!config.build.ssr;
+      if (!ssr) console.log(`Versión ${version.version} · ${version.entorno} · ${version.commit ?? "sin commit"}${version.aviso ? ` · AVISO: ${version.aviso}` : ""}`);
+    },
+    generateBundle() {
+      if (!ssr) this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify(version) });
+    },
+  };
+}
+
 const VIRTUAL_NOVEDADES = "virtual:novedades-ssg";
 const RESOLVED_NOVEDADES = `\0${VIRTUAL_NOVEDADES}`;
 
@@ -170,6 +192,7 @@ export default defineConfig(({ mode, command }) => {
       react(),
       cartaSsgPlugin(env, { requerido: command === "build" }),
       novedadesSsgPlugin(env, { requerido: command === "build" }),
+      versionJsonPlugin(),
     ].filter(Boolean),
     resolve: {
       alias: {
