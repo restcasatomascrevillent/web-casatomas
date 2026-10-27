@@ -64,7 +64,12 @@ for (const [campo, valor] of Object.entries(origen)) {
   }
   // Ajuste interno de Supabase, no de la configuración del proyecto.
   if (campo.startsWith("index_worker_")) continue;
-  const nuevo = typeof valor === "string" ? corregir(valor) : valor;
+  let nuevo = typeof valor === "string" ? corregir(valor) : valor;
+  // Las URLs que solo tiene el destino (el panel nuevo) se conservan.
+  if (campo === "uri_allow_list") {
+    const lista = (texto) => (texto ?? "").split(",").map((u) => u.trim()).filter(Boolean);
+    nuevo = [...new Set([...lista(nuevo), ...lista(actual[campo])])].join(",");
+  }
   if (JSON.stringify(nuevo) !== JSON.stringify(actual[campo])) cambios[campo] = nuevo;
 }
 
