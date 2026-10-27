@@ -194,6 +194,12 @@ enlaces de correos ya enviados (bajas de newsletter, confirmaciones) apuntan a
 - **Secretos.** Supabase no deja leer el valor de ningún secreto, tampoco al
   dueño. Los externos (Stripe, Resend, OpenAI, Google, VAPI, Mapbox…) tienen que
   salir de sus paneles o de donde estén guardados.
+- **Autores de commits en Vercel (plan Hobby).** Vercel bloquea (`BLOCKED`) el
+  despliegue de un commit cuyo autor tiene cuenta de Vercel pero no es del
+  equipo, también cuando lo lanza un *deploy hook*, que compila el último
+  commit de la rama. Le pasó a Touza con el último commit traído del repo
+  viejo. Los commits que se traigan del repo viejo necesitan detrás uno de
+  alguien del equipo.
 - **Demo con datos reales.** Al ser copia completa, cualquier acción en la demo
   que mande correos (confirmar o cancelar una reserva, newsletter) llegaría a
   clientes reales si la demo tiene las claves de Resend.
@@ -212,11 +218,22 @@ el proyecto viejo, la ha bloqueado el control de permisos de la sesión. Queda
 la plantilla [`secretos-funciones.plantilla.env`](secretos-funciones.plantilla.env)
 con esos 31 nombres exactos; los internos los genera el kit.
 
+Hecho el 27-10-2026:
+- Acceso de Claude a `touza-casatomas`, de Vercel al equipo y secrets de
+  GitHub Actions.
+- Demo y prod migradas, con `verificar` sin diferencias salvo los cron. Prod va
+  con `cron=internos` hasta el corte.
+- Web, panel y Touza publicados en Vercel, en `main` (prod) y `staging` (demo).
+- *Deploy hooks* de `main` y `staging` en `web-casatomas` y `touza-casatomas`.
+  Los de `main` están guardados como secrets en prod y los de `staging` en la
+  demo (`VERCEL_DEPLOY_HOOK_CASA_TOMAS`, `VERCEL_DEPLOY_HOOK_TOUZA`). Probados.
+- URLs del panel nuevo en las redirecciones permitidas de Auth (prod y demo).
+
 Pendiente:
 
-1. Dar acceso a la app de Claude a `touza-casatomas`.
-2. Aprobar el acceso de Vercel al equipo "casa-tomas" (enlace de un solo uso).
-3. Secrets de GitHub Actions en `admin-casatomas`: `SUPABASE_ACCESS_TOKEN`,
-   `SUPABASE_ACCESS_TOKEN_ORIGEN` y `GH_TOKEN_LECTURA`. Opcional:
-   `SECRETOS_FUNCIONES_PROD` y `SECRETOS_FUNCIONES_DEMO`.
+1. Claves externas en `SECRETOS_FUNCIONES_PROD` y `SECRETOS_FUNCIONES_DEMO`, y
+   repetir el paso `secretos`.
+2. `VERCEL_ANALYTICS_TOKEN` y los IDs de proyecto nuevos en
+   `trafico_web_sync_estado`.
+3. El corte (fase 7).
 4. Al terminar la migración: revocar los tokens que se pegaron en el chat y crear otros.
