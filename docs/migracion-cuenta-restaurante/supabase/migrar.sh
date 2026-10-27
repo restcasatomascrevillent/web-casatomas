@@ -465,6 +465,8 @@ SQL
 }
 
 [ "$#" -gt 0 ] || { sed -n '2,45p' "$0"; exit 2; }
+mkdir -p "$TRABAJO"
+chmod 700 "$TRABAJO"
 for paso in "$@"; do
   case "$paso" in
     volcar|restaurar|gestionados|ajustar|cron|secretos|storage|funciones|auth|clientes|recargar|verificar)
