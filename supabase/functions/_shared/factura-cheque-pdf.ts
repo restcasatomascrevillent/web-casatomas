@@ -8,6 +8,8 @@ export interface FacturaCheque {
   emisor: { email_mensaje?: string; emisor_nombre: string; emisor_nif: string; emisor_direccion: string; logo_data: string; pie: string };
   cliente: { nombre: string; nif: string; direccion: string; email: string };
   importe_eur: number;
+  /** Gastos de gestión de la compra online; 0 o ausente en facturas anteriores a ellos. */
+  gastos_gestion_eur?: number | null;
   iva_porcentaje: number;
   email_enviado_en: string | null;
 }
@@ -86,12 +88,17 @@ export async function generarPdfFactura(f: FacturaCheque): Promise<string> {
   text("DESCRIPCIÓN", 52, 489 + offset, 9, false, muted); text("IMPORTE", 458, 489 + offset, 9, false, muted);
   text("Cheque regalo Casa Tomás", 52, 450 + offset, 12, true);
   text("1 unidad · Compra en la web", 52, 430 + offset, 9, false, muted);
-  const amount = Number(f.importe_eur);
   const rate = Number(f.iva_porcentaje);
-  const cents = Math.round(amount * 100);
+  const chequeCents = Math.round(Number(f.importe_eur) * 100);
+  const gastosCents = Math.round(Number(f.gastos_gestion_eur || 0) * 100);
+  // El total pagado incluye los gastos de gestión; la base y el IVA salen de él.
+  const cents = chequeCents + gastosCents;
   const base = Math.round(cents / (1 + rate / 100));
   const euro = (v: number) => (v / 100).toFixed(2).replace(".", ",") + " €";
-  text(euro(cents), 455, 450 + offset, 12);
+  text(euro(chequeCents), 455, 450 + offset, 12);
+  if (gastosCents > 0) {
+    text("Gastos de gestión", 52, 405 + offset, 11, true); text(euro(gastosCents), 455, 405 + offset, 11);
+  }
   text("Base imponible", 325, 381 + offset); text(euro(base), 455, 381 + offset);
   if (rate > 0) {
     text("IVA (" + rate + "%)", 325, 357 + offset); text(euro(cents - base), 455, 357 + offset);

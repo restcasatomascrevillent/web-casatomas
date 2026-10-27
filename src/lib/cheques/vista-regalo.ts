@@ -1,6 +1,7 @@
 import { calcularCaducidad, hoyMadrid } from "../../../supabase/functions/_shared/cheques-regalo/caducidad";
 import { CHEQUES_REGALO_PLANTILLA_VISTA_URL, CHEQUES_REGALO_VISTA_URL, functionHeaders } from "@/lib/supabase-functions";
 import { PLANTILLA_REGALO, type PlantillaRegalo, type ChequeRegalo } from "../../../supabase/functions/_shared/cheques-regalo/plantilla";
+import { GASTOS_GESTION_APAGADOS, normalizarConfigGastosGestion, type ConfigGastosGestion } from "../../../supabase/functions/_shared/cheques-regalo/gastos-gestion";
 
 export type DatosVistaRegalo = { importe: string; nombre: string; destinatario: string; mensaje: string; ocultarImporte: boolean; incluirDedicatoria: boolean };
 export type SesionVistaRegalo = ReturnType<typeof crearSesionVistaRegalo>;
@@ -18,6 +19,8 @@ async function solicitar(url: string, body = "{}") {
 export function crearSesionVistaRegalo() {
   let carga: Promise<PlantillaRegalo | null> | undefined;
   let motor: Promise<typeof import("./render-vista-regalo")> | undefined;
+  // Solo los que anuncia la función que los cobra; una versión sin gastos no manda nada.
+  let gastosGestion: ConfigGastosGestion = GASTOS_GESTION_APAGADOS;
   const vistas = new Map<string, Promise<string[]>>();
   function preparar() {
     motor ??= import("./render-vista-regalo");
@@ -25,8 +28,9 @@ export function crearSesionVistaRegalo() {
       const response = await solicitar(CHEQUES_REGALO_PLANTILLA_VISTA_URL);
       // Compatibilidad mientras se despliega la función optimizada.
       if (response.status === 404) return null;
-      const data = await response.json() as { plantilla?: Record<string, unknown> };
+      const data = await response.json() as { plantilla?: Record<string, unknown>; gastos_gestion?: unknown };
       if (!response.ok || !data.plantilla || !campos.every(c => typeof data.plantilla[c] === "string")) throw new Error("Plantilla no disponible");
+      gastosGestion = normalizarConfigGastosGestion(data.gastos_gestion);
       return { ...PLANTILLA_REGALO, caducidad_meses: Number.isInteger(data.plantilla.caducidad_meses) ? Number(data.plantilla.caducidad_meses) : 12, ...Object.fromEntries(campos.map(c => [c, data.plantilla[c]])) };
     })().catch(error => { carga = undefined; throw error; });
     return Promise.all([carga, motor]);
@@ -50,5 +54,9 @@ export function crearSesionVistaRegalo() {
     if (vistas.size >= 8) vistas.delete(vistas.keys().next().value!);
     vistas.set(key, vista); return vista;
   }
-  return { preparar, generar };
+  /** Gastos de gestión que cobrará `/crear`; sin gastos si la plantilla no carga. */
+  function gastos(): Promise<ConfigGastosGestion> {
+    return preparar().then(() => gastosGestion, () => GASTOS_GESTION_APAGADOS);
+  }
+  return { preparar, generar, gastos };
 }

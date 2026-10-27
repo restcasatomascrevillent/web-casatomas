@@ -6,7 +6,9 @@ vi.mock("@/components/TelLink", () => ({ TelLink: () => <span>Teléfono</span> }
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/lib/supabase-functions", () => ({ CHEQUES_REGALO_CREAR_URL: "https://example.com/crear", functionHeaders: () => ({ "Content-Type": "application/json" }), leerCuerpo: async (r: Response) => r.json() }));
 vi.mock("@/components/VistaRegaloCompra", () => ({ VistaRegaloCompra: () => <div>Vista PDF</div> }));
-vi.mock("@/lib/cheques/vista-regalo", () => ({ crearSesionVistaRegalo: () => ({ preparar: vi.fn().mockResolvedValue([]) }) }));
+const APAGADOS = { activos: false, porcentaje: 0, fijo_eur: 0 };
+const gastosMock = vi.hoisted(() => ({ config: { activos: false, porcentaje: 0, fijo_eur: 0 } }));
+vi.mock("@/lib/cheques/vista-regalo", () => ({ crearSesionVistaRegalo: () => ({ preparar: vi.fn().mockResolvedValue([]), gastos: vi.fn(async () => gastosMock.config) }) }));
 import ContactoSection from "@/components/ContactoSection";
 const c = es.translations.contacto;
 function continuar() { fireEvent.click(screen.getByRole("button", { name: "Continuar" })); }
@@ -34,7 +36,21 @@ function completarFactura() {
   continuar();
 }
 describe("Compra guiada del cheque", () => {
-  beforeEach(() => { vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ mensaje: "Prueba sin cobrar" }) })); });
+  beforeEach(() => { gastosMock.config = APAGADOS; vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ mensaje: "Prueba sin cobrar" }) })); });
+  it("sin gastos de gestión el resumen no añade nada al importe", async () => {
+    await abrir(); continuar();
+    expect(screen.getByText("Revisa la información de compra")).toBeTruthy();
+    expect(screen.queryByText("Gastos de gestión")).toBeNull();
+    expect(screen.getByText("100 €")).toBeTruthy();
+  });
+  it("con gastos de gestión enseña el desglose y el total antes de pagar", async () => {
+    gastosMock.config = { activos: true, porcentaje: 1.5, fijo_eur: 0.25 };
+    await abrir(); continuar();
+    expect(await screen.findByText("Gastos de gestión")).toBeTruthy();
+    expect(screen.getByText(/^1,78\s€$/)).toBeTruthy();
+    expect(screen.getAllByText(/^101,78\s€$/)).toHaveLength(2); // cabecera del diálogo y total del resumen
+    expect(screen.getByText(/iguales para cualquier forma de pago/)).toBeTruthy();
+  });
   it("permite elegir factura, valida cada paso y conserva datos al retroceder", async () => {
     await abrir(); pedirFactura();
     continuar();

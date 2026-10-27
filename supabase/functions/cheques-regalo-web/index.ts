@@ -1,4 +1,5 @@
 import { calcularCaducidad } from "../_shared/cheques-regalo/caducidad.ts";
+import { calcularGastosGestion, leerConfigGastosGestion } from "../_shared/cheques-regalo/gastos-gestion.ts";
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 // `npm:` y no esm.sh: ver el comentario en `stripe-webhook-cheques-regalo`.
 import type Stripe from "npm:stripe@23.0.0";
@@ -128,10 +129,19 @@ async function handleCrear(req: Request): Promise<Response> {
   const mensaje = payload.incluir_dedicatoria === false ? null : textoOpcional(payload.mensaje, 500);
   const fechaEntregaDeseada = textoOpcional(payload.fecha_entrega_deseada, 10);
 
+  // Gastos de gestión: los activa el panel (apagados por defecto). Si la
+  // configuración no se puede leer se cobra sin gastos: nunca de más.
+  const { data: configGastos, error: errorGastos } = await supabase.from("plantilla_cheques_regalo")
+    .select("gastos_gestion_activos, gastos_gestion_porcentaje, gastos_gestion_fijo_eur").eq("id", true).single();
+  if (errorGastos) console.error("[cheques-regalo-web] no se pudo leer la configuración de gastos de gestión:", errorGastos);
+  const importeCheque = Math.round(importe * 100) / 100;
+  const gastosGestion = errorGastos ? 0 : calcularGastosGestion(importeCheque, leerConfigGastosGestion(configGastos));
+
   const { data: fila, error: errorInsert } = await supabase
     .from("cheques_regalo")
     .insert({
-      importe_eur: Math.round(importe * 100) / 100,
+      importe_eur: importeCheque,
+      gastos_gestion_eur: gastosGestion,
       solicita_factura: solicitaFactura,
       datos_factura: datosFactura,
       comprador_nombre: compradorNombre,
@@ -170,13 +180,23 @@ async function handleCrear(req: Request): Promise<Response> {
           quantity: 1,
           price_data: {
             currency: "eur",
-            unit_amount: Math.round(importe * 100),
+            unit_amount: Math.round(importeCheque * 100),
             product_data: {
               name: "Cheque regalo Casa Tomás",
               description: destinatarioNombre ? `Para: ${destinatarioNombre}` : undefined,
             },
           },
         },
+        // Línea aparte para que el comprador vea en Stripe qué es el cheque y
+        // qué son los gastos, igual que en el resumen de la web.
+        ...(gastosGestion > 0 ? [{
+          quantity: 1,
+          price_data: {
+            currency: "eur",
+            unit_amount: Math.round(gastosGestion * 100),
+            product_data: { name: "Gastos de gestión", description: "Compra online, iguales para cualquier forma de pago" },
+          },
+        }] : []),
       ],
       metadata: { cheque_regalo_id: fila.id },
       success_url: `${siteUrl}/?cheque_regalo=exito&session_id={CHECKOUT_SESSION_ID}#contacto`,
@@ -198,12 +218,17 @@ async function handleCrear(req: Request): Promise<Response> {
   }
 }
 
-/** Solo los campos públicos del diseño; nunca datos de compradores ni texto del email. */
+/**
+ * Solo los campos públicos del diseño; nunca datos de compradores ni texto del email.
+ * También los gastos de gestión: la web solo los enseña si se los da ESTA función,
+ * que es la que los cobra en `/crear`, así una versión antigua nunca los anuncia sin cobrarlos.
+ */
 async function handlePlantillaVista(): Promise<Response> {
   const { data, error } = await supabase.from("plantilla_cheques_regalo")
-    .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo,caducidad_meses").eq("id", true).single();
+    .select("pdf_titulo,pdf_subtitulo,pdf_instrucciones,pdf_pie,logo_data,color_acento,color_fondo,caducidad_meses,gastos_gestion_activos,gastos_gestion_porcentaje,gastos_gestion_fijo_eur").eq("id", true).single();
   if (error || !data) return json({ mensaje: "No se pudo cargar la vista previa" }, 503);
-  return json({ plantilla: data });
+  const { gastos_gestion_activos: _a, gastos_gestion_porcentaje: _p, gastos_gestion_fijo_eur: _f, ...plantilla } = data;
+  return json({ plantilla, gastos_gestion: leerConfigGastosGestion(data) });
 }
 
 /** Solo usa los datos introducidos y el diseño público del PDF; no consulta compras. */
