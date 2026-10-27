@@ -56,12 +56,26 @@ const cambios = {};
 const omitidos = [];
 for (const [campo, valor] of Object.entries(origen)) {
   if (valor === null || valor === undefined) continue;
-  if (SECRETO.test(campo)) {
+  // Solo un texto puede ser un secreto: los sí/no y números se copian siempre
+  // (p. ej. security_update_password_require_current_password).
+  if (SECRETO.test(campo) && typeof valor === "string") {
     omitidos.push(campo);
     continue;
   }
+  // Ajuste interno de Supabase, no de la configuración del proyecto.
+  if (campo.startsWith("index_worker_")) continue;
   const nuevo = typeof valor === "string" ? corregir(valor) : valor;
   if (JSON.stringify(nuevo) !== JSON.stringify(actual[campo])) cambios[campo] = nuevo;
+}
+
+// En el plan gratuito, sin SMTP propio, Supabase rechaza cualquier cambio de
+// plantillas o asuntos de correo ("Email template modification is not
+// available for free tier projects using the default email provider").
+const plantillas = Object.keys(cambios).filter((c) => /^mailer_(templates|subjects)_/.test(c));
+const smtpDestino = cambios.smtp_host ?? actual.smtp_host;
+if (!smtpDestino && plantillas.length) {
+  for (const c of plantillas) delete cambios[c];
+  console.log(`Plantillas y asuntos de correo no copiados (${plantillas.length}): el destino usa el correo por defecto de Supabase y en el plan gratuito no se pueden cambiar.`);
 }
 if (origen.smtp_host && SMTP_PASS) cambios.smtp_pass = SMTP_PASS;
 
