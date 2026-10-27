@@ -63,7 +63,11 @@ falta() {
     [ -n "${!v:-}" ] || { echo "Falta la variable $v" >&2; exit 2; }
   done
 }
-ocultar() { [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${1:-}" ] && echo "::add-mask::$1"; return 0; }
+# La orden de enmascarar va por el fd 3 (la salida original del proceso):
+# así llega al log de GitHub aunque ocultar() se llame dentro de $(...) o con
+# la salida redirigida a un fichero, y nunca se mezcla con esa salida.
+exec 3>&1
+ocultar() { [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${1:-}" ] && echo "::add-mask::$1" >&3; return 0; }
 
 comprobar_destino() {
   falta DESTINO_REF
