@@ -174,9 +174,9 @@ confirmar y cancelar desde el correo), cheque regalo en modo test, panel
 
 **Fase 7 — corte** (unos 10–15 min, de noche):
 1. Pasos `volcar recargar ajustar storage cron verificar` contra prod, con
-   `cron=todos`. En ese momento se desprograman los cron del proyecto viejo
-   (`select cron.unschedule(jobname) from cron.job;`, desde su SQL Editor) para
-   que no manden nada dos veces. Es el único cambio que se hace en él.
+   `cron=todos`. Justo antes se pausan los cron del proyecto viejo para que no
+   manden nada dos veces: `select cron.alter_job(jobid, active => false) from
+   cron.job;` (para volver atrás, lo mismo con `true`).
 2. Cambiar los webhooks de Stripe, Resend, VAPI y n8n a lo nuevo.
 3. Conectar el dominio al Vercel nuevo.
 4. Pasar `VITE_SITE_URL` de Touza a la URL definitiva.
@@ -229,11 +229,28 @@ Hecho el 27-10-2026:
   demo (`VERCEL_DEPLOY_HOOK_CASA_TOMAS`, `VERCEL_DEPLOY_HOOK_TOUZA`). Probados.
 - URLs del panel nuevo en las redirecciones permitidas de Auth (prod y demo).
 
-Pendiente:
+Corte hecho el 27-10-2026 (18:40–19:15, hora de Madrid):
+- Claves de las funciones copiadas de servidor a servidor con los mismos
+  valores (función temporal en el proyecto viejo, ya borrada). Los internos
+  también, así que los enlaces de correos ya enviados siguen valiendo. La demo
+  no tiene Stripe, Resend ni métricas. `VERCEL_ANALYTICS_TOKEN` y los deploy
+  hooks son los del Vercel nuevo.
+- Cron del proyecto viejo pausados (11, `active = false`) y los 11 activos en
+  prod.
+- Datos recargados y `verificar` sin ninguna diferencia. Storage sin cambios
+  desde la primera copia (315 ficheros iguales).
+- `sync-trafico-web` con el equipo y los proyectos del Vercel nuevo, y sin
+  pedir días anteriores al corte.
+- Touza con `VITE_SITE_URL=https://touza-casatomas.vercel.app`.
 
-1. Claves externas en `SECRETOS_FUNCIONES_PROD` y `SECRETOS_FUNCIONES_DEMO`, y
-   repetir el paso `secretos`.
-2. `VERCEL_ANALYTICS_TOKEN` y los IDs de proyecto nuevos en
-   `trafico_web_sync_estado`.
-3. El corte (fase 7).
-4. Al terminar la migración: revocar los tokens que se pegaron en el chat y crear otros.
+Pendiente (fuera de estos repos):
+
+1. Stripe y Resend: la URL de sus webhooks al proyecto nuevo (el secreto de
+   firma es el mismo).
+2. Bot telefónico (`restaurante-phone`, VAPI) y n8n: URL y clave `service_role`
+   del proyecto nuevo.
+3. Enlaces públicos a `casa-tomas-story.vercel.app` → `web-casatomas.vercel.app`,
+   y el personal entra por `admin-casatomas.vercel.app`. Las webs viejas siguen
+   funcionando contra la base vieja.
+4. Revocar los tokens que se pegaron en el chat y borrar los secrets de GitHub
+   Actions que ya no hagan falta.
