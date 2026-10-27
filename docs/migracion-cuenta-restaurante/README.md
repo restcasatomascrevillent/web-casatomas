@@ -200,6 +200,22 @@ enlaces de correos ya enviados (bajas de newsletter, confirmaciones) apuntan a
   commit de la rama. Le pasó a Touza con el último commit traído del repo
   viejo. Los commits que se traigan del repo viejo necesitan detrás uno de
   alguien del equipo.
+- **Permisos de las funciones (corregido el 27-10-2026, tras el corte).** El
+  volcado no conservó los `REVOKE EXECUTE`: en prod y demo, 375 de 378 funciones
+  quedaron ejecutables por `anon` (la clave publicable de la web), frente a 186
+  en el proyecto viejo. Entre ellas `ejecutar_consulta_chatbot` (`SECURITY
+  DEFINER`, ejecuta cualquier `SELECT` saltando RLS), `establecer_superadmin_panel`
+  y `emitir_factura_cheque`. Se restauraron con
+  [`supabase/restaurar-permisos-funciones.sql`](supabase/restaurar-permisos-funciones.sql)
+  (atómico: no cambia nada si falta alguna firma) y ahora
+  [`supabase/huella-permisos-funciones.sql`](supabase/huella-permisos-funciones.sql)
+  da `0a74e2e2ca9c9872780e942c0032cb2c` en el viejo, prod y demo. Comprobado
+  desde fuera: la clave publicable recibe `permission denied`. Las tablas
+  también quedaron con `GRANT` más amplios (`anon` lee 145 objetos frente a 50),
+  pero todas tienen RLS con las mismas políticas y las 21 vistas son
+  `security_invoker`, así que el acceso efectivo no cambia; no se ha tocado.
+  Si se vuelve a ejecutar `restaurar` o `recargar`, hay que repetir esta
+  corrección y comprobar la huella.
 - **Demo con datos reales.** Al ser copia completa, cualquier acción en la demo
   que mande correos (confirmar o cancelar una reserva, newsletter) llegaría a
   clientes reales si la demo tiene las claves de Resend.
