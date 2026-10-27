@@ -100,7 +100,7 @@ con Docker, `psql` 17, Node y el CLI de Supabase.
 | `storage` | Copia los 315 ficheros con la API de Storage. Va antes de `gestionados` para que el trigger de auditoría no meta filas que el origen no tiene. |
 | `gestionados` | Las 38 políticas de storage, los 7 triggers de auth/storage y las 11 tablas de Realtime. |
 | `ajustar` | Cambia `jeamoczmbfsnwkfjxcyo.supabase.co` por el host nuevo en todos los datos (fotos, enlaces) y en las 4 funciones SQL, sin disparar triggers. También cambia las URLs viejas de Vercel por las nuevas. Al final comprueba que no quede ninguna referencia al origen. |
-| `cron` | Los 11 trabajos con la URL nueva. En demo (`CRON_MODO=internos`) solo los que no mandan correos ni gastan en IA. |
+| `cron` | Los 11 trabajos con la URL nueva. Con `CRON_MODO=internos` (demo siempre; prod hasta el corte) solo los que no mandan correos ni gastan en IA. |
 | `secretos` | Secretos de las funciones, con los mismos valores en el Vault (cron ↔ funciones). Genera los internos (HMAC, cabeceras de cron) si no los aportas. |
 | `funciones` | Las 41 funciones con el **mismo `verify_jwt` que tienen desplegado**. Hay 7 donde `config.toml` dice `true` y en realidad están en `false`: manda lo desplegado. Después lo verifica contra la API. |
 | `auth` | Site URL, redirecciones, plantillas de correo, SMTP y límites. Solo envía lo que difiere. |
@@ -143,8 +143,10 @@ Decisiones del 26-10-2026:
 **Fase 2 — Supabase demo.** Ejecutar el workflow con `destino=demo`, revisar la
 salida de `verificar` y probar el panel y la web contra la demo.
 
-**Fase 3 — Supabase prod.** Ejecutar el workflow con `destino=prod`. Es una
-foto: hasta el corte, las reservas nuevas solo existen en el proyecto viejo.
+**Fase 3 — Supabase prod.** Ejecutar el workflow con `destino=prod` y
+`cron=internos`. Es una foto: hasta el corte, las reservas nuevas solo existen
+en el proyecto viejo, y es el viejo el que manda los correos y llama a OpenAI y
+Google. Con todos los cron activos en los dos, cada correo saldría dos veces.
 
 **Fase 4 — Vercel** (con el conector apuntando a la cuenta del restaurante, o a mano con esta tabla):
 
@@ -171,7 +173,10 @@ confirmar y cancelar desde el correo), cheque regalo en modo test, panel
 (login de los 4 usuarios, facturas/OCR, novedades con foto) y chatbot.
 
 **Fase 7 — corte** (unos 10–15 min, de noche):
-1. Paso `volcar recargar ajustar storage verificar` contra prod.
+1. Pasos `volcar recargar ajustar storage cron verificar` contra prod, con
+   `cron=todos`. En ese momento se desprograman los cron del proyecto viejo
+   (`select cron.unschedule(jobname) from cron.job;`, desde su SQL Editor) para
+   que no manden nada dos veces. Es el único cambio que se hace en él.
 2. Cambiar los webhooks de Stripe, Resend, VAPI y n8n a lo nuevo.
 3. Conectar el dominio al Vercel nuevo.
 4. Pasar `VITE_SITE_URL` de Touza a la URL definitiva.

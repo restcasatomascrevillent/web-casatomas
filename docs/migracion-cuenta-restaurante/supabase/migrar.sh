@@ -21,9 +21,10 @@
 #                 (para el corte final); pide CONFIRMAR=<ref del destino>
 #   verificar     compara recuentos y objetos origen/destino
 #
-#   Primera vez (prod):  volcar restaurar storage gestionados ajustar cron secretos funciones auth verificar
-#   Primera vez (demo):  lo mismo + clientes antes de verificar, con CRON_MODO=internos
-#   Corte final (prod):  volcar recargar ajustar storage verificar
+#   Primera vez (prod):  volcar restaurar storage gestionados ajustar cron secretos funciones auth verificar,
+#                        con CRON_MODO=internos (el proyecto viejo sigue mandando los correos)
+#   Primera vez (demo):  lo mismo, con CRON_MODO=internos (+ clientes si se quiere vaciar)
+#   Corte final (prod):  volcar recargar ajustar storage cron verificar, con CRON_MODO=todos
 #
 #   storage va ANTES que gestionados: gestionados crea el trigger de auditoría
 #   de storage.objects, y con él cada fichero copiado sumaría una fila nueva a
@@ -39,7 +40,7 @@
 #   SECRETOS_FUNCIONES                  .env con las claves externas (Stripe, Resend, OpenAI…)
 #   REEMPLAZOS                          "url_vieja=>url_nueva;..." para las webs y el panel
 #   REPO_PANEL, REPO_WEB                checkouts de admin-casatomas y web-casatomas
-#   CRON_MODO                           todos (prod, por defecto) | internos (demo)
+#   CRON_MODO                           todos (por defecto; prod desde el corte) | internos
 #   SMTP_PASS                           si el origen usa SMTP propio para Auth
 #
 # Nunca imprime valores de secretos ni filas de datos: solo nombres y recuentos.
