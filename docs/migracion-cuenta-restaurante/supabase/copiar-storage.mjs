@@ -3,8 +3,12 @@
 // destino, con la API REST de Storage (sin dependencias, Node 20+).
 //
 // Solo LEE del origen. En el destino crea los buckets que falten (mismo
-// public / límite de tamaño / tipos MIME) y sube cada objeto con upsert, así
-// que se puede relanzar: lo ya copiado se vuelve a escribir igual.
+// public / límite de tamaño / tipos MIME) y sube con upsert los objetos que
+// falten o hayan cambiado (tamaño o eTag distintos); los iguales se saltan.
+//
+// Las subidas llevan x-audit-source: con el trigger de auditoría del panel
+// ya instalado en storage.objects (corte final), una escritura de
+// service_role sin origen declarado da "database error, code: 28000".
 //
 // Variables:
 //   ORIGEN_URL, ORIGEN_SERVICE_KEY     https://<ref>.supabase.co y su clave secreta (service_role / sb_secret_)
@@ -50,10 +54,10 @@ async function api(proyecto, metodo, ruta, cuerpo) {
 }
 
 /** Lista recursiva: en la API de Storage las "carpetas" llegan con id null. */
-async function listar(bucket, prefijo = "") {
+async function listar(proyecto, bucket, prefijo = "") {
   const objetos = [];
   for (let offset = 0; ; offset += 1000) {
-    const pagina = await api(origen, "POST", `/object/list/${encodeURIComponent(bucket)}`, {
+    const pagina = await api(proyecto, "POST", `/object/list/${encodeURIComponent(bucket)}`, {
       prefix: prefijo,
       limit: 1000,
       offset,
@@ -61,7 +65,7 @@ async function listar(bucket, prefijo = "") {
     });
     for (const entrada of pagina) {
       const ruta = prefijo ? `${prefijo}/${entrada.name}` : entrada.name;
-      if (entrada.id === null) objetos.push(...(await listar(bucket, ruta)));
+      if (entrada.id === null) objetos.push(...(await listar(proyecto, bucket, ruta)));
       else objetos.push({ ruta, metadata: entrada.metadata ?? {} });
     }
     if (pagina.length < 1000) break;
@@ -102,6 +106,7 @@ async function copiarObjeto(bucket, { ruta, metadata }) {
       "Content-Type": metadata.mimetype || descarga.headers.get("content-type") || "application/octet-stream",
       "Cache-Control": metadata.cacheControl || "max-age=3600",
       "x-upsert": "true",
+      "x-audit-source": "migracion-storage",
     },
     body: contenido,
   });
@@ -129,11 +134,17 @@ const buckets = await api(origen, "GET", "/bucket");
 let fallos = 0;
 for (const bucket of buckets) {
   await asegurarBucket(bucket);
-  const objetos = await listar(bucket.id);
+  const enDestino = new Map((await listar(destino, bucket.id)).map((o) => [o.ruta, o.metadata]));
+  const igual = ({ ruta, metadata }) => {
+    const d = enDestino.get(ruta);
+    return d !== undefined && d.size === metadata.size && d.eTag === metadata.eTag;
+  };
+  const todos = await listar(origen, bucket.id);
+  const objetos = todos.filter((o) => !igual(o));
   const resultados = await enParalelo(objetos.map((objeto) => () => copiarObjeto(bucket.id, objeto)), CONCURRENCIA);
   const copiados = resultados.filter((r) => r.ok);
   const bytes = copiados.reduce((suma, r) => suma + r.valor, 0);
-  console.log(`${bucket.id}: ${copiados.length}/${objetos.length} objetos (${(bytes / 1048576).toFixed(1)} MB)`);
+  console.log(`${bucket.id}: ${copiados.length}/${objetos.length} objetos copiados (${(bytes / 1048576).toFixed(1)} MB), ${todos.length - objetos.length} ya estaban iguales`);
   resultados.forEach((r, i) => {
     if (!r.ok) {
       fallos++;
