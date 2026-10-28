@@ -35,3 +35,5 @@ blob-report
 
 # Volcados de la migración de Supabase (contienen datos personales)
 docs/migracion-cuenta-restaurante/supabase/.volcado/
+
+.qa-evidencias/
