@@ -39,6 +39,9 @@ const CAMPOS_SALIDA = new Set([
   'bullets', 'bullets_en', 'bullets_fr',
   'tags', 'tags_en', 'tags_fr',
   'destacado', 'orden',
+  // Botones del pie de la tarjeta (`@/lib/menu-novedad`). Un `botones: []`
+  // se compacta fuera y se lee igual: «sin botones».
+  'botones', 'menu', 'plato_id',
 ]);
 
 const vacio = (v) =>

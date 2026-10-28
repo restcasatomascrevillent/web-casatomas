@@ -22,7 +22,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import CartaDelDia from "@/components/espacios/CartaDelDia";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
-import { parsearMenuDiario, type MenuDelDia } from "@/lib/menu-dia";
+import { parsearMenuDiario, type ItemMenu, type MenuDelDia } from "@/lib/menu-dia";
 
 const FOTO = "https://ejemplo.test/storage/v1/object/public/platos/pulpo.webp";
 
@@ -155,5 +155,32 @@ describe("CartaDelDia — menú heredado (v1)", () => {
     expect(screen.queryAllByRole("group")).toHaveLength(0);
     // Y el aviso aparece exactamente una vez, al pie de todo el menú.
     expect(screen.getAllByText(/sin información de alérgenos/i)).toHaveLength(1);
+  });
+});
+
+describe("CartaDelDia — secciones extra (Bebidas del menú de una novedad)", () => {
+  const conExtra = (items: ItemMenu[]) =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <CartaDelDia
+            menu={menuV2()}
+            titulo={<h3>Menú de Navidad</h3>}
+            seccionesExtra={[{ clave: "bebidas", titulo: "Bebidas", items }]}
+          />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+
+  it("se pinta detrás de las del menú, con el mismo formato", () => {
+    conExtra([{ ...itemLibre, origen: "libre", id: "b-1", nombre: "Vino de la casa", alergenos: [] }]);
+    const rotulos = screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+    expect(rotulos).toEqual(["Entrantes", "Bebidas"]);
+    expect(screen.getByText("Vino de la casa")).toBeInTheDocument();
+  });
+
+  it("vacía no se pinta", () => {
+    conExtra([]);
+    expect(screen.queryByRole("heading", { name: "Bebidas" })).toBeNull();
   });
 });

@@ -171,6 +171,14 @@ export const translations = {
       empty: "No hay novedades en este momento",
       error: "No se pudieron cargar las novedades",
       loading: "Cargando novedades...",
+      /** Botones del pie de la tarjeta: fijos, el dueño solo elige cuáles salen. */
+      botones: {
+        llamar: "Llamar",
+        verMenu: "Ver menú",
+        verPlato: "Échale un vistazo",
+        cerrar: "Cerrar",
+        bebidas: "Bebidas",
+      },
     },
     espacios: {
       title: "Nuestros espacios",
