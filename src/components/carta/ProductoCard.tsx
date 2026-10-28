@@ -19,6 +19,7 @@ import {
   etiquetaAlergeno,
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
+import { anclaPlato } from "@/lib/carta-rutas";
 import { imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { NEGOCIO } from "@/lib/negocio";
@@ -46,6 +47,11 @@ interface ProductoCardProps {
    * categoría, alérgenos y precio, como si la foto no existiera.
    */
   mostrarFoto?: boolean;
+  /**
+   * Se llega a este plato desde «Échale un vistazo» de una novedad
+   * (`#plato-<id>`): un anillo durante un momento para encontrarlo.
+   */
+  resaltado?: boolean;
 }
 
 /** "2", "2 kg", "200 g": mismo criterio de unidades que el ticket. */
@@ -181,6 +187,7 @@ const ProductoCard = ({
   cantidadEnPedido = 0,
   onAnadir,
   mostrarFoto = true,
+  resaltado = false,
 }: ProductoCardProps) => {
   const { language, t } = useTranslations();
   // "Foto expandida en carta web" (adminpanelct, `expanded` en Platos/Vinos):
@@ -226,7 +233,11 @@ const ProductoCard = ({
 
   return (
     <div
-      className={`[perspective:1200px] ${expanded || infoOpen ? "h-full" : "h-auto"}`}
+      // Ancla de «Échale un vistazo». `scroll-mt-28` (112 px): el desplazamiento
+      // al `#` (lo hace `Header`) deja el plato por debajo de la cabecera fija.
+      id={anclaPlato(plato.id)}
+      data-resaltado={resaltado || undefined}
+      className={`scroll-mt-28 [perspective:1200px] ${expanded || infoOpen ? "h-full" : "h-auto"}`}
     >
       {/* Envoltorio del giro 3D: mismo patrón que `CartaVinos.tsx`. La cara
           trasera va con `backface-visibility:hidden` y en `absolute` salvo
@@ -239,7 +250,11 @@ const ProductoCard = ({
         <div
           className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}
         >
-          <Card className="font-libre-baskerville flex flex-col overflow-hidden transition duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+          <Card
+            className={`font-libre-baskerville flex flex-col overflow-hidden transition duration-300 motion-reduce:transition-none hover:shadow-xl hover:-translate-y-1 h-full ${
+              resaltado ? "ring-2 ring-accent ring-offset-2 ring-offset-background" : ""
+            }`}
+          >
             {/* `scaleY` en vez de `height: "auto"`: animar `height` fuerza un
                 reflow en cada fotograma (la propiedad afecta al layout), y con
                 varias decenas de platos en la página el tirón se notaba al
