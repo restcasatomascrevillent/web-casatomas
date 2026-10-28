@@ -114,4 +114,4 @@ pausas:
   antes_de_prod: false
 
 limites:
-  rondas_correccion: 3
+  rondas_correccion: 3    # también cuenta cada vuelta extra de frontend (máx. 25 turnos por vuelta: maxTurns en .claude/agents/frontend.md)
