@@ -29,7 +29,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false, headin
   return (
     <>
       <section
-        ref={elementRef as any}
+        ref={elementRef}
         id="reservas"
         className={cn(
           "py-16 px-4 bg-gradient-to-br from-background via-background to-muted scroll-reveal-scale",

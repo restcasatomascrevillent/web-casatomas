@@ -38,6 +38,7 @@ export const getSessionId = (): string => {
  * Obtiene el pedido del usuario actual basado en su sessionId
  * Usa sessionStorage que se borra automáticamente al recargar la página
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Contrato legado de Mi Mesa, pendiente de tipar por variantes de producto.
 export const getUserPedido = (): any[] => {
   const sessionId = getSessionId();
   const allPedidos = JSON.parse(sessionStorage.getItem('pedidos') || '{}');
@@ -47,6 +48,7 @@ export const getUserPedido = (): any[] => {
 /**
  * Guarda el pedido del usuario actual en sessionStorage (temporal)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mantiene el contrato de Mi Mesa mientras se unifican las variantes de producto.
 export const setUserPedido = (pedido: any[]): void => {
   const sessionId = getSessionId();
   const allPedidos = JSON.parse(sessionStorage.getItem('pedidos') || '{}');

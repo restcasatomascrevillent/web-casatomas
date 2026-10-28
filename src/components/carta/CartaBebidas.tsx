@@ -46,7 +46,7 @@ interface Bebida {
   id?: string;
   nombre: string;
   precio_eur: number;
-  categoria: string;
+  categoria?: string;
   descripcion?: string;
   tamano?: string;
   orden?: number;
@@ -200,7 +200,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
   const getPedidoItemKey = (item: Bebida & { nombre?: string }) =>
     item.id
       ? `id:${item.id}`
-      : `fallback:${item.nombre}|${item.precio_eur}|${item.unidad ?? ""}|${item.categoria ?? ""}`;
+      : `fallback:${item.nombre}|${item.precio_eur}|${item.tamano ?? ""}|${item.categoria ?? ""}`;
 
   const addToPedido = (item: Bebida & { displayNombre?: string }) => {
     const cantidadInicial = item.cantidad ?? 1;

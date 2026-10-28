@@ -85,7 +85,7 @@ interface Plato {
   ingredientes?: string[] | string | null;
   precio_eur: number;
   unidad?: string;
-  orden?: number;
+  orden?: string | number | null;
   activado?: boolean;
   nombre_en?: string;
   nombre_fr?: string;

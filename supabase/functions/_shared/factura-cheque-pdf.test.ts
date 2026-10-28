@@ -18,3 +18,10 @@ Deno.test("los datos largos pasan el concepto y los totales a otra página", asy
   const pdf = await PDFDocument.load(await generarPdfFactura(larga));
   if (pdf.getPageCount() !== 2) throw new Error("Los campos extensos necesitan una segunda página sin solapamientos");
 });
+Deno.test("los gastos de gestión van en su línea y suman al total pagado", async () => {
+  const conGastos = { ...ejemplo, importe_eur: 50, gastos_gestion_eur: 1.02 };
+  const pdf = await PDFDocument.load(await generarPdfFactura(conGastos));
+  if (pdf.getPageCount() !== 1) throw new Error("La línea de gastos no debe empujar los totales a otra página");
+  const sinGastos = await generarPdfFactura({ ...ejemplo, gastos_gestion_eur: 0 });
+  if (sinGastos !== await generarPdfFactura(ejemplo)) throw new Error("Sin gastos, la factura queda igual que antes");
+});

@@ -41,7 +41,7 @@ describe("Vista PDF en la compra web", () => {
     const primera = ["data:image/svg+xml,primera"], ultima = ["data:image/svg+xml,ultima"];
     let resolver!: (p: string[]) => void;
     const generar = vi.fn().mockResolvedValueOnce(primera).mockImplementationOnce(() => new Promise<string[]>(r => { resolver = r; })).mockResolvedValueOnce(ultima);
-    const sesion = { preparar: vi.fn(), generar };
+    const sesion = { preparar: vi.fn(), generar, gastos: vi.fn() };
     const { rerender } = render(<VistaRegaloCompra {...props} sesion={sesion} />);
     const image = await screen.findByRole("img");
     rerender(<VistaRegaloCompra {...props} sesion={sesion} ocultarImporte />);
