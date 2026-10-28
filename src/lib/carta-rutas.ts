@@ -192,6 +192,40 @@ export const rutaCategoria = (slug: string, lang: Language = "es") =>
   construirRutaIdioma(`/carta/${slug}`, lang);
 
 /**
+ * `id` del DOM de la tarjeta de un plato en `/carta/<categoría>`, y su ancla
+ * en la URL (`#plato-<id>`). Solo `[a-z0-9-]`: el `id` de `Platos` es texto
+ * libre y tiene que servir tal cual en un `#` y en `getElementById`.
+ */
+export const anclaPlato = (id: string | number): string =>
+  `plato-${String(id).trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-")}`;
+
+const PLATO_POR_ID = new Map<string, PlatoSSG>(
+  cartaSSG.platos.map((plato) => [String(plato.id).trim(), plato]),
+);
+
+/**
+ * Enlace al plato dentro de su página de categoría, en el idioma pedido
+ * (`/en/carta/entrantes#plato-12`), o `null` si ese plato no tiene página.
+ *
+ * Sale de los datos del BUILD, no de Supabase en vivo, a propósito: las
+ * páginas de categoría son estáticas y no se refrescan. Un plato borrado, fuera
+ * de la carta o creado después del último build no tiene ni tarjeta ni (quizá)
+ * página, así que el botón «Échale un vistazo» no debe salir: ni enlace roto
+ * ni 404. Se compara la categoría tal cual, igual que `platosDeCategoria`, para
+ * que el plato esté de verdad en la página a la que se enlaza.
+ */
+export function rutaPlato(platoId: unknown, lang: Language = "es"): string | null {
+  if (typeof platoId !== "string" && typeof platoId !== "number") return null;
+  const id = String(platoId).trim();
+  if (!id) return null;
+  const plato = PLATO_POR_ID.get(id);
+  if (!plato?.categoria) return null;
+  const categoria = CATEGORIAS_CARTA.find((candidata) => candidata.clave === plato.categoria);
+  if (!categoria) return null;
+  return `${rutaCategoria(categoria.slug, lang)}#${anclaPlato(plato.id)}`;
+}
+
+/**
  * Rutas que `vite-react-ssg` debe prerenderizar para `/carta/:categoria` EN
  * UN IDIOMA. Devuelve rutas absolutas y YA con su prefijo (p. ej.
  * `/en/carta/entrantes-frios`): así lo espera `getStaticPaths` en `App.tsx`

@@ -149,7 +149,12 @@ const itemLibre = (id: string, nombre: string): ItemMenu => ({
   alergenosNotas: null,
 });
 
-const aItemMenu = (crudo: unknown, claveFallback: string): ItemMenu | null => {
+/**
+ * Una línea cruda del jsonb → `ItemMenu`, o `null` si no tiene nombre.
+ * Exportada para el menú de las novedades (`@/lib/menu-novedad`), que guarda
+ * las líneas con este mismo contrato v2.
+ */
+export const aItemMenu = (crudo: unknown, claveFallback: string): ItemMenu | null => {
   if (!esObjeto(crudo)) {
     // Una entrada suelta que no es objeto se trata como un nombre a pelo.
     const nombre = lineasDeTexto(crudo)[0];
