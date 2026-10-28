@@ -1,0 +1,95 @@
+# Configuración de los becarios para ESTE proyecto.
+# Se guarda en <repo>/.claude/becarios.yaml y se versiona con el código.
+# Nunca pongas aquí secretos: solo nombres de variables o de secretos del CI.
+
+proyecto: mi-proyecto
+repositorio: organizacion/mi-proyecto      # owner/repo en GitHub, GitLab…
+rama_principal: main
+estrategia_merge: squash                     # squash | merge | rebase
+
+# Condición de inicio: el equipo no arranca hasta que las tres sean true.
+condicion_inicio:
+  estabilizado: false     # la rama principal pasa lint, build y unitarias
+  desplegado: false       # DEMO y PROD están publicados y responden
+  ci_cd_operativo: false  # el último pipeline de la rama principal está en verde
+
+stack:
+  frontend: ""            # p. ej. next.js 15, react + vite
+  backend: ""             # p. ej. node/nestjs, supabase edge functions
+  bbdd: ""                # p. ej. supabase-postgres, postgres + prisma
+  rutas:                  # propiedad de carpetas por agente (evita pisarse)
+    frontend: [src/app, src/components]
+    backend-servicios: [src/server, supabase/functions]
+    backend-datos: [supabase/migrations, prisma]
+    tests: [tests, e2e]
+
+comandos:                 # se ejecutan desde la raíz del repo
+  instalar: npm ci
+  lint: npm run lint
+  tipos: npm run typecheck
+  unitarias: npm test
+  build: npm run build
+  e2e: npx playwright test
+  migraciones_local: ""   # p. ej. supabase db reset
+
+ci_cd:
+  proveedor: github-actions          # github-actions | gitlab-ci | vercel | otro
+  desplegar_demo: "gh workflow run deploy.yml -f entorno=demo --ref {rama}"
+  desplegar_prod: "gh workflow run deploy.yml -f entorno=prod --ref main"
+  estado_ultima_ejecucion: "gh run list --workflow deploy.yml -L 1"
+  rollback_prod: ""                  # comando o procedimiento documentado
+  artefactos_qa: ""                  # dónde publica el CI los informes de e2e
+
+entornos:
+  dev:
+    descripcion: desarrollo y validación local
+  demo:
+    url: https://demo.example.com
+    datos: ficticios
+    # Correspondencia de DEMO con QA y STG en este proyecto:
+    cubre_qa: true
+    cubre_stg: true
+    qa_separado: false               # true si QA se despliega aparte
+    stg_separado: false              # true si STG se despliega aparte
+  qa:
+    url: ""                          # solo si qa_separado
+  stg:
+    url: ""                          # solo si stg_separado
+  prod:
+    url: https://example.com
+    datos: reales
+    healthcheck: https://example.com/api/health
+
+datos_de_prueba:
+  semillas: ""                       # script o ruta de seeds para DEMO
+  cuentas:                           # nombres de variables, nunca contraseñas
+    demo: QA_DEMO_USER / QA_DEMO_PASSWORD
+    prod: QA_PROD_USER / QA_PROD_PASSWORD   # cuenta de prueba en PROD, sin datos reales
+
+diseno:
+  fuente: ""                         # URL de Figma u otra fuente del diseño acordado
+  resoluciones:                      # ancho x alto
+    movil: 375x812
+    tablet: 768x1024
+    escritorio: 1440x900
+
+notion:
+  historias: ""                      # URL de la base de datos de historias
+  registro: ""                       # URL de la base de datos «Registro de entrega»
+  propiedades:
+    proyecto: Proyecto               # nombre de la columna de proyecto en tu base
+  estados:                           # valor de tu columna Estado para cada situación
+    sin_empezar: Sin empezar
+    en_progreso: En progreso
+    en_espera: En espera
+    hecha: Hecha
+  valor_proyecto: ""                 # qué poner en la columna de proyecto para este repo
+  extra: {}                          # valores fijos al crear historias, p. ej. {Área: Producto}
+
+pausas:
+  # Los becarios SIEMPRE se paran cuando el PR está listo y esperan tu «sí»
+  # (que autoriza fusionar, desplegar en PROD y hacer QA en PROD).
+  antes_de_prod: false               # true = parar otra vez justo antes de desplegar en PROD
+
+limites:
+  rondas_correccion: 3               # rondas por fase antes de escalar
