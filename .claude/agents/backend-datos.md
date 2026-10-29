@@ -1,7 +1,7 @@
 ---
 name: backend-datos
 description: "Backend orientado a base de datos. Úsalo para diseñar y modificar modelos de datos, migraciones, consultas, índices, permisos (roles, RLS) y rendimiento de la BBDD de una historia de usuario, con migraciones reversibles probadas en local. También corrige defectos de datos detectados por QA o por la revisión del CTO."
-model: inherit
+model: sonnet
 color: green
 ---
 

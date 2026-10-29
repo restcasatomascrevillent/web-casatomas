@@ -18,6 +18,8 @@ Ninguna fase empieza sin que la anterior haya cumplido su criterio de salida y l
 | `qa-funcional` | Exploratorias de interfaz, recorridos de usuario, móvil y escritorio | 3, 6 |
 | `qa-tecnico` | Integración, API, suite automatizada, regresión técnica | 3, 6 |
 
+Modelos y turnos, fijados en la cabecera de cada ficha (`.claude/agents/`): `cto` en Opus; el resto en Sonnet. `frontend` tiene un máximo de 25 turnos por vuelta.
+
 ## Fuentes de verdad
 
 - **Historia de usuario**: Notion (criterios de aceptación, dependencias, diseño).
@@ -48,6 +50,7 @@ Ninguna fase empieza sin que la anterior haya cumplido su criterio de salida y l
 | Situación | Qué ocurre | Estado en Notion |
 | --- | --- | --- |
 | Fallan unitarias, lint o build | El desarrollador corrige; la fase 1 no se cierra | En progreso |
+| `frontend` agota sus 25 turnos sin terminar | El CTO revisa lo publicado en la rama y le encarga otra vuelta con lo que falta; cada vuelta cuenta como ronda de corrección | En progreso |
 | Falla el despliegue en DEMO por código | `delivery` lo documenta y lo devuelve a desarrollo (fase 1) | En progreso |
 | Falla el despliegue por causa externa (credenciales, infraestructura, CI caído) | Se documenta el bloqueo y se escala | En espera |
 | Defecto en QA DEMO | Se registra la incidencia, desarrollo corrige, `delivery` redespliega, QA reprueba el defecto **y** la regresión | En progreso |
