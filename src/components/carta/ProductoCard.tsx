@@ -20,7 +20,7 @@ import {
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
 import { anclaPlato } from "@/lib/carta-rutas";
-import { imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
+import { esFotoCarta, imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -224,8 +224,10 @@ const ProductoCard = ({
     ),
   ).filter((etiqueta) => !alergenosOficiales.includes(etiqueta));
   const ingredientes = plato.displayIngredientes;
+  const fotoCarta = esFotoCarta(imagen);
+  const proporcionFoto = fotoCarta ? "aspect-[4/3]" : "h-48";
   const encuadre =
-    typeof plato.imagen_posicion_y === "number"
+    !fotoCarta && typeof plato.imagen_posicion_y === "number"
       ? {
           objectPosition: `center ${Math.min(100, Math.max(0, plato.imagen_posicion_y))}%`,
         }
@@ -284,7 +286,7 @@ const ProductoCard = ({
                     style={{ transformOrigin: "top" }}
                     className="overflow-hidden bg-muted flex-shrink-0"
                   >
-                    <div className="relative h-48 overflow-hidden">
+                    <div className={`relative ${proporcionFoto} overflow-hidden`}>
                       <img
                         src={imagenOptimizada(imagen, 768)}
                         alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
@@ -293,7 +295,7 @@ const ProductoCard = ({
                         loading={prioridad ? "eager" : "lazy"}
                         decoding="async"
                         width={640}
-                        height={384}
+                        height={fotoCarta ? 480 : 384}
                       />
                       <div className="absolute top-2 right-2">
                         <Badge className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md">
@@ -387,7 +389,7 @@ const ProductoCard = ({
             {/* Si el cliente ya había abierto la foto, sigue a la vista al
                 girar a la información: que desaparezca de golpe queda mal. */}
             {expanded && imagen && (
-              <div className="relative h-48 overflow-hidden bg-muted flex-shrink-0">
+              <div className={`relative ${proporcionFoto} overflow-hidden bg-muted flex-shrink-0`}>
                 <img
                   src={imagenOptimizada(imagen, 768)}
                   alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
@@ -396,7 +398,7 @@ const ProductoCard = ({
                   loading="lazy"
                   decoding="async"
                   width={640}
-                  height={384}
+                  height={fotoCarta ? 480 : 384}
                 />
               </div>
             )}

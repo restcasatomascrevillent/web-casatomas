@@ -196,3 +196,15 @@ export function imagenOptimizada(
   if (!SUPABASE_STORAGE_HOSTS.has(host)) return url;
   return `/_vercel/image?url=${encodeURIComponent(url)}&w=${ancho}&q=75`;
 }
+
+/**
+ * Las fotos nuevas de la carta son composiciones 4:3 (1200×900, plato al 78 %
+ * sobre fondo liso) y su nombre de archivo lleva `-carta`. Se pintan enteras,
+ * sin el encuadre vertical guardado (que las recortaría). Las antiguas
+ * conservan su comportamiento (object-cover + encuadre).
+ */
+export function esFotoCarta(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const limpia = decodeURIComponent(url.split(/[?#]/)[0] ?? "");
+  return /-carta\.[a-z0-9]+$/i.test(limpia);
+}
