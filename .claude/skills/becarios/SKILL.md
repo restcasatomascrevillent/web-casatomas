@@ -130,10 +130,13 @@ Nunca crees ni modifiques la historia en Notion sin el «sí» del usuario.
 
 Cada encargo incluye: URL de la historia, fase, rama, versión, resumen del plan del CTO y las incidencias que le tocan (no heredan esta conversación). Espera a que cada becario termine antes de imprimir su línea y avanzar. Si los equipos de agentes están activados (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), lánzalos como compañeros con el nombre del rol.
 
+El modelo y los turnos los fija la cabecera de cada ficha en `.claude/agents/`: `cto` en Opus, el resto en Sonnet, y `frontend` con un máximo de 25 turnos por vuelta. Al lanzar un becario **no** pases `model`: sustituiría al de la ficha.
+
 ## Fases
 
 1. **CTO** → plan técnico y rama `historia/<id>-<slug>`.
 2. **Backend datos → Backend servicios → Frontend** (en paralelo solo lo que el plan marque como independiente). Cada uno con lint, tipos, unitarias y build en verde.
+   - Si `frontend` vuelve marcado como parcial (agotó sus 25 turnos): `[Frontend] Sin terminar en 25 turnos → revisa el CTO ❌`. Invoca `cto` en modo «vuelta extra de frontend» y, si responde `OTRA VUELTA`, lanza a `frontend` de nuevo (encargo nuevo, no reanudes) con su lista. Cada vuelta extra cuenta como una ronda de `limites.rondas_correccion`; al agotarlas, o si el CTO responde `BLOQUEADO`: `[Becarios] ⏸ Frontend sin terminar tras <n> vueltas: <motivo>. ¿Qué hago?`
 3. **Delivery** → despliegue en DEMO. Fallo por código: vuelve a 2. Fallo externo: ⏸.
 4. **QA funcional + QA técnico** en paralelo sobre la misma versión. Defectos → al becario dueño, redespliegue y nueva QA. Tras `limites.rondas_correccion` rondas sin superar: `[Becarios] ⏸ <n> rondas sin pasar QA: <motivo>. ¿Qué hago?`
 5. **Delivery** crea el PR → **CTO** lo revisa. Cambios solicitados: vuelta a 2 → 3 → 4 → revisión.

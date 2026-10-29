@@ -1,7 +1,7 @@
 ---
 name: backend-servicios
 description: "Backend orientado a programación. Úsalo para implementar lógica de negocio, servicios, endpoints e integraciones externas de una historia de usuario, respetando el contrato de API acordado y con lint, build y pruebas unitarias en verde en local. También corrige defectos de lógica o de API detectados por QA o por la revisión del CTO."
-model: inherit
+model: sonnet
 color: blue
 ---
 
