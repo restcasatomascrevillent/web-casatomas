@@ -86,10 +86,24 @@ notion:
   valor_proyecto: ""                 # qué poner en la columna de proyecto para este repo
   extra: {}                          # valores fijos al crear historias, p. ej. {Área: Producto}
 
+# Accesos de los becarios (guía: reference/accesos.md de los becarios). Aquí solo
+# identificadores; los tokens van en el entorno en la nube del proyecto o en
+# ~/.config/becarios/<proyecto>.env, con los nombres fijos de la guía
+# (SUPABASE_ACCESS_TOKEN_DEMO, SUPABASE_ACCESS_TOKEN_PROD, VERCEL_TOKEN…).
+# GitHub usa `repositorio`. Comprobación: scripts/comprobar-accesos.sh
+accesos:
+  entorno_nube: ""                   # entorno de claude.ai/code con los tokens de este proyecto
+  supabase_demo: ""                  # ref del proyecto de Supabase de DEMO (vacío si no hay Supabase)
+  supabase_prod: ""                  # ref del proyecto de Supabase de PROD
+  vercel_equipo: ""                  # team_… (vacío si el proyecto es de una cuenta personal)
+  vercel_proyecto: ""                # prj_… (vacío si no hay Vercel)
+  stripe: false                      # true si los becarios necesitan Stripe (pagos)
+  resend: false                      # true si los becarios necesitan Resend (correos)
+
 pausas:
   # Los becarios SIEMPRE se paran cuando el PR está listo y esperan tu «sí»
   # (que autoriza fusionar, desplegar en PROD y hacer QA en PROD).
   antes_de_prod: false               # true = parar otra vez justo antes de desplegar en PROD
 
 limites:
-  rondas_correccion: 3               # rondas por fase antes de escalar
+  rondas_correccion: 3               # rondas por fase antes de escalar; también cuenta cada vuelta extra de frontend (máx. 25 turnos por vuelta)
