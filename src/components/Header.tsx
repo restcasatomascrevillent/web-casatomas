@@ -23,6 +23,24 @@ const ARIA: Record<"cambiarIdioma" | "cerrarMenu" | "abrirMenu", Record<Language
   abrirMenu: { es: "Abrir menú", en: "Open menu", fr: "Ouvrir le menu" },
 };
 
+
+/**
+ * `scrollY` que deja `el` arriba del todo, respetando su `scroll-margin-top`
+ * (el hueco para la cabecera fija), como `scrollIntoView`, pero midiendo
+ * con `offsetTop`, que no cuenta las transformaciones. `scrollIntoView` y
+ * `getBoundingClientRect` sí las cuentan: la rejilla de platos de la carta
+ * entra con `animate-fade-up` (sube 30 px en 0,6 s), y al llegar con
+ * «Échale un vistazo» el plato se medía todavía 30 px más abajo, así que
+ * acababa 30 px más arriba de lo previsto, con el aro bajo la cabecera.
+ */
+const destinoAncla = (el: HTMLElement) => {
+  let top = 0;
+  for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) {
+    top += n.offsetTop + (n.offsetParent instanceof HTMLElement ? n.offsetParent.clientTop : 0);
+  }
+  return top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+};
+
 const Header = () => {
   const { t, language, languages } = useTranslations();
   const location = useLocation();
@@ -90,17 +108,17 @@ const Header = () => {
     setIsMobileMenuOpen(false);
 
     let primeraVez = true;
-    let ultimoTop: number | undefined;
+    let ultimoDestino: number | undefined;
     const alinear = () => {
       const el = document.getElementById(sectionId);
       if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY;
+      const destino = destinoAncla(el);
       // ResizeObserver fires once on observe. Do not interrupt the first
       // smooth scroll unless the destination actually moved during loading.
-      if (ultimoTop !== undefined && Math.abs(top - ultimoTop) < 1) return;
-      ultimoTop = top;
+      if (ultimoDestino !== undefined && Math.abs(destino - ultimoDestino) < 1) return;
+      ultimoDestino = destino;
       const smooth = primeraVez && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      el.scrollIntoView({ behavior: smooth ? "smooth" : "instant" });
+      window.scrollTo({ top: destino, behavior: smooth ? "smooth" : "instant" });
       primeraVez = false;
     };
 
