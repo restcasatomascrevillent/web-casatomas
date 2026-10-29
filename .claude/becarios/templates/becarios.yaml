@@ -89,8 +89,8 @@ notion:
 # Accesos de los becarios (guía: reference/accesos.md de los becarios). Aquí solo
 # identificadores; los tokens van en el entorno en la nube del proyecto o en
 # ~/.config/becarios/<proyecto>.env, con los nombres fijos de la guía
-# (SUPABASE_ACCESS_TOKEN_DEMO, SUPABASE_ACCESS_TOKEN_PROD, VERCEL_TOKEN…).
-# GitHub usa `repositorio`. Comprobación: scripts/comprobar-accesos.sh
+# (GH_TOKEN, SUPABASE_ACCESS_TOKEN_DEMO, SUPABASE_ACCESS_TOKEN_PROD, VERCEL_TOKEN…).
+# GitHub: GH_TOKEN con acceso a `repositorio`. Comprobación: scripts/comprobar-accesos.sh
 accesos:
   entorno_nube: ""                   # entorno de claude.ai/code con los tokens de este proyecto
   supabase_demo: ""                  # ref del proyecto de Supabase de DEMO (vacío si no hay Supabase)

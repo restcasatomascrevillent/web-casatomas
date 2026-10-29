@@ -57,15 +57,19 @@ codigo() {
 
 echo "[Becarios] Accesos de ${PROYECTO:-este proyecto}"
 
-# GitHub: en la nube va por el proxy con tu cuenta; en local, GH_TOKEN o gh auth login.
+# GitHub: con token propio, también en la nube. Sin él, una sesión en la nube solo
+# tiene la conexión de Claude (GH_TOKEN vale proxy-injected), que no basta.
 if [ -n "$REPO" ]; then
+  TOKEN_GH="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
   if ! command -v gh >/dev/null 2>&1; then
     falla "GitHub: falta la herramienta gh"
+  elif [ -z "$TOKEN_GH" ] || [ "$TOKEN_GH" = proxy-injected ]; then
+    falla "GitHub $REPO: falta GH_TOKEN (token fine-grained del proyecto)"
   else
     case "$(gh api "repos/$REPO" --jq '.permissions.push' 2>/dev/null)" in
-      true) ok "GitHub $REPO: lectura y escritura" ;;
-      false) falla "GitHub $REPO: solo lectura" ;;
-      *) falla "GitHub $REPO: sin acceso (nube: añade el repositorio a la sesión; local: GH_TOKEN)" ;;
+      true) ok "GitHub $REPO: lectura y escritura con GH_TOKEN" ;;
+      false) falla "GitHub $REPO: GH_TOKEN solo puede leer" ;;
+      *) falla "GitHub $REPO: GH_TOKEN no llega al repositorio (revisa los repositorios del token)" ;;
     esac
   fi
 fi
@@ -95,6 +99,9 @@ comprobar_supabase() {
     ok "Supabase $entorno ($ref): acceso solo a este proyecto"
   fi
 }
+if [ -n "$SB_DEMO$SB_PROD" ] && { [ -z "$SB_DEMO" ] || [ -z "$SB_PROD" ]; }; then
+  falla "Supabase: hacen falta los dos entornos; rellena supabase_demo y supabase_prod en accesos"
+fi
 comprobar_supabase DEMO "$SB_DEMO" SUPABASE_ACCESS_TOKEN_DEMO "$SB_PROD"
 comprobar_supabase PROD "$SB_PROD" SUPABASE_ACCESS_TOKEN_PROD "$SB_DEMO"
 

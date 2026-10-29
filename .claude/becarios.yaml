@@ -109,8 +109,8 @@ notion:
 
 # Accesos de los becarios (guía: .claude/becarios/reference/accesos.md). Aquí solo
 # identificadores; los tokens van en el entorno en la nube «Casa Tomás» con los
-# nombres fijos de la guía. GitHub va por la conexión de Claude con la cuenta del
-# dueño. Comprobación: bash .claude/becarios/scripts/comprobar-accesos.sh
+# nombres fijos de la guía: GH_TOKEN, SUPABASE_ACCESS_TOKEN_DEMO y _PROD, y el
+# secreto de red de Vercel. Comprobación: bash .claude/becarios/scripts/comprobar-accesos.sh
 accesos:
   entorno_nube: "Casa Tomás"
   supabase_demo: sfonaclosuafvlhutkon            # casatomas-staging

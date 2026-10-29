@@ -20,7 +20,7 @@ Comprobación: `bash .claude/becarios/scripts/comprobar-accesos.sh` (lee `.claud
 Un **entorno en la nube por proyecto** (por ejemplo «Casa Tomás»): en el selector de entorno de una sesión nueva, **New environment**. Al empezar una sesión del proyecto, se elige ese entorno. Su nombre va en `accesos.entorno_nube`.
 
 - **Secreto de red** (*Network secrets* → *Add secret*, tipo *Bearer*, cabecera `Authorization`): para los servicios con **una sola clave por dominio**. El proxy añade la clave a las peticiones de ese dominio y la sesión nunca la ve. Es la opción preferida.
-- **Variable de entorno** (*Environment variables*): cuando hay **dos claves para el mismo dominio** (DEMO y PROD del mismo servicio), porque el proxy solo manda un secreto por dominio. La sesión sí ve el valor: usa tokens limitados y con caducidad, y un entorno personal, no compartido.
+- **Variable de entorno** (*Environment variables*): cuando hay **dos claves para el mismo dominio** (DEMO y PROD del mismo servicio), porque el proxy solo manda un secreto por dominio, y para GitHub, que no admite secretos de red. La sesión sí ve el valor: usa tokens limitados y con caducidad, y un entorno personal, no compartido.
 - **Acceso a red** (*Network access* → *Custom*, con *Also include default list…* marcado): añade los dominios de los servicios que van por variable de entorno. Los dominios de los secretos de red no hace falta añadirlos.
 
 ### En local
@@ -31,12 +31,19 @@ Fichero `~/.config/becarios/<proyecto>.env`, fuera del repositorio y con permiso
 
 ### GitHub
 
-- **Nube**: no hace falta token. La sesión usa la conexión de Claude con tu cuenta (proxy de GitHub). `gh api` funciona; `gh pr` y `gh issue` no, porque usan GraphQL: usa `gh api repos/<owner>/<repo>/pulls` o las herramientas de GitHub.
-- **Local**: token *fine-grained* en https://github.com/settings/personal-access-tokens/new. *Only select repositories* (los del proyecto); permisos de repositorio: *Contents*, *Pull requests*, *Actions* y *Workflows* en *Read and write*; *Commit statuses* y *Metadata* en *Read*. Variable `GH_TOKEN`.
+Token propio, también en la nube: la conexión de Claude con GitHub solo llega a los repositorios añadidos a cada sesión, y los becarios necesitan acceso al repositorio sin depender de ella.
+
+Token *fine-grained* en https://github.com/settings/personal-access-tokens/new:
+
+- *Resource owner*: la cuenta u organización del proyecto. *Repository access*: *Only select repositories*, los del proyecto. *Expiration*: 90 días.
+- *Read and write*: Contents, Pull requests, Issues, Actions, Workflows, Commit statuses. *Read*: Metadata, Deployments. Sin *Administration*: los becarios no tocan la configuración del repositorio.
+- Variable `GH_TOKEN`. En la nube va como variable de entorno: GitHub no admite secretos de red.
+
+`gh` y la API de GitHub usan `GH_TOKEN` solos. Para que git también lo use (clonar o subir a un repositorio que no esté añadido a la sesión): `gh auth setup-git`. En la nube, el proxy de GitHub bloquea GraphQL aunque haya token: `gh pr` y `gh issue` no funcionan; usa `gh api repos/<owner>/<repo>/pulls` (REST) o las herramientas de GitHub.
 
 ### Supabase
 
-Un token **por proyecto** en https://supabase.com/dashboard/account/tokens → *Generate new token* → elige la organización y **solo el proyecto** (DEMO o PROD). Permisos:
+Siempre los **dos entornos**, DEMO y PROD, cada uno con su token. Un token **por proyecto** en https://supabase.com/dashboard/account/tokens → *Generate new token* → elige la organización y **solo el proyecto** (DEMO o PROD). Permisos:
 
 - *Read-write*: Database, Migrations, Edge Functions, Edge Function Secrets.
 - *Read*: Project Settings, API Keys, API Key Secrets, Logs, Advisors.
