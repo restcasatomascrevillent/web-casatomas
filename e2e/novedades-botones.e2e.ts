@@ -282,6 +282,122 @@ for (const [ancho, alto] of [
   });
 }
 
+/**
+ * Las mismas novedades, pero el Menú de Navidad con 16 platos más de primero
+ * (uno con una palabra de 75 letras sin espacios). El build sigue con el menú
+ * corto; este llega al refrescar en vivo, y como el menú no se ve en la
+ * tarjeta, la hidratación no cambia nada visible.
+ */
+const NOVEDADES_MENU_LARGO = (() => {
+  const novedades = JSON.parse(NOVEDADES) as Array<{ titulo: string; menu: { secciones: { primero: Array<Record<string, unknown>> } } }>;
+  const primero = novedades.find((n) => n.titulo === MENU)!.menu.secciones.primero;
+  for (let i = 1; i <= 16; i++) {
+    primero.push({
+      ...primero[1],
+      id: `l-largo-${i}`,
+      nombre: i === 16 ? `Plato${"x".repeat(70)}` : `Plato largo ${i}`,
+      descripcion: "Para que el menú no quepa en la pantalla",
+      traducciones: undefined,
+    });
+  }
+  return JSON.stringify(novedades);
+})();
+
+for (const [ancho, alto] of [
+  [375, 812],
+  [768, 1024],
+  [1440, 900],
+] as const) {
+  test.describe(`${ancho}px (defectos de QA DEMO)`, () => {
+    test.use({ viewport: { width: ancho, height: alto } });
+
+    test("Ver menú con un menú largo: la X sigue a la vista y se puede pulsar tras desplazarlo", async ({ page, erroresJs: _ }) => {
+      await page.route(`${SUPABASE_FALSO}/rest/v1/novedades*`, (route) =>
+        route.request().method() === "OPTIONS"
+          ? route.fulfill({ status: 204, headers: CORS })
+          : route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: NOVEDADES_MENU_LARGO }),
+      );
+      // Las novedades del SSG valen 5 min (`staleTime`, contados desde
+      // `generadoEn`, ver NovedadesSection.tsx): con el build recién hecho no
+      // se refrescarían. Con el reloj una hora por delante sí (los
+      // temporizadores siguen siendo los de verdad).
+      await page.clock.setFixedTime(Date.now() + 60 * 60_000);
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      const boton = tarjeta(page, MENU).getByRole("button", { name: new RegExp(`^${es.novedades.botones.verMenu}`) });
+      await boton.scrollIntoViewIfNeeded();
+
+      // Hasta que llega el menú largo (refresco en vivo), el diálogo enseña el corto.
+      const dialogo = page.getByRole("dialog", { name: MENU });
+      await expect(async () => {
+        if (!(await dialogo.isVisible())) await boton.click();
+        await expect(dialogo.getByText("Plato largo 15", { exact: true })).toBeAttached({ timeout: 1_000 });
+      }).toPass({ timeout: 15_000 });
+      await esperarDialogoQuieto(dialogo);
+
+      // La palabra larga se parte: ni ensancha el diálogo ni lo desplaza en horizontal.
+      const d = await caja(dialogo);
+      expect(d.width).toBeLessThanOrEqual(Math.min(ancho * 0.92, 512) + 1);
+      expect(await dialogo.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+
+      const desplazado = await dialogo.evaluate((el) => {
+        const cabe = el.scrollHeight <= el.clientHeight;
+        el.scrollTop = el.scrollHeight;
+        return { cabe, scrollTop: el.scrollTop };
+      });
+      expect(desplazado.cabe).toBe(false);
+      expect(desplazado.scrollTop).toBeGreaterThan(200);
+      await expect(dialogo.getByText("Agua y refrescos", { exact: true })).toBeInViewport();
+
+      // La X, entera dentro del diálogo, arriba a la derecha y sin nada encima.
+      const cerrar = dialogo.getByRole("button", { name: es.novedades.botones.cerrar });
+      const x = await caja(cerrar);
+      expect(x.height).toBeGreaterThanOrEqual(44);
+      expect(x.y).toBeGreaterThanOrEqual(d.y);
+      expect(x.y + x.height).toBeLessThanOrEqual(d.y + 80);
+      expect(x.x + x.width).toBeLessThanOrEqual(d.x + d.width);
+      expect(x.x + x.width).toBeGreaterThan(d.x + d.width - 40);
+      const encima = await page.evaluate(([cx, cy]) => !!document.elementFromPoint(cx, cy)?.closest("button"), [x.x + x.width / 2, x.y + x.height / 2]);
+      expect(encima, "la X es lo que hay en ese punto").toBe(true);
+
+      // Se cierra con ella (sin forzar el clic) y el foco vuelve al botón.
+      await cerrar.click();
+      await expect(dialogo).toBeHidden();
+      await expect(boton).toBeFocused();
+    });
+
+    test("Échale un vistazo por navegación interna: plato y aro enteros bajo la cabecera", async ({ page, erroresJs: _ }) => {
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      const enlace = tarjeta(page, PLATO).getByRole("link", { name: new RegExp(`^${es.novedades.botones.verPlato}`) });
+      await enlace.scrollIntoViewIfNeeded();
+      await enlace.click();
+      await expect(page).toHaveURL(/\/carta\/entrantes#plato-9$/);
+
+      const plato = page.locator("#plato-9");
+      await expect(plato).toHaveAttribute("data-resaltado", "true");
+      const cabecera = page.locator("header.site-header");
+      // Se mide cuando el plato deja de moverse: la rejilla entra con
+      // `animate-fade-up` (sube 30 px en 0,6 s) mientras la página se desplaza.
+      await expect(async () => {
+        const medir = () =>
+          plato.evaluate((el) => {
+            const tarjetaPlato = el.querySelector(".ring-accent") ?? el.firstElementChild!;
+            return Math.round(tarjetaPlato.getBoundingClientRect().top * 10) / 10;
+          });
+        const antes = await medir();
+        await page.waitForTimeout(250);
+        const ahora = await medir();
+        expect(ahora).toBe(antes);
+        const c = await caja(cabecera);
+        // ring-2 + ring-offset-2: el aro sobresale 4 px por cada lado de la tarjeta.
+        expect(ahora - 4).toBeGreaterThanOrEqual(c.y + c.height);
+        expect(ahora).toBeLessThan(alto / 2);
+      }).toPass({ timeout: 6_000 });
+    });
+  });
+}
+
 test("los botones ya vienen en el HTML prerenderizado de la portada (es, en y fr)", async ({ request }) => {
   for (const [ruta, etiquetas] of [
     ["/", ["Llamar", "Ver menú", "Échale un vistazo"]],
