@@ -68,6 +68,38 @@ async function abrirMenu(page: Page, boton: Locator) {
   return dialogo;
 }
 
+/**
+ * Espera a que el diálogo termine de entrar. El `Dialog` de Radix
+ * (src/components/ui/dialog.tsx) abre con `duration-200`: zoom-in-95 +
+ * slide-in-from-top-[48%] + fade. En ese rato mide un 5 % menos, no está
+ * centrado (hasta ~4 px de desviación) y su X queda por debajo de 44 px, así que
+ * medirlo nada más verlo es intermitente (en CI falló `toBeLessThan(2)` del
+ * centrado con 4,1 px y 2,3 px; en local, la X con 43,98 px). `toBeVisible` no
+ * espera a la animación: se espera a que terminen las de dentro del diálogo y a
+ * que su caja sea idéntica en dos fotogramas seguidos.
+ */
+async function esperarDialogoQuieto(dialogo: Locator) {
+  await dialogo.evaluate(async (el) => {
+    const fotograma = () => new Promise<void>((resolver) => requestAnimationFrame(() => resolver()));
+    // Las infinitas (un spinner, por ejemplo) nunca terminan: no se esperan.
+    const vivas = () => el.getAnimations({ subtree: true }).filter((a) => a.effect?.getComputedTiming().iterations !== Infinity);
+    const huella = () => {
+      const r = el.getBoundingClientRect();
+      return [r.x, r.y, r.width, r.height].join(",");
+    };
+    let anterior = "";
+    for (let intento = 0; intento < 180; intento++) {
+      // Tope de ~3 s a 60 fps: la animación dura 0,2 s.
+      await Promise.all(vivas().map((a) => a.finished.catch(() => undefined)));
+      await fotograma();
+      const actual = huella();
+      if (actual === anterior && vivas().length === 0) return;
+      anterior = actual;
+    }
+    throw new Error("El diálogo sigue moviéndose tras ~3 s");
+  });
+}
+
 for (const [ancho, alto] of [
   [390, 844],
   [1440, 900],
@@ -155,6 +187,8 @@ for (const [ancho, alto] of [
       }
       await expect(dialogo.getByText("Vino tinto de la casa", { exact: true })).toBeAttached();
 
+      // Todas las medidas de abajo (ancho, centrado y 44 px de la X) son del diálogo ya abierto del todo.
+      await esperarDialogoQuieto(dialogo);
       const d = await caja(dialogo);
       if (ancho < 640) {
         // Casi todo el ancho y, como no cabe, se desplaza por dentro (no la página).
