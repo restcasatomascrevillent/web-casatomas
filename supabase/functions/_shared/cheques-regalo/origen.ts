@@ -32,3 +32,16 @@ export function resolverUrlSitio(origenPeticion: string | null, permitidos: stri
   const pedido = origenPeticion ? normalizarOrigen(origenPeticion) : null;
   return pedido && lista.has(pedido) ? pedido : base;
 }
+
+/**
+ * Valor de `Access-Control-Allow-Origin`. Si la variable vale `*` (o no está
+ * definida) se mantiene `*` como hasta ahora. Si es una lista, devuelve el
+ * Origin de la petición solo si está permitido; si no, el origen oficial.
+ * Nunca devuelve la lista entera. Con lista, la respuesta debe llevar
+ * `Vary: Origin`.
+ */
+export function resolverOrigenCors(origenPeticion: string | null, permitidos: string | undefined, fallback: string): string {
+  const crudo = (permitidos ?? "").trim();
+  if (crudo === "" || crudo === "*") return "*";
+  return resolverUrlSitio(origenPeticion, crudo, fallback);
+}

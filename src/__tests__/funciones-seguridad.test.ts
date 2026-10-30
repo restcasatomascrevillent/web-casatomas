@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolverUrlSitio } from "../../supabase/functions/_shared/cheques-regalo/origen";
+import { resolverOrigenCors, resolverUrlSitio } from "../../supabase/functions/_shared/cheques-regalo/origen";
 import { autorizarLlamada } from "../../supabase/functions/limpiar-fotos-novedades/auth";
 
 const OFICIAL = "https://casa.example.es";
@@ -38,5 +38,22 @@ describe("limpiar-fotos-novedades · autorizarLlamada (CT-REM-FN-11)", () => {
   });
   it("con el secreto correcto pasa", () => {
     expect(autorizarLlamada("secreto-1", "secreto-1")).toEqual({ ok: true });
+  });
+});
+
+describe("cheques-regalo-web · resolverOrigenCors (CORS con lista)", () => {
+  const lista = "https://web.example.es,https://staging.example.es";
+  it("lista con varios orígenes: devuelve el Origin permitido, nunca la lista", () => {
+    expect(resolverOrigenCors("https://staging.example.es", lista, OFICIAL)).toBe("https://staging.example.es");
+    expect(resolverOrigenCors("https://web.example.es", lista, OFICIAL)).toBe("https://web.example.es");
+  });
+  it("origen no permitido o ausente: origen oficial", () => {
+    expect(resolverOrigenCors("https://evil.tld", lista, OFICIAL)).toBe(OFICIAL);
+    expect(resolverOrigenCors(null, lista, OFICIAL)).toBe(OFICIAL);
+    expect(resolverOrigenCors("https://evil.tld", lista, OFICIAL)).not.toContain(",");
+  });
+  it("`*` o sin definir mantiene `*`", () => {
+    expect(resolverOrigenCors("https://evil.tld", "*", OFICIAL)).toBe("*");
+    expect(resolverOrigenCors("https://evil.tld", undefined, OFICIAL)).toBe("*");
   });
 });
