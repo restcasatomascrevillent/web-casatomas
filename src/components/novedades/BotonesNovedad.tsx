@@ -36,7 +36,9 @@ const CLASE_SECUNDARIO = "border-accent/60";
 /**
  * Pie de una tarjeta de novedad: 0, 1 o 2 botones fijos en el orden que
  * eligió el dueño. Un botón que no puede funcionar no se pinta:
- *  - «Ver menú» sin un menú legible con algún plato;
+ *  - «Ver menú» sin un menú legible con algún plato o, si es una cata, con
+ *    alguna bebida (`parsearMenuNovedad` da `null`: es el `menuPintable` del
+ *    panel, regla L3 del contrato v2);
  *  - «Échale un vistazo» si el plato no está en la carta del build (borrado,
  *    retirado o nuevo desde el último despliegue): ni enlace roto ni 404.
  * Sin botones que pintar no hay pie, y la tarjeta queda como siempre.

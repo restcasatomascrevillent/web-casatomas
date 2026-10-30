@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
 
-import CartaDelDia, { CLASES_TITULO_CARTA } from "@/components/espacios/CartaDelDia";
+import CartaDelDia, { CLASES_TITULO_CARTA, type SeccionExtraCarta } from "@/components/espacios/CartaDelDia";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { MenuNovedad } from "@/lib/menu-novedad";
@@ -21,10 +21,17 @@ interface MenuNovedadDialogProps {
  * casi a todo el ancho en móvil con scroll por dentro, centrado en escritorio,
  * y con la X siempre a la vista aunque el menú sea largo.
  * Se cierra con la X, con Esc o pulsando fuera (lo da Radix).
+ *
+ * Un menú con maridaje pinta la bebida bajo cada plato; una cata no tiene
+ * platos y enseña solo la sección «Cata» con sus bebidas en orden.
  */
 const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) => {
   const { t } = useTranslations();
   const textos = t.novedades.botones;
+  const seccionesExtra: SeccionExtraCarta[] =
+    menu.tipo === "cata"
+      ? [{ clave: "cata", titulo: textos.cata, lineas: menu.cata }]
+      : [{ clave: "bebidas", titulo: textos.bebidas, items: menu.bebidas }];
 
   return (
     <Dialog>
@@ -46,7 +53,8 @@ const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) =
             // `px-8`: el título va centrado y la X ocupa la esquina; sin este
             // margen un título largo se metería debajo de ella.
             titulo={<DialogTitle className={cn(CLASES_TITULO_CARTA, "px-8")}>{titulo}</DialogTitle>}
-            seccionesExtra={[{ clave: "bebidas", titulo: textos.bebidas, items: menu.bebidas }]}
+            seccionesExtra={seccionesExtra}
+            maridajes={menu.maridajes}
           />
         </div>
         {/* La X se queda a la vista mientras se desplaza un menú largo: va en
