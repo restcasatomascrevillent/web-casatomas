@@ -1,4 +1,6 @@
-project_id = "jeamoczmbfsnwkfjxcyo"
+# Demo (se enlaza primero, ver docs/PROCESO-DE-CAMBIOS.md). El despliegue siempre usa
+# --project-ref explicito; el proyecto viejo jeamoczmbfsnwkfjxcyo esta prohibido (CT-REM-OPS-01).
+project_id = "sfonaclosuafvlhutkon"
 
 
 [functions.cheques-regalo-web]
