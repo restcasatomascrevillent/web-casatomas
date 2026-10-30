@@ -3,9 +3,9 @@
 # Stripe: los tests unitarios usan módulos virtuales vacíos y los E2E un build
 # contra un Supabase de mentira local (scripts/e2e-build.mjs).
 #
-# BLOQUEAN: instalación reproducible, tests unitarios y E2E (incluye el build
-# SSG completo). NO BLOQUEAN todavía (deuda previa): typecheck con 21 errores y
-# ESLint con 10. Quitar `continue-on-error` cuando lleguen a cero.
+# BLOQUEAN: instalación reproducible, tests unitarios, typecheck (0 errores),
+# ESLint (0 errores; los avisos no bloquean) y E2E (incluye el build SSG
+# completo). Typecheck y ESLint estaban ya a cero el 30/10/2026 (CT-REM-OPS-09).
 name: CI
 
 on:
@@ -45,7 +45,7 @@ jobs:
             test-results
           retention-days: 7
 
-  calidad-no-bloqueante:
+  calidad:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -55,26 +55,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # continue-on-error en cada paso y no en el job: la deuda previa no bloquea y
-      # el check sale en verde, con los errores en las anotaciones y en el resumen.
-      # Con continue-on-error en el job, GitHub lo pintaba en rojo en cada PR.
-      - name: Typecheck (21 errores previos)
-        id: typecheck
-        continue-on-error: true
+      - name: Typecheck
         run: npx tsc --noEmit -p tsconfig.app.json
-      - name: ESLint (10 errores previos)
-        id: lint
-        continue-on-error: true
-        run: npm run lint
-      - name: Resumen
-        if: always()
-        run: |
-          {
-            echo "### Calidad (informativa, no bloquea)"
-            echo "- Typecheck: ${{ steps.typecheck.outcome == 'success' && 'sin errores' || 'con errores previos, ver anotaciones' }}"
-            echo "- ESLint: ${{ steps.lint.outcome == 'success' && 'sin errores' || 'con errores previos, ver anotaciones' }}"
-          } >> "$GITHUB_STEP_SUMMARY"
-
+      - name: ESLint
+        run: npm run lint -- --quiet
 
   control-promocion:
     name: Validar promoción a producción
