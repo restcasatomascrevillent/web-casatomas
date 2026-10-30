@@ -3,7 +3,9 @@ import { useOptionalTranslations } from "@/i18n/LanguageProvider";
 // Enlace telefónico único del restaurante. Se reutiliza en footer, contacto,
 // política de privacidad y CTA móvil para que el número sea siempre pulsable.
 export const PHONE_E164 = "+34966107887";
-export const PHONE_DISPLAY = "+34 966 10 78 87";
+/** El mismo número sin prefijo internacional, para textos cortos (botón «Llamar» de las novedades). */
+export const PHONE_NACIONAL = "966 10 78 87";
+export const PHONE_DISPLAY = `+34 ${PHONE_NACIONAL}`;
 export const PHONE_HREF = `tel:${PHONE_E164}`;
 
 interface TelLinkProps {

@@ -10,6 +10,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 import MenuDiarioCards from "@/components/espacios/MenuDiarioCards";
+import BotonesNovedad from "@/components/novedades/BotonesNovedad";
 import { NEGOCIO } from "@/lib/negocio";
 import novedadesSSG from "virtual:novedades-ssg";
 
@@ -50,6 +51,13 @@ interface Novedad {
   tags_fr?: string[] | null;
   destacado?: boolean | null;
   orden?: number | null;
+  /**
+   * Botones del pie (jsonb, ver `@/lib/menu-novedad`). Pueden faltar: filas
+   * de antes de la migración, o el `[]` que el SSG compacta.
+   */
+  botones?: unknown;
+  menu?: unknown;
+  plato_id?: string | null;
 }
 
 /**
@@ -165,8 +173,11 @@ const NovedadesSection = () => {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: idx * 0.12 }}
         viewport={{ once: true }}
+        // `h-full` aquí y `flex flex-col` en la tarjeta: todas las de una fila
+        // miden lo mismo y el `mt-auto` del pie alinea los botones abajo.
+        className="h-full"
       >
-        <Card className="h-full overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
+        <Card className="flex h-full flex-col overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
           {image ? (
             <div className="relative h-44 overflow-hidden">
               {novedad.imagen_url ? (
@@ -211,6 +222,13 @@ const NovedadesSection = () => {
               </div>
             )}
           </CardContent>
+          <BotonesNovedad
+            idNovedad={novedad.id}
+            titulo={localized.titulo}
+            botones={novedad.botones}
+            menu={novedad.menu}
+            platoId={novedad.plato_id}
+          />
         </Card>
       </motion.div>
     );

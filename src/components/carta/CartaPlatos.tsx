@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { imagenOptimizada } from "@/lib/carta-ssg";
+import { esFotoCarta, imagenOptimizada } from "@/lib/carta-ssg";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -631,9 +631,10 @@ const CartaPlatos = ({
             const infoOpen = isInfoCardOpen(item);
             const imageUrl = getDishImage(itemRecord);
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
-            const imagePositionY = getImagePositionY(
-              itemRecord.imagen_posicion_y,
-            );
+            const fotoCarta = esFotoCarta(imageUrl);
+            const imagePositionY = fotoCarta
+              ? null
+              : getImagePositionY(itemRecord.imagen_posicion_y);
             const imageStyle =
               imagePositionY === null
                 ? undefined
@@ -656,7 +657,9 @@ const CartaPlatos = ({
             // La foto se pinta en las dos caras: si el cliente la ha abierto y
             // luego pulsa «información», la tarjeta gira pero la foto sigue.
             const bloqueFoto = (
-              <div className="relative h-48 overflow-hidden">
+              <div
+                className={`relative ${fotoCarta ? "aspect-[4/3]" : "h-48"} overflow-hidden`}
+              >
                 {hasVisibleImage ? (
                   <img
                     src={imagenOptimizada(imageUrl, 768) || undefined}
@@ -665,6 +668,8 @@ const CartaPlatos = ({
                     style={imageStyle}
                     loading="lazy"
                     decoding="async"
+                    width={640}
+                    height={fotoCarta ? 480 : 384}
                     onError={() =>
                       setBrokenImages((prev) => ({ ...prev, [cardKey]: true }))
                     }

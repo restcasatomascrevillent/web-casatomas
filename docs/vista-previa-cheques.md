@@ -12,7 +12,7 @@ Desde `casa-tomas-story`, con Supabase CLI autenticado:
 
 ```sh
 git pull origin main
-npx supabase functions deploy cheques-regalo-web --project-ref jeamoczmbfsnwkfjxcyo
+npx supabase functions deploy cheques-regalo-web --project-ref sfonaclosuafvlhutkon
 ```
 
 No requiere migración SQL. La publicación de la web debe incluir el mismo commit. Hasta desplegar la función, el navegador conserva la compatibilidad con el endpoint de vista anterior cuando `/plantilla-vista` responde 404.

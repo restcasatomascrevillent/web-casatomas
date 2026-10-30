@@ -171,6 +171,13 @@ export const translations: Translations = {
       empty: "Aucune nouveauté pour le moment",
       error: "Impossible de charger les nouveautés",
       loading: "Chargement des nouveautés...",
+      botones: {
+        llamar: "Appeler",
+        verMenu: "Voir le menu",
+        verPlato: "Jetez un œil",
+        cerrar: "Fermer",
+        bebidas: "Boissons",
+      },
     },
     espacios: {
       title: "Nos espaces",

@@ -171,6 +171,13 @@ export const translations: Translations = {
       empty: "No highlights at the moment",
       error: "We couldn't load the highlights",
       loading: "Loading highlights...",
+      botones: {
+        llamar: "Call",
+        verMenu: "View menu",
+        verPlato: "Take a look",
+        cerrar: "Close",
+        bebidas: "Drinks",
+      },
     },
     espacios: {
       title: "Our Spaces",

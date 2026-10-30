@@ -1,6 +1,6 @@
 ---
 name: becarios-configurar
-description: "Prepara un repositorio para trabajar con los becarios. Detecta stack, comandos de pruebas, CI/CD y entornos, genera .claude/becarios.yaml y comprueba la condición de inicio (proyecto estabilizado, desplegado y con CI/CD operativo)."
+description: "Prepara un repositorio para trabajar con los becarios. Detecta stack, comandos de pruebas, CI/CD y entornos, genera .claude/becarios.yaml, deja preparados los accesos (GitHub, Supabase, Vercel, Stripe, Resend) y comprueba la condición de inicio (proyecto estabilizado, desplegado y con CI/CD operativo)."
 argument-hint: "[ruta del repositorio]"
 disable-model-invocation: true
 ---
@@ -33,7 +33,19 @@ Copia `.claude/becarios/templates/becarios.yaml` a `.claude/becarios.yaml` y rel
 
 Añade `.qa-evidencias/` al `.gitignore` del proyecto.
 
-## 3 · Comprobar la condición de inicio
+## 3 · Accesos
+
+Sigue `.claude/becarios/reference/accesos.md` para que los becarios no tengan que pedir permisos a mitad de una historia.
+
+1. **Qué servicios usa**: carpeta `supabase/` o `@supabase/*` → Supabase; `vercel.json` o despliegues en Vercel → Vercel; `stripe` o `resend` en el código o en los secretos de las funciones → Stripe o Resend.
+2. **Rellena tú la sección `accesos`**, sin preguntar lo que puedas averiguar: refs de Supabase de DEMO y PROD (de la configuración, del código o del conector de Supabase), equipo y proyecto de Vercel (conector de Vercel o `.vercel/project.json`). Pon `stripe` o `resend` a `true` solo si los becarios los necesitan para probar; si DEMO no cobra ni manda correos, `false`.
+3. **Comprueba**: `bash .claude/becarios/scripts/comprobar-accesos.sh`.
+4. **Lo que falte**, pídelo en una sola tanda: una línea por token con servicio, entorno, alcance y permisos, dónde guardarlo (nombre de la variable o dominio del secreto de red) y el enlace para crearlo, según la guía. Si trabaja en la nube, incluye crear el entorno `accesos.entorno_nube` y los dominios de *Network access*. **Nunca pidas que pegue un token en el chat.**
+5. Cuando diga que está, repite la comprobación. En la nube, las variables se leen al empezar la sesión: hay que abrir una sesión nueva en ese entorno.
+
+Que falte un acceso no impide empezar: el becario que lo necesite parará con BLOQUEADO.
+
+## 4 · Comprobar la condición de inicio
 
 Verifica y marca en `condicion_inicio` solo lo que hayas comprobado:
 
@@ -45,12 +57,13 @@ Verifica y marca en `condicion_inicio` solo lo que hayas comprobado:
 
 Comprueba también que Notion responde (lee la base de datos de historias). Si falta la base de datos de registro, recomienda `/becarios-notion`.
 
-## 4 · Informe
+## 5 · Informe
 
 Breve, en líneas `[Becarios]`, sin tablas largas:
 
 ```
 [Becarios] Proyecto configurado: Next.js + Supabase · GitHub Actions · .claude/becarios.yaml ✅
+[Becarios] Accesos: GitHub ✅ · Supabase DEMO ✅ · Supabase PROD ❌ falta SUPABASE_ACCESS_TOKEN_PROD · Vercel ✅
 [Becarios] Estabilizado ✅ · Desplegado ✅ · CI/CD ❌ último pipeline de main en rojo
 [Becarios] ⏸ En espera hasta que el CI/CD esté en verde
 ```

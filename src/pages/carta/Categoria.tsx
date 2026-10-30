@@ -1,13 +1,15 @@
 import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
 import { filtrarPlatos } from "@/lib/filtros-carta";
 import MenuDietario from "@/components/carta/MenuDietario";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
 import ProductoCard from "@/components/carta/ProductoCard";
 import {
   CATEGORIAS_CARTA,
+  anclaPlato,
   categoriaPorSlug,
   etiquetaCategoriaIdioma,
   platosDeCategoria,
@@ -24,6 +26,32 @@ import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+
+/** Lo que dura el anillo del plato al que se llega con `#plato-<id>`. */
+export const DURACION_RESALTADO_MS = 2500;
+
+/**
+ * Ancla del plato a resaltar (`plato-12`) mientras dure el resaltado, o `null`.
+ *
+ * Solo el resaltado: el desplazamiento hasta el `#` ya lo hace `Header` (y
+ * `ScrollToTop` lo respeta), así que aquí no se repite. Empieza en `null`
+ * también en el navegador, para que la hidratación coincida con el SSG.
+ */
+function usePlatoResaltado(): string | null {
+  const { hash, key } = useLocation();
+  const [resaltado, setResaltado] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ancla = hash.replace(/^#/, "");
+    if (!ancla.startsWith("plato-")) return;
+    setResaltado(ancla);
+    const temporizador = window.setTimeout(() => setResaltado(null), DURACION_RESALTADO_MS);
+    return () => window.clearTimeout(temporizador);
+    // `key`: volver a pulsar el mismo enlace vuelve a resaltar.
+  }, [hash, key]);
+
+  return resaltado;
+}
 
 const TEXTOS: Record<
   Language,
@@ -102,6 +130,7 @@ const CartaCategoria = () => {
   // Interruptor «Fotos de platos en Casa Tomás»: valor del build y relectura
   // en el navegador (ver el hook). Antes del `return` temprano: es un hook.
   const mostrarFotos = useMostrarFotosPlatos();
+  const platoResaltado = usePlatoResaltado();
 
   if (!categoria) {
     return (
@@ -198,6 +227,7 @@ const CartaCategoria = () => {
                 prioridad={indice < 3}
                 cantidadEnPedido={cantidadDe(plato)}
                 mostrarFoto={mostrarFotos}
+                resaltado={platoResaltado === anclaPlato(plato.id)}
                 onAnadir={() => {
                   // Mismo nombre y categoría que guarda `CartaPlatos` desde la
                   // portada: el nombre ya traducido, la categoría cruda (es la

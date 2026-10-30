@@ -3,8 +3,9 @@
 // ----------------------------------------------------------------------------
 // El build normal descarga la carta y las novedades de Supabase (y se rompe sin
 // credenciales). Para los E2E se levanta aquí un servidor HTTP local que
-// responde a `/rest/v1/...` (una fila de prueba para Platos/Vinos/Bebidas, que el
-// build exige no vacías, y `[]` para todo lo demás), se apunta VITE_SUPABASE_URL a él y
+// responde a `/rest/v1/...` (filas de prueba para Platos/Vinos/Bebidas, que el
+// build exige no vacías; las novedades de `e2e/fixtures/novedades-botones.json`,
+// y `[]` para todo lo demás), se apunta VITE_SUPABASE_URL a él y
 // se construye en `dist-e2e/` (vite.config.e2e.ts). Así:
 //   · el build no depende de la red ni de producción;
 //   · el bundle resultante apunta a http://127.0.0.1:<E2E_SUPABASE_PORT>, una
@@ -13,23 +14,41 @@
 // Uso: `npm run test:e2e` (lo ejecuta antes de `playwright test`).
 // ============================================================================
 import http from "node:http";
+import { readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 
 const PUERTO = Number(process.env.E2E_SUPABASE_PORT ?? 54329);
 const URL_FALSA = `http://127.0.0.1:${PUERTO}`;
 
-/** Una fila mínima por tabla de la carta: `carta-ssg` aborta el build si alguna llega vacía. */
-const FILA_CARTA = {
-  Platos: { id: 1, nombre: "Plato E2E", categoria: "Entrantes", precio_eur: 10, descripcion: "Fila de prueba de los E2E" },
-  Vinos: { id: 1, nombre: "Vino E2E", categoria: "Tintos", precio_eur: 20, ubicacion_pais: "España" },
-  Bebidas: { id: 1, nombre: "Bebida E2E", categoria: "Refrescos", precio_eur: 2 },
+/**
+ * Filas mínimas por tabla de la carta: `carta-ssg` aborta el build si alguna
+ * llega vacía. Los ocho entrantes de más alargan `/carta/entrantes` lo
+ * bastante para que llegar al último (`#plato-9`, el que enlaza la novedad de
+ * abajo) obligue a desplazarse por debajo de la cabecera fija.
+ */
+const FILAS_CARTA = {
+  Platos: [
+    { id: 1, nombre: "Plato E2E", categoria: "Entrantes", precio_eur: 10, descripcion: "Fila de prueba de los E2E" },
+    ...Array.from({ length: 8 }, (_, i) => ({ id: i + 2, nombre: `Entrante E2E ${i + 2}`, categoria: "Entrantes", precio_eur: 6 + i })),
+  ],
+  Vinos: [{ id: 1, nombre: "Vino E2E", categoria: "Tintos", precio_eur: 20, ubicacion_pais: "España" }],
+  Bebidas: [{ id: 1, nombre: "Bebida E2E", categoria: "Refrescos", precio_eur: 2 }],
 };
+
+/**
+ * Novedades con los tres botones (Llamar + Ver menú con bebidas, Échale un
+ * vistazo al «Entrante E2E 9» de arriba, uno a un plato que no existe) y una
+ * sin botones. Las lee también `e2e/novedades-botones.e2e.ts`, que tiene que
+ * devolver LAS MISMAS en el navegador: si no, el refresco en vivo de la
+ * portada cambiaría las tarjetas que salen en el HTML prerenderizado.
+ */
+const NOVEDADES = JSON.parse(readFileSync(new URL("../e2e/fixtures/novedades-botones.json", import.meta.url), "utf8"));
 
 const servidor = http.createServer((req, res) => {
   const tabla = /^\/rest\/v1\/([^?/]+)/.exec(req.url ?? "")?.[1];
-  const fila = tabla ? FILA_CARTA[tabla] : undefined;
+  const filas = tabla === "novedades" ? NOVEDADES : tabla ? FILAS_CARTA[tabla] : undefined;
   res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(JSON.stringify(fila ? [fila] : []));
+  res.end(JSON.stringify(filas ?? []));
 });
 await new Promise((ok, ko) => {
   servidor.once("error", ko);

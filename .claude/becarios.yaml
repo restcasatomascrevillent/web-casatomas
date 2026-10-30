@@ -51,8 +51,8 @@ ci_cd:
   proveedor: github-actions + vercel
   desplegar_demo: "git push origin HEAD:staging"   # Vercel publica la demo en 1–3 min; comprobar estado READY
   desplegar_prod: ""      # no lo lanza ningún becario: lo publica Vercel cuando el dueño acepta el PR staging → main
-  desplegar_funciones_demo: "npx supabase functions deploy <función> --project-ref sfonaclosuafvlhutkon"
-  desplegar_funciones_prod: "npx supabase functions deploy <función> --project-ref haqmmdfdzzatdnrrcgez"   # solo tras aceptar el PR y con el «sí» del dueño
+  desplegar_funciones_demo: "SUPABASE_ACCESS_TOKEN=\"$SUPABASE_ACCESS_TOKEN_DEMO\" npx supabase functions deploy <función> --project-ref sfonaclosuafvlhutkon"
+  desplegar_funciones_prod: "SUPABASE_ACCESS_TOKEN=\"$SUPABASE_ACCESS_TOKEN_PROD\" npx supabase functions deploy <función> --project-ref haqmmdfdzzatdnrrcgez"   # solo tras aceptar el PR y con el «sí» del dueño
   estado_ultima_ejecucion: "gh run list --workflow ci.yml --branch staging -L 1"   # en la nube, con las herramientas de GitHub
   rollback_prod: "Vercel → Deployments → despliegue anterior → ⋯ → Instant Rollback (el dueño). El arreglo vuelve por staging"
   artefactos_qa: "GitHub Actions → artefacto playwright-report (solo si falla, 7 días)"
@@ -106,6 +106,19 @@ notion:
   valor_proyecto: Casa Tomás
   extra:
     Área: Producto
+
+# Accesos de los becarios (guía: .claude/becarios/reference/accesos.md). Aquí solo
+# identificadores; los tokens van en el entorno en la nube «Casa Tomás» con los
+# nombres fijos de la guía: GH_TOKEN, SUPABASE_ACCESS_TOKEN_DEMO y _PROD, y el
+# secreto de red de Vercel. Comprobación: bash .claude/becarios/scripts/comprobar-accesos.sh
+accesos:
+  entorno_nube: "Casa Tomás"
+  supabase_demo: sfonaclosuafvlhutkon            # casatomas-staging
+  supabase_prod: haqmmdfdzzatdnrrcgez            # casatomas-prod (el viejo jeamoczmbfsnwkfjxcyo no se toca)
+  vercel_equipo: team_18KKVg7ueSX0PL4Ycy1QakZj   # casa-tomas
+  vercel_proyecto: prj_0sGVG2CWWPpZWwy1zrr0nCPftcYQ   # web-casatomas
+  stripe: false                                  # la demo no cobra y en PROD no se compra
+  resend: false                                  # la demo no manda correos
 
 pausas:
   # Los becarios SIEMPRE se paran cuando el PR está listo y esperan tu «sí».

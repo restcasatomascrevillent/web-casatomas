@@ -70,9 +70,10 @@ Y tras el «sí»:
 2. **Notion** → comprueba que responde. Si pide autorización: `[Becarios] ⏸ Necesito Notion: conecta Notion (conector de Claude o /mcp en la terminal) y vuelve a llamarnos.` y para.
 3. **Proyecto sin configurar** (falta `.claude/becarios.yaml`) → sigue `.claude/skills/becarios-configurar/SKILL.md` y haz todas las preguntas que falten de una vez.
 4. **Condición de inicio incumplida** → `[Becarios] ⏸ En espera: <qué falta>.` y para.
-5. **Notion sin registro de becarios** → `[Becarios] Notion no tiene el registro de entregas. ¿Lo preparo? (sí/no)`. Si dice sí, sigue `.claude/skills/becarios-notion/SKILL.md`.
-6. **Qué historia es** → ver la sección siguiente.
-7. **Historia a medias** → lee `Fase`, `Estado` y el último registro: `[Becarios] Retomo «<título>» desde <fase>` y continúa desde la primera fase sin superar.
+5. **Accesos** → si la configuración tiene `accesos`, ejecuta una vez `bash .claude/becarios/scripts/comprobar-accesos.sh`. Si falta alguno, no pares: `[Becarios] Accesos: falta <lo que falte> · lo pedirá el becario que lo necesite` y sigue.
+6. **Notion sin registro de becarios** → `[Becarios] Notion no tiene el registro de entregas. ¿Lo preparo? (sí/no)`. Si dice sí, sigue `.claude/skills/becarios-notion/SKILL.md`.
+7. **Qué historia es** → ver la sección siguiente.
+8. **Historia a medias** → lee `Fase`, `Estado` y el último registro: `[Becarios] Retomo «<título>» desde <fase>` y continúa desde la primera fase sin superar.
 
 ## Qué historia es
 
@@ -130,7 +131,7 @@ Nunca crees ni modifiques la historia en Notion sin el «sí» del usuario.
 
 Cada encargo incluye: URL de la historia, fase, rama, versión, resumen del plan del CTO y las incidencias que le tocan (no heredan esta conversación). Espera a que cada becario termine antes de imprimir su línea y avanzar. Si los equipos de agentes están activados (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), lánzalos como compañeros con el nombre del rol.
 
-El modelo y los turnos los fija la cabecera de cada ficha en `.claude/agents/`: `cto` en Opus, el resto en Sonnet, y `frontend` con un máximo de 25 turnos por vuelta. Al lanzar un becario **no** pases `model`: sustituiría al de la ficha.
+El modelo y los turnos los fija la cabecera de la ficha de cada becario: `cto` en Opus, el resto en Sonnet, y `frontend` con un máximo de 25 turnos por vuelta. Al lanzar un becario **no** pases `model`: sustituiría al de la ficha.
 
 ## Fases
 

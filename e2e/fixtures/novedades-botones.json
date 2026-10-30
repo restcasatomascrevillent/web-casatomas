@@ -1,0 +1,192 @@
+[
+  {
+    "id": "e2e-menu-navidad",
+    "titulo": "Menú de Navidad",
+    "titulo_en": "Christmas menu",
+    "titulo_fr": "Menu de Noël",
+    "descripcion": "Del 20 al 31 de diciembre, para grupos y familias.",
+    "descripcion_en": "From 20 to 31 December, for groups and families.",
+    "descripcion_fr": "Du 20 au 31 décembre, pour les groupes et les familles.",
+    "badge_text": "Navidad",
+    "icono": "gift",
+    "imagen_url": null,
+    "destacado": true,
+    "orden": 1,
+    "activo": true,
+    "botones": ["llamar", "ver_menu"],
+    "plato_id": null,
+    "menu": {
+      "version": 1,
+      "incluye_bebidas": true,
+      "secciones": {
+        "primero": [
+          {
+            "id": "l-1",
+            "origen": "carta",
+            "platoId": "1",
+            "nombre": "Ensaladilla de pulpo",
+            "descripcion": "Con pan al carbón",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["moluscos", "huevos"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null,
+            "traducciones": {
+              "en": { "nombre": "Octopus Russian salad", "descripcion": "With charcoal-grilled bread" },
+              "fr": { "nombre": "Salade russe au poulpe", "descripcion": "Avec du pain grillé au charbon" }
+            }
+          },
+          {
+            "id": "l-2",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Sopa de picadillo de la casa",
+            "descripcion": "Caldo de cocido con huevo y jamón",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["huevos", "gluten"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          },
+          {
+            "id": "l-3",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Croquetas de jamón ibérico",
+            "descripcion": "Seis unidades por mesa",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["gluten", "leche"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "segundo": [
+          {
+            "id": "l-4",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Arroz con bogavante",
+            "descripcion": "Mínimo dos personas",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["crustáceos"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null,
+            "traducciones": { "en": { "nombre": "Lobster rice", "descripcion": "Minimum two people" } }
+          },
+          {
+            "id": "l-5",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Cordero lechal asado",
+            "descripcion": "Con patatas panaderas",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          },
+          {
+            "id": "l-6",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Lubina a la sal",
+            "descripcion": "Con verduras de temporada",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["pescado"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "postre": [
+          {
+            "id": "l-7",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Turrón de Jijona casero",
+            "descripcion": "Con helado de vainilla",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["frutos de cáscara", "leche"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "bebidas": [
+          {
+            "id": "l-8",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Vino tinto de la casa",
+            "descripcion": "Una botella cada dos personas",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": ["sulfitos"],
+            "alergenosInferidos": [],
+            "alergenosNotas": null,
+            "traducciones": { "en": { "nombre": "House red wine", "descripcion": "One bottle for every two people" } }
+          },
+          {
+            "id": "l-9",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Agua y refrescos",
+            "descripcion": null,
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "e2e-plato-nuevo",
+    "titulo": "Nuevo en la carta: Entrante E2E 9",
+    "titulo_en": "New on the menu: E2E starter 9",
+    "titulo_fr": "Nouveau à la carte : entrée E2E 9",
+    "descripcion": "Lo acabamos de estrenar.",
+    "icono": "sparkles",
+    "imagen_url": null,
+    "destacado": false,
+    "orden": 2,
+    "activo": true,
+    "botones": ["ver_plato"],
+    "plato_id": "9",
+    "menu": null
+  },
+  {
+    "id": "e2e-plato-retirado",
+    "titulo": "Un plato que ya no está en la carta",
+    "titulo_en": "A dish that is no longer on the menu",
+    "titulo_fr": "Un plat qui n'est plus à la carte",
+    "descripcion": "Su plato enlazado se borró: el botón «Échale un vistazo» no debe salir y «Llamar» sí, aunque esta descripción sea bastante más larga que las demás para que la tarjeta mida distinto.",
+    "icono": "star",
+    "imagen_url": null,
+    "destacado": false,
+    "orden": 3,
+    "activo": true,
+    "botones": ["ver_plato", "llamar"],
+    "plato_id": "999",
+    "menu": null
+  },
+  {
+    "id": "e2e-sin-botones",
+    "titulo": "Una novedad de siempre, sin botones",
+    "titulo_en": "A regular highlight, no buttons",
+    "titulo_fr": "Une nouveauté classique, sans boutons",
+    "descripcion": "Se ve exactamente como antes.",
+    "icono": "coffee",
+    "imagen_url": null,
+    "destacado": false,
+    "orden": 4,
+    "activo": true,
+    "botones": [],
+    "plato_id": null,
+    "menu": null
+  }
+]

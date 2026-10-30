@@ -3,6 +3,7 @@ import { calcularGastosGestion, leerConfigGastosGestion } from "../_shared/chequ
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 // `npm:` y no esm.sh: ver el comentario en `stripe-webhook-cheques-regalo`.
 import type Stripe from "npm:stripe@23.0.0";
+import { resolverOrigenCors, resolverUrlSitio } from "../_shared/cheques-regalo/origen.ts";
 import { PLANTILLA_REGALO } from "../_shared/cheques-regalo/plantilla.ts";
 import { LOGO_CASA_TOMAS_PNG_BASE64 } from "../_shared/cheques-regalo/logo-base64.ts";
 
@@ -24,10 +25,9 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // Mejor una clave restringida (`rk_…`) que la secreta (`sk_…`): aquí solo se
 // crean sesiones de Checkout, así que basta con "Checkout Sessions: escritura".
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
-const CHEQUES_REGALO_ALLOWED_ORIGIN = Deno.env.get("CHEQUES_REGALO_ALLOWED_ORIGIN") || "*";
-// Para construir `success_url`/`cancel_url`. Si no se define, se usa el
-// `Origin` de la propia petición (el navegador lo manda siempre en un fetch
-// cross-origin), y como último recurso el dominio de producción.
+// Para construir `success_url`/`cancel_url`: el `Origin` de la petición solo se
+// usa si coincide con CHEQUES_REGALO_ALLOWED_ORIGIN (lista separada por comas)
+// o con este sitio; en cualquier otro caso se redirige a este sitio.
 const SITE_URL_FALLBACK = Deno.env.get("CHEQUES_REGALO_SITE_URL") || "https://restaurantecasatomascrevillente.es";
 
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -41,7 +41,8 @@ function cargarStripe(): Promise<Stripe> {
 }
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": CHEQUES_REGALO_ALLOWED_ORIGIN,
+  // Se sustituye por petición en `Deno.serve` (CHEQUES_REGALO_ALLOWED_ORIGIN puede ser una lista).
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
@@ -160,8 +161,8 @@ async function handleCrear(req: Request): Promise<Response> {
     return json({ motivo: "error_servidor", mensaje: "No se pudo registrar el cheque regalo." }, 500);
   }
 
-  const origin = req.headers.get("origin") || SITE_URL_FALLBACK;
-  const siteUrl = origin.replace(/\/+$/, "");
+  // CT-REM-FN-08: el `Origin` solo vale si está en la lista de permitidos.
+  const siteUrl = resolverUrlSitio(req.headers.get("origin"), Deno.env.get("CHEQUES_REGALO_ALLOWED_ORIGIN"), SITE_URL_FALLBACK);
 
   try {
     // Sin `payment_method_types`: Stripe enseña los métodos activados en el
@@ -253,6 +254,15 @@ async function handleVistaPrevia(req: Request): Promise<Response> {
 }
 
 Deno.serve(async (req) => {
+  const respuesta = await manejar(req);
+  const permitidos = Deno.env.get("CHEQUES_REGALO_ALLOWED_ORIGIN");
+  const acao = resolverOrigenCors(req.headers.get("origin"), permitidos, SITE_URL_FALLBACK);
+  respuesta.headers.set("Access-Control-Allow-Origin", acao);
+  if (acao !== "*") respuesta.headers.append("Vary", "Origin");
+  return respuesta;
+});
+
+async function manejar(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = new URL(req.url);
@@ -262,7 +272,4 @@ Deno.serve(async (req) => {
   if (req.method === "POST" && ruta === "/vista-previa") return handleVistaPrevia(req);
   if (req.method === "POST" && ruta === "/crear") return handleCrear(req);
 
-  return json({ motivo: "no_encontrado", mensaje: "Ruta no soportada." }, 404);
-});
-
-
+  return json({ motivo: "no_encontrado", mensaje: "Ruta no soportada." }, 404);}

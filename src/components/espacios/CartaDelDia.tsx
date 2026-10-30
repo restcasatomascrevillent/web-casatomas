@@ -239,14 +239,25 @@ const Plato = ({
   );
 };
 
+/** Sección añadida tras las tres del menú (p. ej. «Bebidas» en el menú de una novedad). */
+export interface SeccionExtraCarta {
+  clave: string;
+  /** Rótulo ya traducido. */
+  titulo: string;
+  items: ItemMenu[];
+}
+
 interface CartaDelDiaProps {
-  menu: MenuDelDia;
+  /** La fecha no se pinta aquí (va en `subtitulo`), por eso no se exige. */
+  menu: Pick<MenuDelDia, "estructurado" | "secciones">;
   /** Slot del título. En un diálogo, el `DialogTitle` de Radix. */
   titulo: ReactNode;
   /** Fecha ya formateada en el idioma activo. */
   subtitulo?: string;
   /** Versión reducida, para el carrusel de menús anteriores. */
   compacta?: boolean;
+  /** Secciones que van detrás de primero/segundo/postre. Las vacías no se pintan. */
+  seccionesExtra?: SeccionExtraCarta[];
   className?: string;
 }
 
@@ -268,6 +279,7 @@ const CartaDelDia = ({
   titulo,
   subtitulo,
   compacta = false,
+  seccionesExtra = [],
   className,
 }: CartaDelDiaProps) => {
   const { t, language } = useTranslations();
@@ -279,7 +291,14 @@ const CartaDelDia = ({
     postre: menu.secciones.postre.length > 1 ? etiquetas.desserts : etiquetas.dessert,
   };
 
-  const conPlatos = SECCIONES_MENU.filter((seccion) => menu.secciones[seccion].length > 0);
+  const conPlatos: SeccionExtraCarta[] = [
+    ...SECCIONES_MENU.map((seccion) => ({
+      clave: seccion,
+      titulo: nombreSeccion[seccion],
+      items: menu.secciones[seccion],
+    })),
+    ...seccionesExtra,
+  ].filter((seccion) => seccion.items.length > 0);
 
   return (
     <div
@@ -300,14 +319,14 @@ const CartaDelDia = ({
       </header>
 
       {conPlatos.map((seccion) => (
-        <Fragment key={seccion}>
+        <Fragment key={seccion.clave}>
           <Separador className={compacta ? "my-3.5" : "my-4 sm:my-5"} />
           <section>
             <h4 className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-ticket-stamp">
-              {nombreSeccion[seccion]}
+              {seccion.titulo}
             </h4>
             <ul className={cn("mt-2.5", compacta ? "space-y-3" : "space-y-4")}>
-              {menu.secciones[seccion].map((item) => (
+              {seccion.items.map((item) => (
                 <Plato
                   key={item.id}
                   item={item}

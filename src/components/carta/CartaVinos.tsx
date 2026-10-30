@@ -691,18 +691,17 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                   </CardHeader>
 
                   {expanded && (
-                    // Misma mecánica que el panel de información: la tarjeta
-                    // se alarga hacia abajo con un bloque a todo lo ancho, no
-                    // una columna lateral. object-cover (no contain): se pidió
-                    // que la foto rellene el marco sin huecos ni bandas vacías.
-                    // aspect-[4/3], no [4/5]: que no estire la ficha más que
-                    // el panel de información.
-                    <div id={`foto-vino-${cardKey}`} className="relative aspect-[4/3] w-full overflow-hidden border-y border-border/60 bg-muted/20">
+                    // Foto vertical 3:4 (botella recortada sobre fondo oscuro con
+                    // halo dorado): se ve ENTERA, centrada en un marco de alto
+                    // fijo (sin CLS). Las fotos antiguas de otras proporciones
+                    // caben con object-contain sobre el mismo fondo oscuro.
+                    <div id={`foto-vino-${cardKey}`} className="flex h-80 w-full items-center justify-center overflow-hidden border-y border-border/60 bg-[#1a1612] sm:h-96">
                       <img
                         src={imagenOptimizada(imageUrl, 768) || undefined}
                         alt={`${item.displayNombre || item.nombre} — ${categoriaCorta(item.categoria ?? "", language)}, ${NEGOCIO.nombre}`}
-                        className="h-full w-full object-cover"
-                        style={{ objectPosition: `center ${Math.max(0, Math.min(100, item.imagen_posicion_y ?? 50))}%` }}
+                        width={900}
+                        height={1200}
+                        className="aspect-[3/4] h-full w-auto max-w-full object-contain"
                         loading="lazy"
                         decoding="async"
                         onError={() => setBrokenImages(prev => ({ ...prev, [cardKey]: true }))}

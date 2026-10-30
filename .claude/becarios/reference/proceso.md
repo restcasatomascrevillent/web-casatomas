@@ -18,13 +18,24 @@ Ninguna fase empieza sin que la anterior haya cumplido su criterio de salida y l
 | `qa-funcional` | Exploratorias de interfaz, recorridos de usuario, móvil y escritorio | 3, 6 |
 | `qa-tecnico` | Integración, API, suite automatizada, regresión técnica | 3, 6 |
 
-Modelos y turnos, fijados en la cabecera de cada ficha (`.claude/agents/`): `cto` en Opus; el resto en Sonnet. `frontend` tiene un máximo de 25 turnos por vuelta.
+Modelos y turnos, fijados en la cabecera de la ficha de cada becario: `cto` en Opus; el resto en Sonnet. `frontend` tiene un máximo de 25 turnos por vuelta.
 
 ## Fuentes de verdad
 
 - **Historia de usuario**: Notion (criterios de aceptación, dependencias, diseño).
 - **Configuración del proyecto**: `.claude/becarios.yaml` en la raíz del repositorio (comandos, CI/CD, entornos, diseño, Notion, puertas humanas).
 - **Registro y estado**: Notion, según `reference/notion.md`.
+- **Accesos**: qué token usar para cada servicio y entorno, según `reference/accesos.md` y la sección `accesos` de la configuración.
+
+## Accesos
+
+Los tokens de GitHub, Supabase, Vercel, Stripe y Resend se preparan una vez por proyecto (`/becarios-configurar`) y se usan así:
+
+- **DEMO**: uso libre dentro de la historia.
+- **PROD**: solo después del «sí» del usuario; `delivery` para desplegar y QA para lecturas no destructivas.
+- **Supabase**: el token del entorno delante del comando y el ref de ese mismo entorno, siempre explícito: `SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN_DEMO" npx supabase … --project-ref <ref de DEMO>`.
+- Nunca muestres ni copies el valor de un token (nada de `echo`, `env`, `printenv` ni `set -x`) ni lo pidas por el chat.
+- Si falta un acceso o no tiene permiso: BLOQUEADO con el nombre de la variable o del secreto de red que falta.
 
 ## Fases
 
