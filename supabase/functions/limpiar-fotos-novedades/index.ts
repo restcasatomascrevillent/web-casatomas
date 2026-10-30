@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { autorizarLlamada } from "./auth.ts";
 
 /**
  * Borra del bucket `novedades` las fotos que ya no usa ninguna novedad.
@@ -9,10 +10,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * `novedades_fotos_por_borrar` al eliminar una novedad o cambiarle la foto, y
  * llama a esta función (pg_net) para que la borre por la API de Storage.
  *
- * `verify_jwt` va desactivado porque pg_net llama sin sesión. Es seguro: la
- * función no recibe rutas, solo procesa la cola, que únicamente escribe ese
- * trigger (RLS sin políticas). Quien la llame desde fuera, como mucho, adelanta
- * un borrado que ya estaba pendiente.
+ * `verify_jwt` va desactivado porque pg_net llama sin sesión. La llamada se
+ * autentica con la cabecera `x-webhook-secret` (secreto LIMPIAR_FOTOS_WEBHOOK_SECRET,
+ * fail-closed: ver auth.ts). La función no recibe rutas, solo procesa la cola,
+ * que únicamente escribe ese trigger (RLS sin políticas).
  *
  * Antes de borrar comprueba que ninguna novedad siga usando la foto (dos
  * novedades pueden compartirla). Solo toca el bucket `novedades`: una foto de
@@ -45,6 +46,12 @@ function rutaDeUrl(url: string | null): string | null {
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido" }, 405);
+
+  const auth = autorizarLlamada(Deno.env.get("LIMPIAR_FOTOS_WEBHOOK_SECRET"), req.headers.get("x-webhook-secret"));
+  if (!auth.ok) {
+    if (auth.status === 500) console.error("[limpiar-fotos-novedades] LIMPIAR_FOTOS_WEBHOOK_SECRET no configurado — rechazando (fail closed)");
+    return json({ error: auth.error }, auth.status);
+  }
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false },
