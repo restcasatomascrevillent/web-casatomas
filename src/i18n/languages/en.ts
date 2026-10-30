@@ -177,6 +177,9 @@ export const translations: Translations = {
         verPlato: "Take a look",
         cerrar: "Close",
         bebidas: "Drinks",
+        prefijoMaridaje: "Pairing:",
+        cata: "Tasting",
+        contieneSulfitos: "Contains sulphites",
       },
     },
     espacios: {
