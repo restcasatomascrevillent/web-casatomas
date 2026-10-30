@@ -188,5 +188,186 @@
     "botones": [],
     "plato_id": null,
     "menu": null
+  },
+  {
+    "id": "e2e-menu-maridaje",
+    "titulo": "Menú maridaje de otoño",
+    "titulo_en": "Autumn pairing menu",
+    "titulo_fr": "Menu accords mets et vins",
+    "descripcion": "Cuatro pases, cada uno con su bebida.",
+    "descripcion_en": "Four courses, each with its drink.",
+    "descripcion_fr": "Quatre services, chacun avec sa boisson.",
+    "icono": "wine",
+    "imagen_url": null,
+    "destacado": false,
+    "orden": 5,
+    "activo": true,
+    "botones": [
+      "ver_menu",
+      "llamar"
+    ],
+    "plato_id": null,
+    "menu": {
+      "version": 2,
+      "tipo": "menu",
+      "incluye_bebidas": true,
+      "maridaje": true,
+      "secciones": {
+        "primero": [
+          {
+            "id": "p1",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Gamba roja de Santa Pola",
+            "descripcion": "A la plancha",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null,
+            "traducciones": {
+              "en": {
+                "nombre": "Santa Pola red prawn",
+                "descripcion": "Grilled"
+              },
+              "fr": {
+                "nombre": "Crevette rouge de Santa Pola",
+                "descripcion": "À la plancha"
+              }
+            },
+            "maridaje": {
+              "id": "m1",
+              "origen": "libre",
+              "refId": null,
+              "nombre": "Cava brut nature",
+              "descripcion": "Bien frío",
+              "sulfitos": true,
+              "traducciones": {
+                "en": {
+                  "nombre": "Brut nature cava",
+                  "descripcion": "Well chilled"
+                },
+                "fr": {
+                  "nombre": "Cava brut nature",
+                  "descripcion": "Bien frais"
+                }
+              }
+            }
+          }
+        ],
+        "segundo": [
+          {
+            "id": "s1",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Arroz a banda",
+            "descripcion": null,
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "postre": [
+          {
+            "id": "d1",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Turrón de Jijona",
+            "descripcion": null,
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null,
+            "maridaje": {
+              "id": "m2",
+              "origen": "vino",
+              "refId": "vino-fondillon",
+              "nombre": "Fondillón",
+              "descripcion": null,
+              "sulfitos": true
+            }
+          }
+        ],
+        "bebidas": [
+          {
+            "id": "b1",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Agua mineral",
+            "descripcion": null,
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "e2e-cata",
+    "titulo": "Cata de destilados",
+    "titulo_en": "Spirits tasting",
+    "titulo_fr": "Dégustation de spiritueux",
+    "descripcion": "Tres copas comentadas, sin comida.",
+    "descripcion_en": "Three guided glasses, no food.",
+    "descripcion_fr": "Trois verres commentés, sans repas.",
+    "icono": "star",
+    "imagen_url": null,
+    "destacado": false,
+    "orden": 6,
+    "activo": true,
+    "botones": [
+      "ver_menu"
+    ],
+    "plato_id": null,
+    "menu": {
+      "version": 2,
+      "tipo": "cata",
+      "incluye_bebidas": false,
+      "maridaje": false,
+      "secciones": {
+        "primero": [],
+        "segundo": [],
+        "postre": [],
+        "bebidas": [],
+        "cata": [
+          {
+            "id": "c1",
+            "origen": "bebida",
+            "refId": "bebida-whisky-12",
+            "nombre": "Whisky de malta 12 años",
+            "descripcion": null,
+            "sulfitos": false,
+            "traducciones": {
+              "en": {
+                "nombre": "12-year-old malt whisky",
+                "descripcion": null
+              }
+            }
+          },
+          {
+            "id": "c2",
+            "origen": "vino",
+            "refId": "vino-fondillon",
+            "nombre": "Fondillón",
+            "descripcion": "Alicante, dulce",
+            "sulfitos": true
+          },
+          {
+            "id": "c3",
+            "origen": "libre",
+            "refId": null,
+            "nombre": "Ginebra de Mahón",
+            "descripcion": null,
+            "sulfitos": false
+          }
+        ]
+      }
+    }
   }
 ]
