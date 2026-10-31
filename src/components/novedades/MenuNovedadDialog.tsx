@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import CartaDelDia, { CLASES_TITULO_CARTA, type SeccionExtraCarta } from "@/components/espacios/CartaDelDia";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import type { MenuNovedad } from "@/lib/menu-novedad";
+import type { MenuNovedad, PosicionSeccionExtra } from "@/lib/menu-novedad";
 import { cn } from "@/lib/utils";
 
 interface MenuNovedadDialogProps {
@@ -32,6 +32,11 @@ const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) =
     menu.tipo === "cata"
       ? [{ clave: "cata", titulo: textos.cata, lineas: menu.cata }]
       : [{ clave: "bebidas", titulo: textos.bebidas, items: menu.bebidas }];
+  // Secciones con nombre libre (Aperitivo, Prepostre…), cada una en su sitio.
+  const seccionesIntercaladas: Partial<Record<PosicionSeccionExtra, SeccionExtraCarta[]>> = {};
+  for (const extra of menu.extras ?? []) {
+    (seccionesIntercaladas[extra.posicion] ??= []).push({ clave: extra.id, titulo: extra.titulo, items: extra.items });
+  }
 
   return (
     <Dialog>
@@ -54,6 +59,7 @@ const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) =
             // margen un título largo se metería debajo de ella.
             titulo={<DialogTitle className={cn(CLASES_TITULO_CARTA, "px-8")}>{titulo}</DialogTitle>}
             seccionesExtra={seccionesExtra}
+            seccionesIntercaladas={seccionesIntercaladas}
             maridajes={menu.maridajes}
           />
         </div>
