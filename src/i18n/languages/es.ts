@@ -178,6 +178,10 @@ export const translations = {
         verPlato: "Échale un vistazo",
         cerrar: "Cerrar",
         bebidas: "Bebidas",
+        /** Antes del nombre de la bebida que acompaña a un plato del menú. */
+        prefijoMaridaje: "Maridaje:",
+        cata: "Cata",
+        contieneSulfitos: "Contiene sulfitos",
       },
     },
     espacios: {

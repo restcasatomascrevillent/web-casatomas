@@ -37,10 +37,12 @@ const FILAS_CARTA = {
 
 /**
  * Novedades con los tres botones (Llamar + Ver menú con bebidas, Échale un
- * vistazo al «Entrante E2E 9» de arriba, uno a un plato que no existe) y una
- * sin botones. Las lee también `e2e/novedades-botones.e2e.ts`, que tiene que
- * devolver LAS MISMAS en el navegador: si no, el refresco en vivo de la
- * portada cambiaría las tarjetas que salen en el HTML prerenderizado.
+ * vistazo al «Entrante E2E 9» de arriba, uno a un plato que no existe), una
+ * sin botones y dos con menú v2 (maridaje con sulfitos y cata, con los
+ * fixtures canónicos de `src/__tests__/fixtures/`). Las leen también los e2e
+ * de novedades (`e2e/novedades-comun.ts`), que tienen que devolver LAS MISMAS
+ * en el navegador: si no, el refresco en vivo de la portada cambiaría las
+ * tarjetas que salen en el HTML prerenderizado.
  */
 const NOVEDADES = JSON.parse(readFileSync(new URL("../e2e/fixtures/novedades-botones.json", import.meta.url), "utf8"));
 

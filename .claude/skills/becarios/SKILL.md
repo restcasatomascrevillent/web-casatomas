@@ -131,7 +131,11 @@ Nunca crees ni modifiques la historia en Notion sin el «sí» del usuario.
 
 Cada encargo incluye: URL de la historia, fase, rama, versión, resumen del plan del CTO y las incidencias que le tocan (no heredan esta conversación). Espera a que cada becario termine antes de imprimir su línea y avanzar. Si los equipos de agentes están activados (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`), lánzalos como compañeros con el nombre del rol.
 
-El modelo y los turnos los fija la cabecera de la ficha de cada becario: `cto` en Opus, el resto en Sonnet, y `frontend` con un máximo de 25 turnos por vuelta. Al lanzar un becario **no** pases `model`: sustituiría al de la ficha.
+El modelo y los turnos los fija la cabecera de la ficha de cada becario: `cto` en Opus, el resto en Sonnet, y `frontend` con un máximo de 25 turnos por vuelta. El modelo y el esfuerzo se pueden cambiar desde la pestaña «Becarios» del panel de OficiosOsIA, que los guarda en la base «Becarios» de Notion (data source `7d90c32f-ede0-42ca-8732-2c80134f885b`, una fila por becario con su tipo de agente en la columna `Id`). Antes de lanzar un becario, lee su fila:
+
+- Si `Pausado` está marcado, no lo lances: `[Becarios] ⏸ <becario> está pausado en el panel. ¿Qué hago?`
+- Si `Modelo` tiene valor, pásalo como `model`. Si `Esfuerzo` tiene valor, pásalo como `effort`.
+- Si están vacíos, o no encuentras la base o la fila, no pases `model` ni `effort`: manda la cabecera de la ficha.
 
 ## Fases
 

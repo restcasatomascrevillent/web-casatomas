@@ -15,7 +15,9 @@ import {
   type MenuDelDia,
   type SeccionMenu,
 } from "@/lib/menu-dia";
+import type { LineaBebida as DatosLineaBebida } from "@/lib/menu-novedad";
 import { cn } from "@/lib/utils";
+import LineaBebida from "@/components/novedades/LineaBebida";
 
 /**
  * Clases del título de la carta.
@@ -178,10 +180,13 @@ const Plato = ({
   item,
   compacta,
   conAlergenos,
+  maridaje,
 }: {
   item: ItemMenu;
   compacta: boolean;
   conAlergenos: boolean;
+  /** Bebida que acompaña al plato (menú de una novedad con maridaje). */
+  maridaje?: DatosLineaBebida;
 }) => {
   const [fotoRota, setFotoRota] = useState(false);
 
@@ -234,18 +239,24 @@ const Plato = ({
           </p>
         )}
         {conAlergenos && <AlergenosDelPlato item={item} />}
+        {/* Al final de la columna de texto: alineado con el nombre del plato. */}
+        {maridaje && (
+          <LineaBebida linea={maridaje} variante="maridaje" compacta={compacta} className="mt-1.5" />
+        )}
       </div>
     </li>
   );
 };
 
-/** Sección añadida tras las tres del menú (p. ej. «Bebidas» en el menú de una novedad). */
-export interface SeccionExtraCarta {
+/**
+ * Sección añadida tras las tres del menú: platos (`items`, p. ej. «Bebidas» en
+ * el menú de una novedad) o bebidas en orden (`lineas`, la «Cata»).
+ */
+export type SeccionExtraCarta = {
   clave: string;
   /** Rótulo ya traducido. */
   titulo: string;
-  items: ItemMenu[];
-}
+} & ({ items: ItemMenu[]; lineas?: never } | { lineas: DatosLineaBebida[]; items?: never });
 
 interface CartaDelDiaProps {
   /** La fecha no se pinta aquí (va en `subtitulo`), por eso no se exige. */
@@ -258,6 +269,11 @@ interface CartaDelDiaProps {
   compacta?: boolean;
   /** Secciones que van detrás de primero/segundo/postre. Las vacías no se pintan. */
   seccionesExtra?: SeccionExtraCarta[];
+  /**
+   * Bebida de cada plato por el `id` de su `ItemMenu` (menú de una novedad con
+   * maridaje). El menú del día no lo pasa y se pinta como siempre.
+   */
+  maridajes?: Record<string, DatosLineaBebida>;
   className?: string;
 }
 
@@ -280,6 +296,7 @@ const CartaDelDia = ({
   subtitulo,
   compacta = false,
   seccionesExtra = [],
+  maridajes,
   className,
 }: CartaDelDiaProps) => {
   const { t, language } = useTranslations();
@@ -292,13 +309,13 @@ const CartaDelDia = ({
   };
 
   const conPlatos: SeccionExtraCarta[] = [
-    ...SECCIONES_MENU.map((seccion) => ({
+    ...SECCIONES_MENU.map((seccion): SeccionExtraCarta => ({
       clave: seccion,
       titulo: nombreSeccion[seccion],
       items: menu.secciones[seccion],
     })),
     ...seccionesExtra,
-  ].filter((seccion) => seccion.items.length > 0);
+  ].filter((seccion) => (seccion.items ?? seccion.lineas ?? []).length > 0);
 
   return (
     <div
@@ -325,19 +342,31 @@ const CartaDelDia = ({
             <h4 className="text-[0.6875rem] font-semibold uppercase tracking-[0.2em] text-ticket-stamp">
               {seccion.titulo}
             </h4>
-            <ul className={cn("mt-2.5", compacta ? "space-y-3" : "space-y-4")}>
-              {seccion.items.map((item) => (
-                <Plato
-                  key={item.id}
-                  item={item}
-                  compacta={compacta}
-                  // En un menú heredado (v1) no hay alérgenos en NINGÚN plato:
-                  // repetir "no consta" bajo cada línea sería ruido. Se dice
-                  // una sola vez, abajo.
-                  conAlergenos={menu.estructurado}
-                />
-              ))}
-            </ul>
+            {seccion.items ? (
+              <ul className={cn("mt-2.5", compacta ? "space-y-3" : "space-y-4")}>
+                {seccion.items.map((item) => (
+                  <Plato
+                    key={item.id}
+                    item={item}
+                    compacta={compacta}
+                    // En un menú heredado (v1) no hay alérgenos en NINGÚN plato:
+                    // repetir "no consta" bajo cada línea sería ruido. Se dice
+                    // una sola vez, abajo.
+                    conAlergenos={menu.estructurado}
+                    maridaje={maridajes?.[item.id]}
+                  />
+                ))}
+              </ul>
+            ) : (
+              // `<ol>`: en una cata el orden es el de servir, y se anuncia.
+              <ol className={cn("mt-2.5", compacta ? "space-y-3" : "space-y-4")}>
+                {seccion.lineas.map((linea) => (
+                  <li key={linea.id}>
+                    <LineaBebida linea={linea} variante="cata" compacta={compacta} />
+                  </li>
+                ))}
+              </ol>
+            )}
           </section>
         </Fragment>
       ))}

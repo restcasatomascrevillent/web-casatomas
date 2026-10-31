@@ -52,7 +52,26 @@ const TRADUCIDOS = IDIOMAS.filter((i) => i.lang !== "es");
 
 const escapar = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/**
+ * "Ahora" FIJO de la prueba (miércoles 14-oct-2026, 12:00 hora local).
+ *
+ * `ReservationForm` deshabilita las fechas anteriores a `new Date()` y el
+ * calendario abre en el mes en curso. Con la fecha real, el último día de un
+ * mes que cae en sábado (31-oct-2026, 31-jul-2027, 30-sep-2028…) deja `en`
+ * (semana desde el domingo) sin ningún día seleccionable en la cuadrícula, y
+ * lo mismo les pasa a `es` y `fr` (semana desde el lunes) el último día del
+ * mes cuando es domingo. La prueba comprueba idiomas y contrato, no el
+ * calendario: se fija solo `Date` (sin falsear temporizadores, que romperían
+ * `waitFor`, `userEvent` y los toasts) a mitad de mes, y el resultado deja de
+ * depender del día en que se ejecute. Se construye con la hora LOCAL para que
+ * el día sea el mismo en cualquier zona horaria. Lo que la hace estable es
+ * caer a mitad de mes: no la cambies por un fin de mes (sábado ni domingo).
+ */
+const AHORA = new Date(2026, 9, 14, 12);
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(AHORA);
   vi.stubGlobal("fetch", vi.fn());
   vi.stubGlobal(
     "ResizeObserver",
@@ -68,6 +87,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });

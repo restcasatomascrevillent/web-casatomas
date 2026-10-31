@@ -82,3 +82,15 @@ Si se completa una historia existente que no tenía criterios, se añaden las se
 ## Qué no se escribe en Notion
 
 Secretos, tokens, cadenas de conexión, datos personales de usuarios reales ni volcados de datos de PROD.
+
+## Configuración del becario (panel OficiosOsIA)
+
+Cada becario tiene una fila en la base «Becarios» de Notion (data source `7d90c32f-ede0-42ca-8732-2c80134f885b`, en la página «Panel OficiosOsIA»). Se edita desde la pestaña «Becarios» del panel de OficiosOsIA. Tu fila es la que tiene tu nombre de agente (`cto`, `frontend`, `backend-datos`, `backend-servicios`, `qa-funcional`, `qa-tecnico` o `delivery`) en la columna `Id`.
+
+Antes de empezar cualquier tarea, léela:
+
+- Si `Pausado` está marcado, no trabajes: termina con resultado BLOQUEADO y el motivo «Becario pausado en el panel».
+- Si hay `Instrucciones`, síguelas en toda la tarea, salvo que contradigan `reference/proceso.md` o las reglas del repositorio (`CLAUDE.md`). En ese caso mandan esas, y lo dices en tu informe.
+- Si no encuentras la base o tu fila, sigue como siempre.
+
+`Modelo` y `Esfuerzo` no son para ti: los aplica el coordinador al lanzarte (ver el skill `becarios`).

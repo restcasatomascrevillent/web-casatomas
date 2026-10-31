@@ -45,7 +45,25 @@ const CONTRATO = JSON.parse(
 
 const EXITO = esPack.translations.reservationForm.successTitle;
 
+/**
+ * "Ahora" FIJO de la prueba (miércoles 14-oct-2026, 12:00 hora local).
+ *
+ * `ReservationForm` deshabilita las fechas anteriores a `new Date()` y el
+ * calendario abre en el mes en curso. Con la fecha real, el último día de un
+ * mes que cae en domingo (31-ene-2027, 28-feb-2027, 31-oct-2027, 30-abr-2028,
+ * 31-dic-2028…) deja a `es` (semana desde el lunes) sin ningún día
+ * seleccionable en la cuadrícula. Esta prueba comprueba que el cuerpo enviado
+ * es el del contrato, no el calendario: se fija solo `Date` (sin falsear
+ * temporizadores, que romperían `waitFor`, `userEvent` y los toasts) a mitad
+ * de mes. Hora LOCAL para que el día sea el mismo en cualquier zona horaria;
+ * no la cambies por un fin de mes. Mismo patrón que
+ * `reservas-idiomas.test.tsx`.
+ */
+const AHORA = new Date(2026, 9, 14, 12);
+
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(AHORA);
   vi.stubGlobal("fetch", vi.fn());
   vi.stubGlobal(
     "ResizeObserver",
@@ -56,6 +74,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
