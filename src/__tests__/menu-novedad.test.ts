@@ -167,6 +167,7 @@ describe("parsearMenuNovedad · v1 (L1)", () => {
       bebidas: [expect.objectContaining({ id: "l4" })],
       maridajes: {},
       cata: [],
+      extras: [],
     });
   });
 
@@ -263,6 +264,7 @@ describe("parsearMenuNovedad · v2 cata (fixture canónico)", () => {
         { id: "c2", nombre: "Fondillón", descripcion: "Alicante, dulce", sulfitos: true },
         { id: "c3", nombre: "Ginebra de Mahón", descripcion: null, sulfitos: false },
       ],
+      extras: [],
     });
   });
 

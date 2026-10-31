@@ -15,7 +15,7 @@ import {
   type MenuDelDia,
   type SeccionMenu,
 } from "@/lib/menu-dia";
-import type { LineaBebida as DatosLineaBebida } from "@/lib/menu-novedad";
+import type { LineaBebida as DatosLineaBebida, PosicionSeccionExtra } from "@/lib/menu-novedad";
 import { cn } from "@/lib/utils";
 import LineaBebida from "@/components/novedades/LineaBebida";
 
@@ -270,6 +270,12 @@ interface CartaDelDiaProps {
   /** Secciones que van detrás de primero/segundo/postre. Las vacías no se pintan. */
   seccionesExtra?: SeccionExtraCarta[];
   /**
+   * Secciones con nombre libre del menú de una novedad, intercaladas: antes del
+   * primero, entre primero y segundo, entre segundo y postre o tras el postre
+   * (y antes de `seccionesExtra`).
+   */
+  seccionesIntercaladas?: Partial<Record<PosicionSeccionExtra, SeccionExtraCarta[]>>;
+  /**
    * Bebida de cada plato por el `id` de su `ItemMenu` (menú de una novedad con
    * maridaje). El menú del día no lo pasa y se pinta como siempre.
    */
@@ -296,6 +302,7 @@ const CartaDelDia = ({
   subtitulo,
   compacta = false,
   seccionesExtra = [],
+  seccionesIntercaladas = {},
   maridajes,
   className,
 }: CartaDelDiaProps) => {
@@ -308,12 +315,19 @@ const CartaDelDia = ({
     postre: menu.secciones.postre.length > 1 ? etiquetas.desserts : etiquetas.dessert,
   };
 
+  const fija = (seccion: SeccionMenu): SeccionExtraCarta => ({
+    clave: seccion,
+    titulo: nombreSeccion[seccion],
+    items: menu.secciones[seccion],
+  });
   const conPlatos: SeccionExtraCarta[] = [
-    ...SECCIONES_MENU.map((seccion): SeccionExtraCarta => ({
-      clave: seccion,
-      titulo: nombreSeccion[seccion],
-      items: menu.secciones[seccion],
-    })),
+    ...(seccionesIntercaladas.antes_primero ?? []),
+    fija("primero"),
+    ...(seccionesIntercaladas.antes_segundo ?? []),
+    fija("segundo"),
+    ...(seccionesIntercaladas.antes_postre ?? []),
+    fija("postre"),
+    ...(seccionesIntercaladas.despues_postre ?? []),
     ...seccionesExtra,
   ].filter((seccion) => (seccion.items ?? seccion.lineas ?? []).length > 0);
 

@@ -18,6 +18,11 @@
  *    tipo: "cata", … }` con la lista ordenada en `secciones.cata`. Reglas de
  *    lectura L1–L5 del plan técnico: sin versión o con la 1 todo es un menú sin
  *    maridaje ni cata; una versión mayor que 2 se lee igual que la 2.
+ *  - Secciones extra (31/10/2026): `secciones.extra = [{ id, nombre, posicion,
+ *    traducciones?: { en?: { nombre }, fr?: … }, platos }]`, en cualquier
+ *    versión. Secciones de platos con nombre libre (Aperitivo, Prepostre…) que
+ *    van antes del primero, entre primero y segundo, entre segundo y postre o
+ *    después del postre. Sus platos llevan maridaje igual que los demás.
  *
  * Todo es tolerante: la web en producción puede leer filas de antes de la
  * migración (sin estas columnas) o un valor raro. Lo que no se entiende se
@@ -70,6 +75,17 @@ export interface LineaBebida {
   sulfitos: boolean;
 }
 
+export const POSICIONES_SECCION_EXTRA = ["antes_primero", "antes_segundo", "antes_postre", "despues_postre"] as const;
+export type PosicionSeccionExtra = (typeof POSICIONES_SECCION_EXTRA)[number];
+
+/** Una sección de platos con nombre libre, ya en el idioma pedido. */
+export interface SeccionExtraMenu {
+  id: string;
+  titulo: string;
+  posicion: PosicionSeccionExtra;
+  items: ItemMenu[];
+}
+
 /** El menú de una novedad, listo para `CartaDelDia` en el idioma pedido. */
 export interface MenuNovedad extends Pick<MenuDelDia, "estructurado" | "secciones"> {
   tipo: "menu" | "cata";
@@ -79,6 +95,8 @@ export interface MenuNovedad extends Pick<MenuDelDia, "estructurado" | "seccione
   maridajes: Record<string, LineaBebida>;
   /** Lista ordenada de la cata. Vacía en un menú. */
   cata: LineaBebida[];
+  /** Secciones con nombre libre, en su orden. Vacío en una cata. */
+  extras: SeccionExtraMenu[];
 }
 
 const esObjeto = (valor: unknown): valor is Record<string, unknown> =>
@@ -158,6 +176,39 @@ function lineas(
 const seccionesVacias = (): Record<SeccionMenu, ItemMenu[]> => ({ primero: [], segundo: [], postre: [] });
 
 /**
+ * `secciones.extra` → secciones con nombre y algún plato. El nombre en el idioma
+ * pedido con el castellano de respaldo; una posición desconocida va al final.
+ */
+function seccionesExtra(
+  crudas: unknown,
+  idioma: Language,
+  idNovedad: string,
+  maridajes?: Record<string, LineaBebida>,
+): SeccionExtraMenu[] {
+  if (!Array.isArray(crudas)) return [];
+  const extras: SeccionExtraMenu[] = [];
+  crudas.forEach((cruda, indice) => {
+    if (!esObjeto(cruda)) return;
+    const nombre = textoRecortado(cruda.nombre);
+    if (!nombre) return;
+    const id = textoRecortado(cruda.id) ?? `${idNovedad}-extra-${indice}`;
+    const items = lineas(cruda.platos, idioma, `${idNovedad}-extra-${indice}`, maridajes);
+    if (items.length === 0) return;
+    const variante =
+      idioma !== "es" && esObjeto(cruda.traducciones) && esObjeto(cruda.traducciones[idioma])
+        ? textoRecortado(cruda.traducciones[idioma].nombre)
+        : null;
+    extras.push({
+      id,
+      titulo: variante ?? nombre,
+      posicion: POSICIONES_SECCION_EXTRA.find((p) => p === cruda.posicion) ?? "despues_postre",
+      items,
+    });
+  });
+  return extras;
+}
+
+/**
  * `novedades.menu` → menú pintable, o `null` si no se puede leer o no hay nada
  * que pintar (en ese caso «Ver menú» no sale, L3):
  *
@@ -181,7 +232,15 @@ export function parsearMenuNovedad(
   if (v2 && payload.tipo === "cata") {
     const cata = lineasBebida(crudas.cata, idioma, `${idNovedad}-cata`);
     if (cata.length === 0) return null;
-    return { estructurado: true, tipo: "cata", secciones: seccionesVacias(), bebidas: [], maridajes: {}, cata };
+    return {
+      estructurado: true,
+      tipo: "cata",
+      secciones: seccionesVacias(),
+      bebidas: [],
+      maridajes: {},
+      cata,
+      extras: [],
+    };
   }
 
   const maridajes: Record<string, LineaBebida> = {};
@@ -195,10 +254,11 @@ export function parsearMenuNovedad(
       conMaridaje ? maridajes : undefined,
     );
   }
-  if (!SECCIONES_MENU.some((seccion) => secciones[seccion].length > 0)) return null;
+  const extras = seccionesExtra(crudas.extra, idioma, idNovedad, conMaridaje ? maridajes : undefined);
+  if (!SECCIONES_MENU.some((seccion) => secciones[seccion].length > 0) && extras.length === 0) return null;
 
   const bebidas =
     payload.incluye_bebidas === true ? lineas(crudas.bebidas, idioma, `${idNovedad}-bebidas`) : [];
 
-  return { estructurado: true, tipo: "menu", secciones, bebidas, maridajes, cata: [] };
+  return { estructurado: true, tipo: "menu", secciones, bebidas, maridajes, cata: [], extras };
 }
