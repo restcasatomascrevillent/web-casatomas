@@ -20,6 +20,7 @@ import { parsearMenuNovedad } from "@/lib/menu-novedad";
 
 import FIXTURE_CATA from "./fixtures/menu-novedad-v2-cata.json";
 import FIXTURE_MARIDAJE from "./fixtures/menu-novedad-v2-maridaje.json";
+import FIXTURE_TITULOS from "./fixtures/menu-novedad-titulos.json";
 
 /** Por el texto entero del párrafo: el prefijo «Maridaje:» va en su propio `<span>`. */
 const textoDe = (texto: string) => (_: string, nodo: Element | null) =>
@@ -133,5 +134,75 @@ describe("MenuNovedadDialog — lo de siempre", () => {
     await usuario.click(velo);
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(boton).toHaveFocus();
+  });
+});
+
+describe("MenuNovedadDialog: nombres de sección propios (historia 40a3221d)", () => {
+  const h4 = (modal: HTMLElement, name: string) => within(modal).getByRole("heading", { level: 4, name });
+  const conTitulos = (titulos: unknown) => ({ ...(FIXTURE_TITULOS as Record<string, unknown>), titulos });
+
+  it("C1: los h4 muestran el nombre propio en es, en y fr", async () => {
+    let r = await abrir(FIXTURE_TITULOS, "Menú", "es");
+    expect(h4(r.modal, "Para picar")).toBeInTheDocument();
+    r.unmount();
+    r = await abrir(FIXTURE_TITULOS, "Menu", "en");
+    expect(h4(r.modal, "To share")).toBeInTheDocument();
+    r.unmount();
+    r = await abrir(FIXTURE_TITULOS, "Menu", "fr");
+    expect(h4(r.modal, "À partager")).toBeInTheDocument();
+  });
+
+  it("C2: segundo cae al español en fr y bebidas en en", async () => {
+    let r = await abrir(FIXTURE_TITULOS, "Menu", "fr");
+    expect(h4(r.modal, "Del mar y de la brasa")).toBeInTheDocument();
+    r.unmount();
+    r = await abrir(FIXTURE_TITULOS, "Menu", "en");
+    expect(h4(r.modal, "Vinos y aguas")).toBeInTheDocument();
+  });
+
+  it("C3: postre con español en blanco usa el título de siempre", async () => {
+    const esperado = { es: "Postres", en: "Desserts", fr: "Desserts" } as const;
+    for (const idioma of ["es", "en", "fr"] as const) {
+      const r = await abrir(FIXTURE_TITULOS, "Menu", idioma);
+      expect(h4(r.modal, esperado[idioma])).toBeInTheDocument();
+      r.unmount();
+    }
+  });
+
+  it("C4: sin titulos salen los títulos de siempre; la cata sigue con el suyo", async () => {
+    const de = { es: ["Entrantes", "Principales"], en: ["Starters"], fr: ["Entrées"] } as const;
+    for (const idioma of ["es", "en", "fr"] as const) {
+      const r = await abrir(FIXTURE_MARIDAJE, "Menu", idioma);
+      for (const nombre of de[idioma]) expect(h4(r.modal, nombre)).toBeInTheDocument();
+      expect(within(r.modal).queryByRole("heading", { level: 4, name: "Para picar" })).toBeNull();
+      r.unmount();
+    }
+    const cata = { es: "Cata", en: "Tasting", fr: "Dégustation" } as const;
+    for (const idioma of ["es", "en", "fr"] as const) {
+      const r = await abrir(
+        { ...(FIXTURE_CATA as Record<string, unknown>), titulos: { bebidas: { es: "Otro" } } },
+        "Cata",
+        idioma,
+      );
+      expect(h4(r.modal, cata[idioma])).toBeInTheDocument();
+      r.unmount();
+    }
+  });
+
+  it("seguridad: el nombre se pinta literal, sin HTML", async () => {
+    const malo = "<b>Hola</b><img src=x onerror=alert(1)>";
+    const { modal } = await abrir(conTitulos({ primero: { es: malo } }), "Menu");
+    const titulo = h4(modal, malo);
+    expect(titulo.textContent).toBe(malo);
+    expect(titulo.querySelector("b, img")).toBeNull();
+  });
+
+  it("C5: un nombre de 40 caracteres sale completo y sin recortes", async () => {
+    const largo = "Selección de entrantes para compartir 40";
+    expect(largo).toHaveLength(40);
+    const { modal } = await abrir(conTitulos({ primero: { es: largo } }), "Menu");
+    const titulo = h4(modal, largo);
+    expect(titulo.textContent).toBe(largo);
+    expect(titulo.className).not.toMatch(/truncate|line-clamp|whitespace-nowrap|overflow-hidden/);
   });
 });

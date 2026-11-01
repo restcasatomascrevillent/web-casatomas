@@ -31,7 +31,7 @@ const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) =
   const seccionesExtra: SeccionExtraCarta[] =
     menu.tipo === "cata"
       ? [{ clave: "cata", titulo: textos.cata, lineas: menu.cata }]
-      : [{ clave: "bebidas", titulo: textos.bebidas, items: menu.bebidas }];
+      : [{ clave: "bebidas", titulo: menu.titulos?.bebidas ?? textos.bebidas, items: menu.bebidas }];
   // Secciones con nombre libre (Aperitivo, Prepostre…), cada una en su sitio.
   const seccionesIntercaladas: Partial<Record<PosicionSeccionExtra, SeccionExtraCarta[]>> = {};
   for (const extra of menu.extras ?? []) {
@@ -61,6 +61,7 @@ const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) =
             seccionesExtra={seccionesExtra}
             seccionesIntercaladas={seccionesIntercaladas}
             maridajes={menu.maridajes}
+            titulosSecciones={menu.titulos}
           />
         </div>
         {/* La X se queda a la vista mientras se desplaza un menú largo: va en

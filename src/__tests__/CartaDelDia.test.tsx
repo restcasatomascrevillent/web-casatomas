@@ -184,3 +184,36 @@ describe("CartaDelDia — secciones extra (Bebidas del menú de una novedad)", (
     expect(screen.queryByRole("heading", { name: "Bebidas" })).toBeNull();
   });
 });
+
+describe("CartaDelDia: titulosSecciones", () => {
+  const conPostres = (): MenuDelDia => {
+    const m = menuV2();
+    return {
+      ...m,
+      secciones: {
+        ...m.secciones,
+        segundo: [itemLibre as ItemMenu],
+        postre: [itemLibre as ItemMenu, itemCarta as ItemMenu],
+      },
+    };
+  };
+  const pintarCon = (titulos?: Partial<Record<"primero" | "segundo" | "postre", string>>) =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <CartaDelDia menu={conPostres()} titulo={<h3>Menú</h3>} titulosSecciones={titulos} />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+  const h4s = () => screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+
+  it("sin titulosSecciones, las etiquetas de siempre", () => {
+    pintarCon();
+    expect(h4s()).toEqual(["Entrantes", "Principales", "Postres"]);
+  });
+
+  it("con un parcial solo cambian las indicadas", () => {
+    pintarCon({ segundo: "Del mar", postre: "Dulces" });
+    expect(h4s()).toEqual(["Entrantes", "Del mar", "Dulces"]);
+  });
+});
