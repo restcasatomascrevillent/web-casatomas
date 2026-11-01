@@ -14,11 +14,12 @@ import { describe, expect, it } from "vitest";
 import { translations as en } from "@/i18n/languages/en";
 import { translations as es } from "@/i18n/languages/es";
 import { translations as fr } from "@/i18n/languages/fr";
-import { parsearBotonesNovedad, parsearMenuNovedad } from "@/lib/menu-novedad";
+import { parsearBotonesNovedad, parsearMenuNovedad, tituloSeccion } from "@/lib/menu-novedad";
 // Fixtures canónicos del plan técnico de «Maridajes y catas»: copias idénticas
 // de las del panel (src/lib/__tests__/fixtures/), que las escribe tal cual.
 import FIXTURE_CATA from "./fixtures/menu-novedad-v2-cata.json";
 import FIXTURE_MARIDAJE from "./fixtures/menu-novedad-v2-maridaje.json";
+import FIXTURE_TITULOS from "./fixtures/menu-novedad-titulos.json";
 
 const linea = (id: string, nombre: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -332,5 +333,81 @@ describe("i18n de maridajes y catas", () => {
       cata: "Dégustation",
       contieneSulfitos: "Contient des sulfites",
     });
+  });
+});
+
+describe("tituloSeccion y titulos (historia 40a3221d)", () => {
+  const conTitulos = (titulos: unknown, extra: Record<string, unknown> = {}) => ({
+    ...(FIXTURE_TITULOS as Record<string, unknown>),
+    titulos,
+    ...extra,
+  });
+
+  it("C1: primero con trim y en los tres idiomas", () => {
+    expect(tituloSeccion(FIXTURE_TITULOS, "primero", "es")).toBe("Para picar");
+    expect(tituloSeccion(FIXTURE_TITULOS, "primero", "en")).toBe("To share");
+    expect(tituloSeccion(FIXTURE_TITULOS, "primero", "fr")).toBe("À partager");
+  });
+
+  it("C2: cae al español si en/fr están vacíos, en blanco o no son texto", () => {
+    expect(tituloSeccion(FIXTURE_TITULOS, "segundo", "en")).toBe("Del mar y de la brasa");
+    expect(tituloSeccion(FIXTURE_TITULOS, "segundo", "fr")).toBe("Del mar y de la brasa");
+    expect(tituloSeccion(FIXTURE_TITULOS, "bebidas", "en")).toBe("Vinos y aguas");
+  });
+
+  it("C3: sin español válido la entrada se ignora aunque traiga en/fr", () => {
+    for (const idioma of ["es", "en", "fr"] as const) {
+      expect(tituloSeccion(FIXTURE_TITULOS, "postre", idioma)).toBeNull();
+    }
+    const menu = parsearMenuNovedad(FIXTURE_TITULOS, "en", "n");
+    expect(menu?.titulos).toEqual({ primero: "To share", segundo: "Del mar y de la brasa", bebidas: "Vinos y aguas" });
+    expect(menu?.titulos).not.toHaveProperty("postre");
+  });
+
+  it.each([
+    ["ausente", undefined],
+    ["null", null],
+    ["array", [{ es: "X" }]],
+    ["texto", "Para picar"],
+    ["número", 4],
+    ["entrada en texto", { primero: "Para picar" }],
+    ["es numérico", { primero: { es: 5, en: "To share" } }],
+    ["entrada array", { primero: ["Para picar"] }],
+  ])("C3: titulos %s no crea título", (_, titulos) => {
+    const menu = conTitulos(titulos);
+    expect(tituloSeccion(menu, "primero", "es")).toBeNull();
+    expect(tituloSeccion(menu, "primero", "en")).toBeNull();
+    expect(parsearMenuNovedad(menu, "es", "n")?.titulos ?? {}).not.toHaveProperty("primero");
+  });
+
+  it("ignora claves desconocidas", () => {
+    const menu = parsearMenuNovedad(conTitulos({ otra: { es: "X" }, primero: { es: "Y" } }), "es", "n");
+    expect(menu?.titulos).toEqual({ primero: "Y" });
+  });
+
+  it("C4: los fixtures v1 y v2 existentes dan titulos vacío", () => {
+    // Sin nombres propios la clave no existe: el objeto es idéntico al de antes.
+    expect(parsearMenuNovedad(MENU, "es", "n")?.titulos ?? {}).toEqual({});
+    expect(parsearMenuNovedad(FIXTURE_MARIDAJE, "fr", "n")?.titulos ?? {}).toEqual({});
+    expect(parsearMenuNovedad(MENU, "es", "n")).not.toHaveProperty("titulos");
+  });
+
+  it("C4: una cata con titulos devuelve titulos vacío", () => {
+    const cata = { ...(FIXTURE_CATA as Record<string, unknown>), titulos: { bebidas: { es: "X" } } };
+    expect(parsearMenuNovedad(cata, "es", "n")?.titulos ?? {}).toEqual({});
+  });
+
+  it("C4: mismo resultado sin version, con 1 y con 2", () => {
+    const base = FIXTURE_TITULOS as Record<string, unknown>;
+    const { version: _v, tipo: _t, ...sinVersion } = base;
+    const r = (m: unknown) => parsearMenuNovedad(m, "en", "n")?.titulos;
+    expect(r(sinVersion)).toEqual(r({ ...sinVersion, version: 1 }));
+    expect(r(sinVersion)).toEqual(r({ ...sinVersion, version: 2 }));
+    expect(r(sinVersion)).toEqual({ primero: "To share", segundo: "Del mar y de la brasa", bebidas: "Vinos y aguas" });
+  });
+
+  it("C4: el menú como texto JSON también funciona", () => {
+    expect(tituloSeccion(JSON.stringify(FIXTURE_TITULOS), "primero", "fr")).toBe("À partager");
+    expect(parsearMenuNovedad(JSON.stringify(FIXTURE_TITULOS), "es", "n")?.titulos?.primero).toBe("Para picar");
   });
 });

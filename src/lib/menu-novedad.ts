@@ -23,6 +23,13 @@
  *    versión. Secciones de platos con nombre libre (Aperitivo, Prepostre…) que
  *    van antes del primero, entre primero y segundo, entre segundo y postre o
  *    después del postre. Sus platos llevan maridaje igual que los demás.
+ *  - Nombres propios de sección (01/11/2026, historia 40a3221d): campo opcional
+ *    en la RAÍZ de `menu` (no dentro de `secciones`), válido con version ausente,
+ *    1 o 2: `titulos: { primero?, segundo?, postre?, bebidas? }`, cada clave
+ *    `{ es: string, en?: string, fr?: string }`. Sustituye al título de siempre
+ *    de esa sección. Manda el castellano: sin `es` válido la entrada se ignora
+ *    y vale el título del i18n en los tres idiomas. Cada texto se recorta;
+ *    vacío o no-texto no cuenta; claves desconocidas se ignoran.
  *
  * Todo es tolerante: la web en producción puede leer filas de antes de la
  * migración (sin estas columnas) o un valor raro. Lo que no se entiende se
@@ -86,6 +93,9 @@ export interface SeccionExtraMenu {
   items: ItemMenu[];
 }
 
+export const CLAVES_TITULO_SECCION = ["primero", "segundo", "postre", "bebidas"] as const;
+export type ClaveTituloSeccion = (typeof CLAVES_TITULO_SECCION)[number];
+
 /** El menú de una novedad, listo para `CartaDelDia` en el idioma pedido. */
 export interface MenuNovedad extends Pick<MenuDelDia, "estructurado" | "secciones"> {
   tipo: "menu" | "cata";
@@ -97,6 +107,8 @@ export interface MenuNovedad extends Pick<MenuDelDia, "estructurado" | "seccione
   cata: LineaBebida[];
   /** Secciones con nombre libre, en su orden. Vacío en una cata. */
   extras: SeccionExtraMenu[];
+  /** Nombres propios de sección en el idioma pedido; solo las claves con valor. Ausente si no hay ninguno y en una cata. */
+  titulos?: Partial<Record<ClaveTituloSeccion, string>>;
 }
 
 const esObjeto = (valor: unknown): valor is Record<string, unknown> =>
@@ -209,6 +221,30 @@ function seccionesExtra(
 }
 
 /**
+ * Nombre propio de una sección (`menu.titulos[clave]`) en el idioma pedido, con
+ * el castellano de respaldo, o `null` si no hay ninguno válido (el componente
+ * usa entonces el título del i18n). Recibe `novedades.menu` crudo.
+ */
+export function tituloSeccion(menu: unknown, clave: ClaveTituloSeccion, idioma: Language): string | null {
+  const titulos = parsearPayloadMenu(menu).titulos;
+  if (!esObjeto(titulos)) return null;
+  const entrada = titulos[clave];
+  if (!esObjeto(entrada)) return null;
+  const es = textoRecortado(entrada.es);
+  if (!es) return null;
+  return (idioma === "es" ? null : textoRecortado(entrada[idioma])) ?? es;
+}
+
+function titulosSecciones(menu: unknown, idioma: Language): Partial<Record<ClaveTituloSeccion, string>> {
+  const titulos: Partial<Record<ClaveTituloSeccion, string>> = {};
+  for (const clave of CLAVES_TITULO_SECCION) {
+    const nombre = tituloSeccion(menu, clave, idioma);
+    if (nombre) titulos[clave] = nombre;
+  }
+  return titulos;
+}
+
+/**
  * `novedades.menu` → menú pintable, o `null` si no se puede leer o no hay nada
  * que pintar (en ese caso «Ver menú» no sale, L3):
  *
@@ -260,5 +296,16 @@ export function parsearMenuNovedad(
   const bebidas =
     payload.incluye_bebidas === true ? lineas(crudas.bebidas, idioma, `${idNovedad}-bebidas`) : [];
 
-  return { estructurado: true, tipo: "menu", secciones, bebidas, maridajes, cata: [], extras };
+  const titulos = titulosSecciones(valor, idioma);
+  return {
+    estructurado: true,
+    tipo: "menu",
+    secciones,
+    bebidas,
+    maridajes,
+    cata: [],
+    extras,
+    // Solo si hay alguno: así un menú sin nombres propios queda idéntico al de antes.
+    ...(Object.keys(titulos).length > 0 ? { titulos } : {}),
+  };
 }

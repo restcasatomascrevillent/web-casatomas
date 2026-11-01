@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
 import { openCookiePreferences, useMapsConsent } from "@/lib/cookie-consent";
 import { imagenOptimizada } from "@/lib/carta-ssg";
+import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -215,9 +216,13 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
           expanded: Boolean((item as VinoRecord).expanded),
         }));
 
+        // Mientras `orden` sea texto en `Vinos`, Supabase lo ordena como texto
+        // ("10" antes que "2"). Se reordena numérico dentro de cada categoría
+        // (nulos al final), con el mismo criterio que la semilla del build
+        // (`scripts/carta-ssg.mjs`). Con la columna ya entera no cambia nada.
         setVinosByCategory((prev) => {
           const existing = append ? prev[category] || [] : [];
-          return { ...prev, [category]: [...existing, ...normalized] };
+          return { ...prev, [category]: ordenarPorOrdenEnCategoria([...existing, ...normalized]) };
         });
         setHasMoreByCategory((prev) => ({ ...prev, [category]: (data?.length || 0) === pedidas }));
         return true;

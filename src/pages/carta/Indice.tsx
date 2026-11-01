@@ -22,6 +22,7 @@ import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
 import AvisoReservaConfirmada from "@/components/carta/AvisoReservaConfirmada";
+import BuscadorCarta from "@/components/carta/BuscadorCarta";
 import {
   CATEGORIAS_CARTA,
   etiquetaCategoriaIdioma,
@@ -182,6 +183,9 @@ const TarjetaSeccion = ({
  *
  * No repite productos: reparte enlaces hacia las páginas que sí los tienen. Su
  * JSON-LD es un `Menu` de secciones con recuento y URL, sin `MenuItem`.
+ *
+ * Arriba lleva el buscador de toda la carta (`BuscadorCarta`): platos, vinos y
+ * bebidas. Mientras se busca, los resultados sustituyen al índice.
  */
 const CartaIndice = () => {
   const { conFiltros, totalCategoria } = useFiltrosCarta();
@@ -216,6 +220,10 @@ const CartaIndice = () => {
         migas={[{ nombre: textos.miga }]}
         volverA={{ texto: textos.volverA, path: "/" }}
       >
+        {/* Sin búsqueda, el buscador pinta sus `children` tal cual: el índice
+            de siempre (y el mismo HTML prerenderizado, con el campo encima).
+            Al buscar, los resultados ocupan su lugar. */}
+        <BuscadorCarta titulos={{ platos: textos.platosTitulo, bodega: textos.bodegaTitulo }}>
         <section aria-labelledby="platos" className="animate-fade-up">
           <h2 id="platos" className="text-2xl md:text-3xl font-bold text-primary mb-2">
             {textos.platosTitulo}
@@ -262,6 +270,7 @@ const CartaIndice = () => {
             />
           </div>
         </section>
+        </BuscadorCarta>
       </CartaPageLayout>
 
       {/* Pop-up tras confirmar la reserva desde el correo (solo con `state`,

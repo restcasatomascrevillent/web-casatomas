@@ -15,6 +15,8 @@
  * uso previsto). Nunca viaja al navegador desde aquí — solo el resultado.
  */
 
+import { ordenarPorOrdenEnCategoria } from '../src/lib/orden-carta.mjs';
+
 /**
  * Columnas que se llevan al bundle.
  *
@@ -45,6 +47,10 @@ const CAMPOS = {
  * columna de texto separado por comas, no un array (lo desmenuza
  * `normalizeAlergenos` en `src/lib/alergenos.ts`). Sin ellas el HTML estático
  * enseñaba los alérgenos en castellano aunque el visitante navegara en inglés.
+ *
+ * `orden` viaja en las tres para que el navegador pueda reordenar con el mismo
+ * criterio cuando mezcla la semilla del build con lo que trae de Supabase
+ * (`CartaVinos` siembra con estas filas y añade páginas en vivo).
  */
 const CAMPOS_SALIDA = {
   Platos: [
@@ -52,8 +58,11 @@ const CAMPOS_SALIDA = {
     'nombre', 'nombre_en', 'nombre_fr',
     'categoria', 'categoria_en', 'categoria_fr',
     'descripcion', 'descripcion_en', 'descripcion_fr',
-    'precio_eur', 'unidad',
+    'precio_eur', 'unidad', 'orden',
     'imagen_url', 'imagen_posicion_y', 'expanded',
+    // Columna nueva, aún sin crear en todas las BD: con `select=*` simplemente
+    // no viene y aquí se descarta sin error.
+    'video_url',
     'ingredientes', 'sin_gluten_disponible',
     'etiquetas_dieteticas',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
@@ -65,7 +74,7 @@ const CAMPOS_SALIDA = {
     'nombre', 'nombre_en', 'nombre_fr',
     'categoria', 'categoria_en', 'categoria_fr',
     'descripcion', 'descripcion_en', 'descripcion_fr',
-    'precio_eur', 'unidad',
+    'precio_eur', 'unidad', 'orden',
     'imagen_url', 'imagen_posicion_y',
     'denominacion_origen', 'ubicacion_region', 'ubicacion_pais',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
@@ -77,22 +86,30 @@ const CAMPOS_SALIDA = {
     'nombre', 'nombre_en', 'nombre_fr',
     'categoria', 'categoria_en', 'categoria_fr',
     'descripcion', 'descripcion_en', 'descripcion_fr',
-    'precio_eur', 'tamano',
+    'precio_eur', 'tamano', 'orden',
     // Las bebidas SÍ tienen foto en la BD y no llegaba al HTML estático.
     'imagen_url',
     'traducciones',
   ],
 };
 
-const ORDEN = 'categoria.asc,orden.asc';
-
 /**
- * Vinos lleva además `id` como desempate: casi todos comparten categoría y
- * `orden`, y `/carta/vinos` siembra sus primeras 24 fichas con este orden y
- * luego las sustituye por la primera página que pide `CartaVinos` (que ordena
- * igual). Sin desempate, cada consulta podía devolver otras 24.
+ * Orden de la CONSULTA, el mismo en las tres tablas: categoría, `orden` e `id`.
+ *
+ * `id` es el desempate único. Hoy casi todas las filas comparten categoría y
+ * `orden` ("0" = sin ordenar desde el panel), y sin desempate Postgres puede
+ * devolver los empates en otro orden en cada consulta: las páginas de 24 en 24
+ * que piden `CartaVinos`/`CartaPlatos`/`CartaBebidas` repetirían u omitirían
+ * filas, y la semilla del build no coincidiría con la primera página en vivo.
+ * Es también el desempate que usa el panel, así que, hasta que el dueño
+ * reordene una categoría, la web la enseña en el mismo orden que él ve.
+ *
+ * Dentro de cada categoría, `descargarTabla` además reordena por `orden`
+ * NUMÉRICO (`ordenarPorOrdenEnCategoria`, `src/lib/orden-carta.mjs`): mientras
+ * `orden` sea texto en `Platos` y `Vinos`, PostgREST lo ordena como texto
+ * ("1", "10", "2"…). Cuando el panel la pase a entero, eso ya no cambia nada.
  */
-const ORDEN_POR_TABLA = { Vinos: `${ORDEN},id.asc` };
+const ORDEN = 'categoria.asc,orden.asc,id.asc';
 
 /**
  * El MISMO filtro en las tres tablas y en los dos caminos.
@@ -146,7 +163,7 @@ async function descargarTabla(baseUrl, key, tabla) {
     `${baseUrl}/rest/v1/${tabla}` +
     `?select=${encodeURIComponent(select)}` +
     `&${FILTROS[tabla]}` +
-    `&order=${ORDEN_POR_TABLA[tabla] ?? ORDEN}` +
+    `&order=${ORDEN}` +
     `&limit=2000`;
 
   let respuesta;
@@ -178,7 +195,8 @@ async function descargarTabla(baseUrl, key, tabla) {
     );
   }
   const permitidas = CAMPOS_SALIDA[tabla] ? new Set(CAMPOS_SALIDA[tabla]) : null;
-  return filas.map((fila) => compactar(fila, permitidas));
+  // Antes de compactar: `orden` decide la posición aunque llegue vacío.
+  return ordenarPorOrdenEnCategoria(filas).map((fila) => compactar(fila, permitidas));
 }
 
 /**

@@ -16,7 +16,7 @@
  *    navegador, no en los tests).
  *  - Un menú heredado (v1) no repite "no consta" bajo cada plato.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -182,5 +182,101 @@ describe("CartaDelDia — secciones extra (Bebidas del menú de una novedad)", (
   it("vacía no se pinta", () => {
     conExtra([]);
     expect(screen.queryByRole("heading", { name: "Bebidas" })).toBeNull();
+  });
+});
+
+describe("CartaDelDia — entrante y «postre o café» del menú del día (01/11/2026)", () => {
+  // LanguageProvider guarda el idioma en localStorage: sin limpiar, el francés
+  // de la última prueba se colaría en las de después.
+  afterEach(() => window.localStorage.removeItem("language"));
+  const conIdioma = (menu: MenuDelDia, idioma: "es" | "en" | "fr" = "es") =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider initialLanguage={idioma}>
+          <CartaDelDia menu={menu} titulo={<h3>Menú de hoy</h3>} />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+  const rotulos = () => screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+
+  const menuCompleto = (extra: Record<string, unknown> = {}, entrante: unknown[] = []): MenuDelDia => {
+    const menu = parsearMenuDiario({
+      id: "fila-2",
+      fecha: "2026-11-03",
+      menu: {
+        v: 2,
+        secciones: {
+          entrante,
+          primero: [{ ...itemLibre, id: "p", nombre: "Sopa" }],
+          segundo: [{ ...itemLibre, id: "s", nombre: "Merluza" }],
+          postre: [{ ...itemLibre, id: "d", nombre: "Flan" }],
+        },
+        ...extra,
+      },
+    });
+    if (!menu) throw new Error("el menú de prueba debería poder pintarse");
+    return menu;
+  };
+
+  it("un menú de antes se ve igual que siempre: Entrantes, Principales y Postre", () => {
+    conIdioma(menuV1());
+    expect(rotulos()).toEqual(["Entrantes", "Principales", "Postre"]);
+  });
+
+  it("con entrante: va el primero y los demás pasan a Primeros y Segundos", () => {
+    conIdioma(menuCompleto({}, [{ ...itemLibre, id: "e", nombre: "Gilda" }]));
+    expect(rotulos()).toEqual(["Entrantes", "Primeros", "Segundos", "Postre"]);
+    const entrante = screen.getByRole("heading", { name: "Entrantes" }).closest("section")!;
+    expect(within(entrante).getByText("Gilda")).toBeInTheDocument();
+  });
+
+  it("el título del postre según lo elegido en el panel", () => {
+    const { unmount } = conIdioma(menuCompleto({ postreCafe: "postre_o_cafe" }));
+    expect(rotulos().at(-1)).toBe("Postre o café");
+    unmount();
+    conIdioma(menuCompleto({ postreCafe: "postre_y_cafe" }));
+    expect(rotulos().at(-1)).toBe("Postre y café");
+  });
+
+  it("en inglés y en francés también", () => {
+    const conTodo = () => menuCompleto({ postreCafe: "postre_y_cafe" }, [{ ...itemLibre, id: "e", nombre: "Gilda" }]);
+    const { unmount } = conIdioma(conTodo(), "en");
+    expect(rotulos()).toEqual(["Starters", "First courses", "Main courses", "Dessert and coffee"]);
+    unmount();
+    conIdioma(conTodo(), "fr");
+    expect(rotulos()).toEqual(["Entrées", "Premiers plats", "Plats principaux", "Dessert et café"]);
+  });
+});
+
+describe("CartaDelDia: titulosSecciones", () => {
+  const conPostres = (): MenuDelDia => {
+    const m = menuV2();
+    return {
+      ...m,
+      secciones: {
+        ...m.secciones,
+        segundo: [itemLibre as ItemMenu],
+        postre: [itemLibre as ItemMenu, itemCarta as ItemMenu],
+      },
+    };
+  };
+  const pintarCon = (titulos?: Partial<Record<"primero" | "segundo" | "postre", string>>) =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <CartaDelDia menu={conPostres()} titulo={<h3>Menú</h3>} titulosSecciones={titulos} />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+  const h4s = () => screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+
+  it("sin titulosSecciones, las etiquetas de siempre", () => {
+    pintarCon();
+    expect(h4s()).toEqual(["Entrantes", "Principales", "Postres"]);
+  });
+
+  it("con un parcial solo cambian las indicadas", () => {
+    pintarCon({ segundo: "Del mar", postre: "Dulces" });
+    expect(h4s()).toEqual(["Entrantes", "Del mar", "Dulces"]);
   });
 });

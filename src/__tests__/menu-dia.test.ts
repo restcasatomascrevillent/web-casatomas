@@ -139,3 +139,43 @@ describe("parsearMenuDiario — filas que no se pueden publicar", () => {
     expect(parsearMenuDiario({ ...filaV1, menu: null })).toBeNull();
   });
 });
+
+describe("parsearMenuDiario — entrante y «postre o café» (01/11/2026)", () => {
+  const gilda = { id: "linea-e", origen: "libre", nombre: "Gilda" };
+
+  it("lee el entrante de `secciones.entrante`, aparte de las tres de siempre", () => {
+    const menu = parsearMenuDiario({
+      ...filaV2,
+      menu: { v: 2, secciones: { entrante: [gilda], primero: [{ id: "a", nombre: "Sopa" }], segundo: [], postre: [] } },
+    });
+    expect(menu?.entrante.map((item) => item.nombre)).toEqual(["Gilda"]);
+    expect(menu?.secciones.primero.map((item) => item.nombre)).toEqual(["Sopa"]);
+  });
+
+  it("un menú con solo entrante también se publica", () => {
+    const menu = parsearMenuDiario({
+      ...filaV2,
+      menu: { v: 2, secciones: { entrante: [gilda], primero: [], segundo: [], postre: [] } },
+    });
+    expect(menu?.estructurado).toBe(true);
+    expect(menu?.entrante).toHaveLength(1);
+  });
+
+  it("el espejo heredado también trae el entrante", () => {
+    const menu = parsearMenuDiario({ ...filaV1, menu: { entrante: "Gilda\nBoquerones", primero: "Sopa" } });
+    expect(menu?.entrante.map((item) => item.nombre)).toEqual(["Gilda", "Boquerones"]);
+  });
+
+  it("los menús de antes no tienen entrante y su postre sigue siendo «postre»", () => {
+    const menu = parsearMenuDiario(filaV1);
+    expect(menu?.entrante).toEqual([]);
+    expect(menu?.postreCafe).toBe("postre");
+  });
+
+  it("lee `postreCafe` y un valor desconocido cuenta como «postre»", () => {
+    const con = (postreCafe: unknown) => parsearMenuDiario({ ...filaV1, menu: { ...filaV1.menu, postreCafe } });
+    expect(con("postre_o_cafe")?.postreCafe).toBe("postre_o_cafe");
+    expect(con("postre_y_cafe")?.postreCafe).toBe("postre_y_cafe");
+    expect(con("cafe_solo")?.postreCafe).toBe("postre");
+  });
+});

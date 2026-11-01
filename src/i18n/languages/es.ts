@@ -222,6 +222,15 @@ export const translations = {
         mains: "Principales",
         dessert: "Postre",
         desserts: "Postres",
+        /**
+         * Con entrante en el menú del día, el primero y el segundo dejan de
+         * llamarse «Entrantes» y «Principales» (ver `CartaDelDia`).
+         */
+        firstCourses: "Primeros",
+        secondCourses: "Segundos",
+        /** Título del postre según `postreCafe` (lo elige el dueño en el panel). */
+        dessertOrCoffee: "Postre o café",
+        dessertAndCoffee: "Postre y café",
         tapasOfDay: "Tapas de la semana",
       },
       /**

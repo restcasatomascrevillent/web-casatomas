@@ -23,6 +23,8 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { esFotoCarta, imagenOptimizada } from "@/lib/carta-ssg";
+import { videoDePlato } from "@/lib/foto-plato";
+import FotoPlato from "./FotoPlato";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -45,6 +47,7 @@ import {
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
 import { CATEGORIAS_CARTA } from "@/lib/carta-rutas";
+import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
 
 /** Estado inicial de `platosByCategory`: categoria -> platos. */
 export type CartaPlatosSeed = Record<string, Plato[]>;
@@ -173,6 +176,10 @@ const CartaPlatos = ({
           .is("restaurante", true)
           .order("categoria", { ascending: true })
           .order("orden", { ascending: true })
+          // Desempate único (como Vinos y Bebidas): casi todos los platos
+          // comparten `orden` (0 = sin ordenar) y sin él cada página de 24
+          // podía venir en otro orden (platos repetidos u omitidos).
+          .order("id", { ascending: true })
           .range(offset, to);
 
         if (category !== "TODOS") {
@@ -189,9 +196,13 @@ const CartaPlatos = ({
           expanded: Boolean((item as any).expanded),
         }));
 
+        // Mientras `orden` sea texto en `Platos`, Supabase lo ordena como texto
+        // ("10" antes que "2"): aquí se reordena numérico dentro de cada
+        // categoría (nulos al final), igual que los datos del build
+        // (`scripts/carta-ssg.mjs`). Con la columna ya entera no cambia nada.
         setPlatosByCategory((prev) => {
           const existing = append ? prev[category] || [] : [];
-          return { ...prev, [category]: [...existing, ...mapped] };
+          return { ...prev, [category]: ordenarPorOrdenEnCategoria([...existing, ...mapped]) };
         });
         setHasMoreByCategory((prev) => ({
           ...prev,
@@ -661,13 +672,13 @@ const CartaPlatos = ({
                 className={`relative ${fotoCarta ? "aspect-[4/3]" : "h-48"} overflow-hidden`}
               >
                 {hasVisibleImage ? (
-                  <img
-                    src={imagenOptimizada(imageUrl, 768) || undefined}
+                  <FotoPlato
+                    src={imagenOptimizada(imageUrl, 768) || imageUrl || ""}
+                    imagenOriginal={imageUrl}
+                    video={videoDePlato(itemRecord)}
                     alt={item.displayNombre}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     style={imageStyle}
                     loading="lazy"
-                    decoding="async"
                     width={640}
                     height={fotoCarta ? 480 : 384}
                     onError={() =>
