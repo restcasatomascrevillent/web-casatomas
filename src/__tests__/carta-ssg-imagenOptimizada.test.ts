@@ -9,23 +9,44 @@
  * deje cualquier otra URL tal cual, para no arriesgar un 400.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { imagenOptimizada } from "@/lib/carta-ssg";
 
 const FOTO_SUPABASE =
-  "https://jeamoczmbfsnwkfjxcyo.supabase.co/storage/v1/object/public/platos/abc-123.webp?t=1774192689021";
+  "https://haqmmdfdzzatdnrrcgez.supabase.co/storage/v1/object/public/platos/abc-123.webp?t=1774192689021";
 
 describe("imagenOptimizada", () => {
+  // Build de producción: solo se envuelve el host de su propio proyecto.
+  beforeEach(() => vi.stubEnv("VITE_SUPABASE_URL", "https://haqmmdfdzzatdnrrcgez.supabase.co/"));
+  afterEach(() => vi.unstubAllEnvs());
+
   it("envuelve una foto de Supabase Storage en el optimizador de Vercel, con el ancho y la URL codificados", () => {
     const resultado = imagenOptimizada(FOTO_SUPABASE, 768);
     expect(resultado).toBe(`/_vercel/image?url=${encodeURIComponent(FOTO_SUPABASE)}&w=768&q=75`);
   });
 
-  it("envuelve también las fotos de los proyectos de la cuenta del restaurante (prod y demo)", () => {
-    for (const ref of ["haqmmdfdzzatdnrrcgez", "sfonaclosuafvlhutkon"]) {
+  it("en el build de producción deja tal cual las fotos de la demo y del proyecto viejo", () => {
+    for (const ref of ["sfonaclosuafvlhutkon", "jeamoczmbfsnwkfjxcyo"]) {
       const foto = `https://${ref}.supabase.co/storage/v1/object/public/vinos/x.webp`;
-      expect(imagenOptimizada(foto, 640)).toBe(`/_vercel/image?url=${encodeURIComponent(foto)}&w=640&q=75`);
+      expect(imagenOptimizada(foto, 640)).toBe(foto);
     }
+  });
+
+  it("en el build de la demo envuelve las fotos de la demo", () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://sfonaclosuafvlhutkon.supabase.co");
+    const foto = "https://sfonaclosuafvlhutkon.supabase.co/storage/v1/object/public/vinos/x.webp";
+    expect(imagenOptimizada(foto, 640)).toBe(`/_vercel/image?url=${encodeURIComponent(foto)}&w=640&q=75`);
+  });
+
+  it("con un VITE_SUPABASE_URL que no es de Supabase (backend falso del e2e) no envuelve nada", () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "http://127.0.0.1:4321");
+    const foto = "http://127.0.0.1:4321/storage/v1/object/public/vinos/x.webp";
+    expect(imagenOptimizada(foto, 640)).toBe(foto);
+  });
+
+  it("sin VITE_SUPABASE_URL no envuelve nada", () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "");
+    expect(imagenOptimizada(FOTO_SUPABASE, 640)).toBe(FOTO_SUPABASE);
   });
 
   it("deja tal cual una URL de otro host, en vez de arriesgar un 400 del optimizador", () => {
