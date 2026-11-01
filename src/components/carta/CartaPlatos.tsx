@@ -1,4 +1,8 @@
-import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
+import {
+  etiquetaUnidadPlato,
+  gramosDeUnidad,
+  normalizarUnidadPlato,
+} from "@/lib/unidades-platos";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
@@ -836,7 +840,7 @@ const CartaPlatos = ({
                           {item.unidad && (
                             <span className="text-sm font-normal text-muted-foreground">
                               {" "}
-                              / {normalizarUnidadPlato(item.unidad)}
+                              / {etiquetaUnidadPlato(item.unidad, language)}
                             </span>
                           )}
                         </span>
@@ -961,7 +965,7 @@ const CartaPlatos = ({
                           {item.unidad && (
                             <span className="text-sm font-normal text-muted-foreground">
                               {" "}
-                              / {normalizarUnidadPlato(item.unidad)}
+                              / {etiquetaUnidadPlato(item.unidad, language)}
                             </span>
                           )}
                         </span>

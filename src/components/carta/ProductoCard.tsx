@@ -1,4 +1,8 @@
-import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
+import {
+  etiquetaUnidadPlato,
+  gramosDeUnidad,
+  normalizarUnidadPlato,
+} from "@/lib/unidades-platos";
 import OpcionSinGluten from "./OpcionSinGluten";
 import { useState } from "react";
 import { Eye, EyeOff, Info, Plus, UtensilsCrossed } from "lucide-react";
@@ -27,6 +31,7 @@ import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { Translations } from "@/i18n/languages/es";
+import type { Language } from "@/i18n/types";
 
 interface ProductoCardProps {
   /** Ya resuelto al idioma activo (`resolveTranslatedItem`/`agruparPorCategoria`, NO el plato crudo). */
@@ -75,6 +80,7 @@ type PiePlatoProps = {
   nombre: string;
   onAnadir?: () => void;
   t: Translations["platos"];
+  language: Language;
 };
 
 /**
@@ -95,6 +101,7 @@ const PiePlato = ({
   nombre,
   onAnadir,
   t,
+  language,
 }: PiePlatoProps) => (
   <CardFooter className="flex items-center justify-between gap-3 border-t bg-muted/30 mt-auto flex-shrink-0 px-5 py-3">
     <span className="font-bold text-accent text-xl">
@@ -102,7 +109,7 @@ const PiePlato = ({
       {unidad && (
         <span className="text-sm font-normal text-muted-foreground">
           {" "}
-          / {normalizarUnidadPlato(unidad)}
+          / {etiquetaUnidadPlato(unidad, language)}
         </span>
       )}
     </span>
@@ -375,6 +382,7 @@ const ProductoCard = ({
               nombre={plato.displayNombre}
               onAnadir={onAnadir}
               t={t.platos}
+              language={language}
             />
           </Card>
         </div>
@@ -511,6 +519,7 @@ const ProductoCard = ({
               nombre={plato.displayNombre}
               onAnadir={onAnadir}
               t={t.platos}
+              language={language}
             />
           </Card>
         </div>
