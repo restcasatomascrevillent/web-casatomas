@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { Seo } from "@/components/Seo";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,7 +13,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
+    <main id={ID_CONTENIDO} tabIndex={-1} className="flex min-h-screen items-center justify-center bg-muted outline-none">
       <Seo title="Página no encontrada | Casa Tomás Restaurante" noindex />
 
       <div className="text-center">
@@ -22,7 +23,7 @@ const NotFound = () => {
           {t.notFound.back}
         </a>
       </div>
-    </div>
+    </main>
   );
 };
 

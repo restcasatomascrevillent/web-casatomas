@@ -4,6 +4,7 @@ import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
 import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * Datos del titular tal y como figuran en el aviso legal del WordPress antiguo
@@ -79,6 +80,7 @@ const AvisoLegal = () => (
       lang="es"
       noindex
     />
+    <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
     <div className="bg-dark-slate text-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <Link
@@ -123,11 +125,11 @@ const AvisoLegal = () => (
           <p><strong className="text-foreground">Domicilio social:</strong> {TITULAR.domicilio}</p>
           <p>
             <strong className="text-foreground">Teléfono:</strong>{" "}
-            <TelLink className="text-accent hover:underline" />
+            <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" />
           </p>
           <p>
             <strong className="text-foreground">Email:</strong>{" "}
-            <a href={`mailto:${NEGOCIO.email}`} className="text-accent hover:underline">
+            <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">
               {NEGOCIO.email}
             </a>
           </p>
@@ -145,7 +147,7 @@ const AvisoLegal = () => (
               <p>
                 <strong className="text-foreground">Uso de cookies.</strong> Las cookies que utiliza este sitio web, su
                 finalidad y cómo cambiar el consentimiento se explican en la{" "}
-                <Link to={`${POLITICA_PRIVACIDAD_PATH}#cookies`} className="text-accent hover:underline">
+                <Link to={`${POLITICA_PRIVACIDAD_PATH}#cookies`} className="text-accent underline underline-offset-2 hover:decoration-2">
                   política de privacidad y cookies
                 </Link>
                 .
@@ -155,21 +157,22 @@ const AvisoLegal = () => (
         </section>
       ))}
     </div>
+    </main>
 
     {/* Tag `<footer>` real: MobileReserveCTA lo busca con
         `document.querySelector("footer")` para ocultar su barra fija. */}
     <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
       <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
       <p className="mt-1">
-        <Link to="/" className="hover:text-accent transition-colors">
+        <Link to="/" className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">
           Inicio
         </Link>
         {" · "}
-        <Link to={POLITICA_PRIVACIDAD_PATH} className="hover:text-accent transition-colors">
+        <Link to={POLITICA_PRIVACIDAD_PATH} className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">
           Política de privacidad
         </Link>
         {" · "}
-        <Link to={CONDICIONES_PATH} className="hover:text-accent transition-colors">
+        <Link to={CONDICIONES_PATH} className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">
           Condiciones
         </Link>
       </p>

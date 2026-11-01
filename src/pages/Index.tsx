@@ -12,6 +12,7 @@ import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import { idleImport } from "@/lib/lazyIdle";
 import type { Language } from "@/i18n/types";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 const SEO_HOME: Record<Language, { title: string; description: string }> = {
   es: {
@@ -96,12 +97,14 @@ const Index = () => {
       <JsonLd data={schema} />
       <Header />
       <div className="min-h-screen bg-background">
+        <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
         <Hero />
         <SectionErrorBoundary id="carta"><CartaSection /></SectionErrorBoundary>
         <SectionBoundary id="novedades"><NovedadesSection /></SectionBoundary>
         <SectionBoundary id="espacios"><EspaciosSection /></SectionBoundary>
         <SectionBoundary id="nosotros"><NosotrosSection /></SectionBoundary>
         <SectionBoundary id="contacto"><ContactoSection /></SectionBoundary>
+        </main>
         <SectionErrorBoundary id="footer"><Footer /></SectionErrorBoundary>
       </div>
     </>

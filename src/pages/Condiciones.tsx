@@ -12,6 +12,7 @@ import {
   CONDICIONES_PATH,
   POLITICA_PRIVACIDAD_PATH,
 } from "@/lib/condiciones";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
 
@@ -65,13 +66,13 @@ const Condiciones = () => {
   /** Sustituye `{phone}` por el teléfono pulsable y `{privacy}` por el enlace a la política. */
   const conEnlaces = (texto: string) =>
     texto.split(/(\{phone\}|\{privacy\})/).map((parte, indice) => {
-      if (parte === "{phone}") return <TelLink key={indice} className="text-accent hover:underline" />;
+      if (parte === "{phone}") return <TelLink key={indice} className="text-accent underline underline-offset-2 hover:decoration-2" />;
       if (parte === "{privacy}") {
         return (
           <Link
             key={indice}
             to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-            className="text-accent hover:underline"
+            className="text-accent underline underline-offset-2 hover:decoration-2"
           >
             {c.privacyLink}
           </Link>
@@ -110,6 +111,7 @@ const Condiciones = () => {
         lang={language}
         noindex
       />
+      <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
       {/* Header */}
       <div className="bg-dark-slate text-background py-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -133,12 +135,12 @@ const Condiciones = () => {
             <p className="font-semibold mb-2">{c.tocLabel}</p>
             <ul className="space-y-1">
               <li>
-                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className="text-accent hover:underline">
+                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className="text-accent underline underline-offset-2 hover:decoration-2">
                   {c.bookingHeading}
                 </a>
               </li>
               <li>
-                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className="text-accent hover:underline">
+                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className="text-accent underline underline-offset-2 hover:decoration-2">
                   {c.newsletterHeading}
                 </a>
               </li>
@@ -155,10 +157,10 @@ const Condiciones = () => {
           <p className="text-sm text-muted-foreground">{c.contactIntro}</p>
           <div className="mt-3 text-sm space-y-1">
             <p>
-              <TelLink className="text-accent hover:underline" />
+              <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" />
             </p>
             <p>
-              <a href={`mailto:${NEGOCIO.email}`} className="text-accent hover:underline">
+              <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">
                 {NEGOCIO.email}
               </a>
             </p>
@@ -168,19 +170,20 @@ const Condiciones = () => {
           </div>
         </section>
       </div>
+      </main>
 
       {/* Tag `<footer>` real: MobileReserveCTA lo busca con
           `document.querySelector("footer")` para ocultar su barra fija. */}
       <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
         <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
         <p className="mt-1">
-          <Link to={inicio} className="hover:text-accent transition-colors">
+          <Link to={inicio} className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">
             {c.homeLink}
           </Link>
           {" · "}
           <Link
             to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-            className="hover:text-accent transition-colors"
+            className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors"
           >
             {c.privacyFooterLink}
           </Link>

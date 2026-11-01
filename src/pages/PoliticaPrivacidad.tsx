@@ -12,6 +12,7 @@ import {
 } from "@/lib/condiciones";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
 import { RESPONSABLE_TRATAMIENTO, TEXTOS_PRIVACIDAD } from "@/lib/politica-privacidad-textos";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * Política de privacidad (es/en/fr). Existe en las tres ramas
@@ -36,6 +37,7 @@ const PoliticaPrivacidad = () => {
                 lang={language}
                 noindex
             />
+            <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
             {/* Header */}
             <div className="bg-dark-slate text-background py-8 px-4">
                 <div className="max-w-4xl mx-auto">
@@ -60,7 +62,7 @@ const PoliticaPrivacidad = () => {
                     <div className="rounded-lg border border-border p-5 space-y-1 text-sm text-muted-foreground">
                         <p><strong className="text-foreground">{p.controller.companyLabel}</strong> {RESPONSABLE_TRATAMIENTO.razonSocial}</p>
                         <p><strong className="text-foreground">{p.controller.addressLabel}</strong> {RESPONSABLE_TRATAMIENTO.direccion}</p>
-                        <p><strong className="text-foreground">{p.controller.phoneLabel}</strong> <TelLink className="text-accent hover:underline" /></p>
+                        <p><strong className="text-foreground">{p.controller.phoneLabel}</strong> <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p><strong className="text-foreground">{p.controller.emailLabel}</strong> {NEGOCIO.email}</p>
                     </div>
                 </section>
@@ -94,7 +96,7 @@ const PoliticaPrivacidad = () => {
                                             {" "}
                                             <Link
                                                 to={`${construirRutaIdioma(CONDICIONES_PATH, language)}#${ANCLA_CONDICIONES_NEWSLETTER}`}
-                                                className="text-accent hover:underline"
+                                                className="text-accent underline underline-offset-2 hover:decoration-2"
                                             >
                                                 {p.purposes.conditionsLinkText}
                                             </Link>
@@ -165,7 +167,7 @@ const PoliticaPrivacidad = () => {
                                 {item.href && (
                                     <>
                                         {" "}
-                                        <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                                        <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:decoration-2">
                                             {p.providers.privacyLinkLabel}
                                         </a>
                                     </>
@@ -180,13 +182,14 @@ const PoliticaPrivacidad = () => {
                     <h2 className="text-xl font-bold mb-2 text-accent">{p.contact.heading}</h2>
                     <p className="text-sm text-muted-foreground">{p.contact.intro}</p>
                     <div className="mt-3 text-sm space-y-1">
-                        <p>📧 <a href={`mailto:${NEGOCIO.email}`} className="text-accent hover:underline">{NEGOCIO.email}</a></p>
-                        <p>📞 <TelLink className="text-accent hover:underline" /></p>
+                        <p>📧 <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">{NEGOCIO.email}</a></p>
+                        <p>📞 <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p>📍 {RESPONSABLE_TRATAMIENTO.direccion}</p>
                     </div>
                 </section>
 
             </div>
+            </main>
 
             {/* Footer simple. Tag `<footer>` real: MobileReserveCTA lo busca con
                 `document.querySelector("footer")` para ocultar su barra fija
@@ -194,11 +197,11 @@ const PoliticaPrivacidad = () => {
             <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
                 <p>{p.footer.rights.replace("{year}", String(new Date().getFullYear()))}</p>
                 <p className="mt-1">
-                    <Link to={inicio} className="hover:text-accent transition-colors">{p.footer.home}</Link>
+                    <Link to={inicio} className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">{p.footer.home}</Link>
                     {" · "}
-                    <Link to={rutaPolitica} className="hover:text-accent transition-colors">{p.footer.privacy}</Link>
+                    <Link to={rutaPolitica} className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">{p.footer.privacy}</Link>
                     {" · "}
-                    <Link to={construirRutaIdioma(CONDICIONES_PATH, language)} className="hover:text-accent transition-colors">{p.footer.conditions}</Link>
+                    <Link to={construirRutaIdioma(CONDICIONES_PATH, language)} className="underline underline-offset-2 hover:decoration-2 hover:text-accent transition-colors">{p.footer.conditions}</Link>
                 </p>
             </footer>
         </div>
