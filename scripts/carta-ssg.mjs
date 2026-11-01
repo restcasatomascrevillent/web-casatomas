@@ -60,6 +60,9 @@ const CAMPOS_SALIDA = {
     'descripcion', 'descripcion_en', 'descripcion_fr',
     'precio_eur', 'unidad', 'orden',
     'imagen_url', 'imagen_posicion_y', 'expanded',
+    // Columna nueva, aún sin crear en todas las BD: con `select=*` simplemente
+    // no viene y aquí se descarta sin error.
+    'video_url',
     'ingredientes', 'sin_gluten_disponible',
     'etiquetas_dieteticas',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',

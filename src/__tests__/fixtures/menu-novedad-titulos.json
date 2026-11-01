@@ -1,0 +1,13 @@
+{"version":2,"tipo":"menu","incluye_bebidas":true,
+ "titulos":{
+  "primero":{"es":"  Para picar  ","en":"To share","fr":"À partager"},
+  "segundo":{"es":"Del mar y de la brasa","en":"","fr":"   "},
+  "postre":{"es":"   ","en":"Sweets"},
+  "bebidas":{"es":"Vinos y aguas","en":7}},
+ "secciones":{
+  "primero":[{"id":"p1","origen":"libre","platoId":null,"nombre":"Croquetas caseras","descripcion":null,"imagenUrl":null,"imagenPosicionY":null,"alergenos":[],"alergenosInferidos":[],"alergenosNotas":null}],
+  "segundo":[{"id":"s1","origen":"libre","platoId":null,"nombre":"Arroz a banda","descripcion":null,"imagenUrl":null,"imagenPosicionY":null,"alergenos":[],"alergenosInferidos":[],"alergenosNotas":null}],
+  "postre":[
+   {"id":"d1","origen":"libre","platoId":null,"nombre":"Turrón de Jijona","descripcion":null,"imagenUrl":null,"imagenPosicionY":null,"alergenos":[],"alergenosInferidos":[],"alergenosNotas":null},
+   {"id":"d2","origen":"libre","platoId":null,"nombre":"Flan de la casa","descripcion":null,"imagenUrl":null,"imagenPosicionY":null,"alergenos":[],"alergenosInferidos":[],"alergenosNotas":null}],
+  "bebidas":[{"id":"b1","origen":"libre","platoId":null,"nombre":"Agua mineral","descripcion":null,"imagenUrl":null,"imagenPosicionY":null,"alergenos":[],"alergenosInferidos":[],"alergenosNotas":null}]}}

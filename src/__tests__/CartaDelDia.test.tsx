@@ -16,7 +16,7 @@
  *    navegador, no en los tests).
  *  - Un menú heredado (v1) no repite "no consta" bajo cada plato.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
@@ -186,6 +186,9 @@ describe("CartaDelDia — secciones extra (Bebidas del menú de una novedad)", (
 });
 
 describe("CartaDelDia — entrante y «postre o café» del menú del día (01/11/2026)", () => {
+  // LanguageProvider guarda el idioma en localStorage: sin limpiar, el francés
+  // de la última prueba se colaría en las de después.
+  afterEach(() => window.localStorage.removeItem("language"));
   const conIdioma = (menu: MenuDelDia, idioma: "es" | "en" | "fr" = "es") =>
     render(
       <MemoryRouter>
@@ -242,5 +245,38 @@ describe("CartaDelDia — entrante y «postre o café» del menú del día (01/1
     unmount();
     conIdioma(conTodo(), "fr");
     expect(rotulos()).toEqual(["Entrées", "Premiers plats", "Plats principaux", "Dessert et café"]);
+  });
+});
+
+describe("CartaDelDia: titulosSecciones", () => {
+  const conPostres = (): MenuDelDia => {
+    const m = menuV2();
+    return {
+      ...m,
+      secciones: {
+        ...m.secciones,
+        segundo: [itemLibre as ItemMenu],
+        postre: [itemLibre as ItemMenu, itemCarta as ItemMenu],
+      },
+    };
+  };
+  const pintarCon = (titulos?: Partial<Record<"primero" | "segundo" | "postre", string>>) =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <CartaDelDia menu={conPostres()} titulo={<h3>Menú</h3>} titulosSecciones={titulos} />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+  const h4s = () => screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+
+  it("sin titulosSecciones, las etiquetas de siempre", () => {
+    pintarCon();
+    expect(h4s()).toEqual(["Entrantes", "Principales", "Postres"]);
+  });
+
+  it("con un parcial solo cambian las indicadas", () => {
+    pintarCon({ segundo: "Del mar", postre: "Dulces" });
+    expect(h4s()).toEqual(["Entrantes", "Del mar", "Dulces"]);
   });
 });

@@ -446,3 +446,41 @@ section[id] { scroll-margin-top: 5rem; }
   .animate-float, .animate-pulse-organic { animation: none; }
   .scroll-reveal-scale { opacity: 1; transform: none; transition: none; }
 }
+
+/* Foto «sticker» de los platos (`-carta`, ver `FotoPlato.tsx`): acercamiento
+   lento con un giro muy leve, en bucle, y un brillo que cruza de vez en cuando.
+   Solo `transform`/`opacity` (compositor): no mueve el layout ni retrasa el LCP,
+   la imagen sigue siendo un <img> normal. */
+@keyframes foto-sticker-vaiven {
+  0%   { transform: scale(1)     rotate(-0.4deg); }
+  100% { transform: scale(1.045) rotate(0.5deg); }
+}
+@keyframes foto-sticker-brillo {
+  0%, 78% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  80%     { opacity: 1; }
+  96%     { transform: translateX(260%) skewX(-18deg); opacity: 1; }
+  100%    { transform: translateX(260%) skewX(-18deg); opacity: 0; }
+}
+.foto-sticker {
+  animation: foto-sticker-vaiven 3.5s ease-in-out infinite alternate;
+  transform-origin: 50% 55%;
+  will-change: transform;
+}
+.foto-sticker-brillo {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 45%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: foto-sticker-brillo 9s ease-in-out 1.5s infinite;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .foto-sticker { animation: none; will-change: auto; }
+  .foto-sticker-brillo { display: none; }
+}

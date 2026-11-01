@@ -284,6 +284,12 @@ interface CartaDelDiaProps {
    * maridaje). El menú del día no lo pasa y se pinta como siempre.
    */
   maridajes?: Record<string, DatosLineaBebida>;
+  /**
+   * Nombre propio de primero, segundo y postre (menú de una novedad), ya en el
+   * idioma activo. Sin valor se usa el título de siempre. El menú del día no
+   * lo pasa. El postre con nombre propio se usa tal cual, sin singular/plural.
+   */
+  titulosSecciones?: Partial<Record<SeccionMenu, string>>;
   className?: string;
 }
 
@@ -308,6 +314,7 @@ const CartaDelDia = ({
   seccionesExtra = [],
   seccionesIntercaladas = {},
   maridajes,
+  titulosSecciones,
   className,
 }: CartaDelDiaProps) => {
   const { t, language } = useTranslations();
@@ -319,16 +326,19 @@ const CartaDelDia = ({
   // pasan a «Primeros» y «Segundos» (01/11/2026, petición del dueño).
   const conEntrante = entrante.length > 0;
   const nombreSeccion: Record<SeccionMenu, string> = {
-    primero: conEntrante ? etiquetas.firstCourses : etiquetas.starters,
-    segundo: conEntrante ? etiquetas.secondCourses : etiquetas.mains,
+    // Los títulos propios (los del menú de «Ver menú» de las novedades) mandan;
+    // si no hay, los de siempre según haya entrante y la opción de postre/café.
+    primero: titulosSecciones?.primero ?? (conEntrante ? etiquetas.firstCourses : etiquetas.starters),
+    segundo: titulosSecciones?.segundo ?? (conEntrante ? etiquetas.secondCourses : etiquetas.mains),
     postre:
-      menu.postreCafe === "postre_o_cafe"
+      titulosSecciones?.postre ??
+      (menu.postreCafe === "postre_o_cafe"
         ? etiquetas.dessertOrCoffee
         : menu.postreCafe === "postre_y_cafe"
           ? etiquetas.dessertAndCoffee
           : menu.secciones.postre.length > 1
             ? etiquetas.desserts
-            : etiquetas.dessert,
+            : etiquetas.dessert),
   };
 
   const fija = (seccion: SeccionMenu): SeccionExtraCarta => ({

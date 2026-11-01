@@ -23,6 +23,8 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { esFotoCarta, imagenOptimizada } from "@/lib/carta-ssg";
+import { videoDePlato } from "@/lib/foto-plato";
+import FotoPlato from "./FotoPlato";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -670,13 +672,13 @@ const CartaPlatos = ({
                 className={`relative ${fotoCarta ? "aspect-[4/3]" : "h-48"} overflow-hidden`}
               >
                 {hasVisibleImage ? (
-                  <img
-                    src={imagenOptimizada(imageUrl, 768) || undefined}
+                  <FotoPlato
+                    src={imagenOptimizada(imageUrl, 768) || imageUrl || ""}
+                    imagenOriginal={imageUrl}
+                    video={videoDePlato(itemRecord)}
                     alt={item.displayNombre}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     style={imageStyle}
                     loading="lazy"
-                    decoding="async"
                     width={640}
                     height={fotoCarta ? 480 : 384}
                     onError={() =>

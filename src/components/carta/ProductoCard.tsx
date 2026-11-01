@@ -21,6 +21,8 @@ import {
 } from "@/lib/alergenos";
 import { anclaPlato } from "@/lib/carta-rutas";
 import { esFotoCarta, imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
+import { videoDePlato } from "@/lib/foto-plato";
+import FotoPlato from "./FotoPlato";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -287,13 +289,13 @@ const ProductoCard = ({
                     className="overflow-hidden bg-muted flex-shrink-0"
                   >
                     <div className={`relative ${proporcionFoto} overflow-hidden`}>
-                      <img
-                        src={imagenOptimizada(imagen, 768)}
+                      <FotoPlato
+                        src={imagenOptimizada(imagen, 768) ?? imagen}
+                        imagenOriginal={imagen}
+                        video={videoDePlato(plato)}
                         alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         style={encuadre}
                         loading={prioridad ? "eager" : "lazy"}
-                        decoding="async"
                         width={640}
                         height={fotoCarta ? 480 : 384}
                       />
