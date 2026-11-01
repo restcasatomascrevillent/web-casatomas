@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, startTransition, useContext, useEffect, useMemo, useState } from "react";
 import type { Locale } from "date-fns";
 import { languageOptions, type Language } from "@/i18n/types";
 import esLanguagePack, { type LanguagePack, type Translations } from "@/i18n/languages/es";
@@ -88,7 +88,11 @@ export const LanguageProvider = ({ children, initialLanguage }: LanguageProvider
   });
 
   useEffect(() => {
-    if (terminarHidratacion404() && initialLanguage) setLanguage(initialLanguage);
+    // `startTransition`: el contenido de la ruta va en un `Suspense` que puede
+    // no haber terminado de hidratar todavía; una actualización urgente lo
+    // obligaría a tirar su HTML (error #421 de React). Como transición, React
+    // termina antes de hidratarlo y luego cambia el idioma.
+    if (terminarHidratacion404() && initialLanguage) startTransition(() => setLanguage(initialLanguage));
     // Solo tras el primer render: después manda `setLanguage` (o `key={lang}`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

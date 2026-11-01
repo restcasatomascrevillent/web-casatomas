@@ -44,6 +44,10 @@ async function visitar(page: Page, ruta: string, rota: boolean) {
     if (rota && url.pathname === ruta && route.request().resourceType() === "document") {
       return route.fulfill({ status: 404, contentType: "text/html; charset=utf-8", body: HTML_404() });
     }
+    // Los chunks perezosos llegan con retraso, como en un móvil real: así el
+    // contenido de la ruta (dentro de un `Suspense`) termina de hidratar DESPUÉS
+    // que el resto, que es cuando un cambio de idioma a destiempo rompía (#421).
+    if (url.pathname.startsWith("/assets/") && url.pathname.endsWith(".js")) await new Promise((r) => setTimeout(r, 150));
     return route.continue();
   });
   const respuesta = await page.goto(ruta);
