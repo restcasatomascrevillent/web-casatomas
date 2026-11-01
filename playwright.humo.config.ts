@@ -40,7 +40,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 1,
-  timeout: 30_000,
+  // 60 s: en frío (primera visita a la demo) la hidratación sola puede llevar
+  // más de 15 s; ver `esperarHidratacion` en e2e/humo/web.humo.ts (TEC-09).
+  timeout: 60_000,
   expect: { timeout: 10_000 },
   outputDir: "test-results/humo",
   reporter: [
