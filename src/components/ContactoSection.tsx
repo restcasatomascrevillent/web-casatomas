@@ -320,7 +320,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   </div>
                   
                   <Button
-                    className="w-full bg-accent hover:bg-accent/90"
+                    className="w-full bg-accent hover:bg-accent-hover"
                     onClick={handleGiftPurchase}
                   >
                     {t.contacto.giftButton}

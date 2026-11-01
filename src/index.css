@@ -48,9 +48,13 @@ All colors MUST be HSL.
        3,3:1. La misma piedra a 42 % de luz da 5,3:1. */
     --secondary: 25 13% 42%;
     --secondary-foreground: 0 0% 100%;
+    /* Igual que --accent-hover: el hover oscurece, no aclara. */
+    --secondary-hover: 25 13% 33%;
 
     --muted: 25 13% 85%;
-    --muted-foreground: 15 4% 39%;
+    /* Contraste (2/2): a 39 % daba 4,3:1 sobre --muted, el centro del
+       degradado del Hero (axe no mide degradados). A 35 %, 5:1. */
+    --muted-foreground: 15 4% 35%;
 
     /* Contraste (AA): el dorado de antes (38 59% 45%, #b6852f) daba 3,3:1
        con el blanco, en los dos sentidos (texto dorado y botones dorados).
@@ -58,6 +62,10 @@ All colors MUST be HSL.
        4,6:1 sobre el crema más claro de las secciones. */
     --accent: 38 59% 35%;
     --accent-foreground: 0 0% 100%;
+    /* Hover de los botones dorados: el mismo dorado 8 puntos más oscuro.
+       Antes era `accent/90`, que ACLARA el fondo y baja el contraste del
+       texto blanco justo al pasar el ratón (contraste 2/2, criterio 3). */
+    --accent-hover: 38 59% 27%;
 
     /* Contraste (AA): el rojo de shadcn (#ef4444) daba 3,8:1 con el texto
        blanco de los avisos de error. */
@@ -149,12 +157,14 @@ All colors MUST be HSL.
 
     --secondary: 25 13% 35%;
     --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 25 13% 30%;
 
     --muted: 206 11% 25%;
     --muted-foreground: 25 13% 70%;
 
     --accent: 38 59% 45%;
     --accent-foreground: 0 0% 100%;
+    --accent-hover: 38 59% 38%;
 
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 100%;

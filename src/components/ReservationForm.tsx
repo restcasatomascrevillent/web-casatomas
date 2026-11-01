@@ -468,7 +468,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             <Button
                               variant="outline"
                               className={cn(
-                                "pl-3 text-left font-normal rounded-xl border-border/50 bg-white hover:bg-secondary",
+                                "pl-3 text-left font-normal rounded-xl border-border/50 bg-white hover:bg-muted hover:text-foreground",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
@@ -541,7 +541,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
               size="lg"
               onClick={checkAvailability}
               disabled={!form.watch("fecha") || !form.watch("numero_comensales") || superaMaxWeb || isCheckingAvailability}
-              className="w-full min-w-0 h-auto min-h-12 gap-2 whitespace-normal px-4 py-4 sm:px-8 bg-secondary text-foreground hover:bg-secondary/80 rounded-full text-base font-semibold shadow-sm transition-all"
+              className="w-full min-w-0 h-auto min-h-12 gap-2 whitespace-normal px-4 py-4 sm:px-8 bg-secondary text-secondary-foreground hover:bg-secondary-hover rounded-full text-base font-semibold shadow-sm transition-all"
             >
               {isCheckingAvailability ? (
                 <>

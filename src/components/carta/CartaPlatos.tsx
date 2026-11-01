@@ -853,7 +853,7 @@ const CartaPlatos = ({
                           <Button
                             size="sm"
                             onClick={() => addToPedido(item)}
-                            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                            className="bg-accent hover:bg-accent-hover text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                           >
                             <Plus className="w-4 h-4 mr-1" />
                             {t.platos.add}
@@ -984,7 +984,7 @@ const CartaPlatos = ({
                           <Button
                             size="sm"
                             onClick={() => addToPedido(item)}
-                            className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+                            className="bg-accent hover:bg-accent-hover text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
                           >
                             <Plus className="w-4 h-4 mr-1" />
                             {t.platos.add}

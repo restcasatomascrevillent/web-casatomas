@@ -151,7 +151,7 @@ const MobileReserveCTA = () => {
           </Button>
           <Button
             size="lg"
-            className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2 text-[13px] font-semibold text-accent-foreground shadow-lg hover:bg-accent/90 min-[360px]:text-sm sm:px-8"
+            className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2 text-[13px] font-semibold text-accent-foreground shadow-lg hover:bg-accent-hover min-[360px]:text-sm sm:px-8"
             onClick={() => navigate(construirRutaIdioma(RESERVAS_PATH, language))}
           >
             <Calendar className="w-5 h-5" />
