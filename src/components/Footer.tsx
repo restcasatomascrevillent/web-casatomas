@@ -8,6 +8,13 @@ import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 import { openCookiePreferences } from "@/lib/cookie-consent";
 import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH } from "@/lib/condiciones";
 
+// Zonas de toque de al menos 24×24 px (WCAG 2.2, 2.5.8): con `text-sm` la
+// línea mide 20 px, así que cada enlace crece hasta 24 px de alto sin cambiar
+// el aspecto (el `space-y` baja de 8 a 4 px); los iconos sociales, de 20 px,
+// llevan 2 px de relleno por lado.
+const ENLACE = "inline-flex min-h-6 items-center hover:text-gold-light transition-colors";
+const ICONO = "inline-flex min-h-6 min-w-6 items-center justify-center text-stone-light hover:text-gold-light transition-colors";
+
 const Footer = () => {
   const { t, language } = useTranslations();
   return (
@@ -33,16 +40,16 @@ const Footer = () => {
 
           <div>
             <h4 className="font-semibold mb-4">{t.footer.quickLinks}</h4>
-            <ul className="space-y-2 text-sm text-stone-light">
+            <ul className="space-y-1 text-sm text-stone-light">
               <li>
                 {/* Antes era `#carta`, que fuera de la portada no llevaba a
                     ninguna parte. Ahora la carta tiene página propia. */}
-                <Link to={construirRutaIdioma("/carta", language)} className="hover:text-gold-light transition-colors">
+                <Link to={construirRutaIdioma("/carta", language)} className={ENLACE}>
                   {t.footer.menuLink}
                 </Link>
               </li>
               <li>
-                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className="hover:text-gold-light transition-colors">
+                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className={ENLACE}>
                   {t.footer.reserveLink}
                 </Link>
               </li>
@@ -51,23 +58,23 @@ const Footer = () => {
                 { path: "/contacto", label: { es: "Contacto y horarios", en: "Contact and hours", fr: "Contact et horaires" } },
                 { path: "/regala", label: { es: "Cheques regalo", en: "Gift vouchers", fr: "Chèques cadeaux" } },
                 { path: "/touza", label: { es: "Touza Cocktail Bar", en: "Touza Cocktail Bar", fr: "Touza Cocktail Bar" } },
-              ].map(({ path, label }) => <li key={path}><Link to={construirRutaIdioma(path, language)} className="hover:text-gold-light transition-colors">{label[language]}</Link></li>)}
+              ].map(({ path, label }) => <li key={path}><Link to={construirRutaIdioma(path, language)} className={ENLACE}>{label[language]}</Link></li>)}
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">{t.footer.contactTitle}</h4>
-            <ul className="space-y-2 text-sm text-stone-light">
+            <ul className="space-y-1 text-sm text-stone-light">
               <li>
-                <TelLink className="hover:text-gold-light transition-colors" />
+                <TelLink className={ENLACE} />
               </li>
               <li>
-                <a href="mailto:casatomascrevillent@gmail.com" className="hover:text-gold-light transition-colors">
+                <a href="mailto:casatomascrevillent@gmail.com" className={ENLACE}>
                   casatomascrevillent@gmail.com
                 </a>
               </li>
-              <li>Carrer Santa Maria de la Cabeza, 2</li>
-              <li>03330 Crevillent, Alicante</li>
+              <li className="flex min-h-6 items-center">Carrer Santa Maria de la Cabeza, 2</li>
+              <li className="flex min-h-6 items-center">03330 Crevillent, Alicante</li>
             </ul>
             <div className="flex gap-4 mt-4">
               <a
@@ -75,7 +82,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="text-stone-light hover:text-gold-light transition-colors"
+                className={ICONO}
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -84,7 +91,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="text-stone-light hover:text-gold-light transition-colors"
+                className={ICONO}
               >
                 <Facebook className="w-5 h-5" />
               </a>
@@ -97,7 +104,9 @@ const Footer = () => {
             {t.footer.rights}
           </p>
 
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center">
+          {/* La regla de 24 px va en la fila y no solo en cada enlace, para que
+              cualquier enlace legal que se añada aquí la cumpla también. */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center [&>*]:inline-flex [&>*]:min-h-6 [&>*]:items-center">
             <Link
               to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
               className="text-xs text-stone-light hover:text-gold-light transition-colors"
