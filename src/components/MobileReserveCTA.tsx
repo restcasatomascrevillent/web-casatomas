@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Calendar, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { PHONE_HREF } from "@/components/TelLink";
+import { PHONE_DISPLAY, PHONE_HREF } from "@/components/TelLink";
 import { construirRutaIdioma, quitarPrefijoIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
 import { useEsPaginaNoEncontrada } from "@/lib/hidratacion-404";
@@ -151,7 +151,7 @@ const MobileReserveCTA = () => {
             size="lg"
             className="h-11 min-w-0 flex-1 rounded-full bg-primary px-2 text-[13px] font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 min-[360px]:text-sm sm:px-8"
           >
-            <a href={PHONE_HREF} aria-label={t.mobileCta.callAria}>
+            <a href={PHONE_HREF} aria-label={`${t.mobileCta.call} ${PHONE_DISPLAY}`}>
               <Phone className="w-5 h-5" />
               {t.mobileCta.call}
             </a>

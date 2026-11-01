@@ -68,9 +68,10 @@ const BotonesNovedad = ({ idNovedad, titulo, botones, menu, platoId }: BotonesNo
     if (tipo === "llamar") {
       return (
         <Button key={tipo} asChild {...props}>
-          <a href={PHONE_HREF} aria-label={`${t.mobileCta.callAria}, ${PHONE_NACIONAL}`}>
+          {/* La etiqueta empieza por el texto visible («Llamar 966…», WCAG 2.5.3). */}
+          <a href={PHONE_HREF} aria-label={`${textos.llamar} ${PHONE_NACIONAL}, ${t.mobileCta.callAria}`}>
             <Phone aria-hidden="true" />
-            <span>{textos.llamar}</span>
+            <span>{textos.llamar}</span>{" "}
             {/* Muchos ordenadores no pueden llamar: en escritorio se ve el número. */}
             <span className="hidden font-normal tabular-nums lg:inline">{PHONE_NACIONAL}</span>
           </a>
