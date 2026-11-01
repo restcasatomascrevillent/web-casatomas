@@ -16,7 +16,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
             <h3 className="text-xl font-bold mb-4">Casa Tomás</h3>
-            <p className="text-stone text-sm leading-relaxed mb-5">
+            <p className="text-stone-light text-sm leading-relaxed mb-5">
               {t.footer.description}
             </p>
             <Button
@@ -33,7 +33,7 @@ const Footer = () => {
 
           <div>
             <h4 className="font-semibold mb-4">{t.footer.quickLinks}</h4>
-            <ul className="space-y-2 text-sm text-stone">
+            <ul className="space-y-2 text-sm text-stone-light">
               <li>
                 {/* Antes era `#carta`, que fuera de la portada no llevaba a
                     ninguna parte. Ahora la carta tiene página propia. */}
@@ -57,7 +57,7 @@ const Footer = () => {
 
           <div>
             <h4 className="font-semibold mb-4">{t.footer.contactTitle}</h4>
-            <ul className="space-y-2 text-sm text-stone">
+            <ul className="space-y-2 text-sm text-stone-light">
               <li>
                 <TelLink className="hover:text-accent transition-colors" />
               </li>
@@ -75,7 +75,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="text-stone hover:text-accent transition-colors"
+                className="text-stone-light hover:text-accent transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -84,7 +84,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="text-stone hover:text-accent transition-colors"
+                className="text-stone-light hover:text-accent transition-colors"
               >
                 <Facebook className="w-5 h-5" />
               </a>
@@ -93,34 +93,34 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-mid-gray pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-stone">
+          <p className="text-sm text-stone-light">
             {t.footer.rights}
           </p>
 
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center">
             <Link
               to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-accent transition-colors"
             >
               {t.footer.terms}
             </Link>
             <Link
               to={construirRutaIdioma(CONDICIONES_PATH, language)}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-accent transition-colors"
             >
               {t.footer.bookingTerms}
             </Link>
             {/* Solo existe en español (ver `AVISO_LEGAL_PATH`): sin prefijo de idioma. */}
             <Link
               to={AVISO_LEGAL_PATH}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-accent transition-colors"
             >
               {t.footer.legalNotice}
             </Link>
             <button
               type="button"
               onClick={openCookiePreferences}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-accent transition-colors"
             >
               {t.footer.cookieSettings}
             </button>
