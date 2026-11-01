@@ -547,6 +547,7 @@ export const translations: Translations = {
       terms: "Politique de confidentialité",
       bookingTerms: "Conditions de réservation et newsletter",
       legalNotice: "Mentions légales (en espagnol)",
+      cookiePolicy: "Politique de cookies",
       cookieSettings: "Configurer les cookies",
     },
     cookie: {
@@ -730,8 +731,6 @@ export const translations: Translations = {
       privacyLink: "politique de confidentialité",
       contactTitle: "Contact",
       contactIntro: "Pour toute question sur votre réservation :",
-      homeLink: "Accueil",
-      privacyFooterLink: "Politique de confidentialité",
     },
     /* Etiquetas ARIA de los botones del calendario (react-day-picker las trae en inglés). */
     calendar: {

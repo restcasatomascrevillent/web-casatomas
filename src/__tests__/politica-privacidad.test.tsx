@@ -14,9 +14,14 @@ import { LanguageProvider } from "@/i18n/LanguageProvider";
 import PoliticaPrivacidad from "@/pages/PoliticaPrivacidad";
 import { TextoRico } from "@/components/TextoRico";
 import { LANGUAGES } from "@/i18n/routing";
+import { translations as es } from "@/i18n/languages/es";
+import { translations as en } from "@/i18n/languages/en";
+import { translations as fr } from "@/i18n/languages/fr";
 import type { Language } from "@/i18n/types";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
 import { RESPONSABLE_TRATAMIENTO, TEXTOS_PRIVACIDAD, type TextosPrivacidad } from "@/lib/politica-privacidad-textos";
+
+const TRADUCCIONES = { es, en, fr } as const;
 
 // `Seo` usa `Head` de vite-react-ssg (necesita su provider): se sustituye por un
 // espía que guarda los props que recibe, para comprobar noindex/canonical/lang.
@@ -44,7 +49,6 @@ function todosLosTextos(p: TextosPrivacidad): string[] {
     p.rights.heading, p.rights.intro, ...p.rights.items.flatMap((i) => [i.right, i.description]), p.rights.exercise, p.rights.complaint,
     p.providers.heading, p.providers.intro, p.providers.privacyLinkLabel, ...p.providers.items.flatMap((i) => [i.name, i.text]),
     p.contact.heading, p.contact.intro,
-    p.footer.rights, p.footer.home, p.footer.privacy, p.footer.conditions,
   ];
 }
 
@@ -191,10 +195,12 @@ describe("página de la política de privacidad", () => {
 
     it(`${lang}: sus enlaces internos van a las rutas de su idioma`, () => {
       renderPagina(lang, RUTAS[lang]);
+      // Pie común de la web (`Footer`), con los textos de su idioma.
       const pie = screen.getByRole("contentinfo");
-      expect(within(pie).getByRole("link", { name: p.footer.home })).toHaveAttribute("href", PREFIJO[lang] || "/");
-      expect(within(pie).getByRole("link", { name: p.footer.privacy })).toHaveAttribute("href", `${PREFIJO[lang]}/politica-privacidad`);
-      expect(within(pie).getByRole("link", { name: p.footer.conditions })).toHaveAttribute("href", `${PREFIJO[lang]}/condiciones`);
+      const f = TRADUCCIONES[lang].footer;
+      expect(within(pie).getByRole("link", { name: f.terms })).toHaveAttribute("href", `${PREFIJO[lang]}/politica-privacidad`);
+      expect(within(pie).getByRole("link", { name: f.cookiePolicy })).toHaveAttribute("href", `${PREFIJO[lang]}/politica-privacidad#cookies`);
+      expect(within(pie).getByRole("link", { name: f.bookingTerms })).toHaveAttribute("href", `${PREFIJO[lang]}/condiciones`);
       expect(screen.getByRole("link", { name: new RegExp(p.back) })).toHaveAttribute("href", PREFIJO[lang] || "/");
       expect(screen.getByRole("link", { name: p.purposes.conditionsLinkText })).toHaveAttribute(
         "href",
