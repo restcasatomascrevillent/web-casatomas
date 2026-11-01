@@ -9,7 +9,7 @@
  *  - Los filtros dietéticos de la página se aplican a los platos encontrados.
  *  - Al tocar un plato y volver atrás, la búsqueda sigue ahí.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
@@ -99,6 +99,13 @@ const buscar = async (texto: string) => {
 };
 
 describe("/carta — buscador", () => {
+  // La bodega llega por dos import() diferidos (useBodegaPerezosa). La primera
+  // vez vitest los transforma en frío y en el runner del CI eso se comía el
+  // segundo de espera de findByRole (run 60 de main). Se precargan aquí.
+  beforeAll(async () => {
+    await Promise.all([import("virtual:carta-ssg/vinos"), import("virtual:carta-ssg/bebidas")]);
+  });
+
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     window.sessionStorage.removeItem(CLAVE_BUSQUEDAS_GUARDADAS);
@@ -190,7 +197,7 @@ describe("/carta — buscador", () => {
     render(app());
     fireEvent.focus(campo());
     await buscar("rias baixas");
-    const bodega = await screen.findByRole("region", { name: "Bodega y bebidas" });
+    const bodega = await screen.findByRole("region", { name: "Bodega y bebidas" }, { timeout: 5000 });
     expect(within(bodega).getByRole("heading", { level: 3 })).toHaveTextContent("Vinos blancos 1");
     expect(within(bodega).getByText("Albariño Pazo de Señoráns")).toBeInTheDocument();
     expect(within(bodega).getByText("32€")).toBeInTheDocument();
