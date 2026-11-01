@@ -158,18 +158,24 @@ export function resolverImagen(
 }
 
 /**
- * Hosts de Supabase Storage que acepta el optimizador: los mismos, uno a uno,
- * que `vercel.json` → `images.remotePatterns`. Si se añade un proyecto aquí
- * hay que añadirlo allí, o el optimizador responde 400.
- *   - jeamoczmbfsnwkfjxcyo: proyecto original (cuenta oficiososia).
- *   - haqmmdfdzzatdnrrcgez: producción en la cuenta del restaurante.
- *   - sfonaclosuafvlhutkon: demo/staging en la cuenta del restaurante.
+ * Host de Supabase Storage que acepta el optimizador: el del proyecto con el
+ * que se construye la web (`VITE_SUPABASE_URL`), así cada build solo lleva su
+ * propio proyecto (producción no incluye la dirección de la demo). Tiene que
+ * estar también en `vercel.json` → `images.remotePatterns`, o el optimizador
+ * responde 400.
  */
-const SUPABASE_STORAGE_HOSTS = new Set([
-  "jeamoczmbfsnwkfjxcyo.supabase.co",
-  "haqmmdfdzzatdnrrcgez.supabase.co",
-  "sfonaclosuafvlhutkon.supabase.co",
-]);
+function hostSupabaseStorage(): string | null {
+  const url = import.meta.env?.VITE_SUPABASE_URL as string | undefined;
+  if (!url) return null;
+  try {
+    const host = new URL(url).hostname;
+    // Solo Supabase Storage está en `remotePatterns`; con otro host (p. ej. el
+    // backend falso del e2e) el optimizador no sirve la foto.
+    return host.endsWith(".supabase.co") ? host : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * El panel sube las fotos de platos/vinos tal cual salen del móvil, sin
@@ -193,7 +199,7 @@ export function imagenOptimizada(
   } catch {
     return url;
   }
-  if (!SUPABASE_STORAGE_HOSTS.has(host)) return url;
+  if (host !== hostSupabaseStorage()) return url;
   return `/_vercel/image?url=${encodeURIComponent(url)}&w=${ancho}&q=75`;
 }
 
