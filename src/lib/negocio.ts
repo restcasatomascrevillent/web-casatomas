@@ -39,6 +39,18 @@ export const GOOGLE_PLACE_ID =
 export const GOOGLE_MAPS_URL = `https://www.google.com/maps/place/?q=place_id:${GOOGLE_PLACE_ID}`;
 
 /** URL oficial para que un cliente deje reseña en la ficha real. */
+/**
+ * Web de Touza Cocktail Bar (el otro negocio del dueño). Es el proyecto
+ * `touza-casatomas` del equipo de Vercel del restaurante, el mismo que fija
+ * `VITE_TOUZA_URL` en producción (ver docs/migracion-cuenta-restaurante). La
+ * antigua `touza-restaurant-website.vercel.app` es de la cuenta vieja de
+ * `oficiososia` y no se enlaza. Con dominio propio basta con cambiar la
+ * variable de entorno.
+ */
+export const TOUZA_URL = (
+  (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-casatomas.vercel.app"
+).replace(/\/+$/, "");
+
 export const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
 
 export const NEGOCIO = {
