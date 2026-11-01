@@ -78,8 +78,11 @@ describe.each(IDIOMAS)("enlaces en $lang", ({ lang, prefijo, t }) => {
     expect(screen.queryByRole("button", { name: t.mobileCta.reserve, hidden: true })).toBeNull();
   });
 
-  it("el teléfono de la barra móvil tiene etiqueta accesible en su idioma", () => {
+  it("el teléfono de la barra móvil tiene etiqueta accesible en su idioma y empieza por el texto visible", () => {
     montar(lang, `${prefijo}/condiciones`, <MobileReserveCTA />);
-    expect(screen.getByRole("link", { name: t.mobileCta.callAria, hidden: true })).toHaveAttribute("href", expect.stringMatching(/^tel:/));
+    // WCAG 2.5.3: el nombre accesible incluye (y aquí empieza por) lo que se ve, «Llamar».
+    const enlace = screen.getByRole("link", { name: new RegExp(`^${t.mobileCta.call} \\+34`), hidden: true });
+    expect(enlace).toHaveAttribute("href", expect.stringMatching(/^tel:/));
+    expect(enlace).toHaveTextContent(t.mobileCta.call);
   });
 });

@@ -119,23 +119,25 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
       </div>
       {images.length > 0 ? (
         <>
+          {/* Sin aria-label en las fotos con texto visible: el nombre sale del
+              contenido (foto, «Salón 01 / 05» o «Ver todas las fotos») y así
+              incluye lo que se ve (WCAG 2.5.3). */}
           <div className="ct-mosaic">
             <div className="ct-main-viewport" ref={mainViewport} key={space} onScroll={onPhotoScroll} role="region" aria-label={labels.gallery + " " + name}>
               {images.map((photo, index) => (
                 <button type="button" className="ct-main-photo" key={photo}
                   tabIndex={index === current ? 0 : -1}
-                  aria-label={`${labels.expand}: ${name}, ${index + 1}`}
                   onClick={(event) => open(index, event.currentTarget)}>
                   <ImagenResponsive nombre={photo} alt={altFoto(index)} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 820px" loading="lazy" decoding="async" draggable={false} />
-                  <span className="ct-expand"><Expand size={18} aria-hidden="true" /></span>
-                  <span className="ct-photo-label">{name}<span>{String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
+                  <span className="ct-expand"><Expand size={18} aria-hidden="true" /><span className="ct-sr-only">{labels.expand}</span></span>
+                  <span className="ct-photo-label">{name}{" "}<span>{String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
                 </button>
               ))}
             </div>
             <div className="ct-side-photos">
               {[1, 2].map((offset) => {
                 const index = (current + offset) % images.length;
-                return <button type="button" key={offset} aria-label={`${labels.expand}: ${name}, ${index + 1}`} onClick={(event) => open(index, event.currentTarget)}>
+                return <button type="button" key={offset} aria-label={offset === 2 ? undefined : `${labels.expand}: ${name}, ${index + 1}`} onClick={(event) => open(index, event.currentTarget)}>
                   <ImagenResponsive nombre={images[index]} alt={altFoto(index)} sizes="(max-width: 1200px) 30vw, 360px" loading="lazy" decoding="async" />
                   {offset === 2 && <span className="ct-all-label">{labels.view} <ArrowUpRight size={16} aria-hidden="true" /></span>}
                 </button>;

@@ -304,10 +304,11 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
+                    <label htmlFor="importe-cheque-regalo" className="text-sm font-medium mb-2 block">
                       {t.contacto.giftAmountLabel}
                     </label>
                     <Input
+                      id="importe-cheque-regalo"
                       type="number"
                       inputMode="decimal"
                       placeholder={t.contacto.giftPlaceholder}
