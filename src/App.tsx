@@ -7,6 +7,7 @@ import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
 import FloatingActions from "./components/FloatingActions";
 import ScrollToTop from "./components/ScrollToTop";
+import SaltarAlContenido from "./components/SaltarAlContenido";
 import PageTransition from "./components/PageTransition";
 import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -61,6 +62,9 @@ const Layout = ({ lang }: { lang: Language }) => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider key={lang} initialLanguage={lang}>
       <TooltipProvider>
+        {/* Primer foco de todas las páginas (antes que el banner de cookies y
+            la cabecera de cada página). */}
+        <SaltarAlContenido />
         <ScrollToTop />
         <Suspense fallback={null}>
           <Toaster />

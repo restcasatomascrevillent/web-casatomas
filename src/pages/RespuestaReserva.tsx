@@ -17,6 +17,7 @@ import {
   type Tono,
 } from "@/lib/respuesta-reserva";
 import type { TipoFallo } from "@/lib/supabase-functions";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * /reserva/respuesta?token=... — página de los botones "Aceptar" / "Rechazar"
@@ -162,7 +163,7 @@ const RespuestaReserva = () => {
         </Link>
       </header>
 
-      <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+      <main id={ID_CONTENIDO} tabIndex={-1} className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12 outline-none">
         <section
           className="w-full max-w-md rounded-xl border border-border bg-card shadow-[var(--shadow-elegant)] p-6 sm:p-8"
           aria-busy={fase.tipo === "cargando" || (fase.tipo === "lista" && fase.enviando)}
@@ -207,7 +208,7 @@ const RespuestaReserva = () => {
 
           <p className="mt-8 pt-5 border-t border-border text-center text-sm text-muted-foreground">
             ¿Dudas? Llámanos al{" "}
-            <a href={telHref} className="inline-flex items-center gap-1 font-semibold text-accent hover:underline">
+            <a href={telHref} className="inline-flex items-center gap-1 font-semibold text-accent underline underline-offset-2 hover:decoration-2">
               <Phone className="h-3.5 w-3.5" aria-hidden="true" />
               {telTexto}
             </a>

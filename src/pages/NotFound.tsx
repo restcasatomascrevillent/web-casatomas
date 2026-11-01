@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { Seo } from "@/components/Seo";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * Página de error de las tres ramas (`/`, `/en`, `/fr`): la monta la ruta `*`
@@ -30,7 +31,7 @@ const NotFound = () => {
     <>
       <Seo title={t.notFound.metaTitle} description={t.notFound.metaDescription} lang={language} noindex />
       <Header />
-      <main className="flex min-h-[70vh] items-center justify-center bg-muted px-4 pt-32 pb-16">
+      <main id={ID_CONTENIDO} tabIndex={-1} className="flex min-h-[70vh] items-center justify-center bg-muted px-4 pt-32 pb-16 outline-none">
         <div className="text-center">
           <h1 className="mb-4 text-4xl font-bold">{t.notFound.title}</h1>
           <p className="mb-4 text-xl text-muted-foreground">{t.notFound.message}</p>
