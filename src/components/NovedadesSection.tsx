@@ -1,14 +1,13 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wine, UtensilsCrossed, Gift, Calendar, Star, Sparkles, Coffee, Cake, ImageOff } from "lucide-react";
+import { Wine, UtensilsCrossed, Gift, Calendar, Star, Sparkles, Coffee, Cake } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/LanguageProvider";
 
-import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 import MenuDiarioCards from "@/components/espacios/MenuDiarioCards";
 import BotonesNovedad from "@/components/novedades/BotonesNovedad";
 import { NEGOCIO } from "@/lib/negocio";
@@ -74,15 +73,6 @@ interface Novedad {
  */
 const NOVEDADES_SSG = novedadesSSG.novedades as unknown as Novedad[];
 
-const fallbackImages: NombreImagen[] = ["pulpo-plato", "carne-plato", "champan"];
-
-/**
- * Tarjeta de `max-w-7xl` a 3 columnas desde `md` (≈405 px en escritorio),
- * ancho completo menos el `px-4` de la sección en móvil. La foto va a `h-44`
- * con `object-cover`, así que manda el ancho.
- */
-const SIZES_NOVEDAD = "(min-width: 768px) 33vw, calc(100vw - 32px)";
-
 const getLocalizedContent = (novedad: Novedad, language: Language) => {
   const sufijo = language === "es" ? "" : `_${language}`;
   // Los nombres dinamicos siguen restringidos a las claves declaradas de Novedad.
@@ -144,7 +134,10 @@ const NovedadesSection = () => {
   const renderCard = (novedad: Novedad, idx: number) => {
     const Icon = iconMap[novedad.icono || "star"];
     const localized = getLocalizedContent(novedad, language);
-    const image = novedad.imagen_url || fallbackImages[idx % fallbackImages.length];
+    // Sin foto propia, la tarjeta va sin foto (QA-MDN-05, 01/11/2026). Antes
+    // se ponía una de relleno según la posición (pulpo, carne o champán), que
+    // no tenía nada que ver con la novedad: un filete en una cata de vinos.
+    const image = novedad.imagen_url || null;
     // `0` (encuadre arriba del todo) es un valor válido del panel: con una
     // comprobación de verdad/falsedad se descartaba y la foto salía centrada.
     // Mismo criterio que `ProductoCard`: solo se omite si no hay número.
@@ -178,17 +171,9 @@ const NovedadesSection = () => {
         className="h-full"
       >
         <Card className="flex h-full flex-col overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
-          {image ? (
+          {image && (
             <div className="relative h-44 overflow-hidden">
-              {novedad.imagen_url ? (
-                <img src={novedad.imagen_url} {...imgProps} />
-              ) : (
-                <ImagenResponsive nombre={image as NombreImagen} sizes={SIZES_NOVEDAD} {...imgProps} />
-              )}
-            </div>
-          ) : (
-            <div className="h-44 flex items-center justify-center bg-muted/40 text-muted-foreground">
-              <ImageOff className="w-6 h-6" />
+              <img src={image} {...imgProps} />
             </div>
           )}
           <CardHeader>
