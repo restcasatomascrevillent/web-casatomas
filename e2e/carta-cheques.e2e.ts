@@ -55,8 +55,10 @@ function consultarVinos(url: URL): Vino[] {
   const empate = desde === 0 ? 1 : -1;
   filas.sort((a, b) => {
     for (const { campo, asc } of orden) {
-      if (a[campo] < b[campo]) return asc ? -1 : 1;
-      if (a[campo] > b[campo]) return asc ? 1 : -1;
+      // Algunas columnas admiten null; se compara como hasta ahora (null vale 0 al comparar en JS).
+      const va = a[campo] as string | number, vb = b[campo] as string | number;
+      if (va < vb) return asc ? -1 : 1;
+      if (va > vb) return asc ? 1 : -1;
     }
     return a.id < b.id ? -empate : empate;
   });
