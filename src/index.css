@@ -79,6 +79,9 @@ All colors MUST be HSL.
        ahí; esta, de la misma gama y más clara, 5,2:1. Para fondos claros
        sigue valiendo `--stone`. */
     --stone-light: 25 13% 72%;
+    /* Dorado para texto sobre `--dark-slate` (hover del pie): el dorado
+       normal da 2:1 ahí; este, de la misma gama y más claro, 5:1. */
+    --gold-light: 38 59% 62%;
 
     /*
      * Ticket (resguardo de solicitud de reserva).

@@ -37,12 +37,12 @@ const Footer = () => {
               <li>
                 {/* Antes era `#carta`, que fuera de la portada no llevaba a
                     ninguna parte. Ahora la carta tiene página propia. */}
-                <Link to={construirRutaIdioma("/carta", language)} className="hover:text-accent transition-colors">
+                <Link to={construirRutaIdioma("/carta", language)} className="hover:text-gold-light transition-colors">
                   {t.footer.menuLink}
                 </Link>
               </li>
               <li>
-                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className="hover:text-accent transition-colors">
+                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className="hover:text-gold-light transition-colors">
                   {t.footer.reserveLink}
                 </Link>
               </li>
@@ -51,7 +51,7 @@ const Footer = () => {
                 { path: "/contacto", label: { es: "Contacto y horarios", en: "Contact and hours", fr: "Contact et horaires" } },
                 { path: "/regala", label: { es: "Cheques regalo", en: "Gift vouchers", fr: "Chèques cadeaux" } },
                 { path: "/touza", label: { es: "Touza Cocktail Bar", en: "Touza Cocktail Bar", fr: "Touza Cocktail Bar" } },
-              ].map(({ path, label }) => <li key={path}><Link to={construirRutaIdioma(path, language)} className="hover:text-accent transition-colors">{label[language]}</Link></li>)}
+              ].map(({ path, label }) => <li key={path}><Link to={construirRutaIdioma(path, language)} className="hover:text-gold-light transition-colors">{label[language]}</Link></li>)}
             </ul>
           </div>
 
@@ -59,10 +59,10 @@ const Footer = () => {
             <h4 className="font-semibold mb-4">{t.footer.contactTitle}</h4>
             <ul className="space-y-2 text-sm text-stone-light">
               <li>
-                <TelLink className="hover:text-accent transition-colors" />
+                <TelLink className="hover:text-gold-light transition-colors" />
               </li>
               <li>
-                <a href="mailto:casatomascrevillent@gmail.com" className="hover:text-accent transition-colors">
+                <a href="mailto:casatomascrevillent@gmail.com" className="hover:text-gold-light transition-colors">
                   casatomascrevillent@gmail.com
                 </a>
               </li>
@@ -75,7 +75,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="text-stone-light hover:text-accent transition-colors"
+                className="text-stone-light hover:text-gold-light transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -84,7 +84,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="text-stone-light hover:text-accent transition-colors"
+                className="text-stone-light hover:text-gold-light transition-colors"
               >
                 <Facebook className="w-5 h-5" />
               </a>
@@ -100,27 +100,27 @@ const Footer = () => {
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center">
             <Link
               to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-              className="text-xs text-stone-light hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.terms}
             </Link>
             <Link
               to={construirRutaIdioma(CONDICIONES_PATH, language)}
-              className="text-xs text-stone-light hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.bookingTerms}
             </Link>
             {/* Solo existe en español (ver `AVISO_LEGAL_PATH`): sin prefijo de idioma. */}
             <Link
               to={AVISO_LEGAL_PATH}
-              className="text-xs text-stone-light hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.legalNotice}
             </Link>
             <button
               type="button"
               onClick={openCookiePreferences}
-              className="text-xs text-stone-light hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.cookieSettings}
             </button>

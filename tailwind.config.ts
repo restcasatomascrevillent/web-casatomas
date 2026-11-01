@@ -53,6 +53,7 @@ export default {
         "dark-slate": "hsl(var(--dark-slate))",
         "mid-gray": "hsl(var(--mid-gray))",
         gold: "hsl(var(--gold))",
+        "gold-light": "hsl(var(--gold-light))",
         ticket: {
           paper: "hsl(var(--ticket-paper))",
           tray: "hsl(var(--ticket-tray))",

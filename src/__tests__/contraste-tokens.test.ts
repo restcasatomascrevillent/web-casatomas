@@ -42,6 +42,7 @@ describe("contraste de los tokens (AA, 4,5:1)", () => {
     ["destructive-foreground", "destructive", "avisos de error"],
     ["stone-light", "dark-slate", "texto del pie"],
     ["background", "dark-slate", "títulos del pie"],
+    ["gold-light", "dark-slate", "enlaces del pie al pasar el ratón"],
     ["foreground", "background", "texto normal"],
     ["muted-foreground", "background", "texto secundario"],
   ])("%s sobre %s (%s)", (texto, fondo) => {
