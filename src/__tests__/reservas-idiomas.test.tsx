@@ -434,6 +434,22 @@ describe.each(IDIOMAS)("página de reservas en $lang", ({ lang, prefijo, t }) =>
     await user.click(screen.getByRole("button", { name: t.reservas.backToSite }));
     await waitFor(() => expect(screen.getByTestId("ruta")).toHaveTextContent(new RegExp(`^${prefijo || "/"}$`)));
   });
+
+  it("lleva el pie común de la web, con la política de cookies de su idioma", () => {
+    render(
+      <MemoryRouter initialEntries={[`${prefijo}/reservas`]}>
+        <LanguageProvider initialLanguage={lang}>
+          <Reservas />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+    const pie = screen.getByRole("contentinfo");
+    expect(within(pie).getByRole("link", { name: t.footer.cookiePolicy })).toHaveAttribute(
+      "href",
+      `${prefijo}/politica-privacidad#cookies`,
+    );
+    expect(within(pie).getByRole("link", { name: t.footer.legalNotice })).toHaveAttribute("href", "/aviso-legal");
+  });
 });
 
 describe("textos de confirmación — coherentes con el flujo real", () => {

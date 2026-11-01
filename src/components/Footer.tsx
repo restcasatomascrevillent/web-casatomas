@@ -110,6 +110,14 @@ const Footer = () => {
             >
               {t.footer.bookingTerms}
             </Link>
+            {/* Lleva al apartado de cookies de la política de privacidad; el
+                salto al ancla lo hace la propia página (ver `PoliticaPrivacidad`). */}
+            <Link
+              to={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`}
+              className="text-xs text-stone hover:text-accent transition-colors"
+            >
+              {t.footer.cookiePolicy}
+            </Link>
             {/* Solo existe en español (ver `AVISO_LEGAL_PATH`): sin prefijo de idioma. */}
             <Link
               to={AVISO_LEGAL_PATH}

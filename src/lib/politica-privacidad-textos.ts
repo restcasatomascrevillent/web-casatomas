@@ -69,13 +69,6 @@ export interface TextosPrivacidad {
     heading: string;
     intro: string;
   };
-  footer: {
-    /** `{year}` se sustituye por el año en curso. */
-    rights: string;
-    home: string;
-    privacy: string;
-    conditions: string;
-  };
 }
 
 /** Datos del responsable: iguales en los tres idiomas (no se traducen). */
@@ -263,12 +256,6 @@ const es: TextosPrivacidad = {
     heading: "8. Contacto",
     intro: "Para cualquier consulta sobre privacidad o protección de datos, puede dirigirse a:",
   },
-  footer: {
-    rights: "© {year} Restaurante Casa Tomás · Todos los derechos reservados",
-    home: "Inicio",
-    privacy: "Política de Privacidad",
-    conditions: "Condiciones de reserva y newsletter",
-  },
 };
 
 const en: TextosPrivacidad = {
@@ -450,12 +437,6 @@ const en: TextosPrivacidad = {
     heading: "8. Contact",
     intro: "For any query about privacy or data protection, you can contact:",
   },
-  footer: {
-    rights: "© {year} Restaurante Casa Tomás · All rights reserved",
-    home: "Home",
-    privacy: "Privacy Policy",
-    conditions: "Booking and newsletter conditions",
-  },
 };
 
 const fr: TextosPrivacidad = {
@@ -636,12 +617,6 @@ const fr: TextosPrivacidad = {
   contact: {
     heading: "8. Contact",
     intro: "Pour toute question relative à la confidentialité ou à la protection des données, vous pouvez vous adresser à :",
-  },
-  footer: {
-    rights: "© {year} Restaurante Casa Tomás · Tous droits réservés",
-    home: "Accueil",
-    privacy: "Politique de confidentialité",
-    conditions: "Conditions de réservation et newsletter",
   },
 };
 
