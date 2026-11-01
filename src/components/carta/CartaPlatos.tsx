@@ -467,6 +467,8 @@ const CartaPlatos = ({
     category;
 
   const isCardExpanded = (item: any) => {
+    // Sin foto no hay nada que desplegar (igual que ProductoCard y CartaVinos).
+    if (!item.imagen_url?.trim?.()) return false;
     const forcedExpanded = expandedCards[item.id];
     if (forcedExpanded !== undefined) return forcedExpanded;
     return Boolean(item.expanded);
