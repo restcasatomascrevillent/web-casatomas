@@ -5,6 +5,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { PHONE_HREF } from "@/components/TelLink";
 import { construirRutaIdioma, quitarPrefijoIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
+import { useEsPaginaNoEncontrada } from "@/lib/hidratacion-404";
 import { useEffect, useState } from "react";
 
 // Barra fija de conversión en móvil: llamar o reservar sin hacer scroll.
@@ -90,8 +91,14 @@ const MobileReserveCTA = () => {
     };
   }, [location.pathname]);
 
+  // La página no encontrada se reconoce por la ruta casada, no por la
+  // dirección: el `404.html` se sirve en cualquier URL rota, y si la barra solo
+  // se ocultase en `/404` el primer render del cliente no casaría con el HTML.
+  const esPaginaNoEncontrada = useEsPaginaNoEncontrada();
   const hiddenOnPath =
-    HIDE_ON_PATHS.includes(quitarPrefijoIdioma(location.pathname)) || RUTA_CARTA.test(location.pathname);
+    esPaginaNoEncontrada ||
+    HIDE_ON_PATHS.includes(quitarPrefijoIdioma(location.pathname)) ||
+    RUTA_CARTA.test(location.pathname);
   const visible = !hiddenOnPath && pastHero && !nearFooter;
 
   // Publica la altura que ocupa la barra (0 si está oculta) en

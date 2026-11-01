@@ -17,6 +17,8 @@ import {
 } from "@/lib/carta-rutas";
 import { agruparPorCategoria, platosParaJsonLd } from "@/lib/carta-ssg";
 import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
+import { useMontadoSobreEl404 } from "@/lib/hidratacion-404";
+import NotFound from "@/pages/NotFound";
 import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { SEO_CATEGORIA } from "@/lib/carta-seo";
@@ -114,8 +116,11 @@ const TEXTOS: Record<
  *
  * Las rutas concretas las enumera `getStaticPaths` en `App.tsx` a partir de
  * `CATEGORIAS_CARTA`, que sale de los datos del build. Un slug que no existe no
- * genera `.html`, así que Vercel responde con el `404.html` real; este
- * componente solo ve ese caso si alguien navega a él dentro de la SPA.
+ * genera `.html`, así que Vercel responde con el `404.html` real. Al cargar
+ * esa dirección, el cliente casa igualmente con esta ruta: entonces se pinta
+ * `NotFound`, lo mismo que trae el HTML (si no, la hidratación no coincide).
+ * El aviso propio con las demás categorías queda para cuando se llega aquí
+ * navegando dentro de la web.
  */
 const CartaCategoria = () => {
   const { filtros, conFiltros, totalCategoria } = useFiltrosCarta();
@@ -131,7 +136,9 @@ const CartaCategoria = () => {
   // en el navegador (ver el hook). Antes del `return` temprano: es un hook.
   const mostrarFotos = useMostrarFotosPlatos();
   const platoResaltado = usePlatoResaltado();
+  const montadoSobreEl404 = useMontadoSobreEl404();
 
+  if (!categoria && montadoSobreEl404) return <NotFound />;
   if (!categoria) {
     return (
       <>

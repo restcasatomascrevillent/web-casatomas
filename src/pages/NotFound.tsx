@@ -12,7 +12,9 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
+    // `data-pagina-no-encontrada` le dice al cliente que está hidratando el `404.html` (ver
+    // `src/lib/hidratacion-404.ts`); no cambia nada de lo que se ve.
+    <div data-pagina-no-encontrada="" className="flex min-h-screen items-center justify-center bg-muted">
       <Seo title="Página no encontrada | Casa Tomás Restaurante" noindex />
 
       <div className="text-center">
