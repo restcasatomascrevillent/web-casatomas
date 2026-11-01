@@ -49,6 +49,7 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         stone: "hsl(var(--stone))",
+        "stone-claro": "hsl(var(--stone-claro))",
         "dark-slate": "hsl(var(--dark-slate))",
         "mid-gray": "hsl(var(--mid-gray))",
         gold: "hsl(var(--gold))",
