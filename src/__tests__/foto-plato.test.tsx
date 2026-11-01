@@ -6,6 +6,7 @@
  *    en el prerenderizado queda el `<img>` (SEO/LCP).
  *  - `video_url` ausente (columna sin crear), null o basura → sin vídeo.
  */
+import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render } from "@testing-library/react";
@@ -64,6 +65,28 @@ describe("videoDePlato (columna tolerante)", () => {
 
   it("URL https → la URL", () => {
     expect(videoDePlato({ video_url: ` ${VIDEO} ` })).toBe(VIDEO);
+  });
+
+  it("URL con query string del panel (?v=…&fondo=…) → la URL tal cual", () => {
+    const conQuery = `${VIDEO}?v=1730000000&fondo=cartulina`;
+    expect(videoDePlato({ video_url: conQuery })).toBe(conQuery);
+  });
+});
+
+describe("CSP de vercel.json", () => {
+  it("permite los <video> de Supabase Storage (media-src)", () => {
+    // Sin `media-src` la CSP cae en `default-src 'self'` y el navegador
+    // bloquea el vídeo de https://<proyecto>.supabase.co/storage/...
+    const config = JSON.parse(readFileSync("vercel.json", "utf8"));
+    const csps: string[] = config.headers.flatMap((r: { headers: { key: string; value: string }[] }) =>
+      r.headers.filter((h) => h.key === "Content-Security-Policy").map((h) => h.value),
+    );
+    expect(csps.length).toBeGreaterThan(0);
+    for (const csp of csps) {
+      const media = csp.split(";").map((d) => d.trim()).find((d) => d.startsWith("media-src "));
+      expect(media, csp).toBeDefined();
+      expect(media!.split(/\s+/)).toEqual(expect.arrayContaining(["'self'", "blob:", "https://*.supabase.co"]));
+    }
   });
 });
 
