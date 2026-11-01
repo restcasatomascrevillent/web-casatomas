@@ -45,6 +45,9 @@ describe("contraste de los tokens (AA, 4,5:1)", () => {
     ["gold-light", "dark-slate", "enlaces del pie al pasar el ratón"],
     ["foreground", "background", "texto normal"],
     ["muted-foreground", "background", "texto secundario"],
+    ["muted-foreground", "muted", "antetítulo del Hero en el centro del degradado"],
+    ["accent-foreground", "accent-hover", "botones dorados al pasar el ratón"],
+    ["secondary-foreground", "secondary-hover", "botones piedra al pasar el ratón"],
   ])("%s sobre %s (%s)", (texto, fondo) => {
     expect(contraste(texto, fondo)).toBeGreaterThanOrEqual(4.5);
   });

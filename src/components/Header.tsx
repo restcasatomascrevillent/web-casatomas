@@ -236,7 +236,7 @@ const Header = () => {
             </DropdownMenu>
             <Button
               size="lg"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
+              className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full"
               onClick={() => {
                 navigate(reservasPath);
               }}
@@ -302,7 +302,7 @@ const Header = () => {
               >
                 <Button
                   size="lg"
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full"
+                  className="w-full bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full"
                   onClick={() => {
                     navigate(reservasPath);
                     setIsMobileMenuOpen(false);

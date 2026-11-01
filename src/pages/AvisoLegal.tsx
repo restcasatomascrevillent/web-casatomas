@@ -83,13 +83,13 @@ const AvisoLegal = () => (
       <div className="max-w-4xl mx-auto">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+          className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al inicio
         </Link>
         <h1 className="text-3xl md:text-4xl font-bold">Aviso legal</h1>
-        <p className="text-stone mt-2 text-sm">Ley de Servicios de la Sociedad de la Información (LSSI)</p>
+        <p className="text-stone-light mt-2 text-sm">Ley de Servicios de la Sociedad de la Información (LSSI)</p>
       </div>
     </div>
 
@@ -158,18 +158,18 @@ const AvisoLegal = () => (
 
     {/* Tag `<footer>` real: MobileReserveCTA lo busca con
         `document.querySelector("footer")` para ocultar su barra fija. */}
-    <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
+    <footer className="bg-dark-slate text-stone-light text-center py-6 text-xs mt-8">
       <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
       <p className="mt-1">
-        <Link to="/" className="hover:text-accent transition-colors">
+        <Link to="/" className="hover:text-gold-light transition-colors">
           Inicio
         </Link>
         {" · "}
-        <Link to={POLITICA_PRIVACIDAD_PATH} className="hover:text-accent transition-colors">
+        <Link to={POLITICA_PRIVACIDAD_PATH} className="hover:text-gold-light transition-colors">
           Política de privacidad
         </Link>
         {" · "}
-        <Link to={CONDICIONES_PATH} className="hover:text-accent transition-colors">
+        <Link to={CONDICIONES_PATH} className="hover:text-gold-light transition-colors">
           Condiciones
         </Link>
       </p>
