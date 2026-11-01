@@ -45,6 +45,7 @@ comandos:                 # se ejecutan desde la raíz del repo
   # sin ellas, este es el build del CI contra un Supabase falso local.
   build: node scripts/e2e-build.mjs
   e2e: npm run test:e2e   # obligatorio si se tocan reservas, carta, cheques o maquetación
+  humo: BASE_URL=<url desplegada> npm run test:humo   # prueba rápida de solo lectura contra una URL ya desplegada (PROD incluida); también en GitHub Actions: «Prueba rápida (humo)»
   migraciones_local: ""
 
 ci_cd:

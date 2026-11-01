@@ -1,0 +1,172 @@
+# Prueba rápida («humo») de la web YA DESPLEGADA, relanzable a mano contra cualquier URL.
+# Solo lectura: no escribe en Supabase, no envía formularios ni toca el chatbot
+# (ver e2e/humo/web.humo.ts). No usa `environment:` ni más permisos que leer el código.
+#
+#   - A mano (Actions → «Prueba rápida (humo)» → Run workflow): URL del campo
+#     `base_url`; si va vacío, la variable del repo HUMO_BASE_URL; si tampoco
+#     existe, producción.
+#   - Solo cuando está en `main` (GitHub solo lanza `deployment_status` y muestra
+#     el botón Run workflow con el fichero de la rama por defecto): cada vez que
+#     Vercel publica con éxito un despliegue de Producción, prueba el dominio de
+#     producción y exige que /version.json lleve el commit desplegado.
+#
+# Secreto opcional (solo si se prueba un entorno protegido por Vercel, como la
+# demo): VERCEL_AUTOMATION_BYPASS_SECRET. Con él la traza se apaga y la cabecera
+# solo se manda al propio sitio.
+name: Prueba rápida (humo)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "URL a probar (https://…). Vacío: la variable HUMO_BASE_URL o, si no existe, https://web-casatomas.vercel.app"
+        required: false
+        default: ""
+        type: string
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  humo:
+    name: Prueba rápida
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # A mano, o un despliegue de Producción de Vercel terminado con éxito.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment_status.creator.login == 'vercel[bot]' &&
+       startsWith(github.event.deployment.environment, 'Production'))
+    # Una sola prueba a la vez por URL; la siguiente espera, no cancela a la que corre.
+    concurrency:
+      group: humo-${{ github.event_name == 'deployment_status' && 'https://web-casatomas.vercel.app' || inputs.base_url || vars.HUMO_BASE_URL || 'https://web-casatomas.vercel.app' }}
+      cancel-in-progress: false
+    env:
+      EVENTO: ${{ github.event_name }}
+      ENTRADA_BASE_URL: ${{ inputs.base_url }}
+      VARIABLE_BASE_URL: ${{ vars.HUMO_BASE_URL }}
+      SHA_DESPLIEGUE: ${{ github.event.deployment.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decidir la URL y el commit esperado
+        run: |
+          set -euo pipefail
+          PROD="https://web-casatomas.vercel.app"
+          if [ "$EVENTO" = "deployment_status" ]; then
+            # No se usa environment_url: es la URL única del despliegue, protegida por Vercel.
+            URL="$PROD"
+            if ! [[ "$SHA_DESPLIEGUE" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::El SHA del despliegue no es válido."
+              exit 1
+            fi
+            echo "EXPECTED_COMMIT=$SHA_DESPLIEGUE" >> "$GITHUB_ENV"
+          else
+            URL="${ENTRADA_BASE_URL:-${VARIABLE_BASE_URL:-$PROD}}"
+          fi
+          URL="${URL%/}"
+          # Con [[ =~ ]] el $ final es el final de TODO el texto: un salto de línea no pasa.
+          RE='^https://[A-Za-z0-9][A-Za-z0-9._~:/?#@!$&()*+,;=%-]*$'
+          if ! [[ "$URL" =~ $RE ]]; then
+            echo "::error::La URL a probar tiene que empezar por https:// y no contener espacios ni saltos de línea."
+            exit 1
+          fi
+          echo "BASE_URL=$URL" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Navegador para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Prueba rápida (solo lectura)
+        run: npm run test:humo
+        env:
+          CI: "true"
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+      # Resumen en la página de la ejecución, también si la prueba ha fallado.
+      - name: Resumen
+        if: always()
+        run: |
+          node --input-type=module - <<'JS'
+          import { existsSync, readFileSync, appendFileSync } from "node:fs";
+          const limpio = (t) => String(t ?? "").replace(/\s+/g, " ").replace(/\|/g, "/");
+          const salida = process.env.GITHUB_STEP_SUMMARY;
+          const out = [
+            "## Prueba rápida (humo)",
+            "",
+            `- URL: ${limpio(process.env.BASE_URL)}`,
+            `- Commit esperado: ${process.env.EXPECTED_COMMIT ? limpio(process.env.EXPECTED_COMMIT).slice(0, 7) : "no se exige"}`,
+            "",
+          ];
+          const fichero = "test-results/humo-resultado.json";
+          if (!existsSync(fichero)) {
+            out.push("No hay resultados: la prueba no llegó a ejecutarse.");
+          } else {
+            const informe = JSON.parse(readFileSync(fichero, "utf8"));
+            const filas = [];
+            const recorrer = (suite) => {
+              for (const spec of suite.specs ?? []) {
+                for (const t of spec.tests ?? []) {
+                  const notas = (t.annotations ?? []).map((a) => `${limpio(a.type)}: ${limpio(a.description)}`).join("; ");
+                  filas.push(`| ${limpio(t.projectName)} | ${limpio(spec.title)} | ${limpio(t.status)} | ${notas} |`);
+                }
+              }
+              (suite.suites ?? []).forEach(recorrer);
+            };
+            (informe.suites ?? []).forEach(recorrer);
+            const e = informe.stats ?? {};
+            out.push(
+              `Correctas: ${e.expected ?? 0} · Fallidas: ${e.unexpected ?? 0} · Inestables: ${e.flaky ?? 0} · Omitidas: ${e.skipped ?? 0}`,
+              "",
+              "| Proyecto | Comprobación | Estado | Anotaciones |",
+              "| --- | --- | --- | --- |",
+              ...filas,
+            );
+          }
+          appendFileSync(salida, out.join("\n") + "\n");
+          JS
+
+      # Defensa en profundidad: si el secreto del bypass hubiera acabado en algún texto
+      # del informe, se tacha antes de subirlo. (GitHub ya lo enmascara en la consola.)
+      - name: Tachar el secreto del informe
+        if: failure() && env.VERCEL_AUTOMATION_BYPASS_SECRET != ''
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          node --input-type=module - <<'JS'
+          import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+          import { join } from "node:path";
+          const secreto = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+          const recorrer = (dir) => {
+            if (!existsSync(dir)) return;
+            for (const e of readdirSync(dir, { withFileTypes: true })) {
+              const ruta = join(dir, e.name);
+              if (e.isDirectory()) recorrer(ruta);
+              else if (/\.(md|json|html|txt|log)$/i.test(e.name)) {
+                const t = readFileSync(ruta, "utf8");
+                if (t.includes(secreto)) writeFileSync(ruta, t.split(secreto).join("[secreto-redactado]"));
+              }
+            }
+          };
+          recorrer("playwright-report/humo");
+          JS
+
+      # Solo el informe HTML (con sus capturas): el JSON de resultados y los
+      # `error-context.md` de test-results no hacen falta, el resumen ya sale en la
+      # página de la ejecución. Con bypass la traza está apagada.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: humo-playwright-report
+          path: playwright-report/humo
+          if-no-files-found: ignore
+          retention-days: 7
