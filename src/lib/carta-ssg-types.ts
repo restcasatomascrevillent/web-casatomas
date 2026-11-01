@@ -21,6 +21,11 @@ export interface PlatoSSG {
   unidad?: string;
   imagen_url?: string;
   imagen_posicion_y?: number;
+  /**
+   * Vídeo 4:3 de 3–4 s del plato (bucket `platos`). Columna nueva: puede no
+   * venir en la fila; se lee siempre con `videoDePlato` (`@/lib/foto-plato`).
+   */
+  video_url?: string | null;
   expanded?: boolean;
   ingredientes?: string[] | string;
   /** Solo etiquetas validadas por el restaurante. */
