@@ -6,7 +6,7 @@
  * por ser falso en JavaScript, y la foto se quedaba centrada (50 %).
  */
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 
@@ -17,6 +17,8 @@ const { filas } = vi.hoisted(() => ({
     { id: "medio", titulo: "Medio", imagen_url: "https://example.com/medio.jpg", imagen_posicion_y: 36 },
     { id: "sin-valor", titulo: "Sin valor", imagen_url: "https://example.com/sin-valor.jpg" },
     { id: "sin-foto", titulo: "Cata sin foto", imagen_url: null },
+    { id: "espacios", titulo: "Foto en blanco", imagen_url: "   " },
+    { id: "rota", titulo: "Foto rota", imagen_url: "https://example.com/rota.jpg" },
   ],
 }));
 
@@ -76,6 +78,22 @@ describe("NovedadesSection — novedad sin foto (QA-MDN-05)", () => {
     expect(screen.getByText("Cata sin foto")).toBeInTheDocument();
     expect(screen.queryByAltText(/^Cata sin foto — /)).toBeNull();
     // Las que sí tienen foto siguen con la suya.
-    expect(screen.getAllByRole("img").filter((i) => i.getAttribute("src")?.includes("example.com"))).toHaveLength(3);
+    expect(screen.getAllByRole("img").filter((i) => i.getAttribute("src")?.includes("example.com"))).toHaveLength(4);
+  });
+
+  it("una URL con solo espacios cuenta como sin foto", () => {
+    renderEs();
+    expect(screen.getByText("Foto en blanco")).toBeInTheDocument();
+    expect(screen.queryByAltText(/^Foto en blanco — /)).toBeNull();
+  });
+
+  it("si la foto no carga, quita el bloque en vez de dejar el recuadro roto", () => {
+    renderEs();
+    const foto = fotoDe("Foto rota");
+    const bloque = foto.parentElement!;
+    fireEvent.error(foto);
+    expect(screen.queryByAltText(/^Foto rota — /)).toBeNull();
+    expect(bloque.isConnected).toBe(false);
+    expect(screen.getByText("Foto rota")).toBeInTheDocument();
   });
 });
