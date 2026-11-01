@@ -57,3 +57,32 @@ it("lands on the layout position minus scroll-margin-top, ignoring transforms (t
   expect(section.scrollIntoView).not.toHaveBeenCalled();
   estilo.mockRestore();
 });
+
+it("menú móvil: aria-expanded/aria-controls, se cierra con Esc y el foco vuelve al botón", () => {
+  montar();
+  const boton = screen.getByRole("button", { name: "Abrir menú" });
+  expect(boton).toHaveAttribute("aria-expanded", "false");
+  expect(boton).toHaveAttribute("aria-controls", "menu-movil");
+
+  fireEvent.click(boton);
+  expect(boton).toHaveAttribute("aria-expanded", "true");
+  expect(document.getElementById("menu-movil")).not.toBeNull();
+
+  const enlace = document.querySelector<HTMLElement>("#menu-movil a")!;
+  enlace.focus();
+  fireEvent.keyDown(enlace, { key: "Escape" });
+
+  expect(document.getElementById("menu-movil")).toBeNull();
+  expect(boton).toHaveAttribute("aria-expanded", "false");
+  expect(document.activeElement).toBe(boton);
+});
+
+it("menú móvil: un Esc ya atendido (chat abierto encima) no lo cierra", () => {
+  montar();
+  fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+  const marcar = (e: KeyboardEvent) => e.preventDefault();
+  window.addEventListener("keydown", marcar, true);
+  fireEvent.keyDown(document.body, { key: "Escape" });
+  window.removeEventListener("keydown", marcar, true);
+  expect(document.getElementById("menu-movil")).not.toBeNull();
+});

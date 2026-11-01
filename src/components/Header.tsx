@@ -51,6 +51,26 @@ const Header = () => {
   const reservasPath = construirRutaIdioma(RESERVAS_PATH, language);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const botonMenuRef = useRef<HTMLButtonElement>(null);
+
+  /**
+   * Esc cierra el menú móvil y devuelve el foco al botón que lo abre. Se
+   * escucha en `document` (fase de burbuja) y se ignora un Esc ya atendido
+   * (`defaultPrevented`): el chat y los desplegables de Radix van antes y lo
+   * marcan, y el aviso de cookies escucha en `window`, que va después, así
+   * que con todo abierto cada Esc cierra solo lo de más arriba.
+   */
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const alPulsar = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      setIsMobileMenuOpen(false);
+      botonMenuRef.current?.focus();
+    };
+    document.addEventListener("keydown", alPulsar);
+    return () => document.removeEventListener("keydown", alPulsar);
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -266,8 +286,11 @@ const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
+              ref={botonMenuRef}
               variant="ghost"
               size="icon"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="menu-movil"
               aria-label={isMobileMenuOpen ? ARIA.cerrarMenu[language] : ARIA.abrirMenu[language]}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -281,6 +304,7 @@ const Header = () => {
       <>
         {isMobileMenuOpen && (
           <div
+            id="menu-movil"
             className="lg:hidden bg-background border-t border-border"
           >
             <nav className="flex flex-col p-4 space-y-2">
