@@ -41,13 +41,13 @@ const PoliticaPrivacidad = () => {
                 <div className="max-w-4xl mx-auto">
                     <Link
                         to={inicio}
-                        className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+                        className="inline-flex items-center gap-2 text-stone-claro hover:text-background hover:underline underline-offset-4 transition-colors mb-4 text-sm"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         {p.back}
                     </Link>
                     <h1 className="text-3xl md:text-4xl font-bold">{p.title}</h1>
-                    <p className="text-stone mt-2 text-sm">{p.updated}</p>
+                    <p className="text-stone-claro mt-2 text-sm">{p.updated}</p>
                 </div>
             </div>
 
@@ -191,14 +191,14 @@ const PoliticaPrivacidad = () => {
             {/* Footer simple. Tag `<footer>` real: MobileReserveCTA lo busca con
                 `document.querySelector("footer")` para ocultar su barra fija
                 al llegar aquí abajo. */}
-            <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
+            <footer className="bg-dark-slate text-stone-claro text-center py-6 text-xs mt-8">
                 <p>{p.footer.rights.replace("{year}", String(new Date().getFullYear()))}</p>
                 <p className="mt-1">
-                    <Link to={inicio} className="hover:text-accent transition-colors">{p.footer.home}</Link>
+                    <Link to={inicio} className="hover:text-background hover:underline underline-offset-4 transition-colors">{p.footer.home}</Link>
                     {" · "}
-                    <Link to={rutaPolitica} className="hover:text-accent transition-colors">{p.footer.privacy}</Link>
+                    <Link to={rutaPolitica} className="hover:text-background hover:underline underline-offset-4 transition-colors">{p.footer.privacy}</Link>
                     {" · "}
-                    <Link to={construirRutaIdioma(CONDICIONES_PATH, language)} className="hover:text-accent transition-colors">{p.footer.conditions}</Link>
+                    <Link to={construirRutaIdioma(CONDICIONES_PATH, language)} className="hover:text-background hover:underline underline-offset-4 transition-colors">{p.footer.conditions}</Link>
                 </p>
             </footer>
         </div>

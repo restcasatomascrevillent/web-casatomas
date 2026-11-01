@@ -115,13 +115,13 @@ const Condiciones = () => {
         <div className="max-w-4xl mx-auto">
           <Link
             to={inicio}
-            className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+            className="inline-flex items-center gap-2 text-stone-claro hover:text-background hover:underline underline-offset-4 transition-colors mb-4 text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             {c.back}
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold">{c.title}</h1>
-          <p className="text-stone mt-2 text-sm">{c.updated}</p>
+          <p className="text-stone-claro mt-2 text-sm">{c.updated}</p>
         </div>
       </div>
 
@@ -171,16 +171,16 @@ const Condiciones = () => {
 
       {/* Tag `<footer>` real: MobileReserveCTA lo busca con
           `document.querySelector("footer")` para ocultar su barra fija. */}
-      <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
+      <footer className="bg-dark-slate text-stone-claro text-center py-6 text-xs mt-8">
         <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
         <p className="mt-1">
-          <Link to={inicio} className="hover:text-accent transition-colors">
+          <Link to={inicio} className="hover:text-background hover:underline underline-offset-4 transition-colors">
             {c.homeLink}
           </Link>
           {" · "}
           <Link
             to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-            className="hover:text-accent transition-colors"
+            className="hover:text-background hover:underline underline-offset-4 transition-colors"
           >
             {c.privacyFooterLink}
           </Link>

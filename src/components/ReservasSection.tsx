@@ -50,7 +50,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false, headin
               <>
                 <Button
                   size="lg"
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
+                  className="bg-accent hover:bg-accent-hover text-accent-foreground px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
                   onClick={() => setShowForm(true)}
                 >
                   {t.reservas.cta}
@@ -84,7 +84,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false, headin
                 <div className="flex justify-center">
                   <Button
                     onClick={() => navigate(construirRutaIdioma("/", language))}
-                    className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-6 py-3 shadow-md hover:shadow-lg transition-colors"
+                    className="bg-accent hover:bg-accent-hover text-accent-foreground rounded-full px-6 py-3 shadow-md hover:shadow-lg transition-colors"
                   >
                     {t.reservas.backToSite}
                   </Button>
