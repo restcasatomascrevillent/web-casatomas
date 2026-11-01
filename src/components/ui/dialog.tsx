@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useTextoCerrar } from "@/i18n/cerrar";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -32,30 +33,33 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     /** Oculta la "X" de cierre — para diálogos que solo se resuelven con un botón explícito (p. ej. la verificación de edad). */
     hideCloseButton?: boolean;
-    /** Texto accesible de la "X" de cierre. Por defecto "Close"; los diálogos traducidos pasan el suyo. */
+    /** Texto accesible de la "X" de cierre. Por defecto, «Cerrar» en el idioma de la página. */
     closeLabel?: string;
   }
->(({ className, children, hideCloseButton, closeLabel = "Close", ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      {!hideCloseButton && (
-        <DialogPrimitive.Close className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-lg border border-border/70 hover:shadow-xl hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition">
-          <X className="h-5 w-5" />
-          <span className="sr-only">{closeLabel}</span>
-        </DialogPrimitive.Close>
-      )}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+>(({ className, children, hideCloseButton, closeLabel, ...props }, ref) => {
+  const textoCerrar = useTextoCerrar();
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        {!hideCloseButton && (
+          <DialogPrimitive.Close className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-lg border border-border/70 hover:shadow-xl hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition">
+            <X className="h-5 w-5" />
+            <span className="sr-only">{closeLabel ?? textoCerrar}</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+});
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

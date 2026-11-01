@@ -266,6 +266,30 @@ export const formatearCantidadLinea = (
   return String(Math.max(1, Math.round(cantidad)));
 };
 
+/**
+ * Categoría de una línea del ticket en el idioma de la página. La línea guarda
+ * la categoría en castellano (es parte de su clave), así que se traduce al
+ * pintar: primero la columna de la BD (`categoria_en` / `categoria_fr`, que
+ * viaja en la línea porque se guarda el plato entero), luego el diccionario de
+ * categorías y, si no hay nada, el texto tal cual.
+ */
+export const categoriaDeLinea = (
+  linea: { categoria?: string | null; [campo: string]: unknown },
+  idioma: Language,
+  diccionarios: readonly Record<string, string>[] = [],
+): string | null => {
+  const categoria = linea.categoria?.trim();
+  if (!categoria) return null;
+  if (idioma === "es") return categoria;
+  const columna = linea[`categoria_${idioma}`];
+  if (typeof columna === "string" && columna.trim()) return columna.trim();
+  for (const diccionario of diccionarios) {
+    const traducida = diccionario[categoria];
+    if (traducida) return traducida;
+  }
+  return categoria;
+};
+
 /** Sufijo del precio unitario: "/kg", "/150 g" (el peso guardado) o nada. */
 export const sufijoPrecio = (unidad?: string | null): string =>
   normalizarUnidadPlato(unidad) === "kg"
