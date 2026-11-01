@@ -259,8 +259,12 @@ export type SeccionExtraCarta = {
 } & ({ items: ItemMenu[]; lineas?: never } | { lineas: DatosLineaBebida[]; items?: never });
 
 interface CartaDelDiaProps {
-  /** La fecha no se pinta aquí (va en `subtitulo`), por eso no se exige. */
-  menu: Pick<MenuDelDia, "estructurado" | "secciones">;
+  /**
+   * La fecha no se pinta aquí (va en `subtitulo`), por eso no se exige. El
+   * entrante y `postreCafe` son del menú del día: el de una novedad no los
+   * trae y se pinta como siempre.
+   */
+  menu: Pick<MenuDelDia, "estructurado" | "secciones"> & Partial<Pick<MenuDelDia, "entrante" | "postreCafe">>;
   /** Slot del título. En un diálogo, el `DialogTitle` de Radix. */
   titulo: ReactNode;
   /** Fecha ya formateada en el idioma activo. */
@@ -308,11 +312,23 @@ const CartaDelDia = ({
 }: CartaDelDiaProps) => {
   const { t, language } = useTranslations();
   const etiquetas = t.espacios.menuLabels;
+  const entrante = menu.entrante ?? [];
 
+  // Sin entrante, el primero se llama «Entrantes» y el segundo «Principales»,
+  // como siempre. Con entrante, «Entrantes» es el entrante y los otros dos
+  // pasan a «Primeros» y «Segundos» (01/11/2026, petición del dueño).
+  const conEntrante = entrante.length > 0;
   const nombreSeccion: Record<SeccionMenu, string> = {
-    primero: etiquetas.starters,
-    segundo: etiquetas.mains,
-    postre: menu.secciones.postre.length > 1 ? etiquetas.desserts : etiquetas.dessert,
+    primero: conEntrante ? etiquetas.firstCourses : etiquetas.starters,
+    segundo: conEntrante ? etiquetas.secondCourses : etiquetas.mains,
+    postre:
+      menu.postreCafe === "postre_o_cafe"
+        ? etiquetas.dessertOrCoffee
+        : menu.postreCafe === "postre_y_cafe"
+          ? etiquetas.dessertAndCoffee
+          : menu.secciones.postre.length > 1
+            ? etiquetas.desserts
+            : etiquetas.dessert,
   };
 
   const fija = (seccion: SeccionMenu): SeccionExtraCarta => ({
@@ -321,6 +337,7 @@ const CartaDelDia = ({
     items: menu.secciones[seccion],
   });
   const conPlatos: SeccionExtraCarta[] = [
+    { clave: "entrante", titulo: etiquetas.starters, items: entrante },
     ...(seccionesIntercaladas.antes_primero ?? []),
     fija("primero"),
     ...(seccionesIntercaladas.antes_segundo ?? []),

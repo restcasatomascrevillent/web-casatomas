@@ -220,6 +220,10 @@ export const translations: Translations = {
         mains: "Mains",
         dessert: "Dessert",
         desserts: "Desserts",
+        firstCourses: "First courses",
+        secondCourses: "Main courses",
+        dessertOrCoffee: "Dessert or coffee",
+        dessertAndCoffee: "Dessert and coffee",
         tapasOfDay: "Tapas of the week",
       },
       menuAllergens: {

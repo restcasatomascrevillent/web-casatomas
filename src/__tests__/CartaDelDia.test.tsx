@@ -184,3 +184,63 @@ describe("CartaDelDia — secciones extra (Bebidas del menú de una novedad)", (
     expect(screen.queryByRole("heading", { name: "Bebidas" })).toBeNull();
   });
 });
+
+describe("CartaDelDia — entrante y «postre o café» del menú del día (01/11/2026)", () => {
+  const conIdioma = (menu: MenuDelDia, idioma: "es" | "en" | "fr" = "es") =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider initialLanguage={idioma}>
+          <CartaDelDia menu={menu} titulo={<h3>Menú de hoy</h3>} />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+  const rotulos = () => screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+
+  const menuCompleto = (extra: Record<string, unknown> = {}, entrante: unknown[] = []): MenuDelDia => {
+    const menu = parsearMenuDiario({
+      id: "fila-2",
+      fecha: "2026-11-03",
+      menu: {
+        v: 2,
+        secciones: {
+          entrante,
+          primero: [{ ...itemLibre, id: "p", nombre: "Sopa" }],
+          segundo: [{ ...itemLibre, id: "s", nombre: "Merluza" }],
+          postre: [{ ...itemLibre, id: "d", nombre: "Flan" }],
+        },
+        ...extra,
+      },
+    });
+    if (!menu) throw new Error("el menú de prueba debería poder pintarse");
+    return menu;
+  };
+
+  it("un menú de antes se ve igual que siempre: Entrantes, Principales y Postre", () => {
+    conIdioma(menuV1());
+    expect(rotulos()).toEqual(["Entrantes", "Principales", "Postre"]);
+  });
+
+  it("con entrante: va el primero y los demás pasan a Primeros y Segundos", () => {
+    conIdioma(menuCompleto({}, [{ ...itemLibre, id: "e", nombre: "Gilda" }]));
+    expect(rotulos()).toEqual(["Entrantes", "Primeros", "Segundos", "Postre"]);
+    const entrante = screen.getByRole("heading", { name: "Entrantes" }).closest("section")!;
+    expect(within(entrante).getByText("Gilda")).toBeInTheDocument();
+  });
+
+  it("el título del postre según lo elegido en el panel", () => {
+    const { unmount } = conIdioma(menuCompleto({ postreCafe: "postre_o_cafe" }));
+    expect(rotulos().at(-1)).toBe("Postre o café");
+    unmount();
+    conIdioma(menuCompleto({ postreCafe: "postre_y_cafe" }));
+    expect(rotulos().at(-1)).toBe("Postre y café");
+  });
+
+  it("en inglés y en francés también", () => {
+    const conTodo = () => menuCompleto({ postreCafe: "postre_y_cafe" }, [{ ...itemLibre, id: "e", nombre: "Gilda" }]);
+    const { unmount } = conIdioma(conTodo(), "en");
+    expect(rotulos()).toEqual(["Starters", "First courses", "Main courses", "Dessert and coffee"]);
+    unmount();
+    conIdioma(conTodo(), "fr");
+    expect(rotulos()).toEqual(["Entrées", "Premiers plats", "Plats principaux", "Dessert et café"]);
+  });
+});
