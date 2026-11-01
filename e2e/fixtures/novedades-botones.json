@@ -369,5 +369,103 @@
         ]
       }
     }
+  },
+  {
+    "id": "e2e-menu-titulos",
+    "titulo": "Menú con secciones propias",
+    "titulo_en": "Menu with custom sections",
+    "titulo_fr": "Menu aux rubriques personnalisées",
+    "descripcion": "Cada sección con su título.",
+    "descripcion_en": "Every section with its own title.",
+    "descripcion_fr": "Chaque rubrique avec son titre.",
+    "icono": "utensils",
+    "imagen_url": null,
+    "destacado": false,
+    "orden": 7,
+    "activo": true,
+    "botones": [
+      "ver_menu"
+    ],
+    "plato_id": null,
+    "menu": {
+      "version": 2,
+      "tipo": "menu",
+      "incluye_bebidas": true,
+      "maridaje": false,
+      "titulos": {
+        "primero": {
+          "es": "Selección de entrantes para compartir 40",
+          "en": "Starters to share",
+          "fr": "À partager"
+        },
+        "segundo": {
+          "es": "Del mar"
+        },
+        "postre": {
+          "es": "   "
+        },
+        "bebidas": {
+          "es": "Vinos y aguas"
+        }
+      },
+      "secciones": {
+        "primero": [
+          {
+            "id": "t1",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Anchoas del Cantábrico",
+            "descripcion": "Con tomate rallado",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "segundo": [
+          {
+            "id": "t2",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Rape al horno",
+            "descripcion": "Con patata panadera",
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "postre": [
+          {
+            "id": "t3",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Tarta de queso",
+            "descripcion": null,
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ],
+        "bebidas": [
+          {
+            "id": "t4",
+            "origen": "libre",
+            "platoId": null,
+            "nombre": "Agua mineral",
+            "descripcion": null,
+            "imagenUrl": null,
+            "imagenPosicionY": null,
+            "alergenos": [],
+            "alergenosInferidos": [],
+            "alergenosNotas": null
+          }
+        ]
+      }
+    }
   }
 ]
