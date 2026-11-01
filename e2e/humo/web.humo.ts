@@ -71,6 +71,12 @@ const test = base.extend<{ erroresJs: string[] }>({
   ],
 });
 
+/** Quita el secreto del bypass (si lo hay) de un texto, por si algún error lo arrastrase. */
+function redactar(texto: string): string {
+  const secreto = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  return secreto ? texto.split(secreto).join("[secreto-redactado]") : texto;
+}
+
 function anotar(tipo: string, descripcion: string) {
   test.info().annotations.push({ type: tipo, description: descripcion });
 }
@@ -116,13 +122,18 @@ test.describe("web en producción o demo (solo lectura)", () => {
     await page.waitForLoadState("networkidle").catch(() => undefined);
   });
 
-  test("/version.json: anota versión y commit", async ({ request, baseURL }) => {
-    const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
-    const respuesta = await request.get(new URL("/version.json", baseURL).toString(), {
-      headers: bypass ? { "x-vercel-protection-bypass": bypass } : {},
-    });
-    expect(respuesta.status(), "estado HTTP de /version.json").toBe(200);
-    const datos = (await respuesta.json()) as { version?: unknown; commit?: unknown; entorno?: unknown; rama?: unknown };
+  test("/version.json: anota versión y commit", async ({ page }) => {
+    // Se pide con `page.goto` y no con `request.get(..., { headers })`: así la cabecera
+    // del bypass la pone solo el `context.route` de la fixture y nunca aparece en el
+    // «Call log» del error de Playwright (que acababa en consola, JSON e informe HTML).
+    let respuesta;
+    try {
+      respuesta = await page.goto("/version.json");
+    } catch (error) {
+      throw new Error(redactar(error instanceof Error ? error.message : String(error)));
+    }
+    expect(respuesta?.status(), "estado HTTP de /version.json").toBe(200);
+    const datos = (await respuesta!.json()) as { version?: unknown; commit?: unknown; entorno?: unknown; rama?: unknown };
     expect(typeof datos.version, "version").toBe("string");
     expect(typeof datos.commit, "commit").toBe("string");
     const version = String(datos.version);

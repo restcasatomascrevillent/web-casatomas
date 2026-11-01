@@ -135,12 +135,38 @@ jobs:
           appendFileSync(salida, out.join("\n") + "\n");
           JS
 
+      # Defensa en profundidad: si el secreto del bypass hubiera acabado en algún texto
+      # del informe, se tacha antes de subirlo. (GitHub ya lo enmascara en la consola.)
+      - name: Tachar el secreto del informe
+        if: failure() && env.VERCEL_AUTOMATION_BYPASS_SECRET != ''
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          node --input-type=module - <<'JS'
+          import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+          import { join } from "node:path";
+          const secreto = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+          const recorrer = (dir) => {
+            if (!existsSync(dir)) return;
+            for (const e of readdirSync(dir, { withFileTypes: true })) {
+              const ruta = join(dir, e.name);
+              if (e.isDirectory()) recorrer(ruta);
+              else if (/\.(md|json|html|txt|log)$/i.test(e.name)) {
+                const t = readFileSync(ruta, "utf8");
+                if (t.includes(secreto)) writeFileSync(ruta, t.split(secreto).join("[secreto-redactado]"));
+              }
+            }
+          };
+          recorrer("playwright-report/humo");
+          JS
+
+      # Solo el informe HTML (con sus capturas): el JSON de resultados y los
+      # `error-context.md` de test-results no hacen falta, el resumen ya sale en la
+      # página de la ejecución. Con bypass la traza está apagada.
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: humo-playwright-report
-          path: |
-            playwright-report/humo
-            test-results
+          path: playwright-report/humo
           if-no-files-found: ignore
           retention-days: 7
