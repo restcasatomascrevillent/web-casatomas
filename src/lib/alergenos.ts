@@ -218,7 +218,28 @@ export const clavesAlergenos = (valor: unknown): string[] => [
 ];
 
 /** Etiqueta legible de una clave (o de un valor crudo) en el idioma activo. */
+/**
+ * El panel guarda «sin alérgenos declarados» DENTRO de `alergenos_oficiales`
+ * cuando el restaurante declara que el plato no tiene ninguno. No es un
+ * alérgeno (no tiene clave ni entra en los filtros), pero es texto que ve el
+ * cliente, así que se pinta en su idioma.
+ */
+const SIN_ALERGENOS_DECLARADOS: Record<Language, string> = {
+  es: "Sin alérgenos declarados",
+  en: "No allergens declared",
+  fr: "Aucun allergène déclaré",
+};
+const FORMAS_SIN_ALERGENOS = new Set(
+  [
+    "sin alérgenos declarados",
+    "sin alergenos",
+    "no allergens declared",
+    "aucun allergène déclaré",
+  ].map(normalizarTexto),
+);
+
 export const etiquetaAlergeno = (valor: string, idioma: Language = "es"): string => {
+  if (FORMAS_SIN_ALERGENOS.has(normalizarTexto(valor))) return SIN_ALERGENOS_DECLARADOS[idioma];
   const clave = claveAlergeno(valor);
   const conocida = ETIQUETAS[clave as ClaveAlergeno];
   return conocida ? conocida[idioma] : capitalizar(valor);

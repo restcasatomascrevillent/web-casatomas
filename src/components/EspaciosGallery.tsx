@@ -14,9 +14,9 @@ const photos: NombreImagen[][] = [
 ];
 
 const copy = {
-  es: { names: ["Salón", "Comedor", "Terraza"], title: "Nuestros espacios", subtitle: "Un entorno para cada ocasión", view: "Ver todas las fotos", pending: "Fotografías próximamente", previous: "Foto anterior", next: "Foto siguiente", close: "Cerrar galería", expand: "Ampliar fotografía", photo: "Fotografía", gallery: "Galería de", swipe: "Desliza para explorar" },
-  en: { names: ["Lounge", "Dining room", "Terrace"], title: "Our spaces", subtitle: "A setting for every occasion", view: "View all photos", pending: "Photographs coming soon", previous: "Previous photo", next: "Next photo", close: "Close gallery", expand: "Enlarge photo", photo: "Photo", gallery: "Gallery of", swipe: "Swipe to explore" },
-  fr: { names: ["Salon", "Salle à manger", "Terrasse"], title: "Nos espaces", subtitle: "Un cadre pour chaque occasion", view: "Voir toutes les photos", pending: "Photographies à venir", previous: "Photo précédente", next: "Photo suivante", close: "Fermer la galerie", expand: "Agrandir la photo", photo: "Photographie", gallery: "Galerie de", swipe: "Faites glisser pour découvrir" },
+  es: { names: ["Salón", "Comedor", "Terraza"], title: "Nuestros espacios", subtitle: "Un entorno para cada ocasión", view: "Ver todas las fotos", pending: "Fotografías próximamente", previous: "Foto anterior", next: "Foto siguiente", close: "Cerrar galería", expand: "Ampliar fotografía", photo: "Fotografía", alt: "{name} de {negocio}, {localidad} — fotografía {n}", gallery: "Galería de", swipe: "Desliza para explorar" },
+  en: { names: ["Lounge", "Dining room", "Terrace"], title: "Our spaces", subtitle: "A setting for every occasion", view: "View all photos", pending: "Photographs coming soon", previous: "Previous photo", next: "Next photo", close: "Close gallery", expand: "Enlarge photo", photo: "Photo", alt: "{name} at {negocio}, {localidad} — photo {n}", gallery: "Gallery of", swipe: "Swipe to explore" },
+  fr: { names: ["Salon", "Salle à manger", "Terrasse"], title: "Nos espaces", subtitle: "Un cadre pour chaque occasion", view: "Voir toutes les photos", pending: "Photographies à venir", previous: "Photo précédente", next: "Photo suivante", close: "Fermer la galerie", expand: "Agrandir la photo", photo: "Photographie", alt: "{name} de {negocio}, {localidad} — photographie {n}", gallery: "Galerie de", swipe: "Faites glisser pour découvrir" },
 };
 
 export default function EspaciosGallery({ portalContainer }: { portalContainer?: HTMLElement } = {}) {
@@ -106,7 +106,11 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
   // fotografía 1") no dice en qué restaurante ni dónde, para quien llega
   // a la foto desde una búsqueda de imágenes.
   const altFoto = (index: number) =>
-    `${name} de ${NEGOCIO.nombre}, ${NEGOCIO.localidad} — ${labels.photo.toLowerCase()} ${index + 1}`;
+    labels.alt
+      .replace("{name}", name)
+      .replace("{negocio}", NEGOCIO.nombre)
+      .replace("{localidad}", NEGOCIO.localidad)
+      .replace("{n}", String(index + 1));
 
   return (
     <div className="ct-spaces">
