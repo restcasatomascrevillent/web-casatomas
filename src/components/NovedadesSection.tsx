@@ -181,7 +181,7 @@ const NovedadesSection = () => {
               <div className="p-3 bg-accent/10 rounded-lg">
                 <Icon className="w-6 h-6 text-accent" />
               </div>
-              {localized.badge && <Badge className="bg-accent hover:bg-accent/90">{localized.badge}</Badge>}
+              {localized.badge && <Badge className="bg-accent hover:bg-accent-hover">{localized.badge}</Badge>}
             </div>
             <CardTitle className="text-xl leading-snug">{localized.titulo}</CardTitle>
           </CardHeader>

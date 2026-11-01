@@ -53,13 +53,13 @@ const PoliticaPrivacidad = () => {
                 <div className="max-w-4xl mx-auto">
                     <Link
                         to={inicio}
-                        className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+                        className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         {p.back}
                     </Link>
                     <h1 className="text-3xl md:text-4xl font-bold">{p.title}</h1>
-                    <p className="text-stone mt-2 text-sm">{p.updated}</p>
+                    <p className="text-stone-light mt-2 text-sm">{p.updated}</p>
                 </div>
             </div>
 
@@ -188,7 +188,7 @@ const PoliticaPrivacidad = () => {
                 </section>
 
                 {/* 8. Contacto */}
-                <section className="rounded-lg bg-muted/40 border border-border p-6">
+                <section className="rounded-lg bg-muted/20 border border-border p-6">
                     <h2 className="text-xl font-bold mb-2 text-accent">{p.contact.heading}</h2>
                     <p className="text-sm text-muted-foreground">{p.contact.intro}</p>
                     <div className="mt-3 text-sm space-y-1">

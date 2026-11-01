@@ -91,13 +91,13 @@ const AvisoLegal = () => (
       <div className="max-w-4xl mx-auto">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+          className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al inicio
         </Link>
         <h1 className="text-3xl md:text-4xl font-bold">Aviso legal</h1>
-        <p className="text-stone mt-2 text-sm">Ley de Servicios de la Sociedad de la Información (LSSI)</p>
+        <p className="text-stone-light mt-2 text-sm">Ley de Servicios de la Sociedad de la Información (LSSI)</p>
       </div>
     </div>
 

@@ -22,7 +22,7 @@ const Footer = () => {
             <Button
               asChild
               size="sm"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full shadow-md"
+              className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full shadow-md"
             >
               <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
                 <Star className="w-4 h-4 mr-2 fill-current" />
