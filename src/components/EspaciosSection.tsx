@@ -4,14 +4,11 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import EspaciosGallery from "./EspaciosGallery";
+import { TOUZA_URL } from "@/lib/negocio";
 
-// La web de Touza vive en touza-restaurant-website.vercel.app. Si el dueño
-// pasa a tener dominio propio, basta con fijar VITE_TOUZA_URL para
-// sobrescribir este valor por defecto.
-const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-restaurant-website.vercel.app";
 
 /**
- * Colores REALES de la web de Touza (touza-restaurant-website.vercel.app):
+ * Colores REALES de la web de Touza (`TOUZA_URL`):
  * fondo casi negro y dorado como color de marca — comprobado con un scrape de
  * su página (tema oscuro, `primary`/`accent` #D4A574, `background` #0A0A0A,
  * botón principal con ese mismo dorado y texto casi negro). Fuera de los

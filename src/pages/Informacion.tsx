@@ -9,10 +9,8 @@ import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma, quitarPrefijoIdioma } from "@/i18n/routing";
-import { GOOGLE_MAPS_URL, restaurantSchema, SITE_URL } from "@/lib/negocio";
+import { GOOGLE_MAPS_URL, restaurantSchema, SITE_URL, TOUZA_URL } from "@/lib/negocio";
 import { PAGINAS_INFORMACION, type PaginaInformacion } from "@/lib/paginas-informacion";
-
-const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-restaurant-website.vercel.app";
 
 export default function Informacion() {
   const { language, t } = useTranslations();
