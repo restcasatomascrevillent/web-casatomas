@@ -1,3 +1,4 @@
+import { mostrarPrecio } from "@/lib/precios";
 import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
@@ -832,7 +833,7 @@ const CartaPlatos = ({
                         <span
                           className={`font-bold text-accent ${expanded ? "text-2xl" : "text-lg"}`}
                         >
-                          {item.precio_eur}€
+                          {mostrarPrecio(item.precio_eur, language)}
                           {item.unidad && (
                             <span className="text-sm font-normal text-muted-foreground">
                               {" "}
@@ -957,7 +958,7 @@ const CartaPlatos = ({
 
                       <CardFooter className="flex justify-between items-center border-t bg-muted/30 mt-auto flex-shrink-0 px-6 py-3">
                         <span className="font-bold text-accent text-2xl">
-                          {item.precio_eur}€
+                          {mostrarPrecio(item.precio_eur, language)}
                           {item.unidad && (
                             <span className="text-sm font-normal text-muted-foreground">
                               {" "}

@@ -1,3 +1,4 @@
+import { formatearPrecio } from "@/lib/precios";
 import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
 import OpcionSinGluten from "./OpcionSinGluten";
 import { useState } from "react";
@@ -98,7 +99,7 @@ const PiePlato = ({
 }: PiePlatoProps) => (
   <CardFooter className="flex items-center justify-between gap-3 border-t bg-muted/30 mt-auto flex-shrink-0 px-5 py-3">
     <span className="font-bold text-accent text-xl">
-      {precio}€
+      {formatearPrecio(precio)}
       {unidad && (
         <span className="text-sm font-normal text-muted-foreground">
           {" "}
