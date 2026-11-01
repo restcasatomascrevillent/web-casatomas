@@ -198,12 +198,14 @@ const ProductoCard = ({
   // (la de las páginas /carta/:categoria) se le había quedado siempre en
   // `false` pasara lo que pasara en el panel.
   const [expandedEstado, setExpanded] = useState(() => Boolean(plato.expanded));
-  // Con las fotos apagadas la tarjeta nunca se despliega: no hay ojo que pulsar.
-  const expanded = mostrarFoto && expandedEstado;
   const [infoOpen, setInfoOpen] = useState(false);
   const imagen = mostrarFoto
     ? resolverImagen(plato.imagen_url, SUPABASE_URL)
     : null;
+  // Con las fotos apagadas, o si el plato no tiene foto, la tarjeta nunca se
+  // despliega: un plato marcado «expandido» sin foto enseñaba un hueco vacío
+  // con cubiertos (01-11-2026, p. ej. el tataki de chuleta de vaca).
+  const expanded = mostrarFoto && Boolean(imagen) && expandedEstado;
   // Mismo vocabulario que la portada (`@/lib/alergenos`): las formas del panel
   // (`frutos_cascara`) y las de la BD (`frutos de cáscara`) son un solo token.
   const datos = datosAlergenos(plato);

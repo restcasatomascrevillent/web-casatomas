@@ -158,6 +158,34 @@ describe("ProductoCard — interruptor de fotos", () => {
     expect(ojo).toBeDisabled();
   });
 
+  it("marcado «foto expandida» pero sin foto: la tarjeta no se despliega (sin hueco vacío)", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <ProductoCard
+            plato={resolveTranslatedItem({ ...plato, imagen_url: null, expanded: true }, "es")}
+            categoria="Pescados"
+          />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+    // El hueco «sin foto» (degradado con cubiertos) es lo que se veía antes.
+    expect(container.querySelector(".lucide-utensils-crossed")).toBeNull();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /sin foto/i })[0]).toBeDisabled();
+  });
+
+  it("marcado «foto expandida» y con foto: sale desplegada de entrada", () => {
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <ProductoCard plato={resolveTranslatedItem({ ...plato, expanded: true }, "es")} categoria="Pescados" />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getAllByRole("img", { name: "Pulpo a la brasa — Pescados, Casa Tomás Restaurante" }).length).toBeGreaterThan(0);
+  });
+
   it("al abrir la información (la 'i') el ojo sigue disponible si hay foto", () => {
     pintar();
     // La "i" también sale en las dos caras (para poder volver desde la de info);
