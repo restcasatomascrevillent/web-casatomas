@@ -19,6 +19,12 @@ export interface PlatoSSG {
   descripcion_fr?: string;
   precio_eur: number;
   unidad?: string;
+  /**
+   * Posición dentro de su categoría ("1", "2"… — texto en Platos y Vinos,
+   * número en Bebidas). Las filas ya llegan ordenadas por ella (numérica);
+   * viaja para poder reordenar igual al mezclar con datos en vivo.
+   */
+  orden?: string | number;
   imagen_url?: string;
   imagen_posicion_y?: number;
   expanded?: boolean;
@@ -48,6 +54,8 @@ export interface VinoSSG {
   descripcion_fr?: string;
   precio_eur: number;
   unidad?: string;
+  /** Ver `PlatoSSG.orden`. */
+  orden?: string | number;
   imagen_url?: string;
   imagen_posicion_y?: number;
   denominacion_origen?: string;
@@ -75,6 +83,8 @@ export interface BebidaSSG {
   descripcion_fr?: string;
   precio_eur: number;
   tamano?: string;
+  /** Ver `PlatoSSG.orden`. En Bebidas la columna es numérica (`bigint`). */
+  orden?: number;
   imagen_url?: string;
   traducciones?: unknown;
 }
