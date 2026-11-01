@@ -16,17 +16,30 @@ export default function ListadoCompletoVinos({ vinos, language }: { vinos: VinoL
   return (
     <details className="rounded-xl border border-border p-4">
       <summary className="cursor-pointer font-semibold text-primary">{t.title} ({vinos.length})</summary>
-      <div className="overflow-x-auto mt-4">
+      {/* Móvil (< sm): dos columnas; la denominación baja debajo del nombre y el
+          precio no se parte ni se encoge, así nunca queda fuera de la pantalla.
+          Desde sm, las tres columnas de siempre. */}
+      <div className="mt-4">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">{t.title}</caption>
-          <thead><tr><th scope="col" className="p-2">{t.wine}</th><th scope="col" className="p-2">{t.origin}</th><th scope="col" className="p-2">{t.price}</th></tr></thead>
-          <tbody>{vinos.map((vino, index) => (
-            <tr key={vino.id ?? `${vino.nombre}-${index}`} className="border-t border-border">
-              <th scope="row" className="p-2 font-normal">{vino.nombre}</th>
-              <td className="p-2">{origenComprobable(vino.denominacion_origen) || "—"}</td>
-              <td className="p-2 whitespace-nowrap">{mostrarPrecio(vino.precio_eur, language)}</td>
-            </tr>
-          ))}</tbody>
+          <thead><tr>
+            <th scope="col" className="p-2">{t.wine}</th>
+            <th scope="col" className="hidden p-2 sm:table-cell">{t.origin}</th>
+            <th scope="col" className="p-2 text-right sm:text-left">{t.price}</th>
+          </tr></thead>
+          <tbody>{vinos.map((vino, index) => {
+            const origen = origenComprobable(vino.denominacion_origen) || "—";
+            return (
+              <tr key={vino.id ?? `${vino.nombre}-${index}`} className="border-t border-border">
+                <th scope="row" className="p-2 font-normal [overflow-wrap:anywhere]">
+                  {vino.nombre}
+                  <span className="block text-xs text-muted-foreground sm:hidden">{origen}</span>
+                </th>
+                <td className="hidden p-2 sm:table-cell">{origen}</td>
+                <td className="w-px p-2 text-right align-top whitespace-nowrap sm:w-auto sm:text-left sm:align-middle">{mostrarPrecio(vino.precio_eur, language)}</td>
+              </tr>
+            );
+          })}</tbody>
         </table>
       </div>
     </details>
