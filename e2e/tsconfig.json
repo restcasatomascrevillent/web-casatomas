@@ -5,5 +5,5 @@
     "types": ["node"],
     "resolveJsonModule": true
   },
-  "include": ["./**/*.ts", "../playwright.config.ts", "../vite.config.e2e.ts"]
+  "include": ["./**/*.ts", "../playwright.config.ts", "../playwright.humo.config.ts", "../vite.config.e2e.ts"]
 }
