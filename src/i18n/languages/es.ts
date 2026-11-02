@@ -561,6 +561,7 @@ export const translations = {
       terms: "Política de privacidad",
       bookingTerms: "Condiciones de reserva y newsletter",
       legalNotice: "Aviso legal",
+      cookiePolicy: "Política de cookies",
       cookieSettings: "Configurar cookies",
     },
     cookie: {
@@ -744,8 +745,6 @@ export const translations = {
       privacyLink: "política de privacidad",
       contactTitle: "Contacto",
       contactIntro: "Para cualquier duda sobre tu reserva:",
-      homeLink: "Inicio",
-      privacyFooterLink: "Política de privacidad",
     },
     /* Etiquetas ARIA de los botones del calendario (react-day-picker las trae en inglés). */
     calendar: {
