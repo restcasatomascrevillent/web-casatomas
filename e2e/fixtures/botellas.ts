@@ -2,22 +2,23 @@
  * Fotos de botella de mentira para los e2e de la carta de vinos (SVG, sin
  * binarios en el repo). Imitan lo que llega de Supabase Storage:
  *
- *  - «foto de carta» (nombre con `-carta`): lienzo 3:4 de 900x1200, botella al
- *    80 % del alto apoyada en la línea base (89 %) sobre cartulina kraft
- *    (`#d3b47e` -> `#c4a46d`, el tema `cartulina` del panel).
+ *  - «foto de carta» (`-carta-<ext>.webp`, como las guarda el panel al
+ *    procesar una foto ya subida; ver `rutasFotoCarta.ts` del panel): lienzo
+ *    3:4 de 900x1200, botella al 80 % del alto apoyada en la línea base (89 %)
+ *    sobre cartulina kraft (`#d3b47e` -> `#c4a46d`, el tema `cartulina`).
  *  - fotos antiguas (sin `-carta`): una 3:4 oscura con halo dorado y otra
  *    apaisada 4:3 de móvil, para comprobar que se ven enteras con
  *    `object-contain`.
  */
 export type TipoFoto = "burdeos" | "borgona" | "champan" | "fina" | "magnum" | "antigua-oscura" | "antigua-apaisada";
 
-/** Nombre de archivo que debe llevar `imagen_url` (con `-carta` solo las nuevas). */
+/** Nombre de archivo que debe llevar `imagen_url` (con `-carta-webp` solo las procesadas). */
 export function archivoFoto(tipo: TipoFoto): string {
-  return tipo.startsWith("antigua") ? `${tipo}.jpg` : `${tipo}-carta.webp`;
+  return tipo.startsWith("antigua") ? `${tipo}.jpg` : `${tipo}-carta-webp.webp`;
 }
 
 export function tipoDeArchivo(archivo: string): TipoFoto | null {
-  const base = archivo.replace(/\.[a-z0-9]+$/i, "").replace(/-carta$/, "");
+  const base = archivo.replace(/\.[a-z0-9]+$/i, "").replace(/-carta(-[a-z0-9]+)?$/, "");
   return ["burdeos", "borgona", "champan", "fina", "magnum", "antigua-oscura", "antigua-apaisada"].includes(base) ? (base as TipoFoto) : null;
 }
 

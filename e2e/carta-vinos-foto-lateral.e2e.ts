@@ -6,10 +6,13 @@
  * precio, uno sin foto y dos con foto antigua (otras proporciones). Las fotos
  * son SVG de `e2e/fixtures/botellas.ts` (lienzo 3:4 de carta, 900x1200).
  *
- * Qué se vigila, en móvil (375), tablet (768, 2 columnas) y escritorio
- * (1280, 3 columnas): foto a la izquierda y entera, marco 3:4, la ficha casi
- * no crece respecto a la misma sin foto, nada se pisa ni se corta, botones de
- * 44 px y sin scroll horizontal.
+ * Qué se vigila, en móvil (320 y 375), tablet (768, 2 columnas) y escritorio
+ * (1280, 3 columnas): foto a la izquierda y la botella entera de arriba abajo
+ * (marco 3:5 con `object-cover` para las fotos de carta, que solo recorta
+ * cartulina de los lados; 3:4 con `object-contain` para las antiguas), la ficha
+ * casi no crece respecto a la misma sin foto, nada se pisa ni se corta, botones
+ * de 44 px, misma escala de título y precio con y sin foto, y sin scroll
+ * horizontal.
  */
 import { test as base, expect, type Locator, type Page, type Route } from "@playwright/test";
 import { translations as es } from "../src/i18n/languages/es";
@@ -104,7 +107,7 @@ const dentro = (a: Caja, marco: Caja) => a.x >= marco.x - 0.5 && a.y >= marco.y 
 const fotoCargada = (tarj: Locator) =>
   expect.poll(() => tarj.locator("img").evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
 
-for (const ancho of [375, 768, 1280]) {
+for (const ancho of [320, 375, 768, 1280]) {
   test.describe(`${ancho}px`, () => {
     test("la foto sale en el lateral, entera y en marco 3:4, y la ficha casi no crece", async ({ page, erroresJs: _ }) => {
       await abrirCarta(page, ancho);
@@ -123,24 +126,35 @@ for (const ancho of [375, 768, 1280]) {
       expect(m.x - card.x, "pegada al borde izquierdo").toBeLessThanOrEqual(2);
       expect(Math.abs(m.y - card.y), "arranca arriba").toBeLessThanOrEqual(2);
       expect(m.h, "ocupa el alto de la ficha").toBeGreaterThanOrEqual(card.h - 3);
-      // Marco 3:4 (solo un pelo más alto si el texto pidiera más sitio) y más estrecho que la mitad de la ficha.
-      expect(m.h / m.w).toBeGreaterThanOrEqual(1.3);
-      expect(m.h / m.w).toBeLessThanOrEqual(1.4);
-      expect(m.w).toBeLessThan(card.w / 2);
-      expect(m.w).toBeGreaterThanOrEqual(80);
+      // Marco de carta 3:5: nunca más ancho que 3:4 (así el `cover` solo recorta cartulina de los
+      // lados, jamás la botella en alto), si el texto pide más sitio solo se estira, y más estrecho
+      // que un tercio de la ficha.
+      expect(m.h / m.w).toBeGreaterThanOrEqual(4 / 3);
+      expect(m.h / m.w).toBeLessThanOrEqual(2.2);
+      expect(m.w).toBeLessThan(card.w / 3);
+      expect(m.w).toBeGreaterThanOrEqual(70);
+      expect(m.w).toBeLessThanOrEqual(104.5);
 
-      // La botella entera: la imagen cabe en el marco, sin recortes (`contain`) y con su proporción 3:4.
+      // La botella entera de arriba abajo: la imagen ocupa el marco, `cover`, y como el marco es
+      // más estrecho que 3:4 la escala la manda el ALTO: se ve el lienzo completo de arriba a abajo.
       expect(dentro(img, m)).toBe(true);
-      expect(await tarj.locator("img").evaluate((i) => getComputedStyle(i).objectFit)).toBe("contain");
+      expect(img.h).toBeGreaterThanOrEqual(m.h - 2);
+      expect(await tarj.locator("img").evaluate((i) => getComputedStyle(i).objectFit)).toBe("cover");
       expect(await tarj.locator("img").evaluate((i) => [i.getAttribute("width"), i.getAttribute("height"), i.getAttribute("loading"), i.getAttribute("decoding")])).toEqual(["900", "1200", "lazy", "async"]);
       const natural = await tarj.locator("img").evaluate((i: HTMLImageElement) => i.naturalHeight / i.naturalWidth);
       expect(natural).toBeCloseTo(4 / 3, 2);
       // Fondo del marco: la cartulina kraft de las fotos de carta, no el marrón oscuro de antes.
       expect(await marco.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(205, 174, 119)");
 
+      // Misma escala con foto que sin ella: título 16 px y precio 18 px (16 px por debajo de 360 px de ancho).
+      const escala = () => tarj.evaluate((t) => [getComputedStyle(t.querySelector("h3")!).fontSize, getComputedStyle(t.querySelector("div.border-t > span")!).fontSize]);
+      const conFoto = await escala();
+      expect(conFoto).toEqual(["16px", ancho >= 360 ? "18px" : "16px"]);
+
       // La ficha no se alarga al abrir la foto: se compara con la misma ficha con la foto oculta.
       await tarj.getByRole("button", { name: new RegExp(`${es.vinos.hidePhoto}.*${RIBERA}`, "i") }).click();
       await expect(marco).toHaveCount(0);
+      expect(await escala(), "título y precio no cambian de tamaño al ocultar la foto").toEqual(conFoto);
       const sinFoto = await caja(tarj);
       expect(card.h - sinFoto.h, `con foto ${card.h}px, sin foto ${sinFoto.h}px`).toBeLessThanOrEqual(24);
       // Antes la foto añadía 320-384 px.
@@ -196,7 +210,7 @@ for (const ancho of [375, 768, 1280]) {
         const titulo = tarj.getByRole("heading", { name: nombre, exact: true });
         const ojo = tarj.getByRole("button", { name: new RegExp(`${es.vinos.hidePhoto}`, "i") });
         const info = tarj.getByRole("button", { name: /información/i });
-        const precio = tarj.locator("span.font-bold").first();
+        const precio = tarj.locator("div.border-t > span").first();
         const anadir = tarj.getByRole("button", { name: new RegExp(`${es.vinos.add} —`) });
         const tipo = tarj.locator("p.text-xs").first();
 
@@ -223,22 +237,32 @@ for (const ancho of [375, 768, 1280]) {
         for (const l of [titulo, precio, tipo]) {
           expect(await l.evaluate((e: HTMLElement) => e.scrollWidth <= e.clientWidth + 1), "texto sin cortar").toBe(true);
         }
-        // La botella entera: `contain`, dentro del marco, el marco nunca más ancho que alto (nada de bandas laterales).
+        // La botella entera. Fotos de carta: `cover` en un marco 3:5 o más estrecho (recorta cartulina
+        // de los lados, nunca botella en alto). Fotos antiguas: `contain` en un marco 3:4, enteras.
         const imagen = tarj.locator("img");
+        const antigua = nombre.startsWith("Vino de foto antigua");
         expect(dentro(await caja(imagen), m)).toBe(true);
-        expect(await imagen.evaluate((i) => getComputedStyle(i).objectFit)).toBe("contain");
-        expect(m.h).toBeGreaterThanOrEqual(m.w * 1.3);
+        expect(await imagen.evaluate((i) => getComputedStyle(i).objectFit)).toBe(antigua ? "contain" : "cover");
+        expect(m.h).toBeGreaterThanOrEqual(m.w * (4 / 3) - 2);
+        if (!antigua) expect(m.w).toBeLessThanOrEqual(104.5);
+        // «Consultar precio» no es un precio: sin el serif dorado y en gris.
+        if (nombre === SIN_PRECIO) {
+          expect(await precio.evaluate((e) => [getComputedStyle(e).fontFamily.includes("Baskerville"), getComputedStyle(e).fontSize, getComputedStyle(e).fontWeight])).toEqual([false, "14px", "500"]);
+          expect(await precio.textContent()).toBe("Consultar precio");
+        }
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
       });
     }
 
-    test("las fotos antiguas (sin «-carta») conservan su fondo oscuro y se ven enteras", async ({ page, erroresJs: _ }) => {
+    test("las fotos antiguas (sin «-carta») conservan su fondo oscuro, su marco 3:4 y se ven enteras", async ({ page, erroresJs: _ }) => {
       await abrirCarta(page, ancho);
       for (const nombre of [ANTIGUA_OSCURA, ANTIGUA_APAISADA]) {
         const marco = tarjeta(page, nombre).locator("[id^='foto-vino-']");
         await expect(marco).toBeVisible();
         expect(await marco.evaluate((e) => getComputedStyle(e).backgroundColor), nombre).toBe("rgb(26, 22, 18)");
         expect(await tarjeta(page, nombre).locator("img").evaluate((i) => getComputedStyle(i).objectFit), nombre).toBe("contain");
+        const m = await caja(marco);
+        expect(m.h / m.w, nombre).toBeGreaterThanOrEqual(4 / 3 - 0.02);
       }
     });
   });

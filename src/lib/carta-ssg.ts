@@ -204,13 +204,29 @@ export function imagenOptimizada(
 }
 
 /**
- * Las fotos nuevas de la carta son composiciones 4:3 (1200×900, plato al 78 %
- * sobre fondo liso) y su nombre de archivo lleva `-carta`. Se pintan enteras,
- * sin el encuadre vertical guardado (que las recortaría). Las antiguas
- * conservan su comportamiento (object-cover + encuadre).
+ * Misma regla que el panel (`admin-casatomas/src/components/carta/rutasFotoCarta.ts`,
+ * `RE_CARTA`). El panel guarda las fotos ya procesadas con `-carta` antes de la
+ * extensión: `<id>-carta.webp` (alta nueva ya compuesta) o
+ * `<id>-carta-<ext>.webp` (procesada desde una original ya subida: `-carta-webp`,
+ * `-carta-jpg`…). Cualquiera de las dos cuenta.
+ */
+const RE_FOTO_CARTA = /-carta(?:-([a-z0-9]+))?\.(webp|jpe?g|png)$/i;
+
+/**
+ * Las fotos de la carta procesadas por el panel son composiciones sobre fondo
+ * liso: los platos en 4:3 (1200×900, plato al 78 %) y los vinos en 3:4
+ * (900×1200, botella al 80 % del alto). Se pintan enteras, sin el encuadre
+ * vertical guardado (que las recortaría). Las antiguas conservan su
+ * comportamiento (object-cover + encuadre).
  */
 export function esFotoCarta(url: string | null | undefined): boolean {
   if (!url) return false;
-  const limpia = decodeURIComponent(url.split(/[?#]/)[0] ?? "");
-  return /-carta\.[a-z0-9]+$/i.test(limpia);
+  const sinConsulta = url.split(/[?#]/)[0] ?? "";
+  let limpia = sinConsulta;
+  try {
+    limpia = decodeURIComponent(sinConsulta);
+  } catch {
+    // Escape `%` mal formado: se prueba la ruta tal cual en vez de romper el render.
+  }
+  return RE_FOTO_CARTA.test(limpia);
 }

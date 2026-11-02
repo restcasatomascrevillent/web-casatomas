@@ -16,6 +16,12 @@ import { modoFotoPlato, videoDePlato } from "@/lib/foto-plato";
 
 const STICKER = "https://x.supabase.co/storage/v1/object/public/platos/pulpo-carta.webp";
 const ANTIGUA = "https://x.supabase.co/storage/v1/object/public/platos/pulpo.webp";
+/** Nombres reales que guarda el panel: `<id>-carta.webp` (alta nueva) y `<id>-carta-<ext>.webp` (procesada). */
+const STICKERS_DEL_PANEL = [
+  "https://x.supabase.co/storage/v1/object/public/platos/0621b106-carta.webp",
+  "https://x.supabase.co/storage/v1/object/public/platos/0621b106-carta-webp.webp",
+  "https://x.supabase.co/storage/v1/object/public/platos/0621b106-carta-jpg.webp?t=1774192689021",
+];
 const VIDEO = "https://x.supabase.co/storage/v1/object/public/platos/pulpo.mp4";
 
 const base = { reducirMovimiento: false, hidratado: true };
@@ -28,6 +34,19 @@ describe("modoFotoPlato", () => {
   it("foto -carta → sticker; foto antigua → foto", () => {
     expect(modoFotoPlato({ ...base, imagen: STICKER, video: null })).toBe("sticker");
     expect(modoFotoPlato({ ...base, imagen: ANTIGUA, video: null })).toBe("foto");
+  });
+
+  it("los nombres que de verdad guarda el panel (-carta.webp, -carta-webp.webp, -carta-jpg.webp) son sticker", () => {
+    for (const imagen of STICKERS_DEL_PANEL) {
+      expect(modoFotoPlato({ ...base, imagen, video: null }), imagen).toBe("sticker");
+    }
+  });
+
+  it("lo que NO es de carta sigue siendo foto (carta.webp, -cartas.webp, -carta solo en la consulta)", () => {
+    for (const nombre of ["carta.webp", "pulpo-cartas.webp", "pulpo.webp?x=-carta.webp"]) {
+      const imagen = `https://x.supabase.co/storage/v1/object/public/platos/${nombre}`;
+      expect(modoFotoPlato({ ...base, imagen, video: null }), imagen).toBe("foto");
+    }
   });
 
   it("con vídeo, hidratado y sin reduced-motion → vídeo", () => {
@@ -106,6 +125,13 @@ describe("<FotoPlato>", () => {
     const { container } = render(<FotoPlato {...props} video={null} />);
     const img = container.querySelector("img")!;
     expect(img.className).toContain("foto-sticker");
+    expect(container.querySelector(".foto-sticker-brillo")).not.toBeNull();
+  });
+
+  it("la foto procesada por el panel (-carta-webp.webp) → img con la animación sticker y el brillo", () => {
+    const imagen = STICKERS_DEL_PANEL[1];
+    const { container } = render(<FotoPlato {...props} src={imagen} imagenOriginal={imagen} video={null} />);
+    expect(container.querySelector("img")!.getAttribute("data-modo-foto")).toBe("sticker");
     expect(container.querySelector(".foto-sticker-brillo")).not.toBeNull();
   });
 
