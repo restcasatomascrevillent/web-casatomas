@@ -5,7 +5,9 @@
  *   fija (su `scroll-margin-top` = alto de la cabecera), a 390 y 1440 px.
  * - Enlaces y botones de la cabecera y del pie miden al menos 24×24 px a 390.
  * - El enlace a Touza va a la web documentada.
- * - La cabecera y el pie son los mismos en la portada, /carta y /touza a 1440.
+ * - La cabecera y el pie son los mismos en la portada, /carta, /touza y
+ *   /reservas a 1440; las páginas legales, que no llevan la cabecera del
+ *   sitio, tienen el mismo pie.
  *
  * Igual que los demás e2e: todo lo que sale del sitio se intercepta y
  * «Supabase» responde `[]`.
@@ -109,7 +111,7 @@ test.describe("Enlace de Touza", () => {
 test.describe("Cabecera y pie a 1440 px", () => {
   test.use({ viewport: ESCRITORIO });
 
-  test("son los mismos en la portada, /carta y /touza", async ({ page, erroresJs: _ }) => {
+  test("son los mismos en todas las páginas", async ({ page, erroresJs: _ }) => {
     const huella = async (ruta: string) => {
       await page.goto(ruta);
       await page.waitForLoadState("networkidle");
@@ -119,7 +121,7 @@ test.describe("Cabecera y pie a 1440 px", () => {
             .map((el) => `${el.textContent?.trim() || el.getAttribute("aria-label")}→${el.getAttribute("href") ?? ""}`);
         const footer = document.querySelector("footer")!;
         return {
-          cabecera: enlaces("header.site-header").map((e) => e.replace(/#.*$/, "")),
+          cabecera: document.querySelector("header.site-header") ? enlaces("header.site-header").map((e) => e.replace(/#.*$/, "")) : null,
           pie: enlaces("footer"),
           altoPie: Math.round(footer.getBoundingClientRect().height),
         };
@@ -127,8 +129,14 @@ test.describe("Cabecera y pie a 1440 px", () => {
     };
     const portada = await huella("/");
     expect(portada.pie.length).toBeGreaterThan(5);
-    for (const ruta of ["/carta", "/touza"]) {
+    for (const ruta of ["/carta", "/touza", "/reservas"]) {
       expect(await huella(ruta), ruta).toEqual(portada);
+    }
+    // Las páginas legales no llevan la cabecera del sitio (tienen la suya,
+    // sin menú), pero sí el mismo pie.
+    for (const ruta of ["/politica-privacidad", "/condiciones", "/aviso-legal"]) {
+      const { pie, altoPie } = await huella(ruta);
+      expect({ pie, altoPie }, ruta).toEqual({ pie: portada.pie, altoPie: portada.altoPie });
     }
   });
 });

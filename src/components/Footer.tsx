@@ -105,7 +105,9 @@ const Footer = () => {
             {t.footer.rights}
           </p>
 
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center">
+          {/* La regla de 24 px va en la fila y no solo en cada enlace, para que
+              cualquier enlace legal que se añada aquí la cumpla también. */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center [&>*]:inline-flex [&>*]:min-h-6 [&>*]:items-center">
             <Link
               to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
               className={ENLACE_LEGAL}
