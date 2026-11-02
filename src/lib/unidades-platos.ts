@@ -1,3 +1,5 @@
+import type { Language } from "@/i18n/types";
+
 /** Vocabulario compartido por el editor y la carta pública. La cantidad forma
  * parte de la unidad del precio: 150 g significa euros por 150 gramos. */
 export function normalizarUnidadPlato(valor?: string | null): string {
@@ -16,6 +18,20 @@ export function normalizarUnidadPlato(valor?: string | null): string {
     return `${Number(gramos[1].replace(",", "."))} g`;
   if (/^racion(es)?$/.test(clave)) return "Ración";
   return texto;
+}
+/** "Unidad" y "Ración" son palabras: en la carta pública se pintan en el
+ * idioma de la página. "kg" y "150 g" se quedan como están; un texto libre
+ * del panel que no se reconoce también (no se inventa traducción). */
+const UNIDADES_TRADUCIDAS: Record<string, Record<Language, string>> = {
+  Unidad: { es: "Unidad", en: "Unit", fr: "Unité" },
+  Ración: { es: "Ración", en: "Portion", fr: "Portion" },
+};
+export function etiquetaUnidadPlato(
+  valor: string | null | undefined,
+  idioma: Language,
+): string {
+  const unidad = normalizarUnidadPlato(valor);
+  return UNIDADES_TRADUCIDAS[unidad]?.[idioma] ?? unidad;
 }
 export function gramosDeUnidad(valor?: string | null): number | null {
   const match = normalizarUnidadPlato(valor).match(/^(\d+(?:\.\d+)?) g$/);

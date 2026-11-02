@@ -14,6 +14,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
 import {
+  categoriaDeLinea,
   LOCALE_POR_IDIOMA,
   cantidadDeLinea,
   configUnidad,
@@ -145,7 +146,16 @@ const PreviewPedido = () => {
     }
   };
 
-  const lineas = useMemo(() => pedido.map((linea) => ({ ...linea, clave: clavePedido(linea) })), [pedido]);
+  const categorias = t.categories;
+  const lineas = useMemo(
+    () =>
+      pedido.map((linea) => ({
+        ...linea,
+        clave: clavePedido(linea),
+        categoria: categoriaDeLinea(linea, language, [categorias.platos, categorias.bebidas]),
+      })),
+    [pedido, language, categorias],
+  );
   const { comensales, modo, nombres, asignaciones } = mesa;
   const reparto = useMemo(
     () => repartoCadaUno(lineas, (l) => l.clave, asignaciones, comensales),
