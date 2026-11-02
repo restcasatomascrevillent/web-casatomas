@@ -21,7 +21,16 @@ interface Vino {
 }
 
 interface MapaMundoVinosProps {
+  /** Los vinos que pasan los filtros de la carta (todos, si no hay ninguno). */
   vinos: Vino[];
+  /** Hay un filtro de tipo, denominación o búsqueda aplicado. */
+  filtroActivo?: boolean;
+  /**
+   * Identifica el filtro aplicado: al cambiar, el mapa reencuadra. Un cambio
+   * de `vinos` sin cambio de clave (el refresco del catálogo) no mueve la
+   * cámara, para no quitarle el mapa de las manos a quien lo está mirando.
+   */
+  claveFiltro?: string;
 }
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
@@ -60,10 +69,64 @@ const markerBackground = (categories: string[]) => {
 
 const PAGE_SIZE = 5;
 
-const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
+const vistaInicial = (isMobile: boolean) => ({
+  center: (isMobile ? [0, 20] : [0, 30]) as [number, number],
+  zoom: isMobile ? 1 : 1.5,
+});
+
+// Una zona (centro de una D.O.) no es una bodega: no acercar más que a nivel de región.
+const ZOOM_MAXIMO_ENCUADRE = 6;
+const DURACION_ENCUADRE_MS = 900;
+
+const sinMovimiento = () => typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const AVISOS_SIN_PUNTOS = {
+  es: {
+    sinVinos: "Ningún vino coincide con los filtros.",
+    sinPuntos: "Los vinos de esta selección no tienen ubicación puntual verificada en el mapa. Los encontrarás debajo.",
+  },
+  en: {
+    sinVinos: "No wines match the filters.",
+    sinPuntos: "The wines in this selection have no verified map location. You'll find them below the map.",
+  },
+  fr: {
+    sinVinos: "Aucun vin ne correspond aux filtres.",
+    sinPuntos: "Les vins de cette sélection n’ont pas de localisation précise vérifiée sur la carte. Vous les trouverez sous la carte.",
+  },
+};
+
+/**
+ * Con filtro, la cámara abarca los vinos que quedan; sin filtro, vuelve a la
+ * vista general. Sin movimiento si el visitante lo pide
+ * (`prefers-reduced-motion`) o si no hay desde dónde viajar. Si no queda ningún
+ * punto no se toca: un aviso sobre el mapa explica por qué no hay marcadores.
+ */
+function encuadrarMapa(mapa: mapboxgl.Map, puntos: [number, number][], filtroActivo: boolean, animar: boolean) {
+  const duration = animar && !sinMovimiento() ? DURACION_ENCUADRE_MS : 0;
+  if (!filtroActivo) {
+    mapa.easeTo({ ...vistaInicial(window.innerWidth < 768), duration });
+  } else if (puntos.length > 0) {
+    const longitudes = puntos.map(([longitud]) => longitud);
+    const latitudes = puntos.map(([, latitud]) => latitud);
+    mapa.fitBounds(
+      [[Math.min(...longitudes), Math.min(...latitudes)], [Math.max(...longitudes), Math.max(...latitudes)]],
+      { padding: 48, maxZoom: ZOOM_MAXIMO_ENCUADRE, duration },
+    );
+  }
+}
+
+const MapaMundoVinos = ({ vinos, filtroActivo = false, claveFiltro = "" }: MapaMundoVinosProps) => {
   const { t, language } = useTranslations();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  // El mapa se crea una vez: al cambiar de filtro solo se cambian los
+  // marcadores (y la cámara), no se reconstruye Mapbox ni se vuelven a pedir
+  // los tiles.
+  const marcadores = useRef<mapboxgl.Marker[]>([]);
+  const puntosColocados = useRef<[number, number][]>([]);
+  const [mapaCargado, setMapaCargado] = useState<mapboxgl.Map | null>(null);
+  const mapaEncuadrado = useRef<mapboxgl.Map | null>(null);
+  const claveEncuadrada = useRef(claveFiltro);
   const [selectedRegion, setSelectedRegion] = useState<{ region: string; vinos: Vino[]; category?: string } | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [tipoRegion, setTipoRegion] = useState<TipoVino>("todos");
@@ -91,6 +154,10 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     const mapaActual = map.current;
     const signal = solicitudes.current!.signal;
     const isMobile = window.innerWidth < 768;
+
+    marcadores.current.forEach(marcador => marcador.remove());
+    marcadores.current = [];
+    puntosColocados.current = [];
 
     const colocar = (data: Grupo, coords: [number, number]) => {
       const region = data.region;
@@ -152,6 +219,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         // Los marcadores se redimensionan con el zoom sin alterar su posición
         marker.setRotationAlignment("map");
         marker.setPitchAlignment("map");
+        marcadores.current.push(marker);
+        puntosColocados.current.push(coords);
       }
     };
 
@@ -174,8 +243,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/light-v11',
-        center: isMobile ? [0, 20] : [0, 30],
-        zoom: isMobile ? 1 : 1.5,
+        ...vistaInicial(isMobile),
         projection: { name: "mercator" },
         // Mejorar la experiencia táctil en móvil
         touchZoomRotate: true,
@@ -197,7 +265,8 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         map.current.scrollZoom.disable();
       }
 
-      map.current.on('load', addWineMarkers);
+      const mapa = map.current;
+      mapa.on('load', () => setMapaCargado(mapa));
     } catch (error) {
       toast({
         title: t.map.errorTitle,
@@ -205,7 +274,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
         variant: "destructive",
       });
     }
-  }, [addWineMarkers, toast, t]);
+  }, [toast, t]);
 
   useEffect(() => {
     solicitudes.current?.abort();
@@ -215,14 +284,34 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
     }
 
     setSelectedRegion(null);
+    setMapaCargado(null);
     initializeMap();
 
     return () => {
       solicitudes.current?.abort();
       map.current?.remove();
       map.current = null;
+      marcadores.current = [];
     };
   }, [initializeMap]);
+
+  // Con el mapa cargado, los marcadores son siempre los de la lista que llega
+  // (la que pasa los filtros de la carta). Si lo que cambió es el filtro, la
+  // cámara se acerca a esos vinos; si solo se refrescó el catálogo, se queda
+  // donde el visitante la dejó.
+  useEffect(() => {
+    if (!mapaCargado || mapaCargado !== map.current) return;
+    addWineMarkers();
+    const mapaNuevo = mapaCargado !== mapaEncuadrado.current;
+    const filtroCambiado = claveFiltro !== claveEncuadrada.current;
+    mapaEncuadrado.current = mapaCargado;
+    claveEncuadrada.current = claveFiltro;
+    // Un mapa recién creado ya con un filtro puesto (se montó tarde, o se
+    // reconstruyó) se coloca de golpe: no hay vista anterior desde la que viajar.
+    if (filtroCambiado || (mapaNuevo && filtroActivo)) {
+      encuadrarMapa(mapaCargado, puntosColocados.current, filtroActivo, !mapaNuevo);
+    }
+  }, [mapaCargado, addWineMarkers, claveFiltro, filtroActivo]);
 
   // Asegurar que el mapa recalcula el tamaño cuando cambia el layout (p.ej. tras aceptar el modal 18+)
   useEffect(() => {
@@ -254,6 +343,10 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
   }, [selectedRegion, tipoRegion]);
 
   const origenesSinUbicar = sinUbicar;
+  // Con filtro y ningún vino situable (o ninguno): un aviso en vez de un mapa vacío.
+  const avisoSinPuntos = filtroActivo && sinUbicar.length === grupos.length
+    ? AVISOS_SIN_PUNTOS[language][vinos.length ? "sinPuntos" : "sinVinos"]
+    : "";
   const avisoUbicacion = language === "es" ? "Los puntos sitúan la zona de cada vino: la bodega exacta cuando está documentada, o el centro aproximado de su denominación." : language === "en" ? "Pins show each wine's area: the exact winery where documented, otherwise the approximate centre of its appellation." : "Les points situent la zone de chaque vin : le domaine exact quand il est documenté, sinon le centre approximatif de son appellation.";
 
   return (
@@ -262,11 +355,22 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
       <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base px-4">
         {avisoUbicacion}
       </p>
-      <div 
-        ref={mapContainer} 
-        className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
-        style={{ maxWidth: '100%', overflow: 'hidden' }}
-      />
+      <div className="relative">
+        <div 
+          ref={mapContainer} 
+          className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
+          style={{ maxWidth: '100%', overflow: 'hidden' }}
+        />
+        {/* Siempre en el DOM (vacío si no hace falta): así un lector de pantalla
+            anuncia el aviso cuando aparece. No tapa el mapa ni captura toques. */}
+        <div role="status" className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 justify-center px-6">
+          {avisoSinPuntos && (
+            <p className="max-w-sm rounded-md border border-border bg-background/95 px-4 py-3 text-center text-sm text-muted-foreground shadow-sm">
+              {avisoSinPuntos}
+            </p>
+          )}
+        </div>
+      </div>
       {origenesSinUbicar.length > 0 && (
         <div className="mt-4 space-y-2">
           <p className="text-sm text-muted-foreground">{language === "es" ? "Vinos sin ubicación puntual verificada" : language === "en" ? "Wines without a verified map location" : "Vins sans localisation précise vérifiée"}</p>
