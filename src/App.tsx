@@ -7,10 +7,12 @@ import CookieConsent from "./components/CookieConsent";
 import MobileReserveCTA from "./components/MobileReserveCTA";
 import FloatingActions from "./components/FloatingActions";
 import ScrollToTop from "./components/ScrollToTop";
+import SaltarAlContenido from "./components/SaltarAlContenido";
 import PageTransition from "./components/PageTransition";
 import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
+import { HANDLE_PAGINA_NO_ENCONTRADA } from "@/lib/hidratacion-404";
 
 // Sin esto, React Query usa sus valores por defecto: `staleTime: 0` (cada
 // montaje de un componente con `useQuery` — novedades, reseñas, menús del
@@ -61,6 +63,9 @@ const Layout = ({ lang }: { lang: Language }) => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider key={lang} initialLanguage={lang}>
       <TooltipProvider>
+        {/* Primer foco de todas las páginas (antes que el banner de cookies y
+            la cabecera de cada página). */}
+        <SaltarAlContenido />
         <ScrollToTop />
         <Suspense fallback={null}>
           <Toaster />
@@ -174,6 +179,7 @@ const paginasComunes = (): RouteRecord[] => [
 // llamadas a `lazy` sean idempotentes, la identidad del objeto no lo es.
 const buildCatchAllRoute = (): RouteRecord => ({
   path: "*",
+  handle: HANDLE_PAGINA_NO_ENCONTRADA,
   lazy: lazyRoute(() => import("./pages/NotFound")),
 });
 
@@ -204,7 +210,9 @@ export const routes: RouteRecord[] = [
       // descarta la ruta "*" al recolectar paths). Vercel sirve ese fichero con
       // status 404 para cualquier URL que no resuelva en el filesystem. Uno
       // solo para todo el sitio: Vercel no elige el 404 por idioma.
-      { path: "404", lazy: lazyRoute(() => import("./pages/NotFound")) },
+      // Vercel la serviría con 200 en `/404` (`cleanUrls`): `middleware.ts` la
+      // reescribe para que responda 404. `handle`: ver `src/lib/hidratacion-404.ts`.
+      { path: "404", handle: HANDLE_PAGINA_NO_ENCONTRADA, lazy: lazyRoute(() => import("./pages/NotFound")) },
       // ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE
       buildCatchAllRoute(),
     ],

@@ -1,4 +1,9 @@
-import { gramosDeUnidad, normalizarUnidadPlato } from "@/lib/unidades-platos";
+import { formatearPrecio } from "@/lib/precios";
+import {
+  etiquetaUnidadPlato,
+  gramosDeUnidad,
+  normalizarUnidadPlato,
+} from "@/lib/unidades-platos";
 import OpcionSinGluten from "./OpcionSinGluten";
 import { useState } from "react";
 import { Eye, EyeOff, Info, Plus, UtensilsCrossed } from "lucide-react";
@@ -26,7 +31,9 @@ import FotoPlato from "./FotoPlato";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { girarYEnfocar, propsCara } from "@/lib/caraGiro";
 import type { Translations } from "@/i18n/languages/es";
+import type { Language } from "@/i18n/types";
 
 interface ProductoCardProps {
   /** Ya resuelto al idioma activo (`resolveTranslatedItem`/`agruparPorCategoria`, NO el plato crudo). */
@@ -75,6 +82,7 @@ type PiePlatoProps = {
   nombre: string;
   onAnadir?: () => void;
   t: Translations["platos"];
+  language: Language;
 };
 
 /**
@@ -95,14 +103,15 @@ const PiePlato = ({
   nombre,
   onAnadir,
   t,
+  language,
 }: PiePlatoProps) => (
   <CardFooter className="flex items-center justify-between gap-3 border-t bg-muted/30 mt-auto flex-shrink-0 px-5 py-3">
     <span className="font-bold text-accent text-xl">
-      {precio}€
+      {formatearPrecio(precio)}
       {unidad && (
         <span className="text-sm font-normal text-muted-foreground">
           {" "}
-          / {normalizarUnidadPlato(unidad)}
+          / {etiquetaUnidadPlato(unidad, language)}
         </span>
       )}
     </span>
@@ -119,7 +128,7 @@ const PiePlato = ({
                   .replace("{qty}", formatearCantidad(cantidadEnPedido, unidad))
               : t.addAria.replace("{name}", nombre)
           }
-          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
+          className="bg-accent hover:bg-accent-hover text-accent-foreground rounded-full px-4 shadow-md hover:shadow-lg transition-all"
         >
           <Plus className="w-4 h-4 mr-1" aria-hidden="true" />
           {t.add}
@@ -244,6 +253,7 @@ const ProductoCard = ({
       id={anclaPlato(plato.id)}
       data-resaltado={resaltado || undefined}
       className={`scroll-mt-28 [perspective:1200px] ${expanded || infoOpen ? "h-full" : "h-auto"}`}
+      data-tarjeta-giro={anclaPlato(plato.id)}
     >
       {/* Envoltorio del giro 3D: mismo patrón que `CartaVinos.tsx`. La cara
           trasera va con `backface-visibility:hidden` y en `absolute` salvo
@@ -255,6 +265,8 @@ const ProductoCard = ({
       >
         <div
           className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}
+          data-cara="delantera"
+          {...propsCara(infoOpen)}
         >
           <Card
             className={`font-libre-baskerville flex flex-col overflow-hidden transition duration-300 motion-reduce:transition-none hover:shadow-xl hover:-translate-y-1 h-full ${
@@ -351,8 +363,14 @@ const ProductoCard = ({
                   )}
                   <button
                     type="button"
-                    onClick={() => setInfoOpen((valor) => !valor)}
+                    onClick={(evento) =>
+                      girarYEnfocar(evento.currentTarget, () =>
+                        setInfoOpen((valor) => !valor),
+                      )
+                    }
                     aria-label={`${infoOpen ? t.platos.hideInfo : t.platos.viewInfo} — ${plato.displayNombre}`}
+                    aria-expanded={infoOpen}
+                    data-boton-giro=""
                     className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                   >
                     <Info className="w-5 h-5" aria-hidden="true" />
@@ -375,6 +393,7 @@ const ProductoCard = ({
               nombre={plato.displayNombre}
               onAnadir={onAnadir}
               t={t.platos}
+              language={language}
             />
           </Card>
         </div>
@@ -384,6 +403,8 @@ const ProductoCard = ({
             tarjeta, ahora tras la "i". */}
         <div
           className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
+          data-cara="trasera"
+          {...propsCara(!infoOpen)}
         >
           <Card
             className={`font-libre-baskerville flex flex-col overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
@@ -430,8 +451,14 @@ const ProductoCard = ({
                   )}
                   <button
                     type="button"
-                    onClick={() => setInfoOpen((valor) => !valor)}
+                    onClick={(evento) =>
+                      girarYEnfocar(evento.currentTarget, () =>
+                        setInfoOpen((valor) => !valor),
+                      )
+                    }
                     aria-label={`${infoOpen ? t.platos.hideInfo : t.platos.viewInfo} — ${plato.displayNombre}`}
+                    aria-expanded={infoOpen}
+                    data-boton-giro=""
                     className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03] shrink-0"
                   >
                     <Info className="w-5 h-5" aria-hidden="true" />
@@ -511,6 +538,7 @@ const ProductoCard = ({
               nombre={plato.displayNombre}
               onAnadir={onAnadir}
               t={t.platos}
+              language={language}
             />
           </Card>
         </div>

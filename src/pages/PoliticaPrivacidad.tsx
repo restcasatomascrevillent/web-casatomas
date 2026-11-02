@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
 import { TextoRico } from "@/components/TextoRico";
@@ -12,6 +14,7 @@ import {
 } from "@/lib/condiciones";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
 import { RESPONSABLE_TRATAMIENTO, TEXTOS_PRIVACIDAD } from "@/lib/politica-privacidad-textos";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * Política de privacidad (es/en/fr). Existe en las tres ramas
@@ -26,6 +29,16 @@ const PoliticaPrivacidad = () => {
     const p = TEXTOS_PRIVACIDAD[language];
     const inicio = construirRutaIdioma("/", language);
     const rutaPolitica = construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language);
+    const { hash } = useLocation();
+
+    // Esta página no lleva el `Header` de la portada, que es quien hace el
+    // salto a un ancla en las navegaciones de React Router. Sin esto, el enlace
+    // «Política de cookies» del pie (`…#cookies`) dejaba la página arriba del
+    // todo, o donde estuviera, en vez de en el apartado de cookies.
+    useEffect(() => {
+        if (!hash) return;
+        document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
+    }, [hash]);
 
     return (
         <div className="min-h-screen bg-background">
@@ -36,18 +49,19 @@ const PoliticaPrivacidad = () => {
                 lang={language}
                 noindex
             />
+            <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
             {/* Header */}
             <div className="bg-dark-slate text-background py-8 px-4">
                 <div className="max-w-4xl mx-auto">
                     <Link
                         to={inicio}
-                        className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+                        className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         {p.back}
                     </Link>
                     <h1 className="text-3xl md:text-4xl font-bold">{p.title}</h1>
-                    <p className="text-stone mt-2 text-sm">{p.updated}</p>
+                    <p className="text-stone-light mt-2 text-sm">{p.updated}</p>
                 </div>
             </div>
 
@@ -60,7 +74,7 @@ const PoliticaPrivacidad = () => {
                     <div className="rounded-lg border border-border p-5 space-y-1 text-sm text-muted-foreground">
                         <p><strong className="text-foreground">{p.controller.companyLabel}</strong> {RESPONSABLE_TRATAMIENTO.razonSocial}</p>
                         <p><strong className="text-foreground">{p.controller.addressLabel}</strong> {RESPONSABLE_TRATAMIENTO.direccion}</p>
-                        <p><strong className="text-foreground">{p.controller.phoneLabel}</strong> <TelLink className="text-accent hover:underline" /></p>
+                        <p><strong className="text-foreground">{p.controller.phoneLabel}</strong> <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p><strong className="text-foreground">{p.controller.emailLabel}</strong> {NEGOCIO.email}</p>
                     </div>
                 </section>
@@ -94,7 +108,7 @@ const PoliticaPrivacidad = () => {
                                             {" "}
                                             <Link
                                                 to={`${construirRutaIdioma(CONDICIONES_PATH, language)}#${ANCLA_CONDICIONES_NEWSLETTER}`}
-                                                className="text-accent hover:underline"
+                                                className="text-accent underline underline-offset-2 hover:decoration-2"
                                             >
                                                 {p.purposes.conditionsLinkText}
                                             </Link>
@@ -165,7 +179,7 @@ const PoliticaPrivacidad = () => {
                                 {item.href && (
                                     <>
                                         {" "}
-                                        <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                                        <a href={item.href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:decoration-2">
                                             {p.providers.privacyLinkLabel}
                                         </a>
                                     </>
@@ -176,31 +190,22 @@ const PoliticaPrivacidad = () => {
                 </section>
 
                 {/* 8. Contacto */}
-                <section className="rounded-lg bg-muted/40 border border-border p-6">
+                <section className="rounded-lg bg-muted/20 border border-border p-6">
                     <h2 className="text-xl font-bold mb-2 text-accent">{p.contact.heading}</h2>
                     <p className="text-sm text-muted-foreground">{p.contact.intro}</p>
                     <div className="mt-3 text-sm space-y-1">
-                        <p>📧 <a href={`mailto:${NEGOCIO.email}`} className="text-accent hover:underline">{NEGOCIO.email}</a></p>
-                        <p>📞 <TelLink className="text-accent hover:underline" /></p>
+                        <p>📧 <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">{NEGOCIO.email}</a></p>
+                        <p>📞 <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p>📍 {RESPONSABLE_TRATAMIENTO.direccion}</p>
                     </div>
                 </section>
 
             </div>
+            </main>
 
-            {/* Footer simple. Tag `<footer>` real: MobileReserveCTA lo busca con
-                `document.querySelector("footer")` para ocultar su barra fija
-                al llegar aquí abajo. */}
-            <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
-                <p>{p.footer.rights.replace("{year}", String(new Date().getFullYear()))}</p>
-                <p className="mt-1">
-                    <Link to={inicio} className="hover:text-accent transition-colors">{p.footer.home}</Link>
-                    {" · "}
-                    <Link to={rutaPolitica} className="hover:text-accent transition-colors">{p.footer.privacy}</Link>
-                    {" · "}
-                    <Link to={construirRutaIdioma(CONDICIONES_PATH, language)} className="hover:text-accent transition-colors">{p.footer.conditions}</Link>
-                </p>
-            </footer>
+            {/* Pie común de toda la web (también lleva el `<footer>` real que
+                busca MobileReserveCTA para ocultar su barra fija al llegar abajo). */}
+            <Footer />
         </div>
     );
 };

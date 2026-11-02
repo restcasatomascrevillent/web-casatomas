@@ -44,21 +44,37 @@ All colors MUST be HSL.
     --primary: 206 11% 25%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 25 13% 55%;
+    /* Contraste (AA): el blanco sobre la piedra de antes (25 13% 55%) daba
+       3,3:1. La misma piedra a 42 % de luz da 5,3:1. */
+    --secondary: 25 13% 42%;
     --secondary-foreground: 0 0% 100%;
+    /* Igual que --accent-hover: el hover oscurece, no aclara. */
+    --secondary-hover: 25 13% 33%;
 
     --muted: 25 13% 85%;
-    --muted-foreground: 15 4% 39%;
+    /* Contraste (2/2): a 39 % daba 4,3:1 sobre --muted, el centro del
+       degradado del Hero (axe no mide degradados). A 35 %, 5:1. */
+    --muted-foreground: 15 4% 35%;
 
-    --accent: 38 59% 45%;
+    /* Contraste (AA): el dorado de antes (38 59% 45%, #b6852f) daba 3,3:1
+       con el blanco, en los dos sentidos (texto dorado y botones dorados).
+       El mismo dorado a 35 % de luz (#8e6725) da 5,1:1 sobre blanco y
+       4,6:1 sobre el crema más claro de las secciones. */
+    --accent: 38 59% 35%;
     --accent-foreground: 0 0% 100%;
+    /* Hover de los botones dorados: el mismo dorado 8 puntos más oscuro.
+       Antes era `accent/90`, que ACLARA el fondo y baja el contraste del
+       texto blanco justo al pasar el ratón (contraste 2/2, criterio 3). */
+    --accent-hover: 38 59% 27%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Contraste (AA): el rojo de shadcn (#ef4444) daba 3,8:1 con el texto
+       blanco de los avisos de error. */
+    --destructive: 0 74% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 25 13% 85%;
     --input: 25 13% 85%;
-    --ring: 38 59% 45%;
+    --ring: 38 59% 35%;
 
     --radius: 0.5rem;
     
@@ -66,7 +82,14 @@ All colors MUST be HSL.
     --stone: 25 13% 55%;
     --dark-slate: 206 11% 25%;
     --mid-gray: 15 4% 39%;
-    --gold: 38 59% 45%;
+    --gold: 38 59% 35%;
+    /* Piedra para texto sobre `--dark-slate` (pie): la piedra normal da 3,1:1
+       ahí; esta, de la misma gama y más clara, 5,2:1. Para fondos claros
+       sigue valiendo `--stone`. */
+    --stone-light: 25 13% 72%;
+    /* Dorado para texto sobre `--dark-slate` (hover del pie): el dorado
+       normal da 2:1 ahí; este, de la misma gama y más claro, 5:1. */
+    --gold-light: 38 59% 62%;
 
     /*
      * Ticket (resguardo de solicitud de reserva).
@@ -75,7 +98,7 @@ All colors MUST be HSL.
      * que fija los colores a mano porque se captura como imagen. Aquí sí son
      * tokens: este ticket es DOM vivo y tiene que responder al tema.
      *
-     * `--ticket-stamp` NO es `--gold`: el oro (38 59% 45%) sobre el papel da
+     * `--ticket-stamp` NO es `--gold`: el oro antiguo (38 59% 45%) sobre el papel daba
      * 3,1:1 de contraste — vale para una filigrana, no para el texto del sello,
      * que es justo el dato que no se puede perder. Este oro oscurecido da
      * 5,4:1 (AA) y sigue leyéndose como la misma familia de tinta ámbar.
@@ -134,12 +157,14 @@ All colors MUST be HSL.
 
     --secondary: 25 13% 35%;
     --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 25 13% 30%;
 
     --muted: 206 11% 25%;
     --muted-foreground: 25 13% 70%;
 
     --accent: 38 59% 45%;
     --accent-foreground: 0 0% 100%;
+    --accent-hover: 38 59% 38%;
 
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 100%;
@@ -433,7 +458,13 @@ All colors MUST be HSL.
     radial-gradient(ellipse at 90% 80%, hsl(var(--primary) / 0.10), transparent 60%);
 }
 
-section[id] { scroll-margin-top: 5rem; }
+/* Hueco del ancla = alto de la cabecera fija (`Header.tsx`: h-16 / md:h-20)
+   más su borde inferior de 1 px al hacer scroll, para que la sección quede
+   justo debajo y no tapada ni separada. */
+section[id] { scroll-margin-top: calc(4rem + 1px); }
+@media (min-width: 768px) {
+  section[id] { scroll-margin-top: calc(5rem + 1px); }
+}
 
 @media (hover: none), (pointer: coarse) {
   .hero-section .animate-float { animation: none; }

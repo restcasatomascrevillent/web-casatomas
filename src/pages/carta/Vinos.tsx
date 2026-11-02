@@ -175,7 +175,7 @@ const CartaVinosPagina = () => {
 
         <p className="mt-12 text-sm text-muted-foreground">
           {textos.buscasAlgo}{" "}
-          <Link to={construirRutaIdioma("/carta/bebidas", language)} className="text-accent hover:underline">
+          <Link to={construirRutaIdioma("/carta/bebidas", language)} className="text-accent underline underline-offset-2 hover:decoration-2">
             {textos.verBebidas}
           </Link>
           .

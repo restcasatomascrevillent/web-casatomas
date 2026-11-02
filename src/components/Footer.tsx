@@ -8,6 +8,13 @@ import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 import { openCookiePreferences } from "@/lib/cookie-consent";
 import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH } from "@/lib/condiciones";
 
+// Zonas de toque de al menos 24×24 px (WCAG 2.2, 2.5.8): con `text-sm` la
+// línea mide 20 px, así que cada enlace crece hasta 24 px de alto sin cambiar
+// el aspecto (el `space-y` baja de 8 a 4 px); los iconos sociales, de 20 px,
+// llevan 2 px de relleno por lado.
+const ENLACE = "inline-flex min-h-6 items-center hover:text-gold-light transition-colors";
+const ICONO = "inline-flex min-h-6 min-w-6 items-center justify-center text-stone-light hover:text-gold-light transition-colors";
+
 const Footer = () => {
   const { t, language } = useTranslations();
   return (
@@ -16,13 +23,13 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
             <h3 className="text-xl font-bold mb-4">Casa Tomás</h3>
-            <p className="text-stone text-sm leading-relaxed mb-5">
+            <p className="text-stone-light text-sm leading-relaxed mb-5">
               {t.footer.description}
             </p>
             <Button
               asChild
               size="sm"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-full shadow-md"
+              className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full shadow-md"
             >
               <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
                 <Star className="w-4 h-4 mr-2 fill-current" />
@@ -33,16 +40,16 @@ const Footer = () => {
 
           <div>
             <h4 className="font-semibold mb-4">{t.footer.quickLinks}</h4>
-            <ul className="space-y-2 text-sm text-stone">
+            <ul className="space-y-1 text-sm text-stone-light">
               <li>
                 {/* Antes era `#carta`, que fuera de la portada no llevaba a
                     ninguna parte. Ahora la carta tiene página propia. */}
-                <Link to={construirRutaIdioma("/carta", language)} className="hover:text-accent transition-colors">
+                <Link to={construirRutaIdioma("/carta", language)} className={ENLACE}>
                   {t.footer.menuLink}
                 </Link>
               </li>
               <li>
-                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className="hover:text-accent transition-colors">
+                <Link to={construirRutaIdioma(RESERVAS_PATH, language)} className={ENLACE}>
                   {t.footer.reserveLink}
                 </Link>
               </li>
@@ -51,23 +58,23 @@ const Footer = () => {
                 { path: "/contacto", label: { es: "Contacto y horarios", en: "Contact and hours", fr: "Contact et horaires" } },
                 { path: "/regala", label: { es: "Cheques regalo", en: "Gift vouchers", fr: "Chèques cadeaux" } },
                 { path: "/touza", label: { es: "Touza Cocktail Bar", en: "Touza Cocktail Bar", fr: "Touza Cocktail Bar" } },
-              ].map(({ path, label }) => <li key={path}><Link to={construirRutaIdioma(path, language)} className="hover:text-accent transition-colors">{label[language]}</Link></li>)}
+              ].map(({ path, label }) => <li key={path}><Link to={construirRutaIdioma(path, language)} className={ENLACE}>{label[language]}</Link></li>)}
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">{t.footer.contactTitle}</h4>
-            <ul className="space-y-2 text-sm text-stone">
+            <ul className="space-y-1 text-sm text-stone-light">
               <li>
-                <TelLink className="hover:text-accent transition-colors" />
+                <TelLink className={ENLACE} />
               </li>
               <li>
-                <a href="mailto:casatomascrevillent@gmail.com" className="hover:text-accent transition-colors">
+                <a href="mailto:casatomascrevillent@gmail.com" className={ENLACE}>
                   casatomascrevillent@gmail.com
                 </a>
               </li>
-              <li>Carrer Santa Maria de la Cabeza, 2</li>
-              <li>03330 Crevillent, Alicante</li>
+              <li className="flex min-h-6 items-center">Carrer Santa Maria de la Cabeza, 2</li>
+              <li className="flex min-h-6 items-center">03330 Crevillent, Alicante</li>
             </ul>
             <div className="flex gap-4 mt-4">
               <a
@@ -75,7 +82,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="text-stone hover:text-accent transition-colors"
+                className={ICONO}
               >
                 <Instagram className="w-5 h-5" />
               </a>
@@ -84,7 +91,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="text-stone hover:text-accent transition-colors"
+                className={ICONO}
               >
                 <Facebook className="w-5 h-5" />
               </a>
@@ -93,34 +100,44 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-mid-gray pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-stone">
+          <p className="text-sm text-stone-light">
             {t.footer.rights}
           </p>
 
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center">
+          {/* La regla de 24 px va en la fila y no solo en cada enlace, para que
+              cualquier enlace legal que se añada aquí la cumpla también. */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 items-center [&>*]:inline-flex [&>*]:min-h-6 [&>*]:items-center">
             <Link
               to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.terms}
             </Link>
             <Link
               to={construirRutaIdioma(CONDICIONES_PATH, language)}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.bookingTerms}
+            </Link>
+            {/* Lleva al apartado de cookies de la política de privacidad; el
+                salto al ancla lo hace la propia página (ver `PoliticaPrivacidad`). */}
+            <Link
+              to={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`}
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
+            >
+              {t.footer.cookiePolicy}
             </Link>
             {/* Solo existe en español (ver `AVISO_LEGAL_PATH`): sin prefijo de idioma. */}
             <Link
               to={AVISO_LEGAL_PATH}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.legalNotice}
             </Link>
             <button
               type="button"
               onClick={openCookiePreferences}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.cookieSettings}
             </button>

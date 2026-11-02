@@ -14,6 +14,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
 import {
+  categoriaDeLinea,
   LOCALE_POR_IDIOMA,
   cantidadDeLinea,
   configUnidad,
@@ -145,7 +146,16 @@ const PreviewPedido = () => {
     }
   };
 
-  const lineas = useMemo(() => pedido.map((linea) => ({ ...linea, clave: clavePedido(linea) })), [pedido]);
+  const categorias = t.categories;
+  const lineas = useMemo(
+    () =>
+      pedido.map((linea) => ({
+        ...linea,
+        clave: clavePedido(linea),
+        categoria: categoriaDeLinea(linea, language, [categorias.platos, categorias.bebidas]),
+      })),
+    [pedido, language, categorias],
+  );
   const { comensales, modo, nombres, asignaciones } = mesa;
   const reparto = useMemo(
     () => repartoCadaUno(lineas, (l) => l.clave, asignaciones, comensales),
@@ -400,7 +410,7 @@ const PreviewPedido = () => {
             </span>
             <p className="font-libre-baskerville text-lg text-ticket-ink text-balance">{tp.emptyTitle}</p>
             <p className="mt-2 max-w-xs text-sm text-ticket-ink-soft text-pretty">{tp.emptySubtitle}</p>
-            <Button asChild className="mt-6 rounded-full bg-accent px-6 text-accent-foreground hover:bg-accent/90">
+            <Button asChild className="mt-6 rounded-full bg-accent px-6 text-accent-foreground hover:bg-accent-hover">
               <Link to={rutaCarta} onClick={() => setAbierto(false)}>
                 {tp.emptyCta}
               </Link>
@@ -445,7 +455,7 @@ const PreviewPedido = () => {
               type="button"
               onClick={compartirTicket}
               disabled={compartiendo}
-              className="gap-2 rounded-full bg-accent px-5 text-accent-foreground hover:bg-accent/90"
+              className="gap-2 rounded-full bg-accent px-5 text-accent-foreground hover:bg-accent-hover"
             >
               <Share2 className="h-4 w-4" aria-hidden="true" />
               {tp.share.cta}

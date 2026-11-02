@@ -15,9 +15,11 @@ interface TelLinkProps {
 
 export const TelLink = ({ className, children }: TelLinkProps) => {
   // Etiqueta accesible en el idioma de la página (español si no hay provider).
+  // Empieza por el texto visible (WCAG 2.5.3): quien dicta «+34 966…» la encuentra.
   const idioma = useOptionalTranslations();
+  const accion = idioma?.t.mobileCta.callAria ?? "Llamar a Casa Tomás";
   return (
-    <a href={PHONE_HREF} className={className} aria-label={idioma?.t.mobileCta.callAria ?? "Llamar a Casa Tomás"}>
+    <a href={PHONE_HREF} className={className} aria-label={children ? undefined : `${PHONE_DISPLAY}, ${accion}`}>
       {children ?? PHONE_DISPLAY}
     </a>
   );

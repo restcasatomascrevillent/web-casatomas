@@ -44,6 +44,24 @@ const CookieConsent = () => {
     setShowPreferences(false);
   };
 
+  /**
+   * Esc con el aviso a la vista = «Rechazar» (solo las necesarias): cerrar
+   * sin elegir no puede dejar la web sin aviso ni sin preferencia guardada.
+   * Se escucha en `window` (fase de burbuja), lo último de la página, y se
+   * ignora un Esc ya atendido (`defaultPrevented`): si encima están el chat o
+   * el menú móvil, ese Esc los cierra a ellos y el aviso se queda.
+   */
+  useEffect(() => {
+    if (!showBanner || showPreferences) return;
+    const alPulsar = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      rejectAll();
+    };
+    window.addEventListener("keydown", alPulsar);
+    return () => window.removeEventListener("keydown", alPulsar);
+  }, [showBanner, showPreferences]);
+
   const openPreferences = () => {
     setMapsDraft(getStoredConsent()?.maps === true);
     setShowBanner(false);
@@ -85,7 +103,7 @@ const CookieConsent = () => {
                 <h3 className="text-sm md:text-lg font-bold mb-1 md:mb-2">{t.cookie.title}</h3>
                 <p className="text-xs md:text-sm text-muted-foreground">
                   {t.cookie.message}{" "}
-                  <a href={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)} className="text-primary hover:underline font-medium">
+                  <a href={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`} className="text-primary underline underline-offset-2 hover:decoration-2 font-medium">
                     {t.cookie.link}
                   </a>
                   .

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 const INICIO_POR_IDIOMA = { es: "Inicio", en: "Home", fr: "Accueil" } as const;
 
@@ -83,7 +84,10 @@ const CartaPageLayout = ({
           monta el `Header`, y los enlaces del menú son `text-foreground/80`
           — sobre `bg-dark-slate` quedaban invisibles (contraste 1:1,
           comprobado en el navegador).
-          `pt-24` deja hueco a la cabecera fija (h-16 en móvil, h-20 en md). */}
+          `pt-24` deja hueco a la cabecera fija (h-16 en móvil, h-20 en md).
+          El `<main>` empieza aquí (no en la lista de platos) para que
+          «Saltar al contenido» lleve a las migas y al `h1` de la página. */}
+      <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
       <div className="relative overflow-hidden bg-muted pt-24 md:pt-28 pb-10 px-4 md:px-8 lg:px-16">
         {/* La foto solo ocupa un panel pegado a la izquierda a partir de
             `md` (con su propio degradado hacia `bg-muted` en el borde
@@ -144,7 +148,7 @@ const CartaPageLayout = ({
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 py-12 md:py-16">{children}</main>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 py-12 md:py-16">{children}</div>
 
       {volverAResuelto && (
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pb-12">
@@ -157,6 +161,7 @@ const CartaPageLayout = ({
           </Link>
         </div>
       )}
+      </main>
 
       <Footer />
     </div>

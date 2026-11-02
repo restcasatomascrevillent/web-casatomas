@@ -9,10 +9,9 @@ import { JsonLd } from "@/components/JsonLd";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma, quitarPrefijoIdioma } from "@/i18n/routing";
-import { GOOGLE_MAPS_URL, restaurantSchema, SITE_URL } from "@/lib/negocio";
+import { GOOGLE_MAPS_URL, restaurantSchema, SITE_URL, TOUZA_URL } from "@/lib/negocio";
 import { PAGINAS_INFORMACION, type PaginaInformacion } from "@/lib/paginas-informacion";
-
-const TOUZA_URL = (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza-restaurant-website.vercel.app";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 export default function Informacion() {
   const { language, t } = useTranslations();
@@ -22,7 +21,7 @@ export default function Informacion() {
     <Seo title={texto.title} description={texto.description} canonical={`${SITE_URL}${construirRutaIdioma(ruta, language)}`} lang={language} languageAlternates={alternatesDePagina(ruta, SITE_URL)} />
     <JsonLd data={restaurantSchema({ lang: language })} />
     <Header />
-    <main className="min-h-screen pt-32 pb-16 bg-background">
+    <main id={ID_CONTENIDO} tabIndex={-1} className="min-h-screen pt-32 pb-16 bg-background outline-none">
       <div className="max-w-4xl mx-auto px-4 text-center">
         <h1 className="text-3xl md:text-5xl font-bold text-primary mb-6">{texto.h1}</h1>
         <p className="text-lg text-muted-foreground">{texto.description}</p>

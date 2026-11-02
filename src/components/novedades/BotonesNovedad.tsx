@@ -30,7 +30,7 @@ interface BotonesNovedadProps {
  */
 const CLASE_BOTON =
   "h-auto min-h-11 min-w-32 flex-auto whitespace-normal rounded-full px-4 py-2 text-center leading-tight";
-const CLASE_PRINCIPAL = "bg-accent text-accent-foreground shadow-sm hover:bg-accent/90";
+const CLASE_PRINCIPAL = "bg-accent text-accent-foreground shadow-sm hover:bg-accent-hover";
 const CLASE_SECUNDARIO = "border-accent/60";
 
 /**
@@ -68,9 +68,10 @@ const BotonesNovedad = ({ idNovedad, titulo, botones, menu, platoId }: BotonesNo
     if (tipo === "llamar") {
       return (
         <Button key={tipo} asChild {...props}>
-          <a href={PHONE_HREF} aria-label={`${t.mobileCta.callAria}, ${PHONE_NACIONAL}`}>
+          {/* La etiqueta empieza por el texto visible («Llamar 966…», WCAG 2.5.3). */}
+          <a href={PHONE_HREF} aria-label={`${textos.llamar} ${PHONE_NACIONAL}, ${t.mobileCta.callAria}`}>
             <Phone aria-hidden="true" />
-            <span>{textos.llamar}</span>
+            <span>{textos.llamar}</span>{" "}
             {/* Muchos ordenadores no pueden llamar: en escritorio se ve el número. */}
             <span className="hidden font-normal tabular-nums lg:inline">{PHONE_NACIONAL}</span>
           </a>

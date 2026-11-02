@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, type ComponentProps } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wine, UtensilsCrossed, Gift, Calendar, Star, Sparkles, Coffee, Cake } from "lucide-react";
@@ -73,6 +73,22 @@ interface Novedad {
  */
 const NOVEDADES_SSG = novedadesSSG.novedades as unknown as Novedad[];
 
+/**
+ * Foto de la tarjeta. Si no carga (enlace roto o borrado del almacén), se quita
+ * el bloque entero y la tarjeta queda como una sin foto, en vez de enseñar el
+ * recuadro roto del navegador en un hueco de 176 px (QA, «Navegación de
+ * Novedades 2/2», criterio 3). Mismo criterio que las fotos de `CartaDelDia`.
+ */
+const FotoNovedad = (props: ComponentProps<"img">) => {
+  const [rota, setRota] = useState(false);
+  if (rota) return null;
+  return (
+    <div className="relative h-44 overflow-hidden">
+      <img {...props} onError={() => setRota(true)} />
+    </div>
+  );
+};
+
 const getLocalizedContent = (novedad: Novedad, language: Language) => {
   const sufijo = language === "es" ? "" : `_${language}`;
   // Los nombres dinamicos siguen restringidos a las claves declaradas de Novedad.
@@ -137,7 +153,8 @@ const NovedadesSection = () => {
     // Sin foto propia, la tarjeta va sin foto (QA-MDN-05, 01/11/2026). Antes
     // se ponía una de relleno según la posición (pulpo, carne o champán), que
     // no tenía nada que ver con la novedad: un filete en una cata de vinos.
-    const image = novedad.imagen_url || null;
+    // Una URL con solo espacios (pegada a mano en el panel) también es «sin foto».
+    const image = novedad.imagen_url?.trim() || null;
     // `0` (encuadre arriba del todo) es un valor válido del panel: con una
     // comprobación de verdad/falsedad se descartaba y la foto salía centrada.
     // Mismo criterio que `ProductoCard`: solo se omite si no hay número.
@@ -171,17 +188,13 @@ const NovedadesSection = () => {
         className="h-full"
       >
         <Card className="flex h-full flex-col overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
-          {image && (
-            <div className="relative h-44 overflow-hidden">
-              <img src={image} {...imgProps} />
-            </div>
-          )}
+          {image && <FotoNovedad key={image} src={image} {...imgProps} />}
           <CardHeader>
             <div className="flex items-start justify-between mb-2">
               <div className="p-3 bg-accent/10 rounded-lg">
                 <Icon className="w-6 h-6 text-accent" />
               </div>
-              {localized.badge && <Badge className="bg-accent hover:bg-accent/90">{localized.badge}</Badge>}
+              {localized.badge && <Badge className="bg-accent hover:bg-accent-hover">{localized.badge}</Badge>}
             </div>
             <CardTitle className="text-xl leading-snug">{localized.titulo}</CardTitle>
           </CardHeader>

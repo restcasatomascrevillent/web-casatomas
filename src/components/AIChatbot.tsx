@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Bot, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { CHAT_WEB_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
@@ -39,7 +39,7 @@ const AVISO_MENSAJE_LEN = 400;
  * solo vale contra su propio proyecto, así que la URL no puede ir fija.
  */
 const SUPABASE_CONFIG_BOT_WEB_URL = `${(
-    (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://jeamoczmbfsnwkfjxcyo.supabase.co"
+    (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ""
 ).replace(/\/+$/, "")}/rest/v1/configBotWeb`;
 const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -261,6 +261,8 @@ const AIChatbot = ({
     const [isSending, setIsSending] = useState(false);
     const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
     const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
+    const panelRef = useRef<HTMLDivElement | null>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
 
     useEffect(() => {
@@ -391,14 +393,64 @@ const AIChatbot = ({
         };
     }, [isOpen, language, initialGreeting, initialTicketImage]);
 
+    /**
+     * Esc cierra el chat. Se escucha en `window` en fase de captura, que va
+     * antes que cualquier otro oyente de la página, y se marca con
+     * `preventDefault`: así el menú móvil y el aviso de cookies (que solo
+     * atienden un Esc sin marcar) no se cierran a la vez que el chat. El orden
+     * completo, de arriba abajo: chat → diálogos de Radix → menú móvil →
+     * aviso de cookies.
+     */
     useEffect(() => {
         if (!isOpen) return;
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") onClose();
+            if (event.key !== "Escape" || event.defaultPrevented) return;
+            event.preventDefault();
+            onClose();
         };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown, true);
+        return () => window.removeEventListener("keydown", handleKeyDown, true);
     }, [isOpen, onClose]);
+
+    /**
+     * Foco: al abrir entra en el campo de mensaje y, al cerrar (Esc, la X o
+     * el fondo), vuelve a donde estaba, normalmente el botón que abrió el
+     * chat. Mientras está abierto, Tab no sale del panel.
+     */
+    useEffect(() => {
+        if (!isOpen) return;
+        const previo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const raf = requestAnimationFrame(() => {
+            const panel = panelRef.current;
+            if (panel && !panel.contains(document.activeElement)) {
+                (inputRef.current && !inputRef.current.disabled ? inputRef.current : panel).focus();
+            }
+        });
+        return () => {
+            cancelAnimationFrame(raf);
+            if (previo?.isConnected) previo.focus();
+        };
+    }, [isOpen]);
+
+    const atraparTab = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+        if (event.key !== "Tab" || !panelRef.current) return;
+        const enfocables = Array.from(
+            panelRef.current.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+            ),
+        );
+        if (enfocables.length === 0) return;
+        const primero = enfocables[0];
+        const ultimo = enfocables[enfocables.length - 1];
+        const activo = document.activeElement;
+        if (event.shiftKey && (activo === primero || activo === panelRef.current)) {
+            event.preventDefault();
+            ultimo.focus();
+        } else if (!event.shiftKey && activo === ultimo) {
+            event.preventDefault();
+            primero.focus();
+        }
+    };
 
     useEffect(() => {
         if (!isOpen) return;
@@ -524,10 +576,16 @@ const AIChatbot = ({
                         onClick={onClose}
                     />
                     <motion.div
+                        ref={panelRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="chatbot-titulo"
+                        tabIndex={-1}
+                        onKeyDown={atraparTab}
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="absolute bottom-6 right-6 w-[90vw] sm:w-[400px] h-[500px] pointer-events-auto bg-background border-2 border-primary/20 rounded-2xl shadow-2xl z-[121] flex flex-col overflow-hidden"
+                        className="absolute bottom-6 right-6 w-[90vw] sm:w-[400px] h-[500px] pointer-events-auto bg-background border-2 border-primary/20 rounded-2xl shadow-2xl z-[121] flex flex-col overflow-hidden focus:outline-none"
                         onClick={(event) => event.stopPropagation()}
                     >
                         {/* Header */}
@@ -537,7 +595,7 @@ const AIChatbot = ({
                                     <Bot className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold">Casa Tomás AI</h3>
+                                    <h3 id="chatbot-titulo" className="font-bold">Casa Tomás AI</h3>
                                     <span className="text-xs opacity-80">En línea</span>
                                 </div>
                             </div>
@@ -619,6 +677,7 @@ const AIChatbot = ({
                         <div className="p-4 bg-background border-t border-primary/10 flex gap-2">
                             <div className="relative flex-1">
                                 <input
+                                    ref={inputRef}
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value.slice(0, MAX_MENSAJE_LEN))}

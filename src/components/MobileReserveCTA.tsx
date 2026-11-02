@@ -2,9 +2,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Calendar, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { PHONE_HREF } from "@/components/TelLink";
+import { PHONE_DISPLAY, PHONE_HREF } from "@/components/TelLink";
 import { construirRutaIdioma, quitarPrefijoIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
+import { useEsPaginaNoEncontrada } from "@/lib/hidratacion-404";
 import { useEffect, useState } from "react";
 
 // Barra fija de conversión en móvil: llamar o reservar sin hacer scroll.
@@ -90,8 +91,14 @@ const MobileReserveCTA = () => {
     };
   }, [location.pathname]);
 
+  // La página no encontrada se reconoce por la ruta casada, no por la
+  // dirección: el `404.html` se sirve en cualquier URL rota, y si la barra solo
+  // se ocultase en `/404` el primer render del cliente no casaría con el HTML.
+  const esPaginaNoEncontrada = useEsPaginaNoEncontrada();
   const hiddenOnPath =
-    HIDE_ON_PATHS.includes(quitarPrefijoIdioma(location.pathname)) || RUTA_CARTA.test(location.pathname);
+    esPaginaNoEncontrada ||
+    HIDE_ON_PATHS.includes(quitarPrefijoIdioma(location.pathname)) ||
+    RUTA_CARTA.test(location.pathname);
   const visible = !hiddenOnPath && pastHero && !nearFooter;
 
   // Publica la altura que ocupa la barra (0 si está oculta) en
@@ -122,6 +129,13 @@ const MobileReserveCTA = () => {
           visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
         }`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        // Oculta (`opacity-0` + fuera de pantalla) seguía recibiendo el foco
+        // con Tab: el usuario de teclado caía en dos botones invisibles.
+        // `inert` la saca del orden de tabulación y del árbol de
+        // accesibilidad mientras no se ve. React 18 no conoce el atributo
+        // (ni sus tipos), así que va como cadena vacía, que es como el
+        // navegador lo entiende presente; `undefined` lo quita.
+        {...({ inert: visible ? undefined : "" } as Record<string, string | undefined>)}
       >
         {/* Siempre en una sola línea (`whitespace-nowrap`, alto fijo `h-11`
             que coincide con `MOBILE_CTA_HEIGHT`). Para que "Reservar mesa"
@@ -137,14 +151,14 @@ const MobileReserveCTA = () => {
             size="lg"
             className="h-11 min-w-0 flex-1 rounded-full bg-primary px-2 text-[13px] font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 min-[360px]:text-sm sm:px-8"
           >
-            <a href={PHONE_HREF} aria-label={t.mobileCta.callAria}>
+            <a href={PHONE_HREF} aria-label={`${t.mobileCta.call} ${PHONE_DISPLAY}`}>
               <Phone className="w-5 h-5" />
               {t.mobileCta.call}
             </a>
           </Button>
           <Button
             size="lg"
-            className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2 text-[13px] font-semibold text-accent-foreground shadow-lg hover:bg-accent/90 min-[360px]:text-sm sm:px-8"
+            className="h-11 min-w-0 flex-1 rounded-full bg-accent px-2 text-[13px] font-semibold text-accent-foreground shadow-lg hover:bg-accent-hover min-[360px]:text-sm sm:px-8"
             onClick={() => navigate(construirRutaIdioma(RESERVAS_PATH, language))}
           >
             <Calendar className="w-5 h-5" />

@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, startTransition, useContext, useEffect, useMemo, useState } from "react";
 import type { Locale } from "date-fns";
 import { languageOptions, type Language } from "@/i18n/types";
 import esLanguagePack, { type LanguagePack, type Translations } from "@/i18n/languages/es";
 import enLanguagePack from "@/i18n/languages/en";
 import frLanguagePack from "@/i18n/languages/fr";
+import { idiomaParaHidratar, terminarHidratacion404 } from "@/lib/hidratacion-404";
 
 type LanguageContextValue = {
   language: Language;
@@ -75,10 +76,26 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider = ({ children, initialLanguage }: LanguageProviderProps) => {
-  const [language, setLanguage] = useState<Language>(() => initialLanguage ?? getInitialLanguage());
+  // `idiomaParaHidratar()`: al hidratar el `404.html` servido en `/en/...` o
+  // `/fr/...`, el primer render va en el idioma del HTML (español) y el efecto
+  // de abajo pasa al de la URL justo después; si no, la hidratación no casa
+  // (ver `src/lib/hidratacion-404.ts`). En cualquier otra página es `null`.
+  const [language, setLanguage] = useState<Language>(
+    () => idiomaParaHidratar() ?? initialLanguage ?? getInitialLanguage(),
+  );
   const [languagePack, setLanguagePack] = useState<LanguagePack | null>(() => {
     return languagePackCache[language] ?? null;
   });
+
+  useEffect(() => {
+    // `startTransition`: el contenido de la ruta va en un `Suspense` que puede
+    // no haber terminado de hidratar todavía; una actualización urgente lo
+    // obligaría a tirar su HTML (error #421 de React). Como transición, React
+    // termina antes de hidratarlo y luego cambia el idioma.
+    if (terminarHidratacion404() && initialLanguage) startTransition(() => setLanguage(initialLanguage));
+    // Solo tras el primer render: después manda `setLanguage` (o `key={lang}`).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;

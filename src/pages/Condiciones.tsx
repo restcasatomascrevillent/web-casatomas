@@ -1,6 +1,7 @@
 import { Fragment, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -12,6 +13,7 @@ import {
   CONDICIONES_PATH,
   POLITICA_PRIVACIDAD_PATH,
 } from "@/lib/condiciones";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
 
@@ -65,13 +67,13 @@ const Condiciones = () => {
   /** Sustituye `{phone}` por el teléfono pulsable y `{privacy}` por el enlace a la política. */
   const conEnlaces = (texto: string) =>
     texto.split(/(\{phone\}|\{privacy\})/).map((parte, indice) => {
-      if (parte === "{phone}") return <TelLink key={indice} className="text-accent hover:underline" />;
+      if (parte === "{phone}") return <TelLink key={indice} className="text-accent underline underline-offset-2 hover:decoration-2" />;
       if (parte === "{privacy}") {
         return (
           <Link
             key={indice}
             to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-            className="text-accent hover:underline"
+            className="text-accent underline underline-offset-2 hover:decoration-2"
           >
             {c.privacyLink}
           </Link>
@@ -110,18 +112,19 @@ const Condiciones = () => {
         lang={language}
         noindex
       />
+      <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
       {/* Header */}
       <div className="bg-dark-slate text-background py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <Link
             to={inicio}
-            className="inline-flex items-center gap-2 text-stone hover:text-accent transition-colors mb-4 text-sm"
+            className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             {c.back}
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold">{c.title}</h1>
-          <p className="text-stone mt-2 text-sm">{c.updated}</p>
+          <p className="text-stone-light mt-2 text-sm">{c.updated}</p>
         </div>
       </div>
 
@@ -133,12 +136,12 @@ const Condiciones = () => {
             <p className="font-semibold mb-2">{c.tocLabel}</p>
             <ul className="space-y-1">
               <li>
-                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className="text-accent hover:underline">
+                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className="text-accent underline underline-offset-2 hover:decoration-2">
                   {c.bookingHeading}
                 </a>
               </li>
               <li>
-                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className="text-accent hover:underline">
+                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className="text-accent underline underline-offset-2 hover:decoration-2">
                   {c.newsletterHeading}
                 </a>
               </li>
@@ -150,15 +153,15 @@ const Condiciones = () => {
         {bloque(ANCLA_CONDICIONES_NEWSLETTER, c.newsletterHeading, c.newsletterIntro, c.newsletterSections)}
 
         {/* Contacto: los mismos datos que la política de privacidad (`NEGOCIO`). */}
-        <section className="rounded-lg bg-muted/40 border border-border p-6">
+        <section className="rounded-lg bg-muted/20 border border-border p-6">
           <h2 className="text-xl font-bold mb-2 text-accent">{c.contactTitle}</h2>
           <p className="text-sm text-muted-foreground">{c.contactIntro}</p>
           <div className="mt-3 text-sm space-y-1">
             <p>
-              <TelLink className="text-accent hover:underline" />
+              <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" />
             </p>
             <p>
-              <a href={`mailto:${NEGOCIO.email}`} className="text-accent hover:underline">
+              <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">
                 {NEGOCIO.email}
               </a>
             </p>
@@ -168,24 +171,11 @@ const Condiciones = () => {
           </div>
         </section>
       </div>
+      </main>
 
-      {/* Tag `<footer>` real: MobileReserveCTA lo busca con
-          `document.querySelector("footer")` para ocultar su barra fija. */}
-      <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
-        <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
-        <p className="mt-1">
-          <Link to={inicio} className="hover:text-accent transition-colors">
-            {c.homeLink}
-          </Link>
-          {" · "}
-          <Link
-            to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-            className="hover:text-accent transition-colors"
-          >
-            {c.privacyFooterLink}
-          </Link>
-        </p>
-      </footer>
+      {/* Pie común de toda la web (también lleva el `<footer>` real que
+          busca MobileReserveCTA para ocultar su barra fija al llegar abajo). */}
+      <Footer />
     </div>
   );
 };

@@ -12,6 +12,12 @@ import { render, screen, waitFor, act, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
+// AIChatbot calcula la URL de configBotWeb al importarse y ya no lleva una
+// dirección de Supabase por defecto: se fija aquí, antes de cualquier import.
+vi.hoisted(() => {
+  vi.stubEnv("VITE_SUPABASE_URL", "https://proyecto-test.supabase.co");
+});
+
 // ---------------------------------------------------------------------------
 // Helpers — inline re-implementation of the pure functions in AIChatbot.tsx
 // so we can unit-test them without rendering the full component.
@@ -448,6 +454,50 @@ describe("AIChatbot component", () => {
     });
 
     expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("es un diálogo modal con nombre y el foco entra en el campo de mensaje al abrir", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    renderChatbot({ isOpen: true });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    const dialogo = screen.getByRole("dialog", { name: "Casa Tomás AI" });
+    expect(dialogo).toHaveAttribute("aria-modal", "true");
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByPlaceholderText("Escribe un mensaje...")));
+  });
+
+  it("al cerrarlo el foco vuelve al botón que lo abrió", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+    const lanzador = document.createElement("button");
+    lanzador.textContent = "Abrir chat";
+    document.body.appendChild(lanzador);
+    lanzador.focus();
+
+    const { rerender, onClose } = renderChatbot({ isOpen: true });
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByPlaceholderText("Escribe un mensaje...")));
+
+    rerender(
+      <MemoryRouter>
+        <LanguageProvider>
+          <AIChatbot isOpen={false} onClose={onClose} initialGreeting="Hola test" />
+        </LanguageProvider>
+      </MemoryRouter>
+    );
+    expect(document.activeElement).toBe(lanzador);
+    lanzador.remove();
+  });
+
+  it("Esc marca el evento (preventDefault) para que el menú y el aviso de cookies no se cierren a la vez", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }));
+    const onClose = vi.fn();
+    renderChatbot({ isOpen: true, onClose });
+    await waitFor(() => screen.getByText("Hola test"));
+
+    const evento = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    await act(async () => { document.body.dispatchEvent(evento); });
+
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(evento.defaultPrevented).toBe(true);
   });
 
   it("calls onClose when the close button is clicked", async () => {

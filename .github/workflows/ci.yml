@@ -3,7 +3,8 @@
 # Stripe: los tests unitarios usan módulos virtuales vacíos y los E2E un build
 # contra un Supabase de mentira local (scripts/e2e-build.mjs).
 #
-# BLOQUEAN: instalación reproducible, tests unitarios, typecheck (0 errores),
+# BLOQUEAN: instalación reproducible, tests unitarios, typecheck de la app y de
+# los E2E (0 errores),
 # ESLint (0 errores; los avisos no bloquean) y E2E (incluye el build SSG
 # completo). Typecheck y ESLint estaban ya a cero el 30/10/2026 (CT-REM-OPS-09).
 name: CI
@@ -23,6 +24,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -50,6 +53,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -57,6 +62,8 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Typecheck de los E2E
+        run: npx tsc --noEmit -p e2e
       - name: ESLint
         run: npm run lint -- --quiet
 

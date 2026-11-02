@@ -243,7 +243,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   <div>
                     <p className="font-medium">{t.contacto.phoneLabel}</p>
                     <p className="text-sm">
-                      <TelLink className="text-muted-foreground underline-offset-4 hover:text-accent hover:underline transition-colors" />
+                      <TelLink className="text-muted-foreground underline underline-offset-4 hover:text-accent hover:decoration-2 transition-colors" />
                     </p>
                   </div>
                 </div>
@@ -253,7 +253,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   <div>
                     <p className="font-medium">{t.contacto.emailLabel}</p>
                     <p className="text-sm text-muted-foreground">
-                      <a href="mailto:casatomascrevillent@gmail.com" className="hover:underline">casatomascrevillent@gmail.com</a>
+                      <a href="mailto:casatomascrevillent@gmail.com" className="underline underline-offset-2 hover:decoration-2">casatomascrevillent@gmail.com</a>
                     </p>
                   </div>
                 </div>
@@ -304,10 +304,11 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
+                    <label htmlFor="importe-cheque-regalo" className="text-sm font-medium mb-2 block">
                       {t.contacto.giftAmountLabel}
                     </label>
                     <Input
+                      id="importe-cheque-regalo"
                       type="number"
                       inputMode="decimal"
                       placeholder={t.contacto.giftPlaceholder}
@@ -320,7 +321,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   </div>
                   
                   <Button
-                    className="w-full bg-accent hover:bg-accent/90"
+                    className="w-full bg-accent hover:bg-accent-hover"
                     onClick={handleGiftPurchase}
                   >
                     {t.contacto.giftButton}

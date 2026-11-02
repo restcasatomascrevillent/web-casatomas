@@ -140,7 +140,7 @@ describe("ProductoCard — interruptor de fotos", () => {
     expect(screen.queryByRole("button", { name: /ver foto/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getAllByText("Pulpo a la brasa").length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/18€/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/18,00\s€/).length).toBeGreaterThan(0);
   });
 
   it("sin foto el ojo sigue saliendo, pero deshabilitado", () => {
