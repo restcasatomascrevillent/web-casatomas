@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 import CartaDelDia, { CLASES_TITULO_CARTA, type SeccionExtraCarta } from "@/components/espacios/CartaDelDia";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useCerrarConAtras } from "@/hooks/useCerrarConAtras";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { MenuNovedad, PosicionSeccionExtra } from "@/lib/menu-novedad";
 import { cn } from "@/lib/utils";
@@ -27,42 +28,10 @@ interface MenuNovedadDialogProps {
  * Un menú con maridaje pinta la bebida bajo cada plato; una cata no tiene
  * platos y enseña solo la sección «Cata» con sus bebidas en orden.
  */
-/**
- * Mientras el diálogo está abierto, el historial lleva una entrada más (la
- * misma URL y el mismo estado de React Router, con una marca), así que
- * «atrás» la quita a ella en vez de salir de la página: el `popstate` cierra
- * el diálogo y la portada se queda donde estaba (`ScrollToTop` no se mueve:
- * la entrada a la que se vuelve es la misma, con la misma `key`). Si se
- * cierra de otra forma (X, Esc, fuera), se quita esa entrada con
- * `history.back()` para que el siguiente «atrás» no se quede sin hacer nada.
- */
-function useCerrarConAtras(abierto: boolean, cerrar: () => void) {
-  const alCerrar = useRef(cerrar);
-  alCerrar.current = cerrar;
-
-  useEffect(() => {
-    if (!abierto) return;
-    const marca = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    let entradaPropia = true;
-    window.history.pushState({ ...window.history.state, menuNovedad: marca }, "");
-    const alVolver = () => {
-      entradaPropia = false;
-      alCerrar.current();
-    };
-    window.addEventListener("popstate", alVolver);
-    return () => {
-      window.removeEventListener("popstate", alVolver);
-      // Solo si seguimos en la entrada que se añadió: si otra navegación ya
-      // la dejó atrás, un `back()` la desharía.
-      if (entradaPropia && window.history.state?.menuNovedad === marca) window.history.back();
-    };
-  }, [abierto]);
-}
-
 const MenuNovedadDialog = ({ titulo, menu, children }: MenuNovedadDialogProps) => {
   const { t } = useTranslations();
   const [abierto, setAbierto] = useState(false);
-  useCerrarConAtras(abierto, () => setAbierto(false));
+  useCerrarConAtras(abierto, () => setAbierto(false), "menuNovedad");
   const textos = t.novedades.botones;
   const seccionesExtra: SeccionExtraCarta[] =
     menu.tipo === "cata"
