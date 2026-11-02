@@ -32,7 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
 import { openCookiePreferences, useMapsConsent } from "@/lib/cookie-consent";
-import { imagenOptimizada } from "@/lib/carta-ssg";
+import { esFotoCarta, imagenOptimizada } from "@/lib/carta-ssg";
 import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -642,6 +642,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
             const imageUrl = getWineImage(itemRecord);
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
             const expanded = hasVisibleImage && isCardExpanded(itemRecord);
+            const fotoCarta = expanded && esFotoCarta(imageUrl);
             const originLabel = [
               origenComprobable(item.denominacion_origen),
               origenComprobable(item.ubicacion_region), origenComprobable(item.ubicacion_pais),
@@ -662,77 +663,105 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
             return (
               <div key={cardKey} className="min-w-0">
                 <Card className="overflow-hidden border-border/80 bg-background shadow-sm">
-                  <CardHeader className="gap-2 px-4 py-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words sm:text-lg">
-                        {item.displayNombre || item.nombre}
-                      </CardTitle>
-                      <div className="flex shrink-0 gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleCard(itemRecord, expanded)}
-                          aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
-                          aria-expanded={expanded}
-                          aria-controls={`foto-vino-${cardKey}`}
-                          disabled={!hasVisibleImage}
-                          title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
-                          className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-35"
-                        >
-                          {expanded ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
-                          aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
-                          aria-expanded={infoOpen}
-                          aria-controls={`info-vino-${cardKey}`}
-                          className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                        >
-                          <Info className="h-4 w-4" aria-hidden="true" />
-                        </button>
+                  <div className="flex">
+                    {expanded && (
+                      // Foto en la columna LATERAL de la tarjeta (no debajo): la
+                      // ficha no crece en alto y, en una carta de ~240 vinos, no
+                      // hay scroll eterno. Marco 3:4 (900×1200) de ancho
+                      // proporcional al de la tarjeta, así su alto ≈ el de la
+                      // ficha sin foto, y la botella se ve ENTERA de arriba abajo
+                      // (`object-contain`, nunca `cover`). El `<img>` lleva
+                      // `width`/`height`: el hueco existe antes de cargar (sin CLS).
+                      // Fondo: la cartulina kraft de las fotos de carta (`-carta`,
+                      // tema «cartulina» del panel), para que cualquier margen de
+                      // más case con la foto; las antiguas, de otras proporciones
+                      // (oscuras con halo dorado), siguen sobre su fondo oscuro.
+                      <div
+                        id={`foto-vino-${cardKey}`}
+                        className={`aspect-[3/4] w-[36%] max-w-[8rem] shrink-0 overflow-hidden border-r border-border/60 ${fotoCarta ? "bg-[#cdae77]" : "bg-[#1a1612]"}`}
+                      >
+                        <img
+                          src={imagenOptimizada(imageUrl, 640) || undefined}
+                          alt={`${item.displayNombre || item.nombre} — ${categoriaCorta(item.categoria ?? "", language)}, ${NEGOCIO.nombre}`}
+                          width={900}
+                          height={1200}
+                          className="h-full w-full object-contain"
+                          loading="lazy"
+                          decoding="async"
+                          onError={() => setBrokenImages(prev => ({ ...prev, [cardKey]: true }))}
+                        />
                       </div>
+                    )}
+
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      {/* Con foto lateral la columna de texto es estrecha: los dos
+                          botones (44 px cada uno) se apilan a la derecha, a lo alto
+                          del título + tipo, en vez de quitarle 100 px al nombre. */}
+                      <CardHeader
+                        className={expanded
+                          ? "grid grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_1fr] items-start gap-x-2 gap-y-1 space-y-0 px-3 py-2"
+                          : "gap-2 px-4 py-3"}
+                      >
+                        <div className={expanded ? "contents" : "flex items-start justify-between gap-2"}>
+                          <CardTitle
+                            className={`min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words ${expanded ? "col-start-1 row-start-1" : "sm:text-lg"}`}
+                          >
+                            {item.displayNombre || item.nombre}
+                          </CardTitle>
+                          <div className={`flex shrink-0 gap-1 ${expanded ? "col-start-2 row-span-2 row-start-1 flex-col" : ""}`}>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCard(itemRecord, expanded)}
+                              aria-label={`${expanded ? t.vinos.hidePhoto : t.vinos.viewPhoto} — ${item.displayNombre || item.nombre}`}
+                              aria-expanded={expanded}
+                              aria-controls={`foto-vino-${cardKey}`}
+                              disabled={!hasVisibleImage}
+                              title={!hasVisibleImage ? INFORMACION_VINO[language].sinFoto : undefined}
+                              className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-35"
+                            >
+                              {expanded ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleInfoCard(itemRecord, infoOpen)}
+                              aria-label={`${infoOpen ? INFORMACION_VINO[language].ocultar : INFORMACION_VINO[language].ver} — ${item.displayNombre || item.nombre}`}
+                              aria-expanded={infoOpen}
+                              aria-controls={`info-vino-${cardKey}`}
+                              className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/60 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                            >
+                              <Info className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className={`font-sans text-xs leading-relaxed text-muted-foreground ${expanded ? "col-start-1 row-start-2" : ""}`}>{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "", language)}</p>
+                      </CardHeader>
+
+                      {infoOpen && (
+                        <CardContent id={`info-vino-${cardKey}`} className="space-y-3 px-4 pb-4 font-sans text-sm leading-relaxed">
+                          {originLabel && <p className="flex items-start gap-2 text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" /><span>{originLabel}</span></p>}
+                          {item.descripcion?.trim() && <p className="whitespace-pre-line text-muted-foreground">{item.descripcion}</p>}
+                          <div className="space-y-2">
+                            <p className="font-medium">{t.vinos.allergensTitle}:</p>
+                            {conAlergenos ? <div className="flex flex-wrap gap-1">
+                              {alergenosOficiales.map(alergeno => <Badge key={`oficial-${cardKey}-${alergeno}`} variant="destructive" className="text-xs">{alergeno}</Badge>)}
+                              {alergenosInferidos.map(alergeno => <Badge key={`inferido-${cardKey}-${alergeno}`} variant="secondary" className="text-xs">{alergeno}</Badge>)}
+                            </div> : <p className="rounded bg-destructive/10 p-2 text-destructive">{AVISO_SIN_ALERGENOS[language]}</p>}
+                          </div>
+                          {alergenosItem.notas && <p className="text-xs text-destructive">{alergenosItem.notas}</p>}
+                        </CardContent>
+                      )}
+
+                      {/* Con foto lateral el precio y «Añadir» comparten una sola
+                          fila (sin `flex-wrap`): si el precio no cabe («Consultar
+                          precio») se parte él en dos líneas, nunca baja el botón. */}
+                      <CardFooter
+                        className={`mt-auto flex items-center justify-between border-t border-border/60 bg-muted/10 ${expanded ? "gap-2 px-3 py-2" : "flex-wrap gap-2 px-4 py-3"}`}
+                      >
+                        <span className={`font-libre-baskerville font-bold text-accent ${expanded ? "min-w-0 text-base leading-tight" : "text-xl"}`}>{mostrarPrecio(item.precio_eur, language)}</span>
+                        {showAddButton && <Button size="sm" disabled={!precioConocido(item.precio_eur)} title={!precioConocido(item.precio_eur) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className={`h-10 rounded-full bg-accent font-sans text-sm text-accent-foreground hover:bg-accent-hover ${expanded ? "shrink-0 px-3" : "px-4"}`}><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
+                      </CardFooter>
                     </div>
-                    <p className="font-sans text-xs leading-relaxed text-muted-foreground">{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "", language)}</p>
-                  </CardHeader>
-
-                  {expanded && (
-                    // Foto vertical 3:4 (botella recortada sobre fondo oscuro con
-                    // halo dorado): se ve ENTERA, centrada en un marco de alto
-                    // fijo (sin CLS). Las fotos antiguas de otras proporciones
-                    // caben con object-contain sobre el mismo fondo oscuro.
-                    <div id={`foto-vino-${cardKey}`} className="flex h-80 w-full items-center justify-center overflow-hidden border-y border-border/60 bg-[#1a1612] sm:h-96">
-                      <img
-                        src={imagenOptimizada(imageUrl, 768) || undefined}
-                        alt={`${item.displayNombre || item.nombre} — ${categoriaCorta(item.categoria ?? "", language)}, ${NEGOCIO.nombre}`}
-                        width={900}
-                        height={1200}
-                        className="aspect-[3/4] h-full w-auto max-w-full object-contain"
-                        loading="lazy"
-                        decoding="async"
-                        onError={() => setBrokenImages(prev => ({ ...prev, [cardKey]: true }))}
-                      />
-                    </div>
-                  )}
-
-                  {infoOpen && (
-                    <CardContent id={`info-vino-${cardKey}`} className="space-y-3 px-4 pb-4 font-sans text-sm leading-relaxed">
-                      {originLabel && <p className="flex items-start gap-2 text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" /><span>{originLabel}</span></p>}
-                      {item.descripcion?.trim() && <p className="whitespace-pre-line text-muted-foreground">{item.descripcion}</p>}
-                      <div className="space-y-2">
-                        <p className="font-medium">{t.vinos.allergensTitle}:</p>
-                        {conAlergenos ? <div className="flex flex-wrap gap-1">
-                          {alergenosOficiales.map(alergeno => <Badge key={`oficial-${cardKey}-${alergeno}`} variant="destructive" className="text-xs">{alergeno}</Badge>)}
-                          {alergenosInferidos.map(alergeno => <Badge key={`inferido-${cardKey}-${alergeno}`} variant="secondary" className="text-xs">{alergeno}</Badge>)}
-                        </div> : <p className="rounded bg-destructive/10 p-2 text-destructive">{AVISO_SIN_ALERGENOS[language]}</p>}
-                      </div>
-                      {alergenosItem.notas && <p className="text-xs text-destructive">{alergenosItem.notas}</p>}
-                    </CardContent>
-                  )}
-
-                  <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-muted/10 px-4 py-3">
-                    <span className="font-libre-baskerville text-xl font-bold text-accent">{mostrarPrecio(item.precio_eur, language)}</span>
-                    {showAddButton && <Button size="sm" disabled={!precioConocido(item.precio_eur)} title={!precioConocido(item.precio_eur) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className="h-10 rounded-full bg-accent px-4 font-sans text-sm text-accent-foreground hover:bg-accent-hover"><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
-                  </CardFooter>
+                  </div>
                 </Card>
               </div>
             );
