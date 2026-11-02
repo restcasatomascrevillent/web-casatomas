@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import es from "@/i18n/languages/es";
-vi.mock("@/i18n/LanguageProvider", () => ({ useTranslations: () => ({ t: es.translations, language: "es" }) }));
+vi.mock("@/i18n/LanguageProvider", () => {
+  const valor = { t: es.translations, language: "es" };
+  return { useTranslations: () => valor, useOptionalTranslations: () => valor };
+});
 vi.mock("@/components/TelLink", () => ({ TelLink: () => <span>Teléfono</span> }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("@/lib/supabase-functions", () => ({ CHEQUES_REGALO_CREAR_URL: "https://example.com/crear", functionHeaders: () => ({ "Content-Type": "application/json" }), leerCuerpo: async (r: Response) => r.json() }));

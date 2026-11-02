@@ -32,7 +32,7 @@ import {
 import { filtrarPlatos } from "@/lib/filtros-carta";
 import { mostrarPrecio, precioConocido } from "@/lib/precios";
 import { origenComprobable } from "@/lib/origenes-vino";
-import { normalizarUnidadPlato } from "@/lib/unidades-platos";
+import { etiquetaUnidadPlato } from "@/lib/unidades-platos";
 import type { TipoVino } from "@/lib/tipos-vino";
 
 /**
@@ -162,7 +162,7 @@ function useBodegaPerezosa() {
 }
 
 const precioConUnidad = (precio: unknown, unidad: string | undefined, language: Language) =>
-  `${mostrarPrecio(precio, language)}${precioConocido(precio) && unidad ? ` / ${normalizarUnidadPlato(unidad)}` : ""}`;
+  `${mostrarPrecio(precio, language)}${precioConocido(precio) && unidad ? ` / ${etiquetaUnidadPlato(unidad, language)}` : ""}`;
 
 interface FilaProps {
   nombre: string;
