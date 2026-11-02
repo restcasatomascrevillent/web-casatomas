@@ -71,7 +71,7 @@ for (const { ruta, idioma } of PAGINAS) {
 test.describe("barra «Llamar / Reservar» a 390 px", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-  const barra = (page: Page) => page.locator("div.fixed.bottom-0.lg\\:hidden");
+  const barra = (page: Page) => page.locator("aside.fixed.bottom-0.lg\\:hidden");
 
   test("en la portada, oculta tras el hero: inert y sin foco; al bajar, enfocable", async ({ page, erroresJs }) => {
     void erroresJs;
