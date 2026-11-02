@@ -466,6 +466,17 @@ section[id] { scroll-margin-top: calc(4rem + 1px); }
   section[id] { scroll-margin-top: calc(5rem + 1px); }
 }
 
+/* Foco de teclado y barra fija «Llamar / Reservar» (móvil): al tabular, el
+   navegador deja el control enfocado pegado al borde de abajo, justo debajo de
+   la barra (WCAG 2.4.11). `--mobile-cta-offset` (la publica MobileReserveCTA)
+   vale su alto y 0px cuando está oculta. Solo el borde de abajo: un
+   `scroll-padding-top` global se sumaría al `scroll-margin-top` de las anclas
+   (secciones, platos, #cookies) y las movería; el hueco de la cabecera fija lo
+   cubre `lib/foco-no-tapado.ts`. */
+@media (max-width: 1023.98px) {
+  html { scroll-padding-bottom: calc(var(--mobile-cta-offset, 0px) + 1rem); }
+}
+
 @media (hover: none), (pointer: coarse) {
   .hero-section .animate-float { animation: none; }
   .hero-section img { filter: none; }

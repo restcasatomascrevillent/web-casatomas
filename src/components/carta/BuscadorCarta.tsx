@@ -216,7 +216,7 @@ const Grupo = ({ id, titulo, total, enlace, children }: GrupoProps) => (
       </h3>
       <Link
         to={enlace.to}
-        className="shrink-0 text-sm font-semibold text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+        className="-my-3 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
       >
         {enlace.texto}
       </Link>

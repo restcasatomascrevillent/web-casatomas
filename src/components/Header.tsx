@@ -8,6 +8,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { construirRutaIdioma, rutaEquivalente } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 import { RESERVAS_PATH } from "@/lib/condiciones";
+import { cn } from "@/lib/utils";
+import { instalarFocoNoTapado } from "@/lib/foco-no-tapado";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +73,9 @@ const Header = () => {
     document.addEventListener("keydown", alPulsar);
     return () => document.removeEventListener("keydown", alPulsar);
   }, [isMobileMenuOpen]);
+
+  // Con teclado, que el control enfocado no se quede bajo la cabecera fija.
+  useEffect(() => instalarFocoNoTapado(), []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -207,7 +212,7 @@ const Header = () => {
               }
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex min-h-11 min-w-11 items-center gap-2 cursor-pointer"
           >
             <img
               src={logoSmall.src}
@@ -277,8 +282,16 @@ const Header = () => {
           <div className="flex items-center gap-1 lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={ARIA.cambiarIdioma[language]}>
-                  <Globe2 className="h-5 w-5" />
+                {/* Globo + idioma actual («ES»): el icono solo no dice en qué
+                    idioma se está. El nombre accesible incluye el texto visible
+                    (WCAG 2.5.3). */}
+                <Button
+                  variant="ghost"
+                  className="h-11 min-w-11 gap-1 px-2"
+                  aria-label={`${ARIA.cambiarIdioma[language]} (${language.toUpperCase()})`}
+                >
+                  <Globe2 className="!size-5" aria-hidden="true" />
+                  <span aria-hidden="true" className="text-xs font-semibold uppercase">{language}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-36">
@@ -286,7 +299,7 @@ const Header = () => {
                   <DropdownMenuItem
                     key={option.value}
                     onClick={() => navigate(rutaEquivalente(location.pathname, option.value, location))}
-                    className={language === option.value ? "font-semibold text-primary" : ""}
+                    className={cn("min-h-11", language === option.value ? "font-semibold text-primary" : "")}
                   >
                     {option.label}
                   </DropdownMenuItem>
@@ -297,6 +310,7 @@ const Header = () => {
               ref={botonMenuRef}
               variant="ghost"
               size="icon"
+              className="h-11 w-11"
               aria-expanded={isMobileMenuOpen}
               aria-controls="menu-movil"
               aria-label={isMobileMenuOpen ? ARIA.cerrarMenu[language] : ARIA.abrirMenu[language]}
@@ -311,40 +325,53 @@ const Header = () => {
       {/* Mobile Menu */}
       <>
         {isMobileMenuOpen && (
-          <div
-            id="menu-movil"
-            className="lg:hidden bg-background border-t border-border"
-          >
-            <nav className="flex flex-col p-4 space-y-2">
-              {navItems.map((item) => (
-                <div
-                  key={item.id}
-                >
-                  <NavLink
-                    to={`${home}#${item.id}`}
-                    onClick={(event) => { event.preventDefault(); handleNavClick(item.id); }}
-                    className="block w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
+          <>
+            {/* Telón: tocar fuera del menú lo cierra. Va detrás de la cabecera
+                (`-z-10` dentro de su contexto de apilado), encima de la página. */}
+            <div
+              aria-hidden="true"
+              data-testid="menu-movil-telon"
+              className="fixed inset-0 -z-10 bg-black/30 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            {/* Con poca altura (móvil en horizontal, texto grande) el menú no cabe
+                entero: scroll propio, hasta el borde inferior de la pantalla, y en
+                horizontal los enlaces en dos columnas para que casi no haga falta. */}
+            <div
+              id="menu-movil"
+              className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border bg-background md:max-h-[calc(100dvh-5rem)] lg:hidden"
+            >
+              <nav className="flex flex-col space-y-2 p-4 bajo:grid bajo:grid-cols-2 bajo:gap-x-2 bajo:gap-y-1 bajo:space-y-0">
+                {navItems.map((item) => (
+                  <div
+                    key={item.id}
                   >
-                    {item.label}
-                  </NavLink>
-                </div>
-              ))}
-              <div
-                className="pt-2"
-              >
-                <Button
-                  size="lg"
-                  className="w-full bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full"
-                  onClick={() => {
-                    navigate(reservasPath);
-                    setIsMobileMenuOpen(false);
-                  }}
+                    <NavLink
+                      to={`${home}#${item.id}`}
+                      onClick={(event) => { event.preventDefault(); handleNavClick(item.id); }}
+                      className="block w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
+                    >
+                      {item.label}
+                    </NavLink>
+                  </div>
+                ))}
+                <div
+                  className="pt-2 bajo:col-span-2"
                 >
-                  {t.header.cta}
-                </Button>
-              </div>
-            </nav>
-          </div>
+                  <Button
+                    size="lg"
+                    className="w-full bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full"
+                    onClick={() => {
+                      navigate(reservasPath);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    {t.header.cta}
+                  </Button>
+                </div>
+              </nav>
+            </div>
+          </>
         )}
       </>
     </header>

@@ -14,6 +14,11 @@ export default {
       },
     },
     extend: {
+      screens: {
+        // Pantalla baja: móvil en horizontal (812×375, 932×430) o ventana muy
+        // achatada. No afecta a un portátil ni a una tableta (≥ 600 px de alto).
+        bajo: { raw: "(max-height: 520px)" },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
