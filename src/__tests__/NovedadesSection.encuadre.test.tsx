@@ -16,6 +16,7 @@ const { filas } = vi.hoisted(() => ({
     { id: "arriba", titulo: "Arriba", imagen_url: "https://example.com/arriba.jpg", imagen_posicion_y: 0 },
     { id: "medio", titulo: "Medio", imagen_url: "https://example.com/medio.jpg", imagen_posicion_y: 36 },
     { id: "sin-valor", titulo: "Sin valor", imagen_url: "https://example.com/sin-valor.jpg" },
+    { id: "sin-foto", titulo: "Cata sin foto", imagen_url: null },
   ],
 }));
 
@@ -66,5 +67,15 @@ describe("NovedadesSection — encuadre de la foto", () => {
   it("sin encuadre guardado deja el centrado por defecto del navegador", () => {
     renderEs();
     expect(fotoDe("Sin valor").style.objectPosition).toBe("");
+  });
+});
+
+describe("NovedadesSection — novedad sin foto (QA-MDN-05)", () => {
+  it("no pone una foto de relleno que no tiene que ver con la novedad", () => {
+    renderEs();
+    expect(screen.getByText("Cata sin foto")).toBeInTheDocument();
+    expect(screen.queryByAltText(/^Cata sin foto — /)).toBeNull();
+    // Las que sí tienen foto siguen con la suya.
+    expect(screen.getAllByRole("img").filter((i) => i.getAttribute("src")?.includes("example.com"))).toHaveLength(3);
   });
 });
