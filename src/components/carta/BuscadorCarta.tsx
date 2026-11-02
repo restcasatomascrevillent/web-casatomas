@@ -21,7 +21,7 @@ import {
   type GrupoResultados,
 } from "@/lib/busqueda-carta";
 import { cartaSSG } from "@/lib/carta-ssg";
-import type { BebidaSSG, VinoSSG } from "@/lib/carta-ssg-types";
+import { cargarBodega, type Bodega } from "./cargarBodega";
 import {
   CATEGORIAS_BEBIDAS,
   CATEGORIAS_CARTA,
@@ -132,11 +132,6 @@ const TEXTOS: Record<
 const ID_CAMPO = "buscador-carta";
 const ID_ESTADO = "buscador-carta-estado";
 
-interface Bodega {
-  vinos: VinoSSG[];
-  bebidas: BebidaSSG[];
-}
-
 /**
  * Vinos y bebidas NO viajan en el bundle de `/carta` (ver `vite.config.ts`):
  * se piden la primera vez que el visitante va a buscar (al entrar en el campo)
@@ -149,10 +144,8 @@ function useBodegaPerezosa() {
   const cargar = useCallback(() => {
     if (pedida.current) return;
     pedida.current = true;
-    Promise.all([import("virtual:carta-ssg/vinos"), import("virtual:carta-ssg/bebidas")])
-      .then(([vinos, bebidas]) =>
-        setBodega({ vinos: vinos.default.vinos ?? [], bebidas: bebidas.default.bebidas ?? [] }),
-      )
+    cargarBodega()
+      .then(setBodega)
       .catch(() => {
         // Se reintenta en la próxima interacción.
         pedida.current = false;

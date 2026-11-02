@@ -59,6 +59,7 @@ vi.mock("virtual:carta-ssg/bebidas", () => ({
 vi.mock("@/components/Seo", () => ({ Seo: () => null }));
 
 import CartaIndice from "@/pages/carta/Indice";
+import { cargarBodega } from "@/components/carta/cargarBodega";
 
 /** Página de destino mínima: sirve para volver atrás o volver por un enlace. */
 const CategoriaFalsa = () => {
@@ -99,11 +100,11 @@ const buscar = async (texto: string) => {
 };
 
 describe("/carta — buscador", () => {
-  // La bodega llega por dos import() diferidos (useBodegaPerezosa). La primera
-  // vez vitest los transforma en frío y en el runner del CI eso se comía el
-  // segundo de espera de findByRole (run 60 de main). Se precargan aquí.
+  // La bodega llega por dos import() diferidos que, con la suite entera, podían
+  // tardar segundos: el test de la bodega se quedaba en «Sin resultados». Se
+  // espera aquí la MISMA carga (memorizada) que usa el componente.
   beforeAll(async () => {
-    await Promise.all([import("virtual:carta-ssg/vinos"), import("virtual:carta-ssg/bebidas")]);
+    await cargarBodega();
   });
 
   beforeEach(() => {
