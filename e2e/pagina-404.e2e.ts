@@ -70,7 +70,8 @@ for (const ancho of [390, 1440]) {
         // La barra «Reservar» del móvil no sale en la página no encontrada.
         const idioma = ruta.startsWith("/en/") ? "en" : ruta.startsWith("/fr/") ? "fr" : "es";
         const t = { es, en, fr }[idioma];
-        await expect(page.getByLabel(t.mobileCta.callAria, { exact: true })).toHaveCount(0);
+        // (La barra es la tira fija de abajo; la cabecera y el pie tienen su propio «Llamar».)
+        await expect(page.locator("div.fixed.bottom-0").getByLabel(t.mobileCta.callAria, { exact: true })).toHaveCount(0);
         // Tras hidratar, el idioma es el de la dirección.
         await expect(page.locator("html")).toHaveAttribute("lang", idioma);
       });
