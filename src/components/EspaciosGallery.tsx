@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import useEmblaCarousel from "embla-carousel-react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Expand, Sun, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Expand, X } from "lucide-react";
 import ImagenResponsive, { type NombreImagen } from "@/components/ImagenResponsive";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { NEGOCIO } from "@/lib/negocio";
@@ -10,13 +10,18 @@ import "./espacios-gallery.css";
 const photos: NombreImagen[][] = [
   ["salon-5", "salon-1", "salon-2", "salon-3", "salon-4"],
   ["comedor-1", "comedor-2", "comedor-3"],
-  [],
+  [], // Terraza: sin fotos todavía. Su pestaña no sale hasta que haya alguna.
 ];
 
+// Solo los espacios con fotos tienen pestaña (QA F-32: nada de «Fotografías
+// próximamente» en la web). El índice sigue siendo el de `photos`, `names` y
+// `t.espacios.cards`, así que basta con añadir fotos para que vuelva a salir.
+const espaciosConFotos = photos.flatMap((fotos, index) => (fotos.length > 0 ? [index] : []));
+
 const copy = {
-  es: { names: ["Salón", "Comedor", "Terraza"], title: "Nuestros espacios", subtitle: "Un entorno para cada ocasión", view: "Ver todas las fotos", pending: "Fotografías próximamente", previous: "Foto anterior", next: "Foto siguiente", close: "Cerrar galería", expand: "Ampliar fotografía", photo: "Fotografía", alt: "{name} de {negocio}, {localidad} — fotografía {n}", gallery: "Galería de", swipe: "Desliza para explorar" },
-  en: { names: ["Lounge", "Dining room", "Terrace"], title: "Our spaces", subtitle: "A setting for every occasion", view: "View all photos", pending: "Photographs coming soon", previous: "Previous photo", next: "Next photo", close: "Close gallery", expand: "Enlarge photo", photo: "Photo", alt: "{name} at {negocio}, {localidad} — photo {n}", gallery: "Gallery of", swipe: "Swipe to explore" },
-  fr: { names: ["Salon", "Salle à manger", "Terrasse"], title: "Nos espaces", subtitle: "Un cadre pour chaque occasion", view: "Voir toutes les photos", pending: "Photographies à venir", previous: "Photo précédente", next: "Photo suivante", close: "Fermer la galerie", expand: "Agrandir la photo", photo: "Photographie", alt: "{name} de {negocio}, {localidad} — photographie {n}", gallery: "Galerie de", swipe: "Faites glisser pour découvrir" },
+  es: { names: ["Salón", "Comedor", "Terraza"], title: "Nuestros espacios", subtitle: "Un entorno para cada ocasión", view: "Ver todas las fotos", previous: "Foto anterior", next: "Foto siguiente", close: "Cerrar galería", expand: "Ampliar fotografía", photo: "Fotografía", alt: "{name} de {negocio}, {localidad} — fotografía {n}", gallery: "Galería de", swipe: "Desliza para explorar" },
+  en: { names: ["Lounge", "Dining room", "Terrace"], title: "Our spaces", subtitle: "A setting for every occasion", view: "View all photos", previous: "Previous photo", next: "Next photo", close: "Close gallery", expand: "Enlarge photo", photo: "Photo", alt: "{name} at {negocio}, {localidad} — photo {n}", gallery: "Gallery of", swipe: "Swipe to explore" },
+  fr: { names: ["Salon", "Salle à manger", "Terrasse"], title: "Nos espaces", subtitle: "Un cadre pour chaque occasion", view: "Voir toutes les photos", previous: "Photo précédente", next: "Photo suivante", close: "Fermer la galerie", expand: "Agrandir la photo", photo: "Photographie", alt: "{name} de {negocio}, {localidad} — photographie {n}", gallery: "Galerie de", swipe: "Faites glisser pour découvrir" },
 };
 
 export default function EspaciosGallery({ portalContainer }: { portalContainer?: HTMLElement } = {}) {
@@ -119,53 +124,42 @@ export default function EspaciosGallery({ portalContainer }: { portalContainer?:
         <p>{labels.subtitle}</p>
       </header>
       <div className="ct-tabs" aria-label={labels.title}>
-        {labels.names.map((item, index) => <button type="button" key={item} aria-pressed={space === index} onClick={() => selectSpace(index)}>{item}</button>)}
+        {espaciosConFotos.map((index) => <button type="button" key={labels.names[index]} aria-pressed={space === index} onClick={() => selectSpace(index)}>{labels.names[index]}</button>)}
       </div>
-      {images.length > 0 ? (
-        <>
-          {/* Sin aria-label en las fotos con texto visible: el nombre sale del
-              contenido (foto, «Salón 01 / 05» o «Ver todas las fotos») y así
-              incluye lo que se ve (WCAG 2.5.3). */}
-          <div className="ct-mosaic">
-            <div className="ct-main-viewport" ref={mainViewport} key={space} onScroll={onPhotoScroll} role="region" aria-label={labels.gallery + " " + name}>
-              {images.map((photo, index) => (
-                <button type="button" className="ct-main-photo" key={photo}
-                  tabIndex={index === current ? 0 : -1}
-                  onClick={(event) => open(index, event.currentTarget)}>
-                  <ImagenResponsive nombre={photo} alt={altFoto(index)} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 820px" loading="lazy" decoding="async" draggable={false} />
-                  <span className="ct-expand"><Expand size={18} aria-hidden="true" /><span className="ct-sr-only">{labels.expand}</span></span>
-                  <span className="ct-photo-label">{name}{" "}<span>{String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
-                </button>
-              ))}
-            </div>
-            <div className="ct-side-photos">
-              {[1, 2].map((offset) => {
-                const index = (current + offset) % images.length;
-                return <button type="button" key={offset} aria-label={offset === 2 ? undefined : `${labels.expand}: ${name}, ${index + 1}`} onClick={(event) => open(index, event.currentTarget)}>
-                  <ImagenResponsive nombre={images[index]} alt={altFoto(index)} sizes="(max-width: 1200px) 30vw, 360px" loading="lazy" decoding="async" />
-                  {offset === 2 && <span className="ct-all-label">{labels.view} <ArrowUpRight size={16} aria-hidden="true" /></span>}
-                </button>;
-              })}
-            </div>
-          </div>
-          <div className="ct-caption">
-            <p>{t.espacios.cards[space].description}</p>
-            <div className="ct-navigation">
-              <button type="button" className="ct-round" aria-label={labels.previous} disabled={current === 0} onClick={() => scrollToPhoto(current - 1)}><ArrowLeft size={18} aria-hidden="true" /></button>
-              <span className="ct-count" aria-live="polite">{current + 1} / {images.length}</span>
-              <button type="button" className="ct-round" aria-label={labels.next} disabled={current === images.length - 1} onClick={() => scrollToPhoto(current + 1)}><ArrowRight size={18} aria-hidden="true" /></button>
-              <button type="button" className="ct-view-all" onClick={(event) => open(current, event.currentTarget)}>{labels.view} <ArrowUpRight size={17} aria-hidden="true" /></button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="ct-terrace">
-          <Sun size={32} strokeWidth={1} aria-hidden="true" />
-          <h3>{name}</h3>
-          <p>{t.espacios.cards[space].description}</p>
-          <span>{labels.pending}</span>
+      {/* Sin aria-label en las fotos con texto visible: el nombre sale del
+          contenido (foto, «Salón 01 / 05» o «Ver todas las fotos») y así
+          incluye lo que se ve (WCAG 2.5.3). */}
+      <div className="ct-mosaic">
+        <div className="ct-main-viewport" ref={mainViewport} key={space} onScroll={onPhotoScroll} role="region" aria-label={labels.gallery + " " + name}>
+          {images.map((photo, index) => (
+            <button type="button" className="ct-main-photo" key={photo}
+              tabIndex={index === current ? 0 : -1}
+              onClick={(event) => open(index, event.currentTarget)}>
+              <ImagenResponsive nombre={photo} alt={altFoto(index)} sizes="(max-width: 700px) 100vw, (max-width: 1200px) 65vw, 820px" loading="lazy" decoding="async" draggable={false} />
+              <span className="ct-expand"><Expand size={18} aria-hidden="true" /><span className="ct-sr-only">{labels.expand}</span></span>
+              <span className="ct-photo-label">{name}{" "}<span>{String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span></span>
+            </button>
+          ))}
         </div>
-      )}
+        <div className="ct-side-photos">
+          {[1, 2].map((offset) => {
+            const index = (current + offset) % images.length;
+            return <button type="button" key={offset} aria-label={offset === 2 ? undefined : `${labels.expand}: ${name}, ${index + 1}`} onClick={(event) => open(index, event.currentTarget)}>
+              <ImagenResponsive nombre={images[index]} alt={altFoto(index)} sizes="(max-width: 1200px) 30vw, 360px" loading="lazy" decoding="async" />
+              {offset === 2 && <span className="ct-all-label">{labels.view} <ArrowUpRight size={16} aria-hidden="true" /></span>}
+            </button>;
+          })}
+        </div>
+      </div>
+      <div className="ct-caption">
+        <p>{t.espacios.cards[space].description}</p>
+        <div className="ct-navigation">
+          <button type="button" className="ct-round" aria-label={labels.previous} disabled={current === 0} onClick={() => scrollToPhoto(current - 1)}><ArrowLeft size={18} aria-hidden="true" /></button>
+          <span className="ct-count" aria-live="polite">{current + 1} / {images.length}</span>
+          <button type="button" className="ct-round" aria-label={labels.next} disabled={current === images.length - 1} onClick={() => scrollToPhoto(current + 1)}><ArrowRight size={18} aria-hidden="true" /></button>
+          <button type="button" className="ct-view-all" onClick={(event) => open(current, event.currentTarget)}>{labels.view} <ArrowUpRight size={17} aria-hidden="true" /></button>
+        </div>
+      </div>
       <Dialog.Root open={opened} onOpenChange={setOpened}>
         <Dialog.Portal container={portalContainer}>
           <Dialog.Overlay className="ct-viewer-overlay" />
