@@ -17,7 +17,9 @@ const CATALOGO = [
   { nombre: "Tinto de Rioja", categoria: "VINOS TINTOS — RIOJA", denominacion_origen: "Rioja", ubicacion_pais: "España", ubicacion_region: "Rioja" },
   { nombre: "Champagne Brut", categoria: "VINOS ESPUMOSOS — CHAMPAGNE", denominacion_origen: "AOC Champagne", ubicacion_pais: "Francia", ubicacion_region: "Champagne" },
   { nombre: "Verdejo de Rueda", categoria: "VINOS BLANCOS — RUEDA", denominacion_origen: "D.O. Rueda", ubicacion_pais: "España", ubicacion_region: "Rueda, Castilla y León" },
-  { nombre: "Albariño gallego", categoria: "VINOS BLANCOS — RÍAS BAIXAS", denominacion_origen: "D.O. Rías Baixas", ubicacion_pais: "España", ubicacion_region: "Galicia" },
+  // Sin punto a propósito: región genérica y una D.O. que no está en denominaciones-vino.json (con
+  // «D.O. Rías Baixas» el respaldo por denominación ya lo coloca cerca de Pontevedra).
+  { nombre: "Albariño gallego", categoria: "VINOS BLANCOS — RÍAS BAIXAS", denominacion_origen: "D.O. de prueba sin geocodificar", ubicacion_pais: "España", ubicacion_region: "Galicia" },
 ].map((v, i) => ({ ...v, id: `vino-${i + 1}`, precio_eur: 20 + i, orden: i, activado: true, restaurante: true, imagen_url: null, descripcion: "" }));
 
 /**
