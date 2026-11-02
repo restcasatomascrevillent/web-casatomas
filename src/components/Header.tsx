@@ -129,14 +129,22 @@ const Header = () => {
 
     let primeraVez = true;
     let ultimoDestino: number | undefined;
+    // Scroll máximo de la página al pedir `ultimoDestino`. Si el destino
+    // quedaba más abajo, el navegador recortó el scroll a ese máximo; cuando
+    // la página crece después (las secciones de debajo terminan de cargar),
+    // hay que volver a pedirlo aunque el destino no haya cambiado.
+    let ultimoMaximo = 0;
+    const maximo = () => document.documentElement.scrollHeight - window.innerHeight;
     const alinear = () => {
       const el = document.getElementById(sectionId);
       if (!el) return;
       const destino = destinoAncla(el);
       // ResizeObserver fires once on observe. Do not interrupt the first
       // smooth scroll unless the destination actually moved during loading.
-      if (ultimoDestino !== undefined && Math.abs(destino - ultimoDestino) < 1) return;
+      const recortado = ultimoDestino !== undefined && ultimoDestino > ultimoMaximo + 1 && maximo() > ultimoMaximo + 1;
+      if (ultimoDestino !== undefined && Math.abs(destino - ultimoDestino) < 1 && !recortado) return;
       ultimoDestino = destino;
+      ultimoMaximo = maximo();
       const smooth = primeraVez && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       window.scrollTo({ top: destino, behavior: smooth ? "smooth" : "instant" });
       primeraVez = false;
