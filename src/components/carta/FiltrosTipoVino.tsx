@@ -82,7 +82,7 @@ export function BarraFiltrosVino({ opciones, seleccionado, onChange, etiqueta }:
               )}
             >
               <span className={cn('min-w-0', activo && 'font-semibold')}>{opcion.etiqueta}</span>
-              <span aria-hidden="true" className={cn('shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 text-[11px] leading-none tabular-nums sm:text-xs', activo ? 'font-semibold text-foreground' : 'text-muted-foreground/80')}>{opcion.cantidad}</span>
+              <span aria-hidden="true" className={cn('shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 text-[11px] leading-none tabular-nums sm:text-xs', activo ? 'font-semibold text-foreground' : 'text-muted-foreground')}>{opcion.cantidad}</span>
             </Button>
           );
         })}

@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import ReservasSection from "@/components/ReservasSection";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
@@ -28,6 +29,7 @@ const Reservas = () => {
       <JsonLd data={breadcrumbSchema([{ nombre: p.breadcrumb, path: RESERVAS_PATH }], language)} />
       <Header />
       <ReservasSection headingLevel="h1" forceShowForm showBackButton />
+      <Footer />
     </div>
   );
 };

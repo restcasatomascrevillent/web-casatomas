@@ -49,6 +49,7 @@ import {
 } from "@/lib/alergenos";
 import { CATEGORIAS_CARTA } from "@/lib/carta-rutas";
 import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
+import { girarYEnfocar, propsCara } from "@/lib/caraGiro";
 
 /** Estado inicial de `platosByCategory`: categoria -> platos. */
 export type CartaPlatosSeed = Record<string, Plato[]>;
@@ -723,9 +724,12 @@ const CartaPlatos = ({
                   className={`relative transition-transform duration-500 [transform-style:preserve-3d] ${
                     expanded || infoOpen ? "h-full" : "h-auto"
                   } ${infoOpen ? "[transform:rotateY(180deg)]" : ""}`}
+                  data-tarjeta-giro={cardKey}
                 >
                   <div
                     className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}
+                    data-cara="delantera"
+                    {...propsCara(infoOpen)}
                   >
                     <Card
                       className={`font-libre-baskerville flex flex-col transition-[box-shadow,transform] duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${
@@ -782,14 +786,18 @@ const CartaPlatos = ({
                             </button>
                             <button
                               type="button"
-                              onClick={() =>
-                                handleToggleInfoCard(item.id, infoOpen)
+                              onClick={(evento) =>
+                                girarYEnfocar(evento.currentTarget, () =>
+                                  handleToggleInfoCard(item.id, infoOpen),
+                                )
                               }
                               aria-label={
                                 infoOpen
                                   ? "Ocultar información del plato"
                                   : "Mostrar información del plato"
                               }
+                              aria-expanded={infoOpen}
+                              data-boton-giro=""
                               className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                             >
                               <Info className="w-5 h-5" />
@@ -857,6 +865,8 @@ const CartaPlatos = ({
 
                   <div
                     className={`${infoOpen ? "relative h-auto" : "absolute inset-0 h-full"} [transform:rotateY(180deg)] [backface-visibility:hidden]`}
+                    data-cara="trasera"
+                    {...propsCara(!infoOpen)}
                   >
                     <Card
                       className={`font-libre-baskerville flex flex-col overflow-hidden border-2 border-border/80 bg-gradient-to-br from-background to-muted/30 ${
@@ -882,14 +892,18 @@ const CartaPlatos = ({
                           </div>
                           <button
                             type="button"
-                            onClick={() =>
-                              handleToggleInfoCard(item.id, infoOpen)
+                            onClick={(evento) =>
+                              girarYEnfocar(evento.currentTarget, () =>
+                                handleToggleInfoCard(item.id, infoOpen),
+                              )
                             }
                             aria-label={
                               infoOpen
                                 ? "Ocultar información del plato"
                                 : "Mostrar información del plato"
                             }
+                            aria-expanded={infoOpen}
+                            data-boton-giro=""
                             className="flex items-center justify-center w-11 h-11 rounded-full bg-muted/80 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all duration-200 hover:scale-[1.03]"
                           >
                             <Info className="w-5 h-5" />

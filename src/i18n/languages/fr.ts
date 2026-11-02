@@ -547,6 +547,7 @@ export const translations: Translations = {
       terms: "Politique de confidentialité",
       bookingTerms: "Conditions de réservation et newsletter",
       legalNotice: "Mentions légales (en espagnol)",
+      cookiePolicy: "Politique de cookies",
       cookieSettings: "Configurer les cookies",
     },
     cookie: {
@@ -730,8 +731,6 @@ export const translations: Translations = {
       privacyLink: "politique de confidentialité",
       contactTitle: "Contact",
       contactIntro: "Pour toute question sur votre réservation :",
-      homeLink: "Accueil",
-      privacyFooterLink: "Politique de confidentialité",
     },
     /* Etiquetas ARIA de los botones del calendario (react-day-picker las trae en inglés). */
     calendar: {
@@ -753,6 +752,8 @@ export const translations: Translations = {
     },
     notFound: {
       title: "404",
+      metaTitle: "Page introuvable | Casa Tomás Restaurant",
+      metaDescription: "La page que vous cherchez n'existe pas sur le site de Casa Tomás, restaurant à Crevillente. Revenez à l'accueil pour voir la carte ou réserver une table.",
       message: "Oups ! Page introuvable",
       back: "Retour à l'accueil",
     },

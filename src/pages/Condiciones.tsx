@@ -1,6 +1,7 @@
 import { Fragment, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -169,23 +170,9 @@ const Condiciones = () => {
         </section>
       </div>
 
-      {/* Tag `<footer>` real: MobileReserveCTA lo busca con
-          `document.querySelector("footer")` para ocultar su barra fija. */}
-      <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
-        <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
-        <p className="mt-1">
-          <Link to={inicio} className="hover:text-accent transition-colors">
-            {c.homeLink}
-          </Link>
-          {" · "}
-          <Link
-            to={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
-            className="hover:text-accent transition-colors"
-          >
-            {c.privacyFooterLink}
-          </Link>
-        </p>
-      </footer>
+      {/* Pie común de toda la web (también lleva el `<footer>` real que
+          busca MobileReserveCTA para ocultar su barra fija al llegar abajo). */}
+      <Footer />
     </div>
   );
 };
