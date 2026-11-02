@@ -197,7 +197,23 @@ describe("/carta — buscador", () => {
     render(app());
     fireEvent.focus(campo());
     await buscar("rias baixas");
-    const bodega = await screen.findByRole("region", { name: "Bodega y bebidas" }, { timeout: 5000 });
+    const bodega = await screen.findByRole(
+      "region",
+      { name: "Bodega y bebidas" },
+      {
+        timeout: 5000,
+        // En el CI falla de vez en cuando y en local no se reproduce: sin el
+        // volcado del DOM (que sale cortado), deja constancia de si la búsqueda
+        // llegó a aplicarse y de qué secciones de resultados había.
+        onTimeout: (error) => {
+          const secciones = screen.queryAllByRole("region").map((region) => region.getAttribute("aria-labelledby"));
+          error.message =
+            `No aparece «Bodega y bebidas». Campo: «${(campo() as HTMLInputElement).value}» · ` +
+            `recuento: «${recuento().textContent}» · secciones: ${JSON.stringify(secciones)}`;
+          return error;
+        },
+      },
+    );
     expect(within(bodega).getByRole("heading", { level: 3 })).toHaveTextContent("Vinos blancos 1");
     expect(within(bodega).getByText("Albariño Pazo de Señoráns")).toBeInTheDocument();
     expect(within(bodega).getByText("32,00 €")).toBeInTheDocument();
