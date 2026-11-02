@@ -68,6 +68,9 @@ const codigo = await new Promise((ok) => {
       VITE_SUPABASE_URL: URL_FALSA,
       VITE_SUPABASE_PUBLISHABLE_KEY: "e2e-clave-publica-falsa",
       VITE_SUPABASE_ANON_KEY: "e2e-clave-publica-falsa",
+      // Sin token el mapa de la carta de vinos no se monta. Falso: los E2E
+      // contestan ellos mismos a api.mapbox.com con un estilo vacío.
+      VITE_MAPBOX_TOKEN: "pk.e2e-token-falso",
     },
   });
   hijo.on("exit", (c) => ok(c ?? 1));
