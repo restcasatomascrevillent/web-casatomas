@@ -31,7 +31,7 @@ import FotoPlato from "./FotoPlato";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { girarYEnfocar, propsCara } from "@/lib/caraGiro";
+import { cerrarInfoConEscape, girarYEnfocar, propsCara } from "@/lib/caraGiro";
 import type { Translations } from "@/i18n/languages/es";
 import type { Language } from "@/i18n/types";
 
@@ -136,7 +136,7 @@ const PiePlato = ({
         {cantidadEnPedido > 0 && (
           <span
             aria-hidden="true"
-            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center whitespace-nowrap rounded-full bg-foreground px-1 text-[10px] font-bold leading-none text-background shadow ring-2 ring-background"
+            className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center whitespace-nowrap rounded-full bg-foreground px-1 text-xs font-bold leading-none text-background shadow ring-2 ring-background"
           >
             {formatearCantidad(cantidadEnPedido, unidad)}
           </span>
@@ -254,6 +254,7 @@ const ProductoCard = ({
       data-resaltado={resaltado || undefined}
       className={`scroll-mt-28 [perspective:1200px] ${expanded || infoOpen ? "h-full" : "h-auto"}`}
       data-tarjeta-giro={anclaPlato(plato.id)}
+      onKeyDown={(evento) => cerrarInfoConEscape(evento, infoOpen, () => setInfoOpen(false))}
     >
       {/* Envoltorio del giro 3D: mismo patrón que `CartaVinos.tsx`. La cara
           trasera va con `backface-visibility:hidden` y en `absolute` salvo
@@ -348,7 +349,7 @@ const ProductoCard = ({
 
             <CardHeader className="pb-2 px-5 pt-4 flex-shrink-0">
               <div className="flex items-start justify-between gap-3">
-                <CardTitle className="flex-1 min-w-0 text-base md:text-lg leading-tight whitespace-normal break-words min-h-12">
+                <CardTitle as="h2" className="flex-1 min-w-0 text-base md:text-lg leading-tight whitespace-normal break-words min-h-12">
                   {plato.displayNombre}
                 </CardTitle>
                 <div className="flex items-center gap-2 shrink-0">
@@ -430,7 +431,7 @@ const ProductoCard = ({
             <CardHeader className="pb-3 px-5 pt-4 flex-shrink-0 border-b bg-muted/20">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-base md:text-lg leading-tight whitespace-normal break-words">
+                  <CardTitle as="h2" className="text-base md:text-lg leading-tight whitespace-normal break-words">
                     {plato.displayNombre}
                   </CardTitle>
                   <div className="pt-2">

@@ -325,7 +325,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
                     <span className="w-10 h-10 rounded-full bg-accent/15 text-accent flex items-center justify-center flex-shrink-0">
                       <Wine className="w-4 h-4" />
                     </span>
-                    <CardTitle className="text-lg leading-tight line-clamp-2 min-h-12">{item.displayNombre || item.nombre}</CardTitle>
+                    <CardTitle as="h2" className="text-lg leading-tight line-clamp-2 min-h-12">{item.displayNombre || item.nombre}</CardTitle>
                   </div>
                   <span className="bg-accent/90 text-accent-foreground backdrop-blur-sm shadow-md px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0">
                     {translateCategory(item.categoria)}

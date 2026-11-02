@@ -80,7 +80,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false, headin
                   ))}
                 </div>
               </div>
-              <ReservationForm onSuccessClose={handleSuccessClose} />
+              <ReservationForm onSuccessClose={handleSuccessClose} nivelPasos={Heading === "h1" ? "h2" : "h3"} />
               {showBackButton && (
                 <div className="flex justify-center">
                   <Button

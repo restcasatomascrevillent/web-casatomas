@@ -342,7 +342,7 @@ const CartaSection = () => {
           onEscapeKeyDown={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-balance break-words leading-tight">
               <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />
               {t.vinos.ageCheckTitle}
             </DialogTitle>

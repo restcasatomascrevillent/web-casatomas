@@ -53,6 +53,8 @@ import {
 type ReservationFormProps = {
   onSuccessClose?: () => void;
   navigateOnClose?: boolean;
+  /** Nivel de los títulos de paso: h3 bajo el h2 de la portada; h2 bajo el h1 de /reservas. */
+  nivelPasos?: "h2" | "h3";
 };
 
 /**
@@ -102,7 +104,7 @@ const EnlaceLegal = ({ href, children, aviso }: { href: string; children: string
   </a>
 );
 
-export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
+export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelPasos: Paso = "h3" }: ReservationFormProps) => {
   const { t, dateLocale, language } = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadHueco[]>([]);
@@ -453,7 +455,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-6 pb-6 border-b border-border/30">
-              <h3 className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</h3>
+              <Paso className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</Paso>
 
               <div className="grid sm:grid-cols-2 gap-6">
                 <FormField
@@ -562,7 +564,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
             {hasCheckedAvailability && (
               <div className="space-y-4 pb-6 border-b border-border/30">
-                <h3 className="text-lg font-semibold text-foreground">{t.reservationForm.stepTwo}</h3>
+                <Paso className="text-lg font-semibold text-foreground">{t.reservationForm.stepTwo}</Paso>
                 <FormLabel className="text-foreground font-medium block">
                   {t.reservationForm.timesLabel}
                 </FormLabel>
@@ -617,9 +619,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             )}
 
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-foreground">
+              <Paso className="text-lg font-semibold text-foreground">
                 {hasCheckedAvailability ? t.reservationForm.stepThree : t.reservationForm.infoTitle}
-              </h3>
+              </Paso>
 
               <FormField
                 control={form.control}

@@ -111,6 +111,8 @@ const CookieConsent = () => {
       {showBanner && (
         <div
           ref={bannerRef}
+          role="region"
+          aria-label={t.cookie.title}
           /* En móvil se ancla por encima de la barra fija de CTA (MobileReserveCTA)
              SOLO cuando esa barra está realmente visible: `--mobile-cta-offset`
              (la publica MobileReserveCTA) vale su alto ahí y 0px en cualquier

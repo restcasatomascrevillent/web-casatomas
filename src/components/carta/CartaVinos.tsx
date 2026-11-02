@@ -535,7 +535,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
           onEscapeKeyDown={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-balance break-words leading-tight">
               <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />
               {t.vinos.ageCheckTitle}
             </DialogTitle>
@@ -668,7 +668,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                           : "gap-2 px-4 py-3"}
                       >
                         <div className={expanded ? "contents" : "flex items-start justify-between gap-2"}>
-                          <CardTitle
+                          <CardTitle as="h2"
                             className={`min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words ${expanded ? "col-start-1 row-start-1" : ""}`}
                           >
                             {item.displayNombre || item.nombre}
