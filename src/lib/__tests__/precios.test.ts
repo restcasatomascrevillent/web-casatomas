@@ -9,6 +9,8 @@ describe("formato de precio «24,50 €»", () => {
     for (const idioma of ["es", "en", "fr"] as const) {
       expect(plano(mostrarPrecio(24.5, idioma))).toBe("24,50 €");
       expect(plano(mostrarPrecio(18, idioma))).toBe("18,00 €");
+      expect(plano(mostrarPrecio(18.9, idioma))).toBe("18,90 €");
+      expect(plano(mostrarPrecio(132.5, idioma))).toBe("132,50 €");
     }
   });
 
