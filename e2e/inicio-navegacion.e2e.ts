@@ -90,12 +90,6 @@ for (const [nombre, viewport] of [["móvil", MOVIL], ["escritorio", ESCRITORIO]]
     test("deja #contacto justo bajo la cabecera", async ({ page, erroresJs: _ }) => {
       await page.goto("/carta");
       await esperarHidratacion(page);
-      // Con el Supabase falso las secciones vienen vacías y lo que hay bajo
-      // #contacto es más bajo que la pantalla a 1440: sin este relleno la
-      // página no daría para subir la sección hasta la cabecera. La
-      // navegación a /#contacto es del lado del cliente (se comprueba abajo),
-      // así que el estilo y la marca siguen puestos al llegar a la portada.
-      await page.addStyleTag({ content: "body { padding-bottom: 100vh; }" });
       await page.evaluate(() => { (window as unknown as { __sinRecarga: boolean }).__sinRecarga = true; });
       if (viewport.width < 1024) {
         await page.getByRole("button", { name: "Abrir menú" }).click();
@@ -104,6 +98,13 @@ for (const [nombre, viewport] of [["móvil", MOVIL], ["escritorio", ESCRITORIO]]
       await expect(page).toHaveURL(/\/#contacto$/);
       expect(await page.evaluate(() => (window as unknown as { __sinRecarga?: boolean }).__sinRecarga), "navegación sin recargar").toBe(true);
       await expect(page.locator("#contacto")).toBeAttached();
+      // Como en producción: la página crece DESPUÉS de llegar (las secciones
+      // de debajo terminan de cargar). Con el Supabase falso son cortas y
+      // #contacto no puede subir hasta la cabecera, así que el navegador
+      // recorta el scroll al máximo; al crecer, la cabecera tiene que volver
+      // a pedir el destino (QA-PROD: se quedaba 222 px por debajo a 1440).
+      await page.waitForTimeout(300);
+      await page.addStyleTag({ content: "body { padding-bottom: 100vh; }" });
       await esperarScrollQuieto(page);
       expect(Math.abs(await huecoBajoCabecera(page, "contacto"))).toBeLessThanOrEqual(1);
     });
