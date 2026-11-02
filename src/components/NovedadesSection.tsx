@@ -213,7 +213,7 @@ const NovedadesSection = () => {
             {localized.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {localized.tags.map((tag, i) => (
-                  <Badge key={i} variant="secondary" className="text-[11px]">
+                  <Badge key={i} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
                 ))}

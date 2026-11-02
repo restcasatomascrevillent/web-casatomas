@@ -115,7 +115,7 @@ const BotonPaso = ({
     onClick={onClick}
     disabled={disabled}
     aria-label={label}
-    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
+    className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors after:absolute after:-inset-1.5 after:content-[''] hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-30"
     style={{ color: TINTA, borderColor: BORDE }}
   >
     {children}
@@ -176,7 +176,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
           <div style={{ marginTop: 8 }}>
             <LineaAscii texto={IGUALES} />
           </div>
-          <div style={{ fontSize: 11, color: TINTA_SUAVE, marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: TINTA_SUAVE, marginTop: 6 }}>
             {fecha} · {comensalesTexto}
           </div>
           <div style={{ marginTop: 6 }}>
@@ -188,7 +188,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
         {edicion && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: TINTA_SUAVE }}>
+              <span style={{ fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: TINTA_SUAVE }}>
                 {t.guestsLabel}
               </span>
               <div className="inline-flex items-center gap-2">
@@ -234,7 +234,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
               </div>
             )}
             {cadaUno && (
-              <p className="mt-2 text-[10px]" style={{ color: TINTA_SUAVE }}>
+              <p className="mt-2 text-xs" style={{ color: TINTA_SUAVE }}>
                 {t.splitEachHint}
               </p>
             )}
@@ -258,7 +258,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                 }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ fontWeight: 700, textTransform: "uppercase", fontSize: 11.5, overflowWrap: "anywhere" }}>
+                  <span style={{ fontWeight: 700, textTransform: "uppercase", fontSize: 12, overflowWrap: "anywhere" }}>
                     {linea.nombre}
                   </span>
                   {edicion && (
@@ -266,7 +266,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                       type="button"
                       onClick={() => edicion.onQuitarLinea(indice)}
                       aria-label={t.lineRemove.replace("{name}", linea.nombre)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-600 after:absolute after:-inset-1.5 after:content-[''] transition-colors hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -274,7 +274,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                 </div>
 
                 {linea.categoria && (
-                  <div style={{ fontSize: 10, fontStyle: "italic", color: TINTA_SUAVE, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, fontStyle: "italic", color: TINTA_SUAVE, marginTop: 2 }}>
                     ({linea.categoria})
                   </div>
                 )}
@@ -297,11 +297,11 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                       </BotonPaso>
                     </div>
                   ) : (
-                    <span style={{ fontSize: 10.5, color: TINTA_SUAVE }}>{formatearCantidadLinea(linea, idioma)}</span>
+                    <span style={{ fontSize: 12, color: TINTA_SUAVE }}>{formatearCantidadLinea(linea, idioma)}</span>
                   )}
 
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 10.5, color: TINTA_SUAVE }}>
+                    <div style={{ fontSize: 12, color: TINTA_SUAVE }}>
                       {formatearCantidadLinea(linea, idioma)} × {eur(linea.precio_eur)}
                       {sufijoPrecio(linea.unidad)}
                     </div>
@@ -327,7 +327,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                             type="button"
                             aria-pressed={seleccionado}
                             onClick={() => edicion.onAsignar(linea.clave, i)}
-                            className="rounded-full border px-2.5 py-1 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="relative rounded-full border px-2.5 py-1 text-xs transition-colors after:absolute after:-inset-x-0.5 after:-inset-y-2 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             style={{
                               borderColor: seleccionado ? TINTA : BORDE,
                               background: seleccionado ? TINTA : "transparent",
@@ -340,7 +340,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                       })}
                     </div>
                     {personasLinea.length === 0 && (
-                      <p className="mt-1 text-[10px] italic" style={{ color: TINTA_SUAVE }}>
+                      <p className="mt-1 text-xs italic" style={{ color: TINTA_SUAVE }}>
                         {t.shared}
                       </p>
                     )}
@@ -366,7 +366,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
               </div>
             ) : (
               <div style={{ marginBottom: 6 }}>
-                <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: TINTA_SUAVE, marginBottom: 4 }}>
+                <div style={{ fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: TINTA_SUAVE, marginBottom: 4 }}>
                   {t.ticket.perPersonTitle}
                 </div>
                 {reparto.porPersona.map((importe, i) => (
@@ -391,7 +391,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                   </div>
                 ))}
                 {reparto.compartido > 0 && (
-                  <div style={{ fontSize: 10.5, color: TINTA_SUAVE }}>
+                  <div style={{ fontSize: 12, color: TINTA_SUAVE }}>
                     {t.sharedLine
                       .replace("{amount}", eur(reparto.compartido))
                       .replace("{each}", eur(reparto.compartidoPorPersona))}
@@ -403,7 +403,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
         </div>
 
         {/* Aviso */}
-        <div style={{ textAlign: "center", fontSize: 10.5, color: TINTA_SUAVE, marginTop: 12 }}>{t.note}</div>
+        <div style={{ textAlign: "center", fontSize: 12, color: TINTA_SUAVE, marginTop: 12 }}>{t.note}</div>
 
         {/* Vaciar: solo en el ticket en vivo. */}
         {edicion && (
@@ -465,7 +465,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
                 <path d={pathDeMatrizQr(qr)} fill={TINTA} />
               </svg>
             )}
-            <div style={{ fontSize: 10.5, lineHeight: 1.5, color: TINTA_SUAVE }}>
+            <div style={{ fontSize: 12, lineHeight: 1.5, color: TINTA_SUAVE }}>
               <div style={{ fontFamily: SERIF, fontSize: 12, color: TINTA }}>Casa Tomás</div>
               <div>
                 {NEGOCIO.calle} · {NEGOCIO.cp} {NEGOCIO.localidad}
@@ -477,7 +477,7 @@ const TicketMesa = forwardRef<HTMLDivElement, TicketMesaProps>(
           <LineaAscii texto={ASTERISCOS} />
         </div>
 
-        <div style={{ textAlign: "center", fontFamily: SERIF, fontSize: 11.5, marginTop: 12, color: TINTA_SUAVE }}>
+        <div style={{ textAlign: "center", fontFamily: SERIF, fontSize: 12, marginTop: 12, color: TINTA_SUAVE }}>
           {t.thanks}
         </div>
       </div>

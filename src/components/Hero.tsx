@@ -42,14 +42,14 @@ const Hero = () => {
         className="hero-section relative overflow-hidden bg-gradient-to-br from-background via-muted to-background"
       >
         <div aria-hidden="true" className="hero-backdrop absolute inset-0" />
-        <div className="relative min-h-[inherit] flex flex-col items-center justify-center pt-24 pb-32 sm:pb-24 lg:pb-20 text-center px-4 z-10">
-          <div className="mb-8">
+        <div className="relative min-h-[inherit] flex flex-col items-center justify-center pt-24 pb-32 sm:pb-24 lg:pb-20 bajo:pt-20 bajo:pb-6 text-center px-4 z-10">
+          <div className="mb-8 bajo:mb-3">
             <img
               src={logoHero.src}
               srcSet={logoHero.srcSet}
               sizes={logoHero.sizes}
               alt={t.hero.logoAlt}
-              className="w-64 md:w-96 lg:w-[28rem] h-auto mx-auto mb-6 drop-shadow-2xl"
+              className="w-64 md:w-96 lg:w-[28rem] bajo:w-28 h-auto mx-auto mb-6 bajo:mb-2 drop-shadow-2xl"
               width={LOGO_WIDTH}
               height={LOGO_HEIGHT}
               loading="eager"
@@ -59,10 +59,10 @@ const Hero = () => {
             {/* Sigue siendo el H1 de la portada (lo que Google lee como título de
                 la página), pero discreto: una línea pequeña en versalitas en vez
                 de una frase grande que compita con el logo y el lema. */}
-            <h1 className="text-[11px] sm:text-xs md:text-sm font-medium uppercase tracking-[0.12em] sm:tracking-[0.2em] md:tracking-[0.3em] text-muted-foreground max-w-2xl mx-auto mb-4 text-balance">
+            <h1 className="text-xs md:text-sm font-medium uppercase tracking-[0.12em] sm:tracking-[0.2em] md:tracking-[0.3em] text-muted-foreground max-w-2xl mx-auto mb-4 text-balance">
               {{ es: "Cocina gallega · Marisco · Crevillente", en: "Galician cuisine · Seafood · Crevillente", fr: "Cuisine galicienne · Fruits de mer · Crevillente" }[language]}
             </h1>
-            <p className="text-2xl md:text-3xl text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
+            <p className="text-2xl md:text-3xl bajo:text-lg text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
               {t.hero.motto}
             </p>
           </div>
@@ -70,7 +70,7 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
               size="lg"
-              className="bg-accent hover:bg-accent-hover text-accent-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+              className="bg-accent hover:bg-accent-hover text-accent-foreground px-8 py-6 bajo:py-3 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
               asChild
             >
               <Link to={construirRutaIdioma(RESERVAS_PATH, language)}>
@@ -86,7 +86,7 @@ const Hero = () => {
               asChild
               size="lg"
               variant="outline"
-              className="border-2 border-primary/30 bg-background/50 backdrop-blur-sm text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="border-2 border-primary/30 bg-background/50 backdrop-blur-sm text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary px-8 py-6 bajo:py-3 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               <a href="#carta">
                 <UtensilsCrossed className="w-5 h-5 mr-2" />
@@ -101,7 +101,7 @@ const Hero = () => {
           <a
             href="#carta"
             aria-label={ARIA_SCROLL_DOWN[language]}
-            className="absolute bottom-20 sm:bottom-24 lg:bottom-8 block"
+            className="absolute bottom-20 sm:bottom-24 lg:bottom-8 block bajo:hidden"
           >
             <div className="animate-float">
               <svg

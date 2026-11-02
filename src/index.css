@@ -451,6 +451,12 @@ All colors MUST be HSL.
   min-height: max(38rem, 100svh);
 }
 
+/* Móvil en horizontal: la primera pantalla enseña logo, lema y botones, no solo el logo
+   (el mínimo de 38 rem es más que los 375 px de alto). */
+@media (max-height: 520px) {
+  .hero-section { min-height: 100svh; }
+}
+
 /* Soft colour without animated, blurred offscreen layers. */
 .hero-backdrop {
   background:
