@@ -1,3 +1,4 @@
+import { mostrarPrecio } from "@/lib/precios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -333,7 +334,7 @@ const MapaMundoVinos = ({ vinos }: MapaMundoVinosProps) => {
                         {vino.categoria || categoryKey}
                       </p>
                       <p className="text-sm font-bold" style={{ color: cardColor }}>
-                        {vino.precio_eur}€
+                        {mostrarPrecio(vino.precio_eur, language)}
                       </p>
                     </div>
                   );
