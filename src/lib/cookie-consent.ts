@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /**
  * Único rastreador opcional real del sitio: el mapa de vinos (Mapbox),
@@ -70,6 +70,13 @@ export const getStoredConsent = (): StoredConsent | null => {
   return parsearConsentimiento(leerCookie(COOKIE_NAME));
 };
 
+/**
+ * Elección que no se pudo guardar en ningún sitio: con `localStorage` y cookies
+ * bloqueados, el visitante que pulsa «Aceptar» tiene que ver el mapa igualmente
+ * mientras no recargue (`useMapsConsent`). Es `null` si algo la guardó.
+ */
+let eleccionSinGuardar: StoredConsent | null = null;
+
 export const saveConsent = (maps: boolean): void => {
   const value: StoredConsent = { maps, ts: new Date().toISOString() };
   const serialized = JSON.stringify(value);
@@ -79,6 +86,7 @@ export const saveConsent = (maps: boolean): void => {
     // Sigue adelante: la cookie de abajo puede bastar igualmente.
   }
   escribirCookie(COOKIE_NAME, serialized);
+  eleccionSinGuardar = getStoredConsent() === null ? value : null;
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(CONSENT_CHANGED_EVENT, { detail: value }));
   }
@@ -89,17 +97,26 @@ export const openCookiePreferences = (): void => {
   if (typeof window !== "undefined") window.dispatchEvent(new Event(OPEN_PREFERENCES_EVENT));
 };
 
+const suscribirseAlConsentimiento = (avisar: () => void) => {
+  window.addEventListener(CONSENT_CHANGED_EVENT, avisar);
+  return () => window.removeEventListener(CONSENT_CHANGED_EVENT, avisar);
+};
+const mapaAceptado = (): boolean => (getStoredConsent() ?? eleccionSinGuardar)?.maps === true;
+/** Lo que ve el prerender (Node) y el primer render al hidratar: sin consentimiento, sin mapa. */
+const mapaAceptadoEnElServidor = (): boolean => false;
+
 /**
  * Lee la preferencia del mapa y se mantiene al día si cambia en esta misma
  * pestaña (p. ej. el visitante la cambia desde "Configurar cookies" en el
  * footer mientras está viendo la carta de vinos).
+ *
+ * `useSyncExternalStore` con `getServerSnapshot`: el HTML del SSG se pinta sin
+ * `localStorage` (aviso «Activar mapa») y el primer render del navegador tiene
+ * que coincidir con él aunque el visitante ya hubiera aceptado — si leyera el
+ * almacén ya en el primer render, React descartaría el HTML (errores #418 y
+ * #422). Nada más hidratar, React vuelve a leer `mapaAceptado` y, si hay
+ * consentimiento, monta el mapa en ese mismo momento, sin esperar a ningún
+ * efecto propio.
  */
-export const useMapsConsent = (): boolean => {
-  const [maps, setMaps] = useState(() => getStoredConsent()?.maps === true);
-  useEffect(() => {
-    const onChange = (e: Event) => setMaps((e as CustomEvent<StoredConsent>).detail.maps === true);
-    window.addEventListener(CONSENT_CHANGED_EVENT, onChange);
-    return () => window.removeEventListener(CONSENT_CHANGED_EVENT, onChange);
-  }, []);
-  return maps;
-};
+export const useMapsConsent = (): boolean =>
+  useSyncExternalStore(suscribirseAlConsentimiento, mapaAceptado, mapaAceptadoEnElServidor);

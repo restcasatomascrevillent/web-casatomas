@@ -1,0 +1,226 @@
+{
+  "alemania|||mosel": {
+    "nombre": "Mosela",
+    "coordenadas": [
+      7.07082,
+      49.91574
+    ],
+    "fuente": "Mismo punto que la zona «mosela» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||almansa": {
+    "nombre": "D.O. Almansa",
+    "coordenadas": [
+      -1.09786,
+      38.86821
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Almansa (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||bierzo": {
+    "nombre": "El Bierzo, León",
+    "coordenadas": [
+      -6.62318,
+      42.65265
+    ],
+    "fuente": "Mismo punto que la zona «el bierzo, leon» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||jerez-xeres-sherry": {
+    "nombre": "D.O. Jerez-Xérès-Sherry",
+    "coordenadas": [
+      -6.13774,
+      36.68169
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Jerez de la Frontera (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||jumilla": {
+    "nombre": "Jumilla, Murcia",
+    "coordenadas": [
+      -1.32854,
+      38.47354
+    ],
+    "fuente": "Mismo punto que la zona «jumilla, murcia» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||lanzarote": {
+    "nombre": "Lanzarote, Islas Canarias",
+    "coordenadas": [
+      -13.63629,
+      29.03971
+    ],
+    "fuente": "Mismo punto que la zona «lanzarote, islas canarias» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||monterrei": {
+    "nombre": "D.O. Monterrei",
+    "coordenadas": [
+      -7.41813,
+      41.89548
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Verín (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||navarra": {
+    "nombre": "D.O. Navarra",
+    "coordenadas": [
+      -1.65122,
+      42.48136
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Olite (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||rias baixas": {
+    "nombre": "D.O. Rías Baixas",
+    "coordenadas": [
+      -8.60414,
+      42.42806
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Pontevedra, sede del Consejo Regulador (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||ribeira sacra": {
+    "nombre": "D.O. Ribeira Sacra",
+    "coordenadas": [
+      -7.48752,
+      42.51055
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Monforte de Lemos (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||ribeiro": {
+    "nombre": "Ribeiro, Ourense, Galicia",
+    "coordenadas": [
+      -8.14268,
+      42.28761
+    ],
+    "fuente": "Mismo punto que la zona «ribeiro, ourense, galicia» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||ribera del duero": {
+    "nombre": "Ribera del Duero, Castilla y León",
+    "coordenadas": [
+      -3.68512,
+      41.67151
+    ],
+    "fuente": "Mismo punto que la zona «ribera del duero, castilla y leon» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||rioja": {
+    "nombre": "Rioja",
+    "coordenadas": [
+      -2.43967,
+      42.46612
+    ],
+    "fuente": "Mismo punto que la zona «rioja» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||rueda": {
+    "nombre": "Rueda, Castilla y León",
+    "coordenadas": [
+      -4.95975,
+      41.41298
+    ],
+    "fuente": "Mismo punto que la zona «rueda, castilla y leon» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||toro": {
+    "nombre": "Toro, Castilla y León",
+    "coordenadas": [
+      -5.39398,
+      41.5217
+    ],
+    "fuente": "Mismo punto que la zona «toro, castilla y leon» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||utiel-requena": {
+    "nombre": "Utiel-Requena, Valencia",
+    "coordenadas": [
+      -1.10016,
+      39.48808
+    ],
+    "fuente": "Mismo punto que la zona «utiel-requena, valencia» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||valdeorras": {
+    "nombre": "D.O. Valdeorras",
+    "coordenadas": [
+      -6.9801,
+      42.4301
+    ],
+    "fuente": "OpenStreetMap/Nominatim: O Barco de Valdeorras (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "espana|||valdepenas": {
+    "nombre": "Valdepeñas, Ciudad Real",
+    "coordenadas": [
+      -3.38474,
+      38.75946
+    ],
+    "fuente": "Mismo punto que la zona «valdepenas, ciudad real» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||alsace": {
+    "nombre": "Alsacia",
+    "coordenadas": [
+      7.35796,
+      48.07775
+    ],
+    "fuente": "Mismo punto que la zona «alsacia» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||chablis": {
+    "nombre": "AOC Chablis",
+    "coordenadas": [
+      3.80017,
+      47.81521
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Chablis (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||champagne": {
+    "nombre": "Champagne",
+    "coordenadas": [
+      3.95287,
+      49.04256
+    ],
+    "fuente": "Mismo punto que la zona «champagne» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||cremant de loire": {
+    "nombre": "AOC Crémant de Loire",
+    "coordenadas": [
+      -0.07852,
+      47.25962
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Saumur (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||pouilly-fume": {
+    "nombre": "Pouilly-sur-Loire, Nièvre",
+    "coordenadas": [
+      2.95845,
+      47.28141
+    ],
+    "fuente": "Mismo punto que la zona «pouilly-sur-loire, nievre» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||saint-emilion grand cru": {
+    "nombre": "AOC Saint-Émilion Grand Cru",
+    "coordenadas": [
+      -0.15607,
+      44.89315
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Saint-Émilion (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "francia|||vouvray": {
+    "nombre": "Vouvray, Valle del Loira",
+    "coordenadas": [
+      0.79984,
+      47.41367
+    ],
+    "fuente": "Mismo punto que la zona «vouvray, valle del loira» de zonas-vino.json (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "hungria|||tokaj": {
+    "nombre": "Tokaj",
+    "coordenadas": [
+      21.41139,
+      48.12355
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Tokaj (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "italia|||moscato d'asti": {
+    "nombre": "DOCG Moscato d’Asti",
+    "coordenadas": [
+      8.28714,
+      44.71928
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Canelli (referencia aproximada de la denominación, no la bodega exacta)"
+  },
+  "sudafrica|||stellenbosch": {
+    "nombre": "WO Stellenbosch",
+    "coordenadas": [
+      18.86917,
+      -33.93444
+    ],
+    "fuente": "OpenStreetMap/Nominatim: Stellenbosch (referencia aproximada de la denominación, no la bodega exacta)"
+  }
+}
