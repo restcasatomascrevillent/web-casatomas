@@ -7,6 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import FiltrosTipoVino, { BarraFiltrosVino } from "./FiltrosTipoVino";
 import { origenComprobable } from "@/lib/origenes-vino";
 import { etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
+import { filtrarVinos, hayFiltroVinos, nombreVinoVisible } from "@/lib/filtro-vinos";
 import { Search, AlertCircle, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
 import {
   Dialog,
@@ -256,7 +257,9 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
       for (let offset = 0; ; offset += pageSize) {
         const { data, error } = await supabase
           .from('Vinos')
-          .select('id, categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, precio_eur')
+          // `nombre_en`/`nombre_fr`: el buscador filtra el mapa por el mismo
+          // nombre que ve el visitante en su idioma.
+          .select('id, categoria, ubicacion_region, ubicacion_pais, denominacion_origen, nombre, nombre_en, nombre_fr, precio_eur')
           .eq('activado', true)
           .is('restaurante', true)
           .order('id', { ascending: true })
@@ -351,38 +354,19 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
     return Array.from(cantidades, ([valor, cantidad]) => ({ valor, etiqueta: categoriaCorta(valor, language), cantidad }));
   }, [mapVinos, tipoSeleccionado, language]);
 
-  const getLocalizedField = (vino: Vino, key: string) => {
-    const value = vino[key as keyof Vino];
-    return typeof value === "string" ? value : undefined;
-  };
-
+  // Los mismos filtros (tipo, denominación y buscador) mueven la cuadrícula y el
+  // mapa: `filtrarVinos` es la única fuente. La cuadrícula filtra lo ya cargado
+  // de la categoría (paginado); el mapa, el catálogo entero.
   const filteredItems = useMemo(() => {
     const categoryItems = vinosByCategory[selectedCategory] || [];
-    const translated = categoryItems.map((vino) => {
-      const columnName = getLocalizedField(vino, `nombre_${language}`);
-      return {
-        ...vino,
-        displayNombre: language === "es" ? vino.nombre : (columnName || vino.nombre),
-      };
-    });
-
-    let items = translated;
-
-    const tipo = tipoDesdeCategoria(selectedCategory);
-    if (tipo) {
-      items = items.filter(item => tipoVino(item.categoria) === tipo);
-    } else if (selectedCategory !== "Todos") {
-      items = items.filter(item => item.categoria === selectedCategory);
-    }
-
-    if (debouncedSearchTerm) {
-      items = items.filter(item =>
-        (item.displayNombre || item.nombre).toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-      );
-    }
-
-    return items;
+    return filtrarVinos(categoryItems, { categoria: selectedCategory, busqueda: debouncedSearchTerm, language })
+      .map((vino) => ({ ...vino, displayNombre: nombreVinoVisible(vino, language) }));
   }, [debouncedSearchTerm, language, selectedCategory, vinosByCategory]);
+
+  const mapaVinos = useMemo(
+    () => filtrarVinos(mapVinos, { categoria: selectedCategory, busqueda: debouncedSearchTerm, language }),
+    [mapVinos, selectedCategory, debouncedSearchTerm, language],
+  );
 
   const currentLoading = loadingByCategory[selectedCategory];
 
@@ -577,7 +561,11 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
       {isAdult !== false && MAPBOX_TOKEN && !mapLoading && (
         mapsConsent ? (
           <Suspense fallback={null}>
-            <MapaMundoVinos vinos={mapVinos} />
+            <MapaMundoVinos
+              vinos={mapaVinos}
+              filtroActivo={hayFiltroVinos(selectedCategory, debouncedSearchTerm)}
+              claveFiltro={`${selectedCategory}\u0000${debouncedSearchTerm}`}
+            />
           </Suspense>
         ) : (
           <div className="mb-8 flex flex-col items-center gap-3 rounded-lg border border-dashed border-border bg-muted/30 py-10 px-4 text-center">
