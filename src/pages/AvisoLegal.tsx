@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
-import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
+import { AVISO_LEGAL_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
 
 /**
@@ -19,6 +20,13 @@ const TITULAR = {
   domicilio: `${NEGOCIO.calle}, ${NEGOCIO.cp} ${NEGOCIO.localidad}, ${NEGOCIO.region}.`,
 } as const;
 
+/**
+ * Dominio que cita el aviso legal (apartados 1 y 2).
+ *
+ * PENDIENTE (F-31): Pablo tiene que confirmar si es con «www» o sin él. Es el
+ * texto del WordPress antiguo; la web publica en `SITE_URL`, sin «www». Para
+ * cambiarlo basta con tocar esta línea.
+ */
 const DOMINIO = "www.restaurantecasatomascrevillente.es";
 
 type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
@@ -156,24 +164,9 @@ const AvisoLegal = () => (
       ))}
     </div>
 
-    {/* Tag `<footer>` real: MobileReserveCTA lo busca con
-        `document.querySelector("footer")` para ocultar su barra fija. */}
-    <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
-      <p>© {new Date().getFullYear()} Restaurante Casa Tomás</p>
-      <p className="mt-1">
-        <Link to="/" className="hover:text-accent transition-colors">
-          Inicio
-        </Link>
-        {" · "}
-        <Link to={POLITICA_PRIVACIDAD_PATH} className="hover:text-accent transition-colors">
-          Política de privacidad
-        </Link>
-        {" · "}
-        <Link to={CONDICIONES_PATH} className="hover:text-accent transition-colors">
-          Condiciones
-        </Link>
-      </p>
-    </footer>
+    {/* Pie común de toda la web (también lleva el `<footer>` real que
+        busca MobileReserveCTA para ocultar su barra fija al llegar abajo). */}
+    <Footer />
   </div>
 );
 
