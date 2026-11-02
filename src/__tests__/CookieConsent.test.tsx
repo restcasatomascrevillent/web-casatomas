@@ -154,4 +154,29 @@ describe("CookieConsent", () => {
     const switches = await screen.findAllByRole("switch");
     expect(switches[1]).toBeChecked(); // refleja la elección ya guardada (maps:true), no se resetea
   });
+
+  it("Esc con el aviso a la vista rechaza las opcionales y lo cierra", async () => {
+    const user = userEvent.setup();
+    renderConsent();
+    await waitFor(() => expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3));
+
+    await user.keyboard("{Escape}");
+
+    expect(readStoredConsent()).toMatchObject({ maps: false });
+    await waitFor(() => expect(screen.queryAllByRole("button").length).toBe(0));
+  });
+
+  it("Esc ya atendido por algo de más arriba (chat, menú) no toca el aviso", async () => {
+    renderConsent();
+    await waitFor(() => expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3));
+
+    // Así marca el Esc el chat (window, captura) antes de que llegue al aviso.
+    const marcar = (e: KeyboardEvent) => e.preventDefault();
+    window.addEventListener("keydown", marcar, true);
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    window.removeEventListener("keydown", marcar, true);
+
+    expect(readStoredConsent()).toBeNull();
+    expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3);
+  });
 });
