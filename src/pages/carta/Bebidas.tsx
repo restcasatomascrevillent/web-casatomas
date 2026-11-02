@@ -136,7 +136,7 @@ const CartaBebidasPagina = () => {
 
         <p className="mt-12 text-sm text-muted-foreground">
           {textos.tambien}{" "}
-          <Link to={construirRutaIdioma("/carta/vinos", language)} className="text-accent hover:underline">
+          <Link to={construirRutaIdioma("/carta/vinos", language)} className="text-accent underline underline-offset-2 hover:decoration-2">
             {textos.verVinos}
           </Link>
           .

@@ -7,6 +7,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
 import { breadcrumbSchema, SITE_URL } from "@/lib/negocio";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * Formulario de reserva. Existe en las tres ramas (`/reservas`,
@@ -28,7 +29,9 @@ const Reservas = () => {
       />
       <JsonLd data={breadcrumbSchema([{ nombre: p.breadcrumb, path: RESERVAS_PATH }], language)} />
       <Header />
-      <ReservasSection headingLevel="h1" forceShowForm showBackButton />
+      <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
+        <ReservasSection headingLevel="h1" forceShowForm showBackButton />
+      </main>
       <Footer />
     </div>
   );

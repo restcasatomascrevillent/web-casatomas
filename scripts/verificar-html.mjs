@@ -3,7 +3,9 @@
  * elemento `<html` (nada de un segundo `<html>` colado, p. ej. escrito dentro
  * de un comentario de `index.html`, que el prerenderizado conserva) y su `lang`
  * debe ser el del idioma de la ruta: `/en/*` y `en.html` -> en, `/fr/*` y
- * `fr.html` -> fr, el resto -> es.
+ * `fr.html` -> fr, el resto -> es. Además, accesibilidad de teclado: un solo
+ * `<main>`, con `id="contenido"`, y el enlace «Saltar al contenido»
+ * (`href="#contenido"`) como primer elemento enfocable del `<body>`.
  *
  * Se invoca desde `ssgOptions.onFinished` en `vite.config.ts` (build normal y
  * build de los E2E) y lo cubre `src/__tests__/html-prerenderizado.test.ts`.
@@ -37,6 +39,32 @@ export function problemasDeHtml(html, rutaRelativa) {
   const esperado = idiomaEsperado(rutaRelativa);
   if (lang !== esperado) {
     problemas.push(`${rutaRelativa}: lang="${lang ?? '(ninguno)'}" y se esperaba "${esperado}"`);
+  }
+  problemas.push(...problemasDeAccesibilidad(html, rutaRelativa));
+  return problemas;
+}
+
+/** Etiquetas que reciben foco con Tab por sí solas (o por `tabindex`). */
+const ENFOCABLE = /<(a\s[^>]*\bhref=|button[\s>]|input(?![^>]*type="hidden")[\s>]|select[\s>]|textarea[\s>]|[a-z]+\s[^>]*\btabindex="(?!-)[^"]*")/i;
+
+/**
+ * Un único `<main id="contenido">` y el enlace de saltar al contenido como
+ * primer foco. Solo se mira el `<body>`, sin `<script>`/`<style>`/`<template>`.
+ */
+export function problemasDeAccesibilidad(html, rutaRelativa) {
+  const problemas = [];
+  const cuerpo = (/<body[\s>][\s\S]*$/i.exec(html)?.[0] ?? html)
+    .replace(/<(script|style|template)[\s>][\s\S]*?<\/\1>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+  const mains = cuerpo.match(/<main[\s>][^>]*/gi) ?? [];
+  if (mains.length !== 1) {
+    problemas.push(`${rutaRelativa}: ${mains.length} elementos <main> (debe haber exactamente 1)`);
+  } else if (!/\bid="contenido"/.test(mains[0])) {
+    problemas.push(`${rutaRelativa}: el <main> no tiene id="contenido" (destino de «Saltar al contenido»)`);
+  }
+  const primero = ENFOCABLE.exec(cuerpo);
+  if (!primero || !/^<a\s[^>]*\bhref="#contenido"/i.test(cuerpo.slice(primero.index))) {
+    problemas.push(`${rutaRelativa}: el primer elemento enfocable no es el enlace «Saltar al contenido» (href="#contenido")`);
   }
   return problemas;
 }

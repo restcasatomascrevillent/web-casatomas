@@ -11,6 +11,7 @@ import {
   type ParametrosBaja,
   type RespuestaBaja,
 } from "@/lib/newsletter-baja";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * /newsletter/baja?sid&via&sig — baja del newsletter (RGPD). Ver
@@ -136,7 +137,7 @@ const NewsletterBaja = () => {
           />
         </Link>
       </header>
-      <main className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12">
+      <main id={ID_CONTENIDO} tabIndex={-1} className="flex-1 flex items-start sm:items-center justify-center px-4 py-8 sm:py-12 outline-none">
         <section
           className="w-full max-w-md rounded-xl border border-border bg-card shadow-[var(--shadow-elegant)] p-6 sm:p-8"
           aria-busy={fase.tipo === "cargando" || (fase.tipo === "lista" && fase.enviando)}

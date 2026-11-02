@@ -122,6 +122,13 @@ const MobileReserveCTA = () => {
           visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
         }`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        // Oculta (`opacity-0` + fuera de pantalla) seguía recibiendo el foco
+        // con Tab: el usuario de teclado caía en dos botones invisibles.
+        // `inert` la saca del orden de tabulación y del árbol de
+        // accesibilidad mientras no se ve. React 18 no conoce el atributo
+        // (ni sus tipos), así que va como cadena vacía, que es como el
+        // navegador lo entiende presente; `undefined` lo quita.
+        {...({ inert: visible ? undefined : "" } as Record<string, string | undefined>)}
       >
         {/* Siempre en una sola línea (`whitespace-nowrap`, alto fijo `h-11`
             que coincide con `MOBILE_CTA_HEIGHT`). Para que "Reservar mesa"
