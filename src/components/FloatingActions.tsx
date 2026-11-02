@@ -30,7 +30,8 @@ const OCULTAR_EN = ["/reserva/respuesta", "/newsletter/baja"];
  *
  * Una sola columna `fixed` para que no se pisen entre sí, y con el fondo
  * subido por `--mobile-cta-offset` (lo publica `MobileReserveCTA`) para no
- * tapar la barra móvil de llamar/reservar. `z-40`, por debajo de los
+ * tapar la barra móvil de llamar/reservar, y por `--cookie-banner-offset` (lo
+ * publica `CookieConsent`) mientras el aviso de cookies sigue sin resolver. `z-40`, por debajo de los
  * diálogos y del aviso de cookies.
  *
  * SSG: el botón de Tomy va en el HTML (no toca `window` al renderizar); el
@@ -61,7 +62,7 @@ const FloatingActions = () => {
 
   return (
     <>
-      <div className="fixed right-4 md:right-6 bottom-[calc(1.25rem+var(--mobile-cta-offset,0px))] lg:bottom-6 z-40 flex flex-col items-end gap-3 pointer-events-none transition-[bottom] duration-300 [&>*]:pointer-events-auto">
+      <div className="fixed right-4 md:right-6 bottom-[calc(1.25rem+var(--mobile-cta-offset,0px)+var(--cookie-banner-offset,0px))] lg:bottom-[calc(1.5rem+var(--cookie-banner-offset,0px))] xl:bottom-6 z-40 flex flex-col items-end gap-3 pointer-events-none transition-[bottom] duration-300 [&>*]:pointer-events-auto">
         {chatbotVisible && (
           <Button
             type="button"

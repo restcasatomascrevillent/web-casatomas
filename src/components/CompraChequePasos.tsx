@@ -1,11 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, type CSSProperties, type Dispatch, type SetStateAction } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { flushSync } from "react-dom";
+import { useCerrarConAtras } from "@/hooks/useCerrarConAtras";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { crearSesionVistaRegalo } from "@/lib/cheques/vista-regalo";
+import { crearSesionVistaRegalo, type SesionVistaRegalo } from "@/lib/cheques/vista-regalo";
 import { calcularGastosGestion, GASTOS_GESTION_APAGADOS } from "../../supabase/functions/_shared/cheques-regalo/gastos-gestion";
 import { VistaRegaloCompra } from "./VistaRegaloCompra";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,12 @@ type Field = { key: keyof DatosComprador | "factura" | "resumen" | "vista"; labe
 export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos, enviando, error, setError, confirmar }: Props) {
   const { t, language } = useTranslations();
   const c = t.contacto, copy = copyByLanguage[language || "es"];
-  const sesionVista = useMemo(() => open ? crearSesionVistaRegalo() : null, [open]);
+  // Al cerrar, `sesionVista` pasa a null mientras el diálogo aún se está desmontando: la vista
+  // previa recibiría `undefined`, abriría una sesión propia y repetiría la petición a
+  // `plantilla-vista`. `ultimaSesion` le sigue dando la misma (con su caché) hasta desmontarse.
+  useCerrarConAtras(open, () => onOpenChange(false), "capaCheque"); // «atrás» del móvil cierra el diálogo, no la página
+  const ultimaSesion = useRef<SesionVistaRegalo | null>(null);
+  const sesionVista = useMemo(() => (open ? (ultimaSesion.current = crearSesionVistaRegalo()) : null), [open]);
   useEffect(() => { if (sesionVista) void sesionVista.preparar().catch(() => {}); }, [sesionVista]);
   // Los gastos que cobrará la función de pago; hasta que se sepan, ninguno.
   const [configGastos, setConfigGastos] = useState(GASTOS_GESTION_APAGADOS);
@@ -94,8 +100,11 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
   function change(value: string) { setDatos(d => ({ ...d, [field.key]: value })); setError(null); }
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent onOpenAutoFocus={e => e.preventDefault()}
-      style={viewport ? { top: viewport.top + viewport.height / 2, height: Math.min(560, viewport.height - 24), maxHeight: viewport.height - 24 } : undefined}
-      className="flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
+      // Alto: 35 rem (= 560 px con la letra normal) o el espacio visible si es menor. En rem y no en px:
+      // con el texto del sistema al 200 % el diálogo crece con la letra, hasta ocupar toda la pantalla,
+      // y el botón «Continuar» no se recorta.
+      style={viewport ? { top: viewport.top + viewport.height / 2, maxHeight: viewport.height - 24, "--alto-visible": `${viewport.height - 24}px` } as CSSProperties : undefined}
+      className="h-[min(35rem,var(--alto-visible))] flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
       <DialogHeader className="shrink-0 border-b p-4 text-left bg-accent/5">
         <DialogTitle className="pr-10 text-base">{c.giftDialogTitle}</DialogTitle>
         <DialogDescription className="sr-only">{c.giftDialogDescription}</DialogDescription>
@@ -121,7 +130,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
               <p className="flex justify-between gap-3"><span>{copy.fees}</span><span>{eur(gastos)}</span></p>
               <p className="flex justify-between gap-3 border-t pt-2 font-semibold"><span>{copy.total}</span><span>{eur(importeCheque + gastos)}</span></p>
               <p className="text-xs text-muted-foreground">{copy.feesNote}</p>
-            </div>}</div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /></div> : <div className="space-y-3">
+            </div>}</div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || ultimaSesion.current || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /></div> : <div className="space-y-3">
               {field.key === "mensaje" && opciones}
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
               <Textarea style={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria) ? { display: "none" } : undefined} hidden={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria)} id={field.type === "date" ? undefined : "gift-step-" + field.key}

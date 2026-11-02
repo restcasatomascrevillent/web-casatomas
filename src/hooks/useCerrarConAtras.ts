@@ -17,6 +17,10 @@ import { useEffect, useRef } from "react";
  *
  * @param clave  Nombre de la marca en `history.state`; que sea distinto por capa.
  */
+// Marcas de capa conocidas: la entrada de una capa nueva NO hereda las de las que ya
+// estaban abiertas (si no, no se sabría cuál de las dos entradas es la suya).
+const clavesCapa = new Set<string>();
+
 export function useCerrarConAtras(abierto: boolean, cerrar: () => void, clave = "capaAbierta") {
   const alCerrar = useRef(cerrar);
   alCerrar.current = cerrar;
@@ -25,7 +29,9 @@ export function useCerrarConAtras(abierto: boolean, cerrar: () => void, clave = 
     if (!abierto || typeof window === "undefined") return;
     const marca = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     let entradaPropia = true;
-    window.history.pushState({ ...window.history.state, [clave]: marca }, "");
+    clavesCapa.add(clave);
+    const base = Object.fromEntries(Object.entries(window.history.state ?? {}).filter(([k]) => !clavesCapa.has(k)));
+    window.history.pushState({ ...base, [clave]: marca }, "");
     const alVolver = () => {
       if (window.history.state?.[clave] === marca) return; // «atrás» quitó otra capa, no esta
       entradaPropia = false;

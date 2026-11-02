@@ -29,6 +29,9 @@ import {
  */
 const MapaMundoVinos = lazy(() => import("./MapaMundoVinos"));
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?? "";
+
+/** Cada cuánto se vuelve a consultar la carta de vinos con la pestaña abierta y visible. */
+const ACTUALIZAR_CARTA_CADA_MS = 10 * 60_000;
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
@@ -296,7 +299,10 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
     window.addEventListener("focus", refresh);
     window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", refresh);
-    const timer = window.setInterval(refresh, 60_000);
+    // Cada 10 min (antes 60 s: una petición por minuto y visitante con la carta
+    // abierta). Al volver a la pestaña, recuperar la conexión o enfocar la ventana
+    // se refresca al instante, así que un cambio de precio no tarda en verse.
+    const timer = window.setInterval(refresh, ACTUALIZAR_CARTA_CADA_MS);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("focus", refresh);
