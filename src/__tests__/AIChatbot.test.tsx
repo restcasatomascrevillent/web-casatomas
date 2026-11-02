@@ -12,6 +12,12 @@ import { render, screen, waitFor, act, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
+// AIChatbot calcula la URL de configBotWeb al importarse y ya no lleva una
+// dirección de Supabase por defecto: se fija aquí, antes de cualquier import.
+vi.hoisted(() => {
+  vi.stubEnv("VITE_SUPABASE_URL", "https://proyecto-test.supabase.co");
+});
+
 // ---------------------------------------------------------------------------
 // Helpers — inline re-implementation of the pure functions in AIChatbot.tsx
 // so we can unit-test them without rendering the full component.
