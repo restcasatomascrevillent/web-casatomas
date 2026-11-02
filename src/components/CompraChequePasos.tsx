@@ -88,8 +88,8 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
     body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([hidden]):not([type="checkbox"]), textarea:not([hidden])')?.focus({ preventScroll: true });
   }
   const opciones = <div className="space-y-3 rounded-xl border p-3 text-sm">
-    <label className="flex items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
-    <label className="flex items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
+    <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
+    <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
   </div>;
   function change(value: string) { setDatos(d => ({ ...d, [field.key]: value })); setError(null); }
   return <Dialog open={open} onOpenChange={onOpenChange}>

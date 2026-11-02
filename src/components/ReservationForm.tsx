@@ -714,7 +714,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             aria-required="true"
                           />
                         </FormControl>
-                        <FormLabel className="font-normal text-foreground cursor-pointer leading-snug">
+                        <FormLabel className="-my-3 min-h-11 py-3 font-normal text-foreground cursor-pointer leading-snug">
                           {antes}
                           <EnlaceLegal
                             href={`${rutaCondiciones}#${ANCLA_CONDICIONES_RESERVA}`}
@@ -749,7 +749,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                       />
                     </FormControl>
                     <div className="text-sm leading-snug">
-                      <FormLabel className="font-normal text-foreground cursor-pointer leading-snug">
+                      <FormLabel className="-my-3 inline-block min-h-11 py-3 font-normal text-foreground cursor-pointer leading-snug">
                         {t.reservationForm.newsletterLabel}
                       </FormLabel>{" "}
                       {/* Fuera del <label>: leer las condiciones nunca marca la casilla. */}

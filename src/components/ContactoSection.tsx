@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
+import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
 export interface DatosComprador {
@@ -253,7 +254,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   <div>
                     <p className="font-medium">{t.contacto.emailLabel}</p>
                     <p className="text-sm text-muted-foreground">
-                      <a href="mailto:casatomascrevillent@gmail.com" className="underline underline-offset-2 hover:decoration-2">casatomascrevillent@gmail.com</a>
+                      <a href="mailto:casatomascrevillent@gmail.com" className={`${AREA_TOQUE_EMAIL} underline underline-offset-2 hover:decoration-2`}>casatomascrevillent@gmail.com</a>
                     </p>
                   </div>
                 </div>

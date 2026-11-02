@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
+import { AREA_TOQUE_EMAIL, AREA_TOQUE_ENLACE } from "@/lib/area-toque";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
@@ -118,7 +119,7 @@ const Condiciones = () => {
         <div className="max-w-4xl mx-auto">
           <Link
             to={inicio}
-            className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
+            className="-mt-3 mb-1 inline-flex min-h-11 items-center gap-2 text-stone-light hover:text-gold-light transition-colors text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
             {c.back}
@@ -136,12 +137,12 @@ const Condiciones = () => {
             <p className="font-semibold mb-2">{c.tocLabel}</p>
             <ul className="space-y-1">
               <li>
-                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className="text-accent underline underline-offset-2 hover:decoration-2">
+                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className={`${AREA_TOQUE_ENLACE} text-accent underline underline-offset-2 hover:decoration-2`}>
                   {c.bookingHeading}
                 </a>
               </li>
               <li>
-                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className="text-accent underline underline-offset-2 hover:decoration-2">
+                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className={`${AREA_TOQUE_ENLACE} text-accent underline underline-offset-2 hover:decoration-2`}>
                   {c.newsletterHeading}
                 </a>
               </li>
@@ -161,7 +162,7 @@ const Condiciones = () => {
               <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" />
             </p>
             <p>
-              <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">
+              <a href={`mailto:${NEGOCIO.email}`} className={`${AREA_TOQUE_EMAIL} text-accent underline underline-offset-2 hover:decoration-2`}>
                 {NEGOCIO.email}
               </a>
             </p>

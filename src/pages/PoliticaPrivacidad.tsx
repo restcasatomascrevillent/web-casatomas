@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
+import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { TextoRico } from "@/components/TextoRico";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
@@ -55,7 +56,7 @@ const PoliticaPrivacidad = () => {
                 <div className="max-w-4xl mx-auto">
                     <Link
                         to={inicio}
-                        className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
+                        className="-mt-3 mb-1 inline-flex min-h-11 items-center gap-2 text-stone-light hover:text-gold-light transition-colors text-sm"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         {p.back}
@@ -194,7 +195,7 @@ const PoliticaPrivacidad = () => {
                     <h2 className="text-xl font-bold mb-2 text-accent">{p.contact.heading}</h2>
                     <p className="text-sm text-muted-foreground">{p.contact.intro}</p>
                     <div className="mt-3 text-sm space-y-1">
-                        <p>📧 <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">{NEGOCIO.email}</a></p>
+                        <p>📧 <a href={`mailto:${NEGOCIO.email}`} className={`${AREA_TOQUE_EMAIL} text-accent underline underline-offset-2 hover:decoration-2`}>{NEGOCIO.email}</a></p>
                         <p>📞 <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p>📍 {RESPONSABLE_TRATAMIENTO.direccion}</p>
                     </div>

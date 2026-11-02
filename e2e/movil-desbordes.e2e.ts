@@ -56,25 +56,8 @@ const RUTAS = [
  * Defectos conocidos: «ruta|ancho» (o «ruta|*» para todos los anchos) → ID del
  * informe. Mientras figuren aquí, el test correspondiente es `test.fixme`.
  */
-const DESBORDES_CONOCIDOS: Record<string, string> = {
-  // «www.restaurantecasatomascrevillente.es» (Aviso legal) sobresale de su caja y 3 px de la pantalla.
-  "/aviso-legal|320": "W-13",
-};
-const OBJETIVOS_CONOCIDOS: Record<string, string> = {
-  // Migas «Inicio» / «Carta» y «Volver a la carta» / «Volver a la portada»: 20 px de alto.
-  "/carta|*": "W-04",
-  "/carta/entrantes|*": "W-04",
-  "/carta/vinos|*": "W-04",
-  "/carta/bebidas|*": "W-04",
-  "/fr/carta|*": "W-04",
-  // Enlaces sueltos de teléfono / email (18 px), «Volver al inicio», «Cómo llegar», «Condiciones de…» (20 px).
-  "/|*": "W-05",
-  "/en|*": "W-05",
-  "/contacto|*": "W-05",
-  "/aviso-legal|*": "W-05",
-  "/condiciones|*": "W-05",
-  "/politica-privacidad|*": "W-05",
-};
+const DESBORDES_CONOCIDOS: Record<string, string> = {};
+const OBJETIVOS_CONOCIDOS: Record<string, string> = {};
 
 const conocido = (mapa: Record<string, string>, ruta: string, ancho: number) => mapa[`${ruta}|${ancho}`] ?? mapa[`${ruta}|*`];
 
