@@ -1,3 +1,4 @@
+import { formatearPrecio } from "@/lib/precios";
 import { Card } from "@/components/ui/card";
 
 export interface FilaPrecio {
@@ -39,7 +40,7 @@ const ListaPrecios = ({ filas }: ListaPreciosProps) => (
             )}
           </div>
           <span className="font-bold text-accent whitespace-nowrap text-base md:text-lg">
-            {fila.precio}€
+            {formatearPrecio(fila.precio)}
             {fila.unidad && (
               <span className="text-xs font-normal text-muted-foreground"> / {fila.unidad}</span>
             )}

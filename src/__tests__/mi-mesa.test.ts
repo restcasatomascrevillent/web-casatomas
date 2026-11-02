@@ -56,10 +56,11 @@ describe("importes de Mi mesa", () => {
     expect(porPersona(50, 0)).toBe(50);
   });
 
-  it("formatea en euros según el idioma", () => {
+  it("formatea en euros igual en los tres idiomas («27,00 €», también en inglés)", () => {
     expect(plano(formatearEuros(27, "es"))).toBe("27,00 €");
     expect(plano(formatearEuros(27, "fr"))).toBe("27,00 €");
-    expect(formatearEuros(27, "en")).toBe("€27.00");
+    expect(plano(formatearEuros(27, "en"))).toBe("27,00 €");
+    expect(plano(formatearEuros(24.5, "en"))).toBe("24,50 €");
   });
 });
 

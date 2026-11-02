@@ -10,6 +10,7 @@ import { gramosDeUnidad, normalizarUnidadPlato } from "./unidades-platos";
 import type { Language } from "@/i18n/types";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
+import { formatearPrecio } from "@/lib/precios";
 
 /** Rango del selector de comensales de Mi mesa. */
 export const COMENSALES_MIN = 1;
@@ -235,22 +236,12 @@ export const LOCALE_POR_IDIOMA: Record<Language, string> = {
   fr: "fr-FR",
 };
 
-const formateadores = new Map<string, Intl.NumberFormat>();
-
-export const formatearEuros = (valor: number, idioma: Language): string => {
-  const locale = LOCALE_POR_IDIOMA[idioma] ?? "es-ES";
-  let f = formateadores.get(locale);
-  if (!f) {
-    f = new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-    formateadores.set(locale, f);
-  }
-  return f.format(Number.isFinite(valor) ? valor : 0);
-};
+/**
+ * Mismo formato que la carta (`formatearPrecio`): «24,50 €» en los tres
+ * idiomas, para que el ticket y la tarjeta del plato digan lo mismo.
+ */
+export const formatearEuros = (valor: number, _idioma?: Language): string =>
+  formatearPrecio(valor);
 
 /** "2", "1,5 kg", "350 g" — la cantidad tal y como se lee en el ticket. */
 export const formatearCantidadLinea = (
