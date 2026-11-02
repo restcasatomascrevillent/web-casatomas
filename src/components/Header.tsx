@@ -288,7 +288,7 @@ const Header = () => {
                 <Button
                   variant="ghost"
                   className="h-11 min-w-11 gap-1 px-2"
-                  aria-label={`${ARIA.cambiarIdioma[language]} (${language.toUpperCase()})`}
+                  aria-label={`${ARIA.cambiarIdioma[language]}: ${language.toUpperCase()}`}
                 >
                   <Globe2 className="!size-5" aria-hidden="true" />
                   <span aria-hidden="true" className="text-xs font-semibold uppercase">{language}</span>
