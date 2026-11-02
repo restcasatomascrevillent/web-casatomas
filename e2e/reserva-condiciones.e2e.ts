@@ -457,7 +457,12 @@ for (const idioma of TRADUCIDOS) {
       expect(html).toContain(escaparHtml(TEXTOS_POLITICA[codigo].title));
       expect(html).toContain(escaparHtml(TEXTOS_POLITICA[codigo].controller.heading));
       expect(html).not.toMatch(/hreflang=/i);
-      expect(html).not.toMatch(/in Spanish|en espagnol/i);
+      // El texto de la política está traducido entero. El pie común sí avisa
+      // de que el aviso legal solo existe en español («Legal notice (Spanish)»):
+      // por eso se mira el contenido de la página sin el `<footer>`.
+      const sinPie = html.replace(/<footer[\s\S]*?<\/footer>/gi, "");
+      expect(sinPie).not.toBe(html);
+      expect(sinPie).not.toMatch(/in Spanish|en espagnol/i);
     });
   });
 }

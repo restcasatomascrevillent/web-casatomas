@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
 import { TextoRico } from "@/components/TextoRico";
@@ -26,6 +28,16 @@ const PoliticaPrivacidad = () => {
     const p = TEXTOS_PRIVACIDAD[language];
     const inicio = construirRutaIdioma("/", language);
     const rutaPolitica = construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language);
+    const { hash } = useLocation();
+
+    // Esta página no lleva el `Header` de la portada, que es quien hace el
+    // salto a un ancla en las navegaciones de React Router. Sin esto, el enlace
+    // «Política de cookies» del pie (`…#cookies`) dejaba la página arriba del
+    // todo, o donde estuviera, en vez de en el apartado de cookies.
+    useEffect(() => {
+        if (!hash) return;
+        document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
+    }, [hash]);
 
     return (
         <div className="min-h-screen bg-background">
@@ -188,19 +200,9 @@ const PoliticaPrivacidad = () => {
 
             </div>
 
-            {/* Footer simple. Tag `<footer>` real: MobileReserveCTA lo busca con
-                `document.querySelector("footer")` para ocultar su barra fija
-                al llegar aquí abajo. */}
-            <footer className="bg-dark-slate text-stone text-center py-6 text-xs mt-8">
-                <p>{p.footer.rights.replace("{year}", String(new Date().getFullYear()))}</p>
-                <p className="mt-1">
-                    <Link to={inicio} className="hover:text-accent transition-colors">{p.footer.home}</Link>
-                    {" · "}
-                    <Link to={rutaPolitica} className="hover:text-accent transition-colors">{p.footer.privacy}</Link>
-                    {" · "}
-                    <Link to={construirRutaIdioma(CONDICIONES_PATH, language)} className="hover:text-accent transition-colors">{p.footer.conditions}</Link>
-                </p>
-            </footer>
+            {/* Pie común de toda la web (también lleva el `<footer>` real que
+                busca MobileReserveCTA para ocultar su barra fija al llegar abajo). */}
+            <Footer />
         </div>
     );
 };

@@ -51,6 +51,8 @@ jobs:
       SHA_DESPLIEGUE: ${{ github.event.deployment.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Decidir la URL y el commit esperado
         run: |
@@ -137,27 +139,43 @@ jobs:
 
       # Defensa en profundidad: si el secreto del bypass hubiera acabado en algún texto
       # del informe, se tacha antes de subirlo. (GitHub ya lo enmascara en la consola.)
+      # Corre siempre: un `if:` de paso no ve el `env` del propio paso, así que la
+      # comprobación de si hay secreto va dentro del script, que deja en el registro
+      # cuántas apariciones ha tachado.
       - name: Tachar el secreto del informe
-        if: failure() && env.VERCEL_AUTOMATION_BYPASS_SECRET != ''
+        if: always()
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           node --input-type=module - <<'JS'
           import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
           import { join } from "node:path";
-          const secreto = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+          const secreto = process.env.VERCEL_AUTOMATION_BYPASS_SECRET ?? "";
+          if (!secreto) {
+            console.log("Tachar el secreto: no hay secreto de bypass configurado; nada que tachar.");
+            process.exit(0);
+          }
+          let ficheros = 0;
+          let apariciones = 0;
           const recorrer = (dir) => {
             if (!existsSync(dir)) return;
             for (const e of readdirSync(dir, { withFileTypes: true })) {
               const ruta = join(dir, e.name);
               if (e.isDirectory()) recorrer(ruta);
               else if (/\.(md|json|html|txt|log)$/i.test(e.name)) {
+                ficheros++;
                 const t = readFileSync(ruta, "utf8");
-                if (t.includes(secreto)) writeFileSync(ruta, t.split(secreto).join("[secreto-redactado]"));
+                const trozos = t.split(secreto);
+                if (trozos.length > 1) {
+                  apariciones += trozos.length - 1;
+                  writeFileSync(ruta, trozos.join("[secreto-redactado]"));
+                }
               }
             }
           };
           recorrer("playwright-report/humo");
+          recorrer("test-results");
+          console.log(`Tachar el secreto: ${ficheros} ficheros revisados, ${apariciones} apariciones tachadas.`);
           JS
 
       # Solo el informe HTML (con sus capturas): el JSON de resultados y los

@@ -39,7 +39,7 @@ const AVISO_MENSAJE_LEN = 400;
  * solo vale contra su propio proyecto, así que la URL no puede ir fija.
  */
 const SUPABASE_CONFIG_BOT_WEB_URL = `${(
-    (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://jeamoczmbfsnwkfjxcyo.supabase.co"
+    (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ""
 ).replace(/\/+$/, "")}/rest/v1/configBotWeb`;
 const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
