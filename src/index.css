@@ -458,7 +458,13 @@ All colors MUST be HSL.
     radial-gradient(ellipse at 90% 80%, hsl(var(--primary) / 0.10), transparent 60%);
 }
 
-section[id] { scroll-margin-top: 5rem; }
+/* Hueco del ancla = alto de la cabecera fija (`Header.tsx`: h-16 / md:h-20)
+   más su borde inferior de 1 px al hacer scroll, para que la sección quede
+   justo debajo y no tapada ni separada. */
+section[id] { scroll-margin-top: calc(4rem + 1px); }
+@media (min-width: 768px) {
+  section[id] { scroll-margin-top: calc(5rem + 1px); }
+}
 
 @media (hover: none), (pointer: coarse) {
   .hero-section .animate-float { animation: none; }
