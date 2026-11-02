@@ -1,3 +1,4 @@
+import { mostrarPrecio } from "@/lib/precios";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
@@ -340,7 +341,7 @@ const CartaBebidas = ({ showAddButton, initialBebidas }: CartaBebidasProps) => {
                 )}
               </CardContent>
               <CardFooter className="flex justify-between items-center border-t bg-muted/40 flex-shrink-0 mt-auto px-6 py-3">
-                <span className="text-2xl font-bold text-accent leading-none">{item.precio_eur}€</span>
+                <span className="text-2xl font-bold text-accent leading-none">{mostrarPrecio(item.precio_eur, language)}</span>
                 {showAddButton && (
                   <Button
                     size="sm"
