@@ -88,25 +88,40 @@ function diaSemanaMadrid(): number {
 }
 
 /**
- * Abre el menú de hamburguesa solo si el botón está a la vista (móvil). La
- * portada es HTML estático hasta que hidrata: un clic anterior no hace nada, así
- * que se repite hasta que el enlace buscado aparece.
+ * Espera a que React haya hidratado la cabecera. Las páginas son HTML estático
+ * (SSG) hasta que llega y se ejecuta el JS: un clic anterior no hace nada.
+ *
+ * Causa de la inestabilidad TEC-09 (móvil, «carta», 1 de 3 en la demo): antes se
+ * repetía el clic durante 15 s esperando 1 s cada vez; con la demo en frío (primera
+ * visita: Vercel sirve los chunks sin caché y Supabase arranca) la hidratación
+ * podía pasar de 15 s y la prueba fallaba sin que la web lo hiciera. Ahora se
+ * espera a la condición real: React deja `__reactProps$…` en cada nodo que hidrata.
  */
-async function abrirMenuSiHaceFalta(page: Page, enlace: Locator) {
-  const abrir = page.getByRole("button", { name: "Abrir menú" });
-  await expect(async () => {
-    if (await abrir.isVisible()) await abrir.click();
-    await expect(enlace).toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 15_000 });
+async function esperarHidratacion(page: Page) {
+  await page.waitForFunction(
+    () => {
+      const boton = document.querySelector("header button[aria-label]");
+      return !!boton && Object.keys(boton).some((k) => k.startsWith("__reactProps$"));
+    },
+    undefined,
+    { timeout: 40_000 },
+  );
 }
 
-/** Abre el desplegable de idioma (mismo motivo para repetir el clic: la hidratación). */
+/** Abre el menú de hamburguesa solo si el botón está a la vista (móvil). */
+async function abrirMenuSiHaceFalta(page: Page, enlace: Locator) {
+  await esperarHidratacion(page);
+  const abrir = page.getByRole("button", { name: "Abrir menú" });
+  if (await abrir.isVisible()) await abrir.click();
+  await expect(enlace).toBeVisible();
+}
+
+/** Abre el desplegable de idioma, ya hidratada la página. */
 async function abrirIdiomas(page: Page, nombreBoton: string, idioma: string) {
+  await esperarHidratacion(page);
   const opcion = page.getByRole("menuitem", { name: idioma });
-  await expect(async () => {
-    if (!(await opcion.isVisible())) await page.getByRole("button", { name: nombreBoton }).click();
-    await expect(opcion).toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 15_000 });
+  if (!(await opcion.isVisible())) await page.getByRole("button", { name: nombreBoton }).click();
+  await expect(opcion).toBeVisible();
   return opcion;
 }
 

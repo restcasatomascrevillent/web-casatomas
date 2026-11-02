@@ -186,7 +186,7 @@ describe("/carta — buscador", () => {
       "Postres 1",
     ]);
     expect(within(resultados).getByText("Arròs negre")).toBeInTheDocument();
-    expect(within(resultados).getByText("24€ / Ración")).toBeInTheDocument();
+    expect(within(resultados).getByText("24,00 € / Ración")).toBeInTheDocument();
 
     await buscar("bechamel");
     expect(screen.getByText("Croquetas de jamón ibérico")).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe("/carta — buscador", () => {
     const bodega = await screen.findByRole("region", { name: "Bodega y bebidas" }, { timeout: 5000 });
     expect(within(bodega).getByRole("heading", { level: 3 })).toHaveTextContent("Vinos blancos 1");
     expect(within(bodega).getByText("Albariño Pazo de Señoráns")).toBeInTheDocument();
-    expect(within(bodega).getByText("32€")).toBeInTheDocument();
+    expect(within(bodega).getByText("32,00 €")).toBeInTheDocument();
     expect(within(bodega).getByRole("link", { name: "Ver carta de vinos" })).toHaveAttribute("href", "/carta/vinos");
 
     // Un vino que sale por su maridaje enseña la frase que lo explica.
