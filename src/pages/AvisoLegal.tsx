@@ -20,6 +20,13 @@ const TITULAR = {
   domicilio: `${NEGOCIO.calle}, ${NEGOCIO.cp} ${NEGOCIO.localidad}, ${NEGOCIO.region}.`,
 } as const;
 
+/**
+ * Dominio que cita el aviso legal (apartados 1 y 2).
+ *
+ * PENDIENTE (F-31): Pablo tiene que confirmar si es con «www» o sin él. Es el
+ * texto del WordPress antiguo; la web publica en `SITE_URL`, sin «www». Para
+ * cambiarlo basta con tocar esta línea.
+ */
 const DOMINIO = "www.restaurantecasatomascrevillente.es";
 
 type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
