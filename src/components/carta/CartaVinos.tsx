@@ -552,7 +552,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
             <DialogDescription>{t.vinos.ageCheckDescription}</DialogDescription>
           </DialogHeader>
           <div className="flex gap-4 justify-center pt-4">
-            <Button onClick={() => handleAgeConfirm(true)} className="bg-accent hover:bg-accent/90">
+            <Button onClick={() => handleAgeConfirm(true)} className="bg-accent hover:bg-accent-hover">
               {t.vinos.ageCheckConfirm}
             </Button>
             <Button variant="outline" onClick={() => handleAgeConfirm(false)}>
@@ -731,7 +731,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
 
                   <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 bg-muted/10 px-4 py-3">
                     <span className="font-libre-baskerville text-xl font-bold text-accent">{mostrarPrecio(item.precio_eur, language)}</span>
-                    {showAddButton && <Button size="sm" disabled={!precioConocido(item.precio_eur)} title={!precioConocido(item.precio_eur) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className="h-10 rounded-full bg-accent px-4 font-sans text-sm text-accent-foreground hover:bg-accent/90"><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
+                    {showAddButton && <Button size="sm" disabled={!precioConocido(item.precio_eur)} title={!precioConocido(item.precio_eur) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className="h-10 rounded-full bg-accent px-4 font-sans text-sm text-accent-foreground hover:bg-accent-hover"><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
                   </CardFooter>
                 </Card>
               </div>

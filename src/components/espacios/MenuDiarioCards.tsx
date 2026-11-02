@@ -213,13 +213,13 @@ const MenuDiarioCards = () => {
                   <h3 className="font-libre-baskerville text-xl font-bold text-primary sm:text-2xl">
                     {t.espacios.middayMenuTitle}
                   </h3>
-                  <Badge className="bg-accent hover:bg-accent/90">{menuDaysLabel}</Badge>
+                  <Badge className="bg-accent hover:bg-accent-hover">{menuDaysLabel}</Badge>
                 </div>
                 <p className="mt-1 text-muted-foreground">{t.espacios.middayMenuDescription}</p>
               </div>
               <Button
                 size="lg"
-                className="w-full shrink-0 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
+                className="w-full shrink-0 rounded-full bg-accent hover:bg-accent-hover text-accent-foreground font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
                 onClick={() => setShowTodayMenu(true)}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -240,13 +240,13 @@ const MenuDiarioCards = () => {
                   <h3 className="font-libre-baskerville text-xl font-bold text-primary sm:text-2xl">
                     {t.espacios.tapasTitle}
                   </h3>
-                  <Badge className="bg-accent hover:bg-accent/90 capitalize">{tapasDayLabel}</Badge>
+                  <Badge className="bg-accent hover:bg-accent-hover capitalize">{tapasDayLabel}</Badge>
                 </div>
                 <p className="mt-1 text-muted-foreground">{t.espacios.tapasDescription}</p>
               </div>
               <Button
                 size="lg"
-                className="w-full shrink-0 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
+                className="w-full shrink-0 rounded-full bg-accent hover:bg-accent-hover text-accent-foreground font-semibold shadow-lg transition-transform duration-300 hover:scale-105 sm:w-auto"
                 onClick={() => setShowTodayTapas(true)}
               >
                 <Sparkles className="w-4 h-4 mr-2" />

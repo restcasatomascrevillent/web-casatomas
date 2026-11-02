@@ -64,7 +64,7 @@ const AdminLogin = () => {
 
             <Button 
               type="submit" 
-              className="w-full bg-accent hover:bg-accent/90"
+              className="w-full bg-accent hover:bg-accent-hover"
             >
               {t.adminLogin.submit}
             </Button>
