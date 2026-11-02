@@ -72,7 +72,9 @@ export function BarraFiltrosVino({ opciones, seleccionado, onChange, etiqueta }:
               key={opcion.valor}
               type="button"
               variant="ghost"
-              aria-label={opcion.nombreAccesible ?? opcion.etiqueta}
+              // Empieza por el texto visible («Tintos 207»): quien dicta «pulsar Tintos 207» lo encuentra
+              // (WCAG 2.5.3). El nombre largo, si lo hay, va detrás.
+              aria-label={`${opcion.etiqueta} ${opcion.cantidad}${opcion.nombreAccesible && opcion.nombreAccesible !== opcion.etiqueta ? `, ${opcion.nombreAccesible}` : ''}`}
               title={opcion.nombreAccesible ?? opcion.etiqueta}
               aria-pressed={activo}
               onClick={() => onChange(opcion.valor)}
@@ -82,7 +84,7 @@ export function BarraFiltrosVino({ opciones, seleccionado, onChange, etiqueta }:
               )}
             >
               <span className={cn('min-w-0', activo && 'font-semibold')}>{opcion.etiqueta}</span>
-              <span aria-hidden="true" className={cn('shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 text-[11px] leading-none tabular-nums sm:text-xs', activo ? 'font-semibold text-foreground' : 'text-muted-foreground')}>{opcion.cantidad}</span>
+              <span aria-hidden="true" className={cn('shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 text-xs leading-none tabular-nums', activo ? 'font-semibold text-foreground' : 'text-muted-foreground')}>{opcion.cantidad}</span>
             </Button>
           );
         })}

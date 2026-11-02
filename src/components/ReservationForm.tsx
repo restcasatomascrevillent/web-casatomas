@@ -449,7 +449,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         </DialogContent>
       </Dialog>
 
-      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-4 sm:p-8 rounded-2xl shadow-xl">
+      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-3 sm:p-8 rounded-2xl shadow-xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-6 pb-6 border-b border-border/30">
@@ -481,7 +481,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent
+                          className="w-auto max-h-[var(--radix-popover-content-available-height)] overflow-y-auto overscroll-contain p-0"
+                          align="start"
+                          collisionPadding={8}
+                        >
                           <Calendar
                             mode="single"
                             selected={field.value}

@@ -70,7 +70,7 @@ describe("Los filtros de la carta de vinos llegan al mapa", () => {
 
   it("el filtro por tipo deja en el mapa todos los vinos del tipo, aunque la cuadrícula sea paginada", async () => {
     const tipos = await pintar();
-    fireEvent.click(tipos.getByRole('button', { name: 'Blancos' }));
+    fireEvent.click(tipos.getByRole('button', { name: /^Blancos\b/ }));
     await waitFor(() => expect(nombresDelMapa()).toHaveLength(30));
     expect(nombresDelMapa()).not.toContain('Champagne Brut');
     expect(screen.getByTestId("mapa")).toHaveAttribute("data-filtro-activo", "true");
@@ -78,22 +78,22 @@ describe("Los filtros de la carta de vinos llegan al mapa", () => {
     await waitFor(() => expect(screen.getAllByText('Blanco 23').length).toBeGreaterThan(0));
     expect(screen.queryByText('Blanco 29')).not.toBeInTheDocument();
 
-    fireEvent.click(tipos.getByRole('button', { name: 'Tintos' }));
+    fireEvent.click(tipos.getByRole('button', { name: /^Tintos\b/ }));
     await waitFor(() => expect(nombresDelMapa()).toEqual(['Reserva Ribera', 'Crianza Rioja']));
   });
 
   it("la denominación y el buscador acotan el mapa, y «Todos» lo devuelve a todos los vinos", async () => {
     const tipos = await pintar();
-    fireEvent.click(tipos.getByRole('button', { name: 'Tintos' }));
-    fireEvent.click(within(await screen.findByRole('group', { name: 'Filtrar vinos por denominación' })).getByRole('button', { name: 'Rioja' }));
+    fireEvent.click(tipos.getByRole('button', { name: /^Tintos\b/ }));
+    fireEvent.click(within(await screen.findByRole('group', { name: 'Filtrar vinos por denominación' })).getByRole('button', { name: /^Rioja\b/ }));
     await waitFor(() => expect(nombresDelMapa()).toEqual(['Crianza Rioja']));
 
-    fireEvent.click(within(screen.getByRole('group', { name: 'Filtrar vinos por denominación' })).getByRole('button', { name: 'Todas' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Filtrar vinos por denominación' })).getByRole('button', { name: /^Todas\b/ }));
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'ribera' } });
     await waitFor(() => expect(nombresDelMapa()).toEqual(['Reserva Ribera']));
     expect(screen.getByTestId("mapa").dataset.clave).toContain('ribera');
 
-    fireEvent.click(tipos.getByRole('button', { name: 'Todos' }));
+    fireEvent.click(tipos.getByRole('button', { name: /^Todos\b/ }));
     await waitFor(() => expect(nombresDelMapa()).toEqual(['Reserva Ribera']));
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } });
     await waitFor(() => expect(nombresDelMapa()).toHaveLength(datos.vinos.length));
