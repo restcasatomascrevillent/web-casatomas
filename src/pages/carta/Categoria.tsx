@@ -151,7 +151,7 @@ const CartaCategoria = () => {
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {CATEGORIAS_CARTA.map((otra) => (
               <li key={otra.slug}>
-                <Link to={conFiltros(rutaCategoria(otra.slug, language))} className="text-accent hover:underline">
+                <Link to={conFiltros(rutaCategoria(otra.slug, language))} className="text-accent underline underline-offset-2 hover:decoration-2">
                   {etiquetaCategoriaIdioma(otra.clave, language)}
                 </Link>
               </li>

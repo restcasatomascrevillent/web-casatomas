@@ -85,7 +85,7 @@ const CookieConsent = () => {
                 <h3 className="text-sm md:text-lg font-bold mb-1 md:mb-2">{t.cookie.title}</h3>
                 <p className="text-xs md:text-sm text-muted-foreground">
                   {t.cookie.message}{" "}
-                  <a href={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`} className="text-primary hover:underline font-medium">
+                  <a href={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`} className="text-primary underline underline-offset-2 hover:decoration-2 font-medium">
                     {t.cookie.link}
                   </a>
                   .

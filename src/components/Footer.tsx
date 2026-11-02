@@ -114,7 +114,7 @@ const Footer = () => {
                 salto al ancla lo hace la propia página (ver `PoliticaPrivacidad`). */}
             <Link
               to={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`}
-              className="text-xs text-stone hover:text-accent transition-colors"
+              className="text-xs text-stone-light hover:text-gold-light transition-colors"
             >
               {t.footer.cookiePolicy}
             </Link>

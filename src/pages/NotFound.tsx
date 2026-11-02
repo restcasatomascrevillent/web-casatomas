@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { Seo } from "@/components/Seo";
+import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * Página de error de las tres ramas (`/`, `/en`, `/fr`): la monta la ruta `*`
@@ -36,7 +37,12 @@ const NotFound = () => {
       <Header />
       {/* `data-pagina-no-encontrada` le dice al cliente que está hidratando el
           `404.html` (ver `src/lib/hidratacion-404.ts`); no cambia nada de lo que se ve. */}
-      <main data-pagina-no-encontrada="" className="flex min-h-[70vh] items-center justify-center bg-muted px-4 pt-32 pb-16">
+      <main
+        id={ID_CONTENIDO}
+        tabIndex={-1}
+        data-pagina-no-encontrada=""
+        className="flex min-h-[70vh] items-center justify-center bg-muted px-4 pt-32 pb-16 outline-none"
+      >
         <div className="text-center">
           <h1 className="mb-4 text-4xl font-bold">{t.notFound.title}</h1>
           <p className="mb-4 text-xl text-muted-foreground">{t.notFound.message}</p>

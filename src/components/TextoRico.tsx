@@ -14,7 +14,7 @@ import { NEGOCIO } from "@/lib/negocio";
  * Todo lo demás se pinta como texto (React lo escapa): no hay HTML en crudo.
  */
 const MARCADO = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)\s]+\)|\{phone\}|\{email\})/;
-const CLASE_ENLACE = "text-accent hover:underline";
+const CLASE_ENLACE = "text-accent underline underline-offset-2 hover:decoration-2";
 
 export const TextoRico = ({ texto }: { texto: string }) => (
   <>
