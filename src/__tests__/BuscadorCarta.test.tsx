@@ -212,7 +212,9 @@ describe("/carta — buscador", () => {
     await buscar("cerveza");
     expect(within(screen.getByRole("region", { name: "Bodega y bebidas" })).getByText("Estrella Galicia")).toBeInTheDocument();
     expect(screen.getByText("33 cl")).toBeInTheDocument();
-  });
+    // Límite propio: la espera de la bodega ya puede llegar a 5 s y, con las
+    // tres búsquedas, el test pasaba de los 5 s por defecto en el runner del CI.
+  }, 15000);
 
   it("en inglés busca en los nombres traducidos y habla en inglés", async () => {
     render(app("/en/carta", "en"));
