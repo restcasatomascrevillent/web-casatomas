@@ -55,7 +55,9 @@ const RIOJA_VINOS = [
     nombre: "Marqués de Riscal Reserva",
     precio_eur: 35,
     categoria: "TINTO",
-    denominacion_origen: "Rioja",
+    // Origen sin punto conocido (ni zona ni D.O. del respaldo de `denominaciones-vino.json`):
+    // estos tests miran la lista de «sin ubicación puntual verificada».
+    denominacion_origen: "D.O. de prueba sin geocodificar",
     ubicacion_pais: "España",
     ubicacion_region: "La Rioja",
   },

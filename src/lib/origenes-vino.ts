@@ -1,5 +1,6 @@
 import bodegas from "./bodegas-verificadas.json";
 import zonasVino from "./zonas-vino.json";
+import { denominacionConocida, esComunidadAutonoma, type DenominacionConocida } from "./denominaciones-vino";
 
 export interface OrigenVino {
   id?: string;
@@ -42,7 +43,7 @@ const textoZona = (vino: OrigenVino) =>
 
 export const nombreOrigen = (vino: OrigenVino) => {
   const bodega = bodegaVerificada(vino);
-  return bodega ? `${bodega.nombre} · ${bodega.localidad}` : textoZona(vino);
+  return bodega ? `${bodega.nombre} · ${bodega.localidad}` : porDenominacion(vino)?.nombre ?? textoZona(vino);
 };
 
 type ZonaConocida = { coordenadas: number[]; fuente: string };
@@ -58,6 +59,27 @@ function zonaConocida(vino: OrigenVino): ZonaConocida | null {
   return (zonasVino as Record<string, ZonaConocida>)[clave] ?? null;
 }
 
+// Centro de la D.O. del vino (docs/mapa-zonas-vino.md), o null si la D.O. no
+// está en `denominaciones-vino.json` o el país no coincide.
+function denominacion(vino: OrigenVino): DenominacionConocida | null {
+  const pais = origenComprobable(vino.ubicacion_pais);
+  const nombre = origenComprobable(vino.denominacion_origen);
+  return pais && nombre ? denominacionConocida(normalizarOrigen(pais), normalizarOrigen(nombre)) : null;
+}
+
+// Orden de precisión: bodega verificada > zona de la región > centro de la D.O.
+// La D.O. solo pasa por delante de la región cuando esta no es una zona
+// conocida (p. ej. «Galicia» + «D.O. Rías Baixas», o una localidad nueva) o es
+// una comunidad autónoma (la D.O. concreta sitúa mejor el vino que «Castilla y León»).
+function porDenominacion(vino: OrigenVino): DenominacionConocida | null {
+  if (bodegaVerificada(vino)) return null;
+  const den = denominacion(vino);
+  if (!den) return null;
+  const pais = normalizarOrigen(origenComprobable(vino.ubicacion_pais));
+  const region = normalizarOrigen(origenComprobable(vino.ubicacion_region));
+  return !zonaConocida(vino) || esComunidadAutonoma(pais, region) ? den : null;
+}
+
 export const claveOrigen = (vino: OrigenVino) => {
   const bodega = bodegaVerificada(vino);
   return JSON.stringify(bodega
@@ -66,7 +88,7 @@ export const claveOrigen = (vino: OrigenVino) => {
 };
 
 export function coordenadasConocidas(vino: OrigenVino): [number, number] | null {
-  const coords = bodegaVerificada(vino)?.coordenadas ?? zonaConocida(vino)?.coordenadas;
+  const coords = bodegaVerificada(vino)?.coordenadas ?? porDenominacion(vino)?.coordenadas ?? zonaConocida(vino)?.coordenadas;
   if (!coords || coords.length !== 2 || !coords.every(Number.isFinite)
     || Math.abs(coords[0]) > 180 || Math.abs(coords[1]) > 90) return null;
   return [coords[0], coords[1]];

@@ -9,11 +9,19 @@ const [id, registro] = Object.entries(bodegas)[0];
 const REGION_SIN_ZONA = 'Región de prueba sin geocodificar';
 const aalto = { id, nombre: registro.nombreVino, denominacion_origen: registro.denominacion, ubicacion_pais: 'España', ubicacion_region: REGION_SIN_ZONA };
 describe('Orígenes sin estimaciones', () => {
-  it('no convierte una D.O. en una bodega, ni inventa coordenadas para una zona desconocida', () => {
-    for (const denominacion_origen of ['D.O. Ribera del Duero', 'D.O. Ribera del Duero (estimado)', 'D.O.Ca. Rioja']) {
+  it('no convierte una D.O. en una bodega, ni inventa coordenadas para una zona o D.O. desconocida', () => {
+    // Las D.O. que no están en `denominaciones-vino.json` (Cava abarca varias comunidades) no tienen punto.
+    for (const denominacion_origen of ['D.O. Cava', 'D.O. Ribera del Duero (estimado)', 'IGP Castilla y León', 'Sin D.O.']) {
       const vino = { denominacion_origen, ubicacion_pais: 'España', ubicacion_region: REGION_SIN_ZONA };
       expect(bodegaVerificada(vino)).toBeNull();
       expect(coordenadasConocidas(vino)).toBeNull();
+    }
+    // Una D.O. conocida sí cae en el centro de la denominación, nunca en una bodega.
+    for (const denominacion_origen of ['D.O. Ribera del Duero', 'D.O.Ca. Rioja']) {
+      const vino = { denominacion_origen, ubicacion_pais: 'España', ubicacion_region: REGION_SIN_ZONA };
+      expect(bodegaVerificada(vino)).toBeNull();
+      expect(coordenadasConocidas(vino)).not.toBeNull();
+      expect(coordenadasConocidas(vino)).not.toEqual([-4.25687, 41.62417]);
     }
     expect(origenComprobable('Borgoña (estimado)')).toBe('');
     expect(origenComprobable('D.O. Rueda (según carta)')).toBe('');
@@ -21,9 +29,12 @@ describe('Orígenes sin estimaciones', () => {
   it('solo utiliza puntos publicados para referencias identificadas', () => {
     expect(coordenadasConocidas(aalto)).toEqual([-4.25687, 41.62417]);
     expect(bodegaVerificada(aalto)?.fuente).toContain('www.riberadelduero.es');
-    expect(coordenadasConocidas({ ...aalto, nombre: 'Otro vino' })).toBeNull();
+    // Si cambia la identidad del vino, el punto de la bodega no se reutiliza: queda el centro de la D.O.
+    const centroRibera = coordenadasConocidas({ ubicacion_pais: 'España', denominacion_origen: 'D.O. Ribera del Duero', ubicacion_region: REGION_SIN_ZONA });
+    expect(coordenadasConocidas({ ...aalto, nombre: 'Otro vino' })).toEqual(centroRibera);
+    expect(coordenadasConocidas({ ...aalto, nombre: 'Otro vino' })).not.toEqual([-4.25687, 41.62417]);
     expect(coordenadasConocidas({ ...aalto, ubicacion_pais: 'Francia' })).toBeNull();
-    expect(coordenadasConocidas({ ...aalto, denominacion_origen: 'D.O. Rueda' })).toBeNull();
+    expect(coordenadasConocidas({ ...aalto, denominacion_origen: 'D.O. Rueda' })).not.toEqual([-4.25687, 41.62417]);
   });
   it('usa el centro aproximado de la zona cuando no hay bodega verificada', () => {
     const vino = { ubicacion_pais: 'España', ubicacion_region: 'Castilla y León' };
