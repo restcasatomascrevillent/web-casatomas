@@ -50,27 +50,61 @@ async function huecoBajoCabecera(page: Page, id: string) {
   }, id);
 }
 
+/**
+ * Espera a que React haya hidratado la cabecera: hasta entonces el HTML del
+ * SSG no tiene manejadores, «Abrir menú» no hace nada y «Contacto» es un
+ * enlace normal que recarga la página entera (y se pierde lo que el test
+ * haya puesto en ella). React deja una clave `__reactFiber…` en los nodos
+ * que ya ha hidratado.
+ */
+async function esperarHidratacion(page: Page) {
+  await page.waitForFunction(() => {
+    const cabecera = document.querySelector("header.site-header");
+    return !!cabecera && Object.keys(cabecera).some((k) => k.startsWith("__reactFiber"));
+  }, null, { timeout: 30_000 });
+}
+
+/**
+ * Espera a que el scroll se quede quieto: misma posición durante 600 ms
+ * seguidos. La cabecera corrige el ancla mientras cargan las secciones
+ * diferidas (ver `scrollToSection` en Header.tsx), así que medir antes daría
+ * una posición intermedia. Sin plazo fijo para el destino: lo que se espera
+ * es que termine, no un número concreto.
+ */
+async function esperarScrollQuieto(page: Page) {
+  await page.waitForFunction(() => {
+    const w = window as unknown as { __scroll?: { y: number; desde: number } };
+    const ahora = performance.now();
+    if (!w.__scroll || w.__scroll.y !== window.scrollY) {
+      w.__scroll = { y: window.scrollY, desde: ahora };
+      return false;
+    }
+    return ahora - w.__scroll.desde >= 600;
+  }, null, { timeout: 30_000, polling: 100 });
+}
+
 for (const [nombre, viewport] of [["móvil", MOVIL], ["escritorio", ESCRITORIO]] as const) {
   test.describe(`Ancla de Contacto desde /carta (${nombre})`, () => {
     test.use({ viewport });
 
     test("deja #contacto justo bajo la cabecera", async ({ page, erroresJs: _ }) => {
       await page.goto("/carta");
-      await page.waitForLoadState("networkidle");
+      await esperarHidratacion(page);
       // Con el Supabase falso las secciones vienen vacías y lo que hay bajo
       // #contacto es más bajo que la pantalla a 1440: sin este relleno la
-      // página no daría para subir la sección hasta la cabecera.
-      // La navegación a /#contacto es del lado del cliente, así que el
-      // estilo sigue puesto al llegar a la portada.
+      // página no daría para subir la sección hasta la cabecera. La
+      // navegación a /#contacto es del lado del cliente (se comprueba abajo),
+      // así que el estilo y la marca siguen puestos al llegar a la portada.
       await page.addStyleTag({ content: "body { padding-bottom: 100vh; }" });
+      await page.evaluate(() => { (window as unknown as { __sinRecarga: boolean }).__sinRecarga = true; });
       if (viewport.width < 1024) {
         await page.getByRole("button", { name: "Abrir menú" }).click();
       }
       await page.locator("header.site-header nav").getByRole("link", { name: "Contacto" }).first().click();
       await expect(page).toHaveURL(/\/#contacto$/);
-      // Se espera a que la corrección del ancla (cargas diferidas) se asiente.
-      await expect.poll(() => huecoBajoCabecera(page, "contacto"), { timeout: 15_000 }).toBe(0);
-      await page.waitForTimeout(1_500);
+      expect(await page.evaluate(() => (window as unknown as { __sinRecarga?: boolean }).__sinRecarga), "navegación sin recargar").toBe(true);
+      await expect(page.locator("#contacto")).toBeAttached();
+      await esperarScrollQuieto(page);
       expect(Math.abs(await huecoBajoCabecera(page, "contacto"))).toBeLessThanOrEqual(1);
     });
   });
