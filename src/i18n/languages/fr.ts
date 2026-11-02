@@ -752,6 +752,8 @@ export const translations: Translations = {
     },
     notFound: {
       title: "404",
+      metaTitle: "Page introuvable | Casa Tomás Restaurant",
+      metaDescription: "La page que vous cherchez n'existe pas sur le site de Casa Tomás, restaurant à Crevillente. Revenez à l'accueil pour voir la carte ou réserver une table.",
       message: "Oups ! Page introuvable",
       back: "Retour à l'accueil",
     },
