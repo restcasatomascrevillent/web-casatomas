@@ -9,8 +9,9 @@
  * deje cualquier otra URL tal cual, para no arriesgar un 400.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { imagenOptimizada } from "@/lib/carta-ssg";
+import { imagenOptimizada, srcSetOptimizada } from "@/lib/carta-ssg";
 
 const FOTO_SUPABASE =
   "https://haqmmdfdzzatdnrrcgez.supabase.co/storage/v1/object/public/platos/abc-123.webp?t=1774192689021";
@@ -66,5 +67,23 @@ describe("imagenOptimizada", () => {
     const a = imagenOptimizada(FOTO_SUPABASE, 640);
     const b = imagenOptimizada(FOTO_SUPABASE, 1024);
     expect(a).not.toBe(b);
+  });
+});
+
+describe("srcSetOptimizada (novedades)", () => {
+  beforeEach(() => vi.stubEnv("VITE_SUPABASE_URL", "https://haqmmdfdzzatdnrrcgez.supabase.co/"));
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("genera un srcset con los tres anchos de vercel.json → images.sizes", () => {
+    const srcset = srcSetOptimizada(FOTO_SUPABASE)!;
+    const anchos = JSON.parse(readFileSync("vercel.json", "utf8")).images.sizes as number[];
+    expect(srcset.split(", ")).toHaveLength(anchos.length);
+    for (const w of anchos) expect(srcset).toContain(`&w=${w}&q=75 ${w}w`);
+    expect(srcset).toContain("/_vercel/image?url=");
+  });
+
+  it("URLs fuera del optimizador o vacías → null", () => {
+    expect(srcSetOptimizada("https://example.com/a.jpg")).toBeNull();
+    expect(srcSetOptimizada(null)).toBeNull();
   });
 });

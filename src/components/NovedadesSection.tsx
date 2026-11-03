@@ -11,6 +11,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import MenuDiarioCards from "@/components/espacios/MenuDiarioCards";
 import BotonesNovedad from "@/components/novedades/BotonesNovedad";
 import { NEGOCIO } from "@/lib/negocio";
+import { imagenOptimizada, srcSetOptimizada } from "@/lib/carta-ssg";
 import novedadesSSG from "virtual:novedades-ssg";
 
 type IconKey = "utensils" | "wine" | "gift" | "calendar" | "star" | "sparkles" | "coffee" | "cake";
@@ -167,6 +168,13 @@ const NovedadesSection = () => {
       className: "w-full h-full object-cover",
       style: imageStyle,
       loading: "lazy" as const,
+      // Las fotos se suben sin comprimir (hasta 1,3 MB): pasan por el
+      // optimizador de Vercel (como las de la carta) con srcset por ancho.
+      srcSet: srcSetOptimizada(image) ?? undefined,
+      // 1 columna en móvil; 3 columnas desde `md` (rejilla de máx. 80rem).
+      sizes: "(min-width: 768px) 33vw, 100vw",
+      width: 640,
+      height: 352,
       fetchPriority: "low" as const,
       decoding: "async" as const,
     };
@@ -188,7 +196,7 @@ const NovedadesSection = () => {
         className="h-full"
       >
         <Card className="flex h-full flex-col overflow-hidden border border-border/70 bg-gradient-to-br from-background via-muted/40 to-background">
-          {image && <FotoNovedad key={image} src={image} {...imgProps} />}
+          {image && <FotoNovedad key={image} src={imagenOptimizada(image, 768) ?? image} {...imgProps} />}
           <CardHeader>
             <div className="flex items-start justify-between mb-2">
               <div className="p-3 bg-accent/10 rounded-lg">
