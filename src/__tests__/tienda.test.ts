@@ -6,8 +6,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   centimosTienda,
-  formatearPorcentaje,
-  insigniaDescuento,
   normalizarConfigTienda,
   precioTienda,
   vinosALaVenta,
@@ -73,12 +71,6 @@ describe("precio tienda = round(precio_eur * (1 - descuento_pct/100), 2), como P
     expect(Number.isInteger(centimosTienda(19.99, 33.33))).toBe(true);
   });
 
-  it("insignia y porcentaje en cada idioma", () => {
-    expect(insigniaDescuento(30, "es")).toBe("-30 %");
-    expect(insigniaDescuento(30, "en")).toBe("-30%");
-    expect(insigniaDescuento(12.5, "es")).toBe("-12,5 %");
-    expect(formatearPorcentaje(30, "fr")).toMatch(/^30\s%$/u);
-  });
 });
 
 describe("vinosALaVenta", () => {

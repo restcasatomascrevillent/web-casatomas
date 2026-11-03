@@ -124,16 +124,19 @@ async function desbordes(page: Page) {
 test.describe("escritorio 1440 px", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("escaparate: precios con descuento, «Cómo comprar», filtros y «Mostrar más», con axe", async ({ page, supabase: _ }) => {
+  test("escaparate: precio de tienda de cada vino, «Cómo comprar», filtros y «Mostrar más», con axe", async ({ page, supabase: _ }) => {
     await abrirTienda(page);
     await expect(page.getByRole("heading", { level: 1, name: "Tienda de vinos" })).toBeVisible();
-    await expect(page.getByText("-30 % sobre precio de carta")).toBeVisible();
+    await expect(page.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toBeVisible();
+    await expect(page.getByText("Se compran en el restaurante", { exact: true })).toBeVisible();
 
     const macan = tarjeta(page, "Macán Clásico 2020");
-    await expect(macan.locator("s")).toHaveText("45,00 €");
+    // 45 € de carta con el 30 % del panel → 31,50 €, enseñado como un precio normal.
     await expect(macan.getByText("31,50 €")).toBeVisible();
-    await expect(macan.getByText("-30 %")).toBeVisible();
     await expect(macan.getByRole("button")).toHaveCount(0);
+    // Ni precio de carta tachado, ni insignia, ni una palabra sobre descuentos.
+    await expect(page.locator("main s, main del")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText(/descuento|precio de carta|-?\d+\s?%/i);
     // 47,85 € → 33,50 € (redondeo de Postgres, no 33,49 € de la coma flotante).
     await expect(tarjeta(page, "Louis Roederer Cristal").getByText("33,50 €")).toBeVisible();
     await expect(tarjeta(page, "Vino excluido en el panel")).toHaveCount(0);

@@ -6,7 +6,7 @@ import { formatearPrecio } from "@/lib/precios";
 import { categoriaCorta, etiquetaTipoVino, tipoVino } from "@/lib/tipos-vino";
 import { nombreVinoVisible } from "@/lib/filtro-vinos";
 import { NEGOCIO } from "@/lib/negocio";
-import { aCentimos, centimosTienda, formatearPorcentaje, insigniaDescuento, type VinoTienda } from "@/lib/tienda";
+import { centimosTienda, type VinoTienda } from "@/lib/tienda";
 import type { TextosTienda } from "@/i18n/tienda";
 import type { Language } from "@/i18n/types";
 import { cn } from "@/lib/utils";
@@ -17,15 +17,17 @@ interface TarjetaVinoTiendaProps {
   vino: VinoTienda;
   language: Language;
   textos: TextosTienda;
+  /** `descuento_pct` del panel: solo para calcular el precio de tienda (no se enseña). */
   descuentoPct: number;
 }
 
 /**
  * Ficha de un vino de la tienda: misma familia visual que la de la carta
  * (`CartaVinos`: título en Libre Baskerville, «Tintos · Ribera del Duero», foto
- * de carta en el lateral sobre su cartulina), con el precio de carta tachado, el
- * de tienda destacado y la insignia del descuento. Sin botones: la tienda es un
- * escaparate y los vinos se compran en el restaurante.
+ * de carta en el lateral sobre su cartulina) y su precio de tienda bien a la
+ * vista, como un precio normal: ni precio de carta ni descuento (lo pidió así el
+ * dueño). Sin botones: la tienda es un escaparate y los vinos se compran en el
+ * restaurante.
  *
  * La foto pasa por el optimizador de Vercel (`imagenOptimizada`, 640 px, el
  * ancho más pequeño que permite `vercel.json`), perezosa y con `width`/`height`
@@ -39,7 +41,6 @@ const TarjetaVinoTienda = ({ vino, language, textos, descuentoPct }: TarjetaVino
   const [fotoRota, setFotoRota] = useState(false);
   const conFoto = !!foto && !fotoRota;
   const fotoCarta = conFoto && esFotoCarta(foto);
-  const hayDescuento = descuentoPct > 0;
   const idTitulo = `vino-tienda-${vino.id}`;
 
   return (
@@ -65,21 +66,9 @@ const TarjetaVinoTienda = ({ vino, language, textos, descuentoPct }: TarjetaVino
           )}
         </div>
 
-        <div className="mt-auto border-t border-border/60 bg-muted/10 px-4 py-3 font-sans">
-          {hayDescuento && (
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-tight text-muted-foreground">
-              <span>
-                <span className="sr-only">{textos.tarjeta.precioCarta}: </span>
-                <s>{formatearPrecio(aCentimos(vino.precio_eur) / 100)}</s>
-              </span>
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-                <span aria-hidden="true">{insigniaDescuento(descuentoPct, language)}</span>
-                <span className="sr-only">{textos.tarjeta.descuento(formatearPorcentaje(descuentoPct, language))}</span>
-              </span>
-            </p>
-          )}
-          <p className="mt-1 font-libre-baskerville text-lg font-bold leading-tight text-accent">
-            <span className="sr-only">{textos.tarjeta.precioTienda}: </span>
+        <div className="mt-auto border-t border-border/60 bg-muted/10 px-4 py-3">
+          <p className="font-libre-baskerville text-xl font-bold leading-tight text-accent">
+            <span className="sr-only">{textos.tarjeta.precio}: </span>
             {formatearPrecio(centimosTienda(vino.precio_eur, descuentoPct) / 100)}
           </p>
         </div>

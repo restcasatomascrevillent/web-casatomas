@@ -1,7 +1,8 @@
 /**
  * Tienda de vinos (`/tienda`): un ESCAPARATE. Enseña los vinos de la carta que
- * se venden para llevar, con el precio de carta tachado y el de tienda, pero
- * NO se compra por internet: las botellas se compran (y se pagan) en el propio
+ * se venden para llevar, cada uno con su precio de tienda (sin hablar de
+ * descuentos ni del precio de carta: lo pidió así el dueño), pero NO se
+ * compra por internet: las botellas se compran (y se pagan) en el propio
  * restaurante, o se reservan por teléfono. Aquí está la lógica que no pinta
  * nada (configuración, precios, catálogo y sus lecturas en vivo), para poder
  * probarla sin montar la página.
@@ -28,7 +29,6 @@ import { precioConocido } from "@/lib/precios";
 import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
 import { functionHeaders } from "@/lib/supabase-functions";
 import type { VinoSSG } from "@/lib/carta-ssg-types";
-import type { Language } from "@/i18n/types";
 
 const SUPABASE_URL = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? "").replace(/\/+$/, "");
 
@@ -38,7 +38,7 @@ const SUPABASE_URL = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) 
 
 export interface ConfigTienda {
   activa: boolean;
-  /** 0–100. Con 0 no hay descuento: ni precio tachado ni insignia. */
+  /** 0–100. Solo para calcular el precio de tienda; la web no lo enseña. */
   descuento_pct: number;
   vinos_excluidos: string[];
   aviso: string | null;
@@ -95,19 +95,6 @@ export function centimosTienda(precioCarta: number, descuentoPct: number): numbe
 /** Precio tienda en euros (ver `centimosTienda`). */
 export const precioTienda = (precioCarta: number, descuentoPct: number): number =>
   centimosTienda(precioCarta, descuentoPct) / 100;
-
-const FORMATO_PORCENTAJE: Record<Language, Intl.NumberFormat> = {
-  es: new Intl.NumberFormat("es-ES", { style: "percent", maximumFractionDigits: 2 }),
-  en: new Intl.NumberFormat("en-GB", { style: "percent", maximumFractionDigits: 2 }),
-  fr: new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 2 }),
-};
-
-/** «30 %» (es, fr) o «30%» (en), con el espacio duro de cada idioma. */
-export const formatearPorcentaje = (pct: number, idioma: Language): string =>
-  FORMATO_PORCENTAJE[idioma].format(pct / 100);
-
-/** La insignia: «-30 %». */
-export const insigniaDescuento = (pct: number, idioma: Language): string => `-${formatearPorcentaje(pct, idioma)}`;
 
 // ---------------------------------------------------------------------------
 // Catálogo

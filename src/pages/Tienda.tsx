@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BadgePercent, Info, Loader2, Phone, Search, Store } from "lucide-react";
+import { Info, Loader2, Phone, Search, Store } from "lucide-react";
 import datosVinos from "virtual:carta-ssg/vinos";
 import datosTienda from "virtual:carta-ssg/tienda";
 import { Seo } from "@/components/Seo";
@@ -20,7 +20,7 @@ import { TEXTOS_TIENDA } from "@/i18n/tienda";
 import { breadcrumbSchema, SITE_URL } from "@/lib/negocio";
 import { filtrarVinos } from "@/lib/filtro-vinos";
 import { categoriaCorta, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
-import { formatearPorcentaje, normalizarConfigTienda, vinosALaVenta, type VinoTienda } from "@/lib/tienda";
+import { normalizarConfigTienda, vinosALaVenta, type VinoTienda } from "@/lib/tienda";
 
 const RUTA_ES = "/tienda";
 /** Fichas por tanda, como la carta de vinos (`PAGE_SIZE` de `CartaVinos`). */
@@ -44,8 +44,9 @@ const SEMILLA_VINOS: VinoTienda[] = (datosVinos.vinos ?? []).map((vino) => ({
 
 /**
  * `/tienda` (y `/en/tienda`, `/fr/tienda`): ESCAPARATE de los vinos de la
- * carta que se venden para llevar, con el descuento que fija el panel
- * (`configuracion_tienda`). No hay compra por internet: el bloque «Cómo
+ * carta que se venden para llevar, cada uno con su precio de tienda (calculado
+ * con el `descuento_pct` del panel, `configuracion_tienda`; la página no habla
+ * de descuentos ni del precio de carta). No hay compra por internet: el bloque «Cómo
  * comprar» explica que se compran en el restaurante (o se reservan por
  * teléfono) con la dirección, el horario y el teléfono.
  *
@@ -89,8 +90,6 @@ const TiendaPagina = () => {
     return Array.from(cantidades, ([valor, cantidad]) => ({ valor, etiqueta: categoriaCorta(valor, language), cantidad }));
   }, [aLaVenta, tipoSeleccionado, language]);
 
-  const textoDescuento = descuento > 0 ? formatearPorcentaje(descuento, language) : null;
-
   return (
     <>
       <Seo
@@ -105,7 +104,7 @@ const TiendaPagina = () => {
 
       <CartaPageLayout
         titulo={textos.titulo}
-        subtitulo={activa ? textos.subtitulo(textoDescuento) : undefined}
+        subtitulo={activa ? textos.subtitulo : undefined}
         detalle={activa ? textos.detalle(aLaVenta.length) : undefined}
         migas={[{ nombre: textos.miga }]}
         volverA={null}
@@ -113,7 +112,6 @@ const TiendaPagina = () => {
           activa && (
             <ul className="mt-5 flex flex-wrap gap-2 font-sans text-sm">
               {[
-                ...(textoDescuento ? [{ icono: BadgePercent, texto: textos.ventajas.descuento(textoDescuento) }] : []),
                 { icono: Store, texto: textos.ventajas.restaurante },
                 { icono: Phone, texto: textos.ventajas.reserva },
               ].map(({ icono: Icono, texto }) => (
