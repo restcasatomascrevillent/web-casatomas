@@ -8,6 +8,7 @@ import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
 import { calcularVersion } from "./scripts/version.mjs";
 import { tiendaEnBuild } from "./scripts/tienda-maqueta.mjs";
+import { navidadEnBuild } from "./scripts/navidad.mjs";
 
 /**
  * Un `fetch` a Supabase, TRES módulos virtuales.
@@ -186,6 +187,20 @@ function novedadesSsgPlugin(env: Record<string, string>, { requerido }: { requer
   };
 }
 
+/**
+ * Estilos de Navidad (`import "virtual:navidad.css"` en `main.tsx`): en la demo
+ * resuelve a `src/styles/navidad.css`; en producción, a un CSS vacío, para que
+ * no llegue ni una regla navideña (ver `scripts/navidad.mjs`).
+ */
+function navidadCssPlugin(activa: boolean): Plugin {
+  const fichero = path.resolve(__dirname, activa ? "src/styles/navidad.css" : "src/styles/navidad-apagada.css");
+  return {
+    name: "navidad-css",
+    enforce: "pre",
+    resolveId: (id) => (id === "virtual:navidad.css" ? fichero : undefined),
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -196,6 +211,8 @@ export default defineConfig(({ mode, command }) => {
     // Constante en el bundle: en producción su ruta y sus enlaces desaparecen.
     define: {
       "import.meta.env.VITE_TIENDA_VISIBLE": JSON.stringify(String(tiendaEnBuild(process.env))),
+      // Estética de Navidad: solo en la demo (ver `scripts/navidad.mjs`).
+      "import.meta.env.VITE_NAVIDAD": JSON.stringify(String(navidadEnBuild(process.env))),
     },
     server: {
       host: "::",
@@ -206,6 +223,7 @@ export default defineConfig(({ mode, command }) => {
       cartaSsgPlugin(env, { requerido: command === "build" }),
       novedadesSsgPlugin(env, { requerido: command === "build" }),
       versionJsonPlugin(),
+      navidadCssPlugin(navidadEnBuild(process.env)),
     ].filter(Boolean),
     resolve: {
       alias: {

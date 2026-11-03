@@ -13,6 +13,8 @@ import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { TIENDA_PATH } from "@/lib/condiciones";
 import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
+import { NAVIDAD } from "@/lib/navidad";
+import { LazoRegalo, LemaRegalo } from "@/components/navidad/Navidad";
 import type { Language } from "@/i18n/types";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
@@ -311,8 +313,11 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Card className="h-full bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
-              <CardHeader>
+            <Card className={`h-full bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20${NAVIDAD ? " navidad-tarjeta-regalo" : ""}`}>
+              {/* Navidad (solo demo): lazo en la esquina y antetítulo festivo. */}
+              {NAVIDAD && <LazoRegalo />}
+              <CardHeader className={NAVIDAD ? "navidad-cabecera-regalo" : undefined}>
+                {NAVIDAD && <LemaRegalo language={language} />}
                 <CardTitle as={nivelTitulo} className="flex items-center gap-2">
                   <Gift className="w-6 h-6 text-accent" />
                   {t.contacto.giftTitle}

@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import type { Language } from "@/i18n/types";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
+import { NAVIDAD } from "@/lib/navidad";
+import { NevadaHero, OrnamentoHero } from "@/components/navidad/Navidad";
 
 // Aria-label de la flecha de scroll. Distinto del texto del botón "Ver
 // carta" (mismo destino) para no repetir el mismo nombre accesible dos
@@ -42,6 +44,8 @@ const Hero = () => {
         className="hero-section relative overflow-hidden bg-gradient-to-br from-background via-muted to-background"
       >
         <div aria-hidden="true" className="hero-backdrop absolute inset-0" />
+        {/* Navidad (solo demo): nevada por detrás del contenido (z-10). */}
+        {NAVIDAD && <NevadaHero />}
         <div className="relative min-h-[inherit] flex flex-col items-center justify-center pt-24 pb-32 sm:pb-24 lg:pb-20 bajo:pt-16 bajo:pb-4 text-center px-4 z-10">
           <div className="mb-8 bajo:mb-3">
             <img
@@ -65,6 +69,7 @@ const Hero = () => {
             <p className="text-2xl md:text-3xl bajo:text-lg text-foreground/80 max-w-2xl mx-auto leading-relaxed font-semibold italic">
               {t.hero.motto}
             </p>
+            {NAVIDAD && <OrnamentoHero />}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
