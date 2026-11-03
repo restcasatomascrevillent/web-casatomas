@@ -29,7 +29,7 @@ const Footer = () => {
             <Button
               asChild
               size="sm"
-              className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full shadow-md"
+              className="h-auto min-h-9 whitespace-normal py-2 text-center bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full shadow-md"
             >
               <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
                 <Star className="w-4 h-4 mr-2 fill-current" />
@@ -69,7 +69,7 @@ const Footer = () => {
                 <TelLink className={ENLACE} />
               </li>
               <li>
-                <a href="mailto:casatomascrevillent@gmail.com" className={ENLACE}>
+                <a href="mailto:casatomascrevillent@gmail.com" className={`${ENLACE} [overflow-wrap:anywhere]`}>
                   casatomascrevillent@gmail.com
                 </a>
               </li>

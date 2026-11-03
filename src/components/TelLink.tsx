@@ -1,6 +1,6 @@
 import { useOptionalTranslations } from "@/i18n/LanguageProvider";
 import { cn } from "@/lib/utils";
-import { AREA_TOQUE_ENLACE } from "@/lib/area-toque";
+import { AREA_TOQUE_APILADO } from "@/lib/area-toque";
 
 // Enlace telefónico único del restaurante. Se reutiliza en footer, contacto,
 // política de privacidad y CTA móvil para que el número sea siempre pulsable.
@@ -21,7 +21,7 @@ export const TelLink = ({ className, children }: TelLinkProps) => {
   const idioma = useOptionalTranslations();
   const accion = idioma?.t.mobileCta.callAria ?? "Llamar a Casa Tomás";
   return (
-    <a href={PHONE_HREF} className={cn(AREA_TOQUE_ENLACE, className)} aria-label={children ? undefined : `${PHONE_DISPLAY}, ${accion}`}>
+    <a href={PHONE_HREF} className={cn(AREA_TOQUE_APILADO, className)} aria-label={children ? undefined : `${PHONE_DISPLAY}, ${accion}`}>
       {children ?? PHONE_DISPLAY}
     </a>
   );

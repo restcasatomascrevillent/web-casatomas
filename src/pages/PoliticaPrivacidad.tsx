@@ -194,7 +194,7 @@ const PoliticaPrivacidad = () => {
                 <section className="rounded-lg bg-muted/20 border border-border p-6">
                     <h2 className="text-xl font-bold mb-2 text-accent">{p.contact.heading}</h2>
                     <p className="text-sm text-muted-foreground">{p.contact.intro}</p>
-                    <div className="mt-3 text-sm space-y-1">
+                    <div className="mt-3 text-sm space-y-2">
                         <p>📧 <a href={`mailto:${NEGOCIO.email}`} className={`${AREA_TOQUE_EMAIL} text-accent underline underline-offset-2 hover:decoration-2`}>{NEGOCIO.email}</a></p>
                         <p>📞 <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p>📍 {RESPONSABLE_TRATAMIENTO.direccion}</p>

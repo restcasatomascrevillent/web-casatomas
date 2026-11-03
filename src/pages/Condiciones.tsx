@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
-import { AREA_TOQUE_EMAIL, AREA_TOQUE_ENLACE } from "@/lib/area-toque";
+import { AREA_TOQUE_APILADO, AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
@@ -135,14 +135,14 @@ const Condiciones = () => {
           <p className="text-sm text-muted-foreground">{c.intro}</p>
           <nav aria-label={c.tocLabel} className="rounded-lg border border-border p-4 text-sm">
             <p className="font-semibold mb-2">{c.tocLabel}</p>
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               <li>
-                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className={`${AREA_TOQUE_ENLACE} text-accent underline underline-offset-2 hover:decoration-2`}>
+                <a href={`#${ANCLA_CONDICIONES_RESERVA}`} className={`${AREA_TOQUE_APILADO} text-accent underline underline-offset-2 hover:decoration-2`}>
                   {c.bookingHeading}
                 </a>
               </li>
               <li>
-                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className={`${AREA_TOQUE_ENLACE} text-accent underline underline-offset-2 hover:decoration-2`}>
+                <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className={`${AREA_TOQUE_APILADO} text-accent underline underline-offset-2 hover:decoration-2`}>
                   {c.newsletterHeading}
                 </a>
               </li>
@@ -157,7 +157,7 @@ const Condiciones = () => {
         <section className="rounded-lg bg-muted/20 border border-border p-6">
           <h2 className="text-xl font-bold mb-2 text-accent">{c.contactTitle}</h2>
           <p className="text-sm text-muted-foreground">{c.contactIntro}</p>
-          <div className="mt-3 text-sm space-y-1">
+          <div className="mt-3 text-sm space-y-2">
             <p>
               <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" />
             </p>

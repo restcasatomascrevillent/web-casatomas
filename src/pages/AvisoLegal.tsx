@@ -126,7 +126,7 @@ const AvisoLegal = () => (
 
       <section>
         <h2 className="text-xl font-bold mb-3 text-accent">1. Datos identificativos</h2>
-        <div className="rounded-lg border border-border p-5 space-y-1 text-sm text-muted-foreground [overflow-wrap:anywhere]">
+        <div className="rounded-lg border border-border p-5 space-y-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">
           <p><strong className="text-foreground">Nombre de dominio:</strong> {DOMINIO}</p>
           <p><strong className="text-foreground">Nombre comercial:</strong> {TITULAR.nombreComercial}</p>
           <p><strong className="text-foreground">Denominación social:</strong> {TITULAR.denominacionSocial}</p>
