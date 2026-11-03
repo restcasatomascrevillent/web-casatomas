@@ -99,6 +99,9 @@ const TiendaPagina = () => {
         lang={language}
         languageAlternates={alternatesDePagina(RUTA_ES, SITE_URL)}
         keywords={textos.seo.keywords}
+        // Maqueta de la demo: que ningún buscador la guarde ni siga sus enlaces.
+        noindex
+        nofollow
       />
       <JsonLd data={breadcrumbSchema([{ nombre: textos.miga, path: RUTA_ES }], language)} />
 
@@ -127,6 +130,11 @@ const TiendaPagina = () => {
           )
         }
       >
+        {/* Maqueta: la tienda solo existe en la demo (`TIENDA_VISIBLE`). */}
+        <p className="mb-8 flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 font-sans text-sm text-amber-950">
+          <strong className="font-bold uppercase tracking-wide">{textos.maqueta.etiqueta}</strong>
+          <span>{textos.maqueta.texto}</span>
+        </p>
         {pendiente ? (
           <p role="status" className="flex items-center justify-center gap-2 py-16 font-sans text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />

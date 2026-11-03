@@ -3,12 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CompraChequePasos } from "@/components/CompraChequePasos";
-import { MapPin, Phone, Mail, Gift, PawPrint } from "lucide-react";
+import { MapPin, Phone, Mail, Gift, PawPrint, Wine } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
 import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
+import { construirRutaIdioma } from "@/i18n/routing";
+import { TIENDA_PATH } from "@/lib/condiciones";
+import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
+import type { Language } from "@/i18n/types";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
 export interface DatosComprador {
@@ -45,6 +50,17 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Mismos límites que valida `cheques-regalo-web/crear` en el servidor. */
 const IMPORTE_MIN = 10;
 const IMPORTE_MAX = 1000;
+
+/**
+ * Acceso a la tienda de vinos al pie de la tarjeta de cheques regalo. Solo
+ * donde existe la tienda (maqueta de la demo, `TIENDA_VISIBLE`): en el build
+ * de producción ni se pinta.
+ */
+const ACCESO_TIENDA: Record<Language, { titulo: string; texto: string; boton: string }> = {
+  es: { titulo: "Tienda de vinos", texto: "Llévate a casa los vinos de nuestra carta.", boton: "Ver la tienda" },
+  en: { titulo: "Wine shop", texto: "Take home the wines from our wine list.", boton: "See the shop" },
+  fr: { titulo: "Boutique de vins", texto: "Emportez chez vous les vins de notre carte.", boton: "Voir la boutique" },
+};
 
 const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto" | "regalo" }) => {
   const { t, language } = useTranslations();
@@ -352,6 +368,20 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                 <p className="text-xs text-muted-foreground pt-4">
                   {t.contacto.giftNote}
                 </p>
+
+                {TIENDA_VISIBLE && (
+                  <div className="pt-4 border-t border-accent/20">
+                    <SubTitulo className="font-medium mb-1 flex items-center gap-2">
+                      <Wine className="w-4 h-4 shrink-0 text-accent" aria-hidden="true" />
+                      {ACCESO_TIENDA[language].titulo}
+                    </SubTitulo>
+                    <p className="text-sm text-muted-foreground mb-3">{ACCESO_TIENDA[language].texto}</p>
+                    {/* Mismo aspecto que los botones de importe de arriba. */}
+                    <Button asChild variant="outline" className="h-auto min-h-10 w-full whitespace-normal py-2 border-accent/30 hover:bg-accent/10">
+                      <Link to={construirRutaIdioma(TIENDA_PATH, language)}>{ACCESO_TIENDA[language].boton}</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>}

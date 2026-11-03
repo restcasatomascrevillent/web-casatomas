@@ -129,6 +129,9 @@ test.describe("escritorio 1440 px", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Tienda de vinos" })).toBeVisible();
     await expect(page.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toBeVisible();
     await expect(page.getByText("Se compran en el restaurante", { exact: true })).toBeVisible();
+    // Maqueta solo en la demo: banda a la vista y fuera de los buscadores.
+    await expect(page.getByText("Maqueta · solo en la demo")).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex,nofollow");
 
     const macan = tarjeta(page, "Macán Clásico 2020");
     // 45 € de carta con el 30 % del panel → 31,50 €, enseñado como un precio normal.

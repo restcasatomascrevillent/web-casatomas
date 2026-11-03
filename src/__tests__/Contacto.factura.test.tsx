@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import es from "@/i18n/languages/es";
 vi.mock("@/i18n/LanguageProvider", () => {
   const valor = { t: es.translations, language: "es" };
@@ -16,7 +17,7 @@ import ContactoSection from "@/components/ContactoSection";
 const c = es.translations.contacto;
 function continuar() { fireEvent.click(screen.getByRole("button", { name: "Continuar" })); }
 async function abrir() {
-  render(<ContactoSection />);
+  render(<MemoryRouter><ContactoSection /></MemoryRouter>);
   fireEvent.click(screen.getByRole("button", { name: "100€" }));
   fireEvent.click(screen.getByRole("button", { name: c.giftButton }));
   fireEvent.change(screen.getByLabelText(c.giftFormBuyerName), { target: { value: "Ana" } });
@@ -123,7 +124,7 @@ describe("Compra guiada del cheque", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
   it("mantiene el campo montado y el foco al continuar", () => {
-    render(<ContactoSection />);
+    render(<MemoryRouter><ContactoSection /></MemoryRouter>);
     fireEvent.click(screen.getByRole("button", { name: "100€" }));
     fireEvent.click(screen.getByRole("button", { name: c.giftButton }));
     const input = screen.getByLabelText(c.giftFormBuyerName);
@@ -134,7 +135,7 @@ describe("Compra guiada del cheque", () => {
     expect(screen.getByLabelText(c.giftFormBuyerEmail)).toHaveFocus();
   });
   it("conserva el mismo campo al pasar al mensaje y evita perder foco con el toque", () => {
-    render(<ContactoSection />);
+    render(<MemoryRouter><ContactoSection /></MemoryRouter>);
     fireEvent.click(screen.getByRole("button", { name: "100€" }));
     fireEvent.click(screen.getByRole("button", { name: c.giftButton }));
     const field = screen.getByLabelText(c.giftFormBuyerName);
@@ -154,7 +155,7 @@ describe("Compra guiada del cheque", () => {
     const viewport = new EventTarget() as EventTarget & { height: number; offsetTop: number };
     viewport.height = 760; viewport.offsetTop = 0;
     vi.stubGlobal("visualViewport", viewport);
-    render(<ContactoSection />);
+    render(<MemoryRouter><ContactoSection /></MemoryRouter>);
     fireEvent.click(screen.getByRole("button", { name: "100€" }));
     fireEvent.click(screen.getByRole("button", { name: c.giftButton }));
     continuar();

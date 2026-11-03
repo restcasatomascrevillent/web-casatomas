@@ -37,8 +37,14 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("virtual:carta-ssg/vinos", () => ({ default: { generadoEn: "", vinos: mocks.vinos } }));
 vi.mock("virtual:carta-ssg/tienda", () => ({ default: { generadoEn: "", config: mocks.config } }));
-// `Seo` usa `Head` de vite-react-ssg (necesita su provider).
-vi.mock("@/components/Seo", () => ({ Seo: () => null }));
+// `Seo` usa `Head` de vite-react-ssg (necesita su provider): un espía que guarda los props.
+const seo = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
+vi.mock("@/components/Seo", () => ({
+  Seo: (props: Record<string, unknown>) => {
+    seo.props = props;
+    return null;
+  },
+}));
 vi.mock("@/components/JsonLd", () => ({ JsonLd: () => null }));
 
 import TiendaPagina from "@/pages/Tienda";
@@ -151,6 +157,20 @@ describe("/tienda: escaparate", () => {
     expect(screen.getByRole("article", { name: "Macán Classic 2020" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "How to buy" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Call to reserve bottles" })).toHaveAttribute("href", "tel:+34966107887");
+  });
+});
+
+describe("/tienda es una maqueta de la demo", () => {
+  it("banda visible «Maqueta · solo en la demo» y noindex,nofollow", () => {
+    pintar();
+    expect(screen.getByText("Maqueta · solo en la demo")).toBeVisible();
+    expect(screen.getByText("Esta página no está publicada en la web real.")).toBeInTheDocument();
+    expect(seo.props).toMatchObject({ noindex: true, nofollow: true });
+  });
+
+  it("también en inglés y francés", () => {
+    pintar("/en/tienda");
+    expect(screen.getByText("Mock-up · demo only")).toBeInTheDocument();
   });
 });
 
