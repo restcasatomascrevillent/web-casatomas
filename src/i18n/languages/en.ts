@@ -46,6 +46,8 @@ export const translations: Translations = {
       addMoreAria: "Add {name} to My table again (you have {qty})",
       viewPhoto: "View photo",
       hidePhoto: "Hide photo",
+      playVideo: "Play video",
+      pauseVideo: "Pause video",
       noPhoto: "No photo",
       viewInfo: "View ingredients and allergens",
       hideInfo: "Hide ingredients and allergens",
