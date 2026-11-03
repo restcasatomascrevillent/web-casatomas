@@ -140,6 +140,9 @@ export default {
     // `bajo:` = pantalla baja: móvil en horizontal (812×375, 932×430) o ventana muy achatada.
     // No afecta a un portátil ni a una tableta (≥ 600 px de alto). Va como variante y no como
     // `theme.screens` con `raw`: un `screens` crudo hace desaparecer las variantes `min-[…]`/`max-[…]`.
-    plugin(({ addVariant }) => addVariant("bajo", "@media (max-height: 520px)")),
+    // `:not(#\#)` sube la especificidad: Tailwind emite las variantes de un plugin ANTES de
+    // `sm:/md:/lg:`, y un móvil apaisado (812 px de ancho) cumple `md:`; sin esto `bajo:p-3` perdía
+    // contra `md:p-6` y el aviso de cookies y el hero no se compactaban.
+    plugin(({ addVariant }) => addVariant("bajo", "@media (max-height: 520px) { &:not(#\\#) }")),
   ],
 } satisfies Config;

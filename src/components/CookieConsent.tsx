@@ -121,7 +121,8 @@ const CookieConsent = () => {
              en esas páginas. Sin relleno abajo (`pb-0`): la tarjeta queda pegada
              a ese borde, sin el hueco que dejaba `p-2`/`p-6` a los cuatro lados.
              Pantalla baja (`bajo`: móvil en horizontal): relleno y letra de móvil
-             aunque el ancho sea de tableta, para no comerse más de media pantalla. */
+             aunque el ancho sea de tableta y el título solo para lectores de pantalla
+             (la región ya se llama así), para no comerse más de media pantalla. */
           className="fixed bottom-[var(--mobile-cta-offset,0px)] lg:bottom-0 left-0 right-0 z-50 pt-2 px-2 pb-0 md:pt-6 md:px-6 md:pb-0 bajo:pt-1 bajo:px-2 transition-[bottom] duration-300"
         >
           <Card className="max-w-4xl mx-auto max-h-[60dvh] overflow-y-auto p-3 md:p-6 bajo:p-3 shadow-2xl border-2 border-primary/20 bg-background">
@@ -130,7 +131,7 @@ const CookieConsent = () => {
                 <Cookie className="w-8 h-8 text-accent" />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm md:text-lg bajo:text-sm font-bold mb-1 md:mb-2 bajo:mb-0.5">{t.cookie.title}</h3>
+                <h3 className="text-sm md:text-lg bajo:sr-only font-bold mb-1 md:mb-2">{t.cookie.title}</h3>
                 <p className="text-xs md:text-sm bajo:text-xs leading-snug text-muted-foreground">
                   {t.cookie.message}{" "}
                   <a href={`${construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}#cookies`} className="text-primary underline underline-offset-2 hover:decoration-2 font-medium">

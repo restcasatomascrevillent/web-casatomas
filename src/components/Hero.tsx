@@ -42,14 +42,14 @@ const Hero = () => {
         className="hero-section relative overflow-hidden bg-gradient-to-br from-background via-muted to-background"
       >
         <div aria-hidden="true" className="hero-backdrop absolute inset-0" />
-        <div className="relative min-h-[inherit] flex flex-col items-center justify-center pt-24 pb-32 sm:pb-24 lg:pb-20 bajo:pt-20 bajo:pb-6 text-center px-4 z-10">
+        <div className="relative min-h-[inherit] flex flex-col items-center justify-center pt-24 pb-32 sm:pb-24 lg:pb-20 bajo:pt-16 bajo:pb-4 text-center px-4 z-10">
           <div className="mb-8 bajo:mb-3">
             <img
               src={logoHero.src}
               srcSet={logoHero.srcSet}
               sizes={logoHero.sizes}
               alt={t.hero.logoAlt}
-              className="w-64 md:w-96 lg:w-[28rem] bajo:w-28 h-auto mx-auto mb-6 bajo:mb-2 drop-shadow-2xl"
+              className="w-64 md:w-96 lg:w-[28rem] bajo:w-20 h-auto mx-auto mb-6 bajo:mb-1 drop-shadow-2xl"
               width={LOGO_WIDTH}
               height={LOGO_HEIGHT}
               loading="eager"
