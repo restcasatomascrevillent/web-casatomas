@@ -104,7 +104,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
       // con el texto del sistema al 200 % el diálogo crece con la letra, hasta ocupar toda la pantalla,
       // y el botón «Continuar» no se recorta.
       style={viewport ? { top: viewport.top + viewport.height / 2, maxHeight: viewport.height - 24, "--alto-visible": `${viewport.height - 24}px` } as CSSProperties : undefined}
-      className="h-[min(35rem,var(--alto-visible))] flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
+      className="h-[min(35rem,var(--alto-visible))] flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-x-hidden overflow-y-auto rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
       <DialogHeader className="shrink-0 border-b p-4 text-left bg-accent/5">
         <DialogTitle className="pr-10 text-base">{c.giftDialogTitle}</DialogTitle>
         <DialogDescription className="sr-only">{c.giftDialogDescription}</DialogDescription>
@@ -112,7 +112,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
         <div className="h-1 rounded-full bg-accent/10 overflow-hidden"><div className="h-full bg-accent transition-all" style={{ width: ((step + 1) / fields.length * 100) + "%" }} /></div>
       </DialogHeader>
       <form className="flex min-h-0 flex-1 flex-col" onSubmit={e => { e.preventDefault(); next(); }} noValidate>
-        <div ref={body} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
+        <div ref={body} className="min-h-14 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
           <div className="space-y-3 w-full min-w-0 my-auto">
             {!final && <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>}
             {field.type === "choice" ? <div className="space-y-3">
