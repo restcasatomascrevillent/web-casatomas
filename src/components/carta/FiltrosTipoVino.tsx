@@ -84,6 +84,8 @@ export function BarraFiltrosVino({ opciones, seleccionado, onChange, etiqueta }:
               )}
             >
               <span className={cn('min-w-0', activo && 'font-semibold')}>{opcion.etiqueta}</span>
+              {/* Un espacio entre etiqueta y contador: el texto visible es «Tintos 108» (axe lo compara sin espacios con el nombre accesible). En un contenedor flex no se pinta. */}
+              {' '}
               <span aria-hidden="true" className={cn('shrink-0 rounded-md bg-foreground/5 px-1.5 py-0.5 text-xs leading-none tabular-nums', activo ? 'font-semibold text-foreground' : 'text-muted-foreground')}>{opcion.cantidad}</span>
             </Button>
           );
