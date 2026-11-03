@@ -16,9 +16,9 @@ export interface TextosTienda {
   seo: { title: string; description: string; keywords: string[] };
   miga: string;
   titulo: string;
-  subtitulo: (descuento: string | null) => string;
+  subtitulo: string;
   detalle: (n: number) => string;
-  ventajas: { descuento: (descuento: string) => string; restaurante: string; reserva: string };
+  ventajas: { restaurante: string; reserva: string };
   comprobando: string;
   cerrada: { titulo: string; texto: string; verCarta: string; llamar: string };
   edad: { titulo: string; texto: string };
@@ -44,7 +44,8 @@ export interface TextosTienda {
     todos: string;
     final: string;
   };
-  tarjeta: { precioCarta: string; precioTienda: string; descuento: (descuento: string) => string };
+  /** Prefijo del precio para el lector de pantalla («Precio: 31,50 €»). */
+  tarjeta: { precio: string };
 }
 
 export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
@@ -52,18 +53,14 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
     seo: {
       title: "Tienda de vinos | Casa Tomás Crevillente",
       description:
-        "Los vinos de la bodega de Casa Tomás para llevar a casa, con descuento sobre el precio de carta. Se compran en el restaurante, en Crevillent: pásate o llámanos para reservarlos.",
+        "Los vinos de la bodega de Casa Tomás para llevar a casa, con su precio. Se compran en el restaurante, en Crevillent: pásate o llámanos para reservarlos.",
       keywords: ["tienda de vinos Crevillent", "comprar vino Crevillente", "vinos Casa Tomás", "vino para llevar Alicante"],
     },
     miga: "Tienda",
     titulo: "Tienda de vinos",
-    subtitulo: (d) =>
-      d
-        ? `Los vinos de nuestra bodega, para llevártelos a casa con un ${d} de descuento sobre el precio de carta.`
-        : "Los vinos de nuestra bodega, para llevártelos a casa.",
+    subtitulo: "Los vinos de nuestra bodega, para llevártelos a casa.",
     detalle: (n) => (n === 1 ? "1 vino a la venta" : `${n} vinos a la venta`),
     ventajas: {
-      descuento: (d) => `-${d} sobre precio de carta`,
       restaurante: "Se compran en el restaurante",
       reserva: "Resérvalos por teléfono",
     },
@@ -100,22 +97,20 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       todos: "Todos",
       final: "¿Te llevas alguno? Pídelo en el restaurante o llámanos al {phone} y te lo reservamos.",
     },
-    tarjeta: { precioCarta: "Precio en carta", precioTienda: "Precio tienda", descuento: (d) => `${d} de descuento` },
+    tarjeta: { precio: "Precio" },
   },
   en: {
     seo: {
       title: "Wine Shop | Casa Tomás Crevillente",
       description:
-        "The wines from the Casa Tomás cellar to take home, at a discount on the wine-list price. Buy them at the restaurant in Crevillent: drop by or call us to reserve them.",
+        "The wines from the Casa Tomás cellar to take home, with their prices. Buy them at the restaurant in Crevillent: drop by or call us to reserve them.",
       keywords: ["wine shop Crevillent", "buy wine Crevillente", "Casa Tomás wines", "wine to take away Alicante"],
     },
     miga: "Shop",
     titulo: "Wine shop",
-    subtitulo: (d) =>
-      d ? `The wines from our cellar, to take home with ${d} off the wine-list price.` : "The wines from our cellar, to take home.",
+    subtitulo: "The wines from our cellar, to take home.",
     detalle: (n) => (n === 1 ? "1 wine for sale" : `${n} wines for sale`),
     ventajas: {
-      descuento: (d) => `${d} off the wine-list price`,
       restaurante: "Buy them at the restaurant",
       reserva: "Reserve them by phone",
     },
@@ -152,24 +147,20 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       todos: "All",
       final: "Fancy one? Ask for it at the restaurant or call us on {phone} and we'll reserve it for you.",
     },
-    tarjeta: { precioCarta: "Wine-list price", precioTienda: "Shop price", descuento: (d) => `${d} off` },
+    tarjeta: { precio: "Price" },
   },
   fr: {
     seo: {
       title: "Boutique de vins | Casa Tomás Crevillente",
       description:
-        "Les vins de la cave de Casa Tomás à emporter, avec une remise sur le prix de la carte. Ils s'achètent au restaurant, à Crevillent : passez nous voir ou appelez-nous pour les réserver.",
+        "Les vins de la cave de Casa Tomás à emporter, avec leur prix. Ils s'achètent au restaurant, à Crevillent : passez nous voir ou appelez-nous pour les réserver.",
       keywords: ["boutique de vins Crevillent", "acheter du vin Crevillente", "vins Casa Tomás", "vin à emporter Alicante"],
     },
     miga: "Boutique",
     titulo: "Boutique de vins",
-    subtitulo: (d) =>
-      d
-        ? `Les vins de notre cave, à emporter chez vous avec ${d} de remise sur le prix de la carte.`
-        : "Les vins de notre cave, à emporter chez vous.",
+    subtitulo: "Les vins de notre cave, à emporter chez vous.",
     detalle: (n) => (n === 1 ? "1 vin en vente" : `${n} vins en vente`),
     ventajas: {
-      descuento: (d) => `-${d} sur le prix de la carte`,
       restaurante: "En vente au restaurant",
       reserva: "Réservez-les par téléphone",
     },
@@ -206,6 +197,6 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       todos: "Tous",
       final: "Un vin vous tente ? Demandez-le au restaurant ou appelez-nous au {phone} et nous vous le réservons.",
     },
-    tarjeta: { precioCarta: "Prix carte", precioTienda: "Prix boutique", descuento: (d) => `${d} de remise` },
+    tarjeta: { precio: "Prix" },
   },
 };

@@ -1,6 +1,7 @@
 /**
  * Página `/tienda` (escaparate, sin compra por internet): lo que sale con la
- * semilla del build, los precios con el descuento del panel, los filtros, el
+ * semilla del build, el precio de tienda de cada vino (sin hablar de descuento
+ * ni de precio de carta), los filtros, el
  * bloque «Cómo comprar» (dirección, horario, teléfono pulsable, texto
  * `recogida` y `aviso` del panel), la tienda apagada y los enlaces del menú y
  * del pie. `fetch` simula PostgREST (configuración y vinos).
@@ -81,17 +82,21 @@ afterEach(() => {
 });
 
 describe("/tienda: escaparate", () => {
-  it("cabecera y vinos a la venta con precio de carta tachado, precio tienda e insignia", async () => {
-    pintar();
+  it("cabecera y vinos a la venta, cada uno solo con su precio de tienda", async () => {
+    const { container } = pintar();
     expect(screen.getByRole("heading", { level: 1, name: "Tienda de vinos" })).toBeInTheDocument();
-    expect(screen.getByText("-30 % sobre precio de carta")).toBeInTheDocument();
+    expect(screen.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toBeInTheDocument();
     expect(screen.getByText("Se compran en el restaurante")).toBeInTheDocument();
+    expect(screen.getByText("Resérvalos por teléfono")).toBeInTheDocument();
 
     const macan = tarjeta("Macán Clásico 2020");
-    expect(within(macan).getByText("45,00 €").tagName).toBe("S");
+    // 45 € de carta con el 30 % del panel → 31,50 €, como un precio normal.
     expect(within(macan).getByText("31,50 €")).toBeInTheDocument();
-    expect(within(macan).getByText("-30 %")).toBeInTheDocument();
-    expect(within(macan).getByText("30 % de descuento")).toHaveClass("sr-only");
+    expect(within(macan).getByText("Precio:", { exact: false })).toHaveClass("sr-only");
+    // Ni precio de carta, ni insignia, ni una palabra sobre descuentos.
+    expect(within(macan).queryByText("45,00 €")).toBeNull();
+    expect(container.querySelector("main s, main del")).toBeNull();
+    expect(container.querySelector("main")!.textContent).not.toMatch(/descuento|precio de carta|-?\d+\s?%/i);
     expect(within(macan).getByText("Tintos · Rioja")).toBeInTheDocument();
     // Escaparate: ni botones de compra ni formularios.
     expect(within(macan).queryByRole("button")).toBeNull();
@@ -132,17 +137,17 @@ describe("/tienda: escaparate", () => {
     expect(screen.queryByRole("article", { name: "Albariño Pazo" })).toBeNull();
   });
 
-  it("el descuento y las exclusiones que cambian en el panel se ven sin esperar a un deploy", async () => {
+  it("los precios y las exclusiones que cambian en el panel se ven sin esperar a un deploy", async () => {
     mocks.vivo.config = { ...mocks.config, descuento_pct: 20, vinos_excluidos: ["v2"] };
     pintar();
     await waitFor(() => expect(screen.queryByRole("article", { name: "Albariño Pazo" })).toBeNull());
     expect(within(tarjeta("Macán Clásico 2020")).getByText("36,00 €")).toBeInTheDocument();
-    expect(within(tarjeta("Macán Clásico 2020")).getByText("-20 %")).toBeInTheDocument();
   });
 
   it("en inglés: nombre traducido y textos en inglés", () => {
-    pintar("/en/tienda");
+    const { container } = pintar("/en/tienda");
     expect(screen.getByRole("heading", { level: 1, name: "Wine shop" })).toBeInTheDocument();
+    expect(container.querySelector("main")!.textContent).not.toMatch(/discount|wine-list price|\boff\b|\d+\s?%/i);
     expect(screen.getByRole("article", { name: "Macán Classic 2020" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "How to buy" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Call to reserve bottles" })).toHaveAttribute("href", "tel:+34966107887");
