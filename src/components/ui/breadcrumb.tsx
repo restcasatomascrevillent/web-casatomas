@@ -41,7 +41,15 @@ const BreadcrumbLink = React.forwardRef<
 >(({ asChild, className, ...props }, ref) => {
   const Comp = asChild ? Slot : "a";
 
-  return <Comp ref={ref} className={cn("transition-colors hover:text-foreground", className)} {...props} />;
+  // Área pulsable de 44 px de alto (WCAG 2.5.8) sin mover nada: el margen negativo
+  // devuelve a la fila los 12 px de arriba y de abajo que añade el alto mínimo.
+  return (
+    <Comp
+      ref={ref}
+      className={cn("-my-3 inline-flex min-h-11 items-center transition-colors hover:text-foreground", className)}
+      {...props}
+    />
+  );
 });
 BreadcrumbLink.displayName = "BreadcrumbLink";
 

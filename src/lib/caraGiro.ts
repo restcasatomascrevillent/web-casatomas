@@ -40,3 +40,20 @@ export function girarYEnfocar(boton: HTMLElement, girar: () => void) {
   const selector = `[${ATRIBUTO_TARJETA}="${CSS.escape(id)}"] [data-cara]:not([inert]) [${ATRIBUTO_BOTON_GIRO}]`;
   boton.ownerDocument.querySelector<HTMLElement>(selector)?.focus();
 }
+
+/**
+ * Escape cierra la información de la tarjeta (la gira de vuelta) y deja el foco en el
+ * botón de la cara que queda a la vista, como cualquier otra superficie desplegable.
+ * Va en el `onKeyDown` del contenedor de la tarjeta (`data-tarjeta-giro`).
+ */
+export function cerrarInfoConEscape(
+  evento: { key: string; defaultPrevented: boolean; currentTarget: HTMLElement; preventDefault: () => void },
+  abierta: boolean,
+  girar: () => void,
+) {
+  if (evento.key !== "Escape" || !abierta || evento.defaultPrevented) return;
+  const boton = evento.currentTarget.querySelector<HTMLElement>(`[data-cara]:not([inert]) [${ATRIBUTO_BOTON_GIRO}]`);
+  if (!boton) return;
+  evento.preventDefault();
+  girarYEnfocar(boton, girar);
+}

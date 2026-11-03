@@ -161,7 +161,7 @@ describe("Compra guiada del cheque", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(c.toasts.giftMissingName);
     viewport.height = 320; viewport.offsetTop = 20;
     act(() => { viewport.dispatchEvent(new Event("resize")); });
-    await waitFor(() => expect(screen.getByRole("dialog")).toHaveStyle({ top: "180px", height: "296px", maxHeight: "296px" }));
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveStyle({ top: "180px", maxHeight: "296px", "--alto-visible": "296px" }));
     expect(screen.getByRole("button", { name: "Continuar" })).toBeEnabled();
     vi.unstubAllGlobals();
   });

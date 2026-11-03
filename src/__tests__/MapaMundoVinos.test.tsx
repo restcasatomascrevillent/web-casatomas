@@ -115,16 +115,16 @@ it("filtra dentro de la chincheta y reinicia la paginación al cambiar de tipo",
   renderComponent(vinos);
   fireEvent.click(screen.getByRole("button", { name: "La Rioja (9)" }));
   const dialog = within(await screen.findByRole("dialog"));
-  fireEvent.click(dialog.getByRole("button", { name: "Blancos" }));
+  fireEvent.click(dialog.getByRole("button", { name: /^Blancos\b/ }));
   expect(dialog.queryByText("Marqués de Riscal Reserva")).not.toBeInTheDocument();
   expect(dialog.queryByText("Espumoso de Rioja")).not.toBeInTheDocument();
   expect(dialog.queryByText("Blanco de Rioja 6")).not.toBeInTheDocument();
   fireEvent.click(dialog.getByRole("button", { name: "Mostrar más" }));
   expect(dialog.getByText("Blanco de Rioja 6")).toBeInTheDocument();
-  fireEvent.click(dialog.getByRole("button", { name: "Tintos" }));
+  fireEvent.click(dialog.getByRole("button", { name: /^Tintos\b/ }));
   expect(dialog.getByText("Marqués de Riscal Reserva")).toBeInTheDocument();
   expect(dialog.queryByText("Blanco de Rioja 0")).not.toBeInTheDocument();
-  fireEvent.click(dialog.getByRole("button", { name: "Champagnes y espumosos" }));
+  fireEvent.click(dialog.getByRole("button", { name: /Champagnes y espumosos/ }));
   expect(dialog.getByText("Espumoso de Rioja")).toBeInTheDocument();
 });
 

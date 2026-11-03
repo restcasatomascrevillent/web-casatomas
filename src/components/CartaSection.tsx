@@ -301,7 +301,7 @@ const CartaSection = () => {
             onMouseEnter={precargarPaginaVinos}
             onFocus={precargarPaginaVinos}
             onTouchStart={precargarPaginaVinos}
-            className="px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="h-auto min-h-11 whitespace-normal py-2 text-center leading-tight px-2 sm:h-11 sm:whitespace-nowrap sm:px-4 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Link to={rutaVinos} onClick={handleVinosClick}>
               <Wine className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
@@ -318,7 +318,7 @@ const CartaSection = () => {
             onMouseEnter={precargarPaginaBebidas}
             onFocus={precargarPaginaBebidas}
             onTouchStart={precargarPaginaBebidas}
-            className="px-2 sm:px-4 py-5 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary-hover text-secondary-foreground"
+            className="h-auto min-h-11 whitespace-normal py-2 text-center leading-tight px-2 sm:h-11 sm:whitespace-nowrap sm:px-4 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary-hover text-secondary-foreground"
           >
             <Link to={rutaBebidas}>
               <Beer className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
@@ -342,7 +342,7 @@ const CartaSection = () => {
           onEscapeKeyDown={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-balance break-words leading-tight">
               <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />
               {t.vinos.ageCheckTitle}
             </DialogTitle>

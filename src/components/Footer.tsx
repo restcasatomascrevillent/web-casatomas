@@ -13,7 +13,7 @@ import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_
 // el aspecto (el `space-y` baja de 8 a 4 px); los iconos sociales, de 20 px,
 // llevan 2 px de relleno por lado.
 const ENLACE = "inline-flex min-h-6 items-center hover:text-gold-light transition-colors";
-const ICONO = "inline-flex min-h-6 min-w-6 items-center justify-center text-stone-light hover:text-gold-light transition-colors";
+const ICONO = "inline-flex min-h-11 min-w-11 items-center justify-center text-stone-light hover:text-gold-light transition-colors";
 
 const Footer = () => {
   const { t, language } = useTranslations();
@@ -22,14 +22,14 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">Casa Tomás</h3>
+            <h2 className="text-xl font-bold mb-4">Casa Tomás</h2>
             <p className="text-stone-light text-sm leading-relaxed mb-5">
               {t.footer.description}
             </p>
             <Button
               asChild
               size="sm"
-              className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full shadow-md"
+              className="h-auto min-h-9 whitespace-normal py-2 text-center bg-accent hover:bg-accent-hover text-accent-foreground font-semibold rounded-full shadow-md"
             >
               <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
                 <Star className="w-4 h-4 mr-2 fill-current" />
@@ -39,7 +39,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">{t.footer.quickLinks}</h4>
+            <h3 className="font-semibold mb-4">{t.footer.quickLinks}</h3>
             <ul className="space-y-1 text-sm text-stone-light">
               <li>
                 {/* Antes era `#carta`, que fuera de la portada no llevaba a
@@ -63,20 +63,20 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">{t.footer.contactTitle}</h4>
+            <h3 className="font-semibold mb-4">{t.footer.contactTitle}</h3>
             <ul className="space-y-1 text-sm text-stone-light">
               <li>
                 <TelLink className={ENLACE} />
               </li>
               <li>
-                <a href="mailto:casatomascrevillent@gmail.com" className={ENLACE}>
+                <a href="mailto:casatomascrevillent@gmail.com" className={`${ENLACE} [overflow-wrap:anywhere]`}>
                   casatomascrevillent@gmail.com
                 </a>
               </li>
               <li className="flex min-h-6 items-center">Carrer Santa Maria de la Cabeza, 2</li>
               <li className="flex min-h-6 items-center">03330 Crevillent, Alicante</li>
             </ul>
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-2 mt-2">
               <a
                 href="https://www.instagram.com/casatomascrevillent/?hl=es"
                 target="_blank"

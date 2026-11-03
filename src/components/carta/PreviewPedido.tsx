@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { clavePedido, type LineaPedido } from "@/hooks/usePedido";
 import { useMiMesa } from "@/hooks/useMiMesa";
+import { useCerrarConAtras } from "@/hooks/useCerrarConAtras";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
@@ -106,6 +107,11 @@ const PreviewPedido = () => {
   const [compartiendo, setCompartiendo] = useState(false);
   const [vistaPrevia, setVistaPrevia] = useState<{ dataUrl: string; archivo: File | null } | null>(null);
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
+  // Botón «Mi mesa»: al cerrar la hoja el foco vuelve a él (no es un `SheetTrigger`, así que Radix no lo sabe).
+  const botonMesaRef = useRef<HTMLButtonElement>(null);
+  // «Atrás» del móvil cierra la hoja (y, encima, la vista previa) en vez de salir de la página.
+  useCerrarConAtras(abierto, () => setAbierto(false), "capaMiMesa");
+  useCerrarConAtras(vistaPrevia !== null, () => setVistaPrevia(null), "capaVistaPreviaMesa");
   const [qr, setQr] = useState<boolean[][] | null>(null);
   const [chat, setChat] = useState<{ imagen: string | null; pregunta: string } | null>(null);
 
@@ -396,7 +402,7 @@ const PreviewPedido = () => {
           size="icon"
           onClick={() => setAbierto(false)}
           aria-label={tp.close}
-          className="h-9 w-9 shrink-0 rounded-full text-ticket-ink hover:bg-ticket-ink/10"
+          className="h-11 w-11 shrink-0 rounded-full text-ticket-ink hover:bg-ticket-ink/10"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </Button>
@@ -487,12 +493,16 @@ const PreviewPedido = () => {
   return (
     <>
       {lineas.length > 0 && (
-        <BotonMiMesa onOpen={() => setAbierto(true)} count={lineas.length} label={tp.floatingLabel} aria={tp.openTicketAria} />
+        <BotonMiMesa botonRef={botonMesaRef} onOpen={() => setAbierto(true)} count={lineas.length} label={tp.floatingLabel} aria={tp.openTicketAria} />
       )}
 
       <Sheet open={abierto} onOpenChange={setAbierto}>
         <SheetContent
           side={isMobile ? "bottom" : "right"}
+          onCloseAutoFocus={(evento) => {
+            evento.preventDefault();
+            botonMesaRef.current?.focus();
+          }}
           className={cn(
             "flex flex-col gap-0 overflow-hidden bg-ticket-paper p-0 [&>button.absolute]:hidden",
             isMobile ? "max-h-[92dvh] rounded-t-3xl" : "w-full sm:max-w-md",
@@ -597,6 +607,7 @@ const PreviewPedido = () => {
 export default PreviewPedido;
 
 type BotonMiMesaProps = {
+  botonRef: React.Ref<HTMLButtonElement>;
   onOpen: () => void;
   count: number;
   label: string;
@@ -608,8 +619,9 @@ type BotonMiMesaProps = {
  * (`FloatingActions`), que lo apila con "Pregunta a Tomy" y lo sube por
  * encima de la barra móvil de llamar/reservar (`--mobile-cta-offset`).
  */
-const BotonMiMesa = ({ onOpen, count, label, aria }: BotonMiMesaProps) => (
+const BotonMiMesa = ({ botonRef, onOpen, count, label, aria }: BotonMiMesaProps) => (
   <Button
+    ref={botonRef}
     type="button"
     onClick={onOpen}
     aria-haspopup="dialog"

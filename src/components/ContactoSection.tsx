@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
+import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
 
 export interface DatosComprador {
@@ -47,6 +48,10 @@ const IMPORTE_MAX = 1000;
 
 const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto" | "regalo" }) => {
   const { t, language } = useTranslations();
+  // En la portada la sección cuelga de un h2; en /contacto y /regala solo hay el h1 de la página:
+  // sus tarjetas llevan h2 (y el subtítulo h3) para no saltarse ningún nivel.
+  const nivelTitulo = modo === "completo" ? "h3" : "h2";
+  const SubTitulo = modo === "completo" ? "h4" : "h3";
   const [giftAmount, setGiftAmount] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [datos, setDatos] = useState<DatosComprador>(DATOS_COMPRADOR_VACIOS);
@@ -220,7 +225,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
           >
             <Card>
               <CardHeader>
-                <CardTitle>{t.contacto.infoTitle}</CardTitle>
+                <CardTitle as={nivelTitulo}>{t.contacto.infoTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-3">
@@ -253,7 +258,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   <div>
                     <p className="font-medium">{t.contacto.emailLabel}</p>
                     <p className="text-sm text-muted-foreground">
-                      <a href="mailto:casatomascrevillent@gmail.com" className="underline underline-offset-2 hover:decoration-2">casatomascrevillent@gmail.com</a>
+                      <a href="mailto:casatomascrevillent@gmail.com" className={`${AREA_TOQUE_EMAIL} underline underline-offset-2 hover:decoration-2`}>casatomascrevillent@gmail.com</a>
                     </p>
                   </div>
                 </div>
@@ -270,7 +275,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
 
             <Card>
               <CardHeader>
-                <CardTitle>{t.contacto.hoursTitle}</CardTitle>
+                <CardTitle as={nivelTitulo}>{t.contacto.hoursTitle}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 {t.contacto.schedule.map((slot) => (
@@ -292,7 +297,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
           >
             <Card className="h-full bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle as={nivelTitulo} className="flex items-center gap-2">
                   <Gift className="w-6 h-6 text-accent" />
                   {t.contacto.giftTitle}
                 </CardTitle>
@@ -329,7 +334,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                 </div>
 
                 <div className="pt-4 border-t border-accent/20">
-                  <h4 className="font-medium mb-2">{t.contacto.giftSuggested}</h4>
+                  <SubTitulo className="font-medium mb-2">{t.contacto.giftSuggested}</SubTitulo>
                   <div className="grid grid-cols-3 gap-2">
                     {[50, 100, 150].map((amount) => (
                       <Button

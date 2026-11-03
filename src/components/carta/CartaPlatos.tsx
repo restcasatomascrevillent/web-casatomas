@@ -53,7 +53,7 @@ import {
 } from "@/lib/alergenos";
 import { CATEGORIAS_CARTA } from "@/lib/carta-rutas";
 import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
-import { girarYEnfocar, propsCara } from "@/lib/caraGiro";
+import { cerrarInfoConEscape, girarYEnfocar, propsCara } from "@/lib/caraGiro";
 
 /** Estado inicial de `platosByCategory`: categoria -> platos. */
 export type CartaPlatosSeed = Record<string, Plato[]>;
@@ -729,6 +729,7 @@ const CartaPlatos = ({
                     expanded || infoOpen ? "h-full" : "h-auto"
                   } ${infoOpen ? "[transform:rotateY(180deg)]" : ""}`}
                   data-tarjeta-giro={cardKey}
+                  onKeyDown={(evento) => cerrarInfoConEscape(evento, infoOpen, () => handleToggleInfoCard(item.id, true))}
                 >
                   <div
                     className={`${infoOpen ? "absolute inset-0 h-full" : "h-full"} [backface-visibility:hidden]`}
@@ -761,7 +762,7 @@ const CartaPlatos = ({
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <CardTitle
+                            <CardTitle as="h2"
                               className={`leading-tight whitespace-normal break-words line-clamp-2 ${
                                 expanded ? "text-lg" : "text-base min-h-12"
                               }`}
@@ -885,7 +886,7 @@ const CartaPlatos = ({
                       <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg leading-tight whitespace-normal break-words">
+                            <CardTitle as="h2" className="text-lg leading-tight whitespace-normal break-words">
                               {item.displayNombre}
                             </CardTitle>
                             <div className="pt-2">

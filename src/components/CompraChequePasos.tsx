@@ -1,11 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, type CSSProperties, type Dispatch, type SetStateAction } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { flushSync } from "react-dom";
+import { useCerrarConAtras } from "@/hooks/useCerrarConAtras";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { crearSesionVistaRegalo } from "@/lib/cheques/vista-regalo";
+import { crearSesionVistaRegalo, type SesionVistaRegalo } from "@/lib/cheques/vista-regalo";
 import { calcularGastosGestion, GASTOS_GESTION_APAGADOS } from "../../supabase/functions/_shared/cheques-regalo/gastos-gestion";
 import { VistaRegaloCompra } from "./VistaRegaloCompra";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,12 @@ type Field = { key: keyof DatosComprador | "factura" | "resumen" | "vista"; labe
 export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos, enviando, error, setError, confirmar }: Props) {
   const { t, language } = useTranslations();
   const c = t.contacto, copy = copyByLanguage[language || "es"];
-  const sesionVista = useMemo(() => open ? crearSesionVistaRegalo() : null, [open]);
+  // Al cerrar, `sesionVista` pasa a null mientras el diálogo aún se está desmontando: la vista
+  // previa recibiría `undefined`, abriría una sesión propia y repetiría la petición a
+  // `plantilla-vista`. `ultimaSesion` le sigue dando la misma (con su caché) hasta desmontarse.
+  useCerrarConAtras(open, () => onOpenChange(false), "capaCheque"); // «atrás» del móvil cierra el diálogo, no la página
+  const ultimaSesion = useRef<SesionVistaRegalo | null>(null);
+  const sesionVista = useMemo(() => (open ? (ultimaSesion.current = crearSesionVistaRegalo()) : null), [open]);
   useEffect(() => { if (sesionVista) void sesionVista.preparar().catch(() => {}); }, [sesionVista]);
   // Los gastos que cobrará la función de pago; hasta que se sepan, ninguno.
   const [configGastos, setConfigGastos] = useState(GASTOS_GESTION_APAGADOS);
@@ -88,14 +94,17 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
     body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([hidden]):not([type="checkbox"]), textarea:not([hidden])')?.focus({ preventScroll: true });
   }
   const opciones = <div className="space-y-3 rounded-xl border p-3 text-sm">
-    <label className="flex items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
-    <label className="flex items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
+    <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
+    <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
   </div>;
   function change(value: string) { setDatos(d => ({ ...d, [field.key]: value })); setError(null); }
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent onOpenAutoFocus={e => e.preventDefault()}
-      style={viewport ? { top: viewport.top + viewport.height / 2, height: Math.min(560, viewport.height - 24), maxHeight: viewport.height - 24 } : undefined}
-      className="flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-hidden rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
+      // Alto: 35 rem (= 560 px con la letra normal) o el espacio visible si es menor. En rem y no en px:
+      // con el texto del sistema al 200 % el diálogo crece con la letra, hasta ocupar toda la pantalla,
+      // y el botón «Continuar» no se recorta.
+      style={viewport ? { top: viewport.top + viewport.height / 2, maxHeight: viewport.height - 24, "--alto-visible": `${viewport.height - 24}px` } as CSSProperties : undefined}
+      className="h-[min(35rem,var(--alto-visible))] flex w-[calc(100%_-_1.5rem)] max-w-[calc(100%_-_1.5rem)] sm:max-w-md flex-col gap-0 overflow-x-hidden overflow-y-auto rounded-2xl p-0 max-h-[calc(100dvh-1.5rem)]">
       <DialogHeader className="shrink-0 border-b p-4 text-left bg-accent/5">
         <DialogTitle className="pr-10 text-base">{c.giftDialogTitle}</DialogTitle>
         <DialogDescription className="sr-only">{c.giftDialogDescription}</DialogDescription>
@@ -103,7 +112,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
         <div className="h-1 rounded-full bg-accent/10 overflow-hidden"><div className="h-full bg-accent transition-all" style={{ width: ((step + 1) / fields.length * 100) + "%" }} /></div>
       </DialogHeader>
       <form className="flex min-h-0 flex-1 flex-col" onSubmit={e => { e.preventDefault(); next(); }} noValidate>
-        <div ref={body} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
+        <div ref={body} className="min-h-14 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
           <div className="space-y-3 w-full min-w-0 my-auto">
             {!final && <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>}
             {field.type === "choice" ? <div className="space-y-3">
@@ -121,7 +130,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
               <p className="flex justify-between gap-3"><span>{copy.fees}</span><span>{eur(gastos)}</span></p>
               <p className="flex justify-between gap-3 border-t pt-2 font-semibold"><span>{copy.total}</span><span>{eur(importeCheque + gastos)}</span></p>
               <p className="text-xs text-muted-foreground">{copy.feesNote}</p>
-            </div>}</div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /></div> : <div className="space-y-3">
+            </div>}</div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || ultimaSesion.current || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /></div> : <div className="space-y-3">
               {field.key === "mensaje" && opciones}
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
               <Textarea style={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria) ? { display: "none" } : undefined} hidden={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria)} id={field.type === "date" ? undefined : "gift-step-" + field.key}
@@ -141,9 +150,10 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
           </div>
         </div>
         {error && <p role="alert" className="shrink-0 max-h-24 overflow-y-auto border-t bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</p>}
-        <div className="shrink-0 flex items-center gap-3 border-t bg-background p-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
-          <Button type="button" onPointerDown={e => e.preventDefault()} variant="outline" className="h-12" disabled={enviando} onClick={() => { setError(null); if (step) goTo(step - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
-          <Button type="submit" onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()} className="h-12 flex-1 bg-accent hover:bg-accent-hover whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
+        {/* `flex-wrap`: con la letra al 200 % «Cancelar» + «Continuar» no caben en una fila y el pie se recortaba; así «Continuar» baja a su propia fila. */}
+        <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 border-t bg-background p-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
+          <Button type="button" onPointerDown={e => e.preventDefault()} variant="outline" className="h-12 min-w-0" disabled={enviando} onClick={() => { setError(null); if (step) goTo(step - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
+          <Button type="submit" onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()} className="h-12 min-w-0 flex-1 basis-32 bg-accent hover:bg-accent-hover whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
         </div>
       </form>
     </DialogContent>

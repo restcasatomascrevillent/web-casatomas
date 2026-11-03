@@ -53,6 +53,8 @@ import {
 type ReservationFormProps = {
   onSuccessClose?: () => void;
   navigateOnClose?: boolean;
+  /** Nivel de los títulos de paso: h3 bajo el h2 de la portada; h2 bajo el h1 de /reservas. */
+  nivelPasos?: "h2" | "h3";
 };
 
 /**
@@ -102,7 +104,7 @@ const EnlaceLegal = ({ href, children, aviso }: { href: string; children: string
   </a>
 );
 
-export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: ReservationFormProps) => {
+export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelPasos: Paso = "h3" }: ReservationFormProps) => {
   const { t, dateLocale, language } = useTranslations();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadHueco[]>([]);
@@ -449,11 +451,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
         </DialogContent>
       </Dialog>
 
-      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-4 sm:p-8 rounded-2xl shadow-xl">
+      <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-3 sm:p-8 rounded-2xl shadow-xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-6 pb-6 border-b border-border/30">
-              <h3 className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</h3>
+              <Paso className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</Paso>
 
               <div className="grid sm:grid-cols-2 gap-6">
                 <FormField
@@ -481,7 +483,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent
+                          className="w-auto max-h-[var(--radix-popover-content-available-height)] overflow-y-auto overscroll-contain p-0"
+                          align="start"
+                          collisionPadding={8}
+                        >
                           <Calendar
                             mode="single"
                             selected={field.value}
@@ -558,7 +564,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
 
             {hasCheckedAvailability && (
               <div className="space-y-4 pb-6 border-b border-border/30">
-                <h3 className="text-lg font-semibold text-foreground">{t.reservationForm.stepTwo}</h3>
+                <Paso className="text-lg font-semibold text-foreground">{t.reservationForm.stepTwo}</Paso>
                 <FormLabel className="text-foreground font-medium block">
                   {t.reservationForm.timesLabel}
                 </FormLabel>
@@ -613,9 +619,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
             )}
 
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-foreground">
+              <Paso className="text-lg font-semibold text-foreground">
                 {hasCheckedAvailability ? t.reservationForm.stepThree : t.reservationForm.infoTitle}
-              </h3>
+              </Paso>
 
               <FormField
                 control={form.control}
@@ -714,7 +720,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                             aria-required="true"
                           />
                         </FormControl>
-                        <FormLabel className="font-normal text-foreground cursor-pointer leading-snug">
+                        <FormLabel className="-my-3 min-h-11 py-3 font-normal text-foreground cursor-pointer leading-snug">
                           {antes}
                           <EnlaceLegal
                             href={`${rutaCondiciones}#${ANCLA_CONDICIONES_RESERVA}`}
@@ -749,7 +755,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true }: Rese
                       />
                     </FormControl>
                     <div className="text-sm leading-snug">
-                      <FormLabel className="font-normal text-foreground cursor-pointer leading-snug">
+                      <FormLabel className="-my-3 inline-block min-h-11 py-3 font-normal text-foreground cursor-pointer leading-snug">
                         {t.reservationForm.newsletterLabel}
                       </FormLabel>{" "}
                       {/* Fuera del <label>: leer las condiciones nunca marca la casilla. */}

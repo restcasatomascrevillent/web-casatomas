@@ -44,7 +44,7 @@ export default function MenuDietario({ compacto = false, children }: { compacto?
     <div role="group" aria-label={copy.title} className="grid grid-cols-4 gap-1 sm:gap-3">
       {DIETAS.map((dieta, index) => <button key={dieta} type="button" aria-pressed={filtros.includes(dieta)}
         onClick={() => cambiar(filtros.includes(dieta) ? filtros.filter(x => x !== dieta) : [...filtros, dieta])}
-        className={`min-h-11 min-w-0 whitespace-nowrap border-b-2 px-0.5 py-2 text-[11px] min-[375px]:text-xs sm:text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${filtros.includes(dieta) ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary'}`}>
+        className={`min-h-11 min-w-0 whitespace-normal break-words text-center leading-tight border-b-2 px-0.5 py-2 text-xs sm:text-sm sm:whitespace-nowrap font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${filtros.includes(dieta) ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary'}`}>
         {copy.labels[index]}
       </button>)}
     </div>

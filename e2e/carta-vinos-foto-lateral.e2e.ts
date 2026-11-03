@@ -147,7 +147,7 @@ for (const ancho of [320, 375, 768, 1280]) {
       expect(await marco.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(205, 174, 119)");
 
       // Misma escala con foto que sin ella: título 16 px y precio 18 px (16 px por debajo de 360 px de ancho).
-      const escala = () => tarj.evaluate((t) => [getComputedStyle(t.querySelector("h3")!).fontSize, getComputedStyle(t.querySelector("div.border-t > span")!).fontSize]);
+      const escala = () => tarj.evaluate((t) => [getComputedStyle(t.querySelector("h2")!).fontSize, getComputedStyle(t.querySelector("div.border-t > span")!).fontSize]);
       const conFoto = await escala();
       expect(conFoto).toEqual(["16px", ancho >= 360 ? "18px" : "16px"]);
 

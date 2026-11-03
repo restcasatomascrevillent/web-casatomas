@@ -32,12 +32,13 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false, headin
         ref={elementRef}
         id="reservas"
         className={cn(
-          "py-16 px-4 bg-gradient-to-br from-background via-background to-muted scroll-reveal-scale",
+          "py-16 px-3 sm:px-4 bg-gradient-to-br from-background via-background to-muted scroll-reveal-scale",
           "text-foreground",
           isVisible ? "is-visible" : ""
         )}
       >
-        <div className="container mx-auto max-w-5xl">
+        {/* Sin `container` (que suma 2 rem de relleno por lado): en 320 px los campos medían 190 px. Desde `sm`, el mismo 2 rem de siempre. */}
+        <div className="mx-auto max-w-5xl px-0 sm:px-8">
           <Heading className="text-4xl md:text-5xl font-bold tracking-tight text-center mb-4 text-foreground">
             {t.reservas.title}
           </Heading>
@@ -79,7 +80,7 @@ const ReservasSection = ({ forceShowForm = false, showBackButton = false, headin
                   ))}
                 </div>
               </div>
-              <ReservationForm onSuccessClose={handleSuccessClose} />
+              <ReservationForm onSuccessClose={handleSuccessClose} nivelPasos={Heading === "h1" ? "h2" : "h3"} />
               {showBackButton && (
                 <div className="flex justify-center">
                   <Button

@@ -28,6 +28,8 @@ const HOME_PATHS = ["/", "/en", "/fr"];
 // Alto de la barra: `py-3` (1.5rem) + botón `size="lg"` (`h-11`, 2.75rem).
 const MOBILE_CTA_HEIGHT = "4.25rem";
 
+const ETIQUETA_BARRA = { es: "Llamar o reservar", en: "Call or book", fr: "Appeler ou réserver" } as const;
+
 const MobileReserveCTA = () => {
   const { t, language } = useTranslations();
   const navigate = useNavigate();
@@ -124,7 +126,10 @@ const MobileReserveCTA = () => {
 
   return (
     <>
-      <div
+      {/* `aside` con nombre: la barra es un punto de referencia propio y no «contenido
+          suelto» fuera de los landmarks (axe `region`). */}
+      <aside
+        aria-label={ETIQUETA_BARRA[language]}
         className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transition-all duration-300 ease-out ${
           visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
         }`}
@@ -165,7 +170,7 @@ const MobileReserveCTA = () => {
             {t.mobileCta.reserve}
           </Button>
         </div>
-      </div>
+      </aside>
     </>
   );
 };

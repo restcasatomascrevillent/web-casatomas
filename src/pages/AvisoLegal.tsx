@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
+import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { AVISO_LEGAL_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
 import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
@@ -93,7 +94,7 @@ const AvisoLegal = () => (
       <div className="max-w-4xl mx-auto">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-stone-light hover:text-gold-light transition-colors mb-4 text-sm"
+          className="-mt-3 mb-1 inline-flex min-h-11 items-center gap-2 text-stone-light hover:text-gold-light transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver al inicio
@@ -125,7 +126,7 @@ const AvisoLegal = () => (
 
       <section>
         <h2 className="text-xl font-bold mb-3 text-accent">1. Datos identificativos</h2>
-        <div className="rounded-lg border border-border p-5 space-y-1 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border p-5 space-y-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">
           <p><strong className="text-foreground">Nombre de dominio:</strong> {DOMINIO}</p>
           <p><strong className="text-foreground">Nombre comercial:</strong> {TITULAR.nombreComercial}</p>
           <p><strong className="text-foreground">Denominación social:</strong> {TITULAR.denominacionSocial}</p>
@@ -137,7 +138,7 @@ const AvisoLegal = () => (
           </p>
           <p>
             <strong className="text-foreground">Email:</strong>{" "}
-            <a href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2">
+            <a href={`mailto:${NEGOCIO.email}`} className={`${AREA_TOQUE_EMAIL} text-accent underline underline-offset-2 hover:decoration-2`}>
               {NEGOCIO.email}
             </a>
           </p>

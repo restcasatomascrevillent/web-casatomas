@@ -208,7 +208,7 @@ const RespuestaReserva = () => {
 
           <p className="mt-8 pt-5 border-t border-border text-center text-sm text-muted-foreground">
             ¿Dudas? Llámanos al{" "}
-            <a href={telHref} className="inline-flex items-center gap-1 font-semibold text-accent underline underline-offset-2 hover:decoration-2">
+            <a href={telHref} className="-my-1 inline-flex items-center gap-1 py-1 font-semibold text-accent underline underline-offset-2 hover:decoration-2">
               <Phone className="h-3.5 w-3.5" aria-hidden="true" />
               {telTexto}
             </a>

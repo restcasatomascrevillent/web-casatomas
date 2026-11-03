@@ -154,7 +154,7 @@ const CartaPageLayout = ({
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pb-12">
           <Link
             to={conFiltros(construirRutaIdioma(volverAResuelto.path, language))}
-            className="inline-flex items-center gap-2 text-accent hover:underline text-sm font-semibold"
+            className="-my-3 inline-flex min-h-11 items-center gap-2 text-accent hover:underline text-sm font-semibold"
           >
             <ArrowLeft className="w-4 h-4" />
             {volverAResuelto.texto}

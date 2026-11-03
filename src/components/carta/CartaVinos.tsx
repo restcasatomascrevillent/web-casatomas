@@ -29,6 +29,9 @@ import {
  */
 const MapaMundoVinos = lazy(() => import("./MapaMundoVinos"));
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?? "";
+
+/** Cada cuánto se vuelve a consultar la carta de vinos con la pestaña abierta y visible. */
+const ACTUALIZAR_CARTA_CADA_MS = 10 * 60_000;
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { getEdadVinosConfirmada, getUserPedido, setEdadVinosConfirmada, setUserPedido } from "@/utils/sessionManager";
@@ -296,7 +299,10 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
     window.addEventListener("focus", refresh);
     window.addEventListener("online", refresh);
     document.addEventListener("visibilitychange", refresh);
-    const timer = window.setInterval(refresh, 60_000);
+    // Cada 10 min (antes 60 s: una petición por minuto y visitante con la carta
+    // abierta). Al volver a la pestaña, recuperar la conexión o enfocar la ventana
+    // se refresca al instante, así que un cambio de precio no tarda en verse.
+    const timer = window.setInterval(refresh, ACTUALIZAR_CARTA_CADA_MS);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("focus", refresh);
@@ -529,7 +535,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
           onEscapeKeyDown={(event) => event.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 text-balance break-words leading-tight">
               <AlertCircle className="w-6 h-6 text-accent" aria-hidden="true" />
               {t.vinos.ageCheckTitle}
             </DialogTitle>
@@ -662,7 +668,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                           : "gap-2 px-4 py-3"}
                       >
                         <div className={expanded ? "contents" : "flex items-start justify-between gap-2"}>
-                          <CardTitle
+                          <CardTitle as="h2"
                             className={`min-w-0 flex-1 pt-1 font-libre-baskerville text-base leading-snug break-words ${expanded ? "col-start-1 row-start-1" : ""}`}
                           >
                             {item.displayNombre || item.nombre}
