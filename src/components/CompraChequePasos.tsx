@@ -150,9 +150,10 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
           </div>
         </div>
         {error && <p role="alert" className="shrink-0 max-h-24 overflow-y-auto border-t bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</p>}
-        <div className="shrink-0 flex items-center gap-3 border-t bg-background p-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
-          <Button type="button" onPointerDown={e => e.preventDefault()} variant="outline" className="h-12" disabled={enviando} onClick={() => { setError(null); if (step) goTo(step - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
-          <Button type="submit" onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()} className="h-12 flex-1 bg-accent hover:bg-accent-hover whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
+        {/* `flex-wrap`: con la letra al 200 % «Cancelar» + «Continuar» no caben en una fila y el pie se recortaba; así «Continuar» baja a su propia fila. */}
+        <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2 border-t bg-background p-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
+          <Button type="button" onPointerDown={e => e.preventDefault()} variant="outline" className="h-12 min-w-0" disabled={enviando} onClick={() => { setError(null); if (step) goTo(step - 1); else onOpenChange(false); }}>{step ? copy.back : c.giftFormCancel}</Button>
+          <Button type="submit" onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()} className="h-12 min-w-0 flex-1 basis-32 bg-accent hover:bg-accent-hover whitespace-normal" disabled={enviando}>{enviando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{final ? enviando ? c.giftFormSubmitting : c.giftFormSubmit : copy.next}</Button>
         </div>
       </form>
     </DialogContent>

@@ -21,8 +21,8 @@ const ToastViewport = React.forwardRef<
       className={cn(
         // Móvil: abajo y compacto, por encima de la barra fija (`--mobile-cta-offset`
         // vale su alto, o 0 si no está) y del botón flotante «Mi mesa» (4,75 rem), sin
-        // tapar la cabecera. Desde `sm`, arriba a la derecha como siempre.
-        "pointer-events-none fixed bottom-[calc(var(--mobile-cta-offset,0px)+4.75rem)] z-[100] flex max-h-screen w-full flex-col-reverse p-3 sm:bottom-auto sm:right-0 sm:top-0 sm:flex-col sm:p-4 md:max-w-[420px]",
+        // tapar la cabecera (que lleva idioma y menú hasta `lg`). Desde `lg`, arriba a la derecha como siempre.
+        "pointer-events-none fixed bottom-[calc(var(--mobile-cta-offset,0px)+4.75rem)] left-1/2 z-[100] flex max-h-screen w-full max-w-[420px] -translate-x-1/2 flex-col-reverse p-3 lg:bottom-auto lg:left-auto lg:right-0 lg:top-0 lg:translate-x-0 lg:flex-col lg:p-4",
         className,
       )}
     />
@@ -31,7 +31,7 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-3 pr-12 shadow-lg sm:p-6 sm:pr-8 transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-full sm:data-[state=open]:slide-in-from-top-full",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-3 pr-12 shadow-lg lg:p-6 lg:pr-8 transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-full lg:data-[state=open]:slide-in-from-top-full",
   {
     variants: {
       variant: {
@@ -86,8 +86,8 @@ const ToastClose = React.forwardRef<
       aria-label={textoCerrar}
       className={cn(
         // Táctil: siempre visible y de 44 px (no hay «hover» que lo revele).
-        // Con ratón (≥ sm, `hover: hover`): como siempre, aparece al pasar por encima.
-        "absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-foreground/60 transition-opacity group-[.destructive]:text-red-300 hover:text-foreground group-[.destructive]:hover:text-red-50 focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600 sm:right-2 sm:top-2 sm:block sm:h-auto sm:w-auto sm:translate-y-0 sm:p-1 sm:text-foreground/50 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100",
+        // Con ratón (`hover: hover`): como siempre, aparece al pasar por encima.
+        "absolute right-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-foreground/60 transition-opacity group-[.destructive]:text-red-300 hover:text-foreground group-[.destructive]:hover:text-red-50 focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600 lg:right-2 lg:top-2 lg:block lg:h-auto lg:w-auto lg:translate-y-0 lg:p-1 lg:text-foreground/50 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100",
         className,
       )}
       toast-close=""
