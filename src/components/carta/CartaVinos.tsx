@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import FiltrosTipoVino, { BarraFiltrosVino } from "./FiltrosTipoVino";
 import { origenComprobable } from "@/lib/origenes-vino";
-import { etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
+import { categoriaCorta, etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
 import { filtrarVinos, hayFiltroVinos, nombreVinoVisible } from "@/lib/filtro-vinos";
 import { Search, AlertCircle, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
 import {
@@ -100,25 +100,6 @@ const INFORMACION_VINO = {
   en: { ver: "View information", ocultar: "Hide information", sinFoto: "No photo available" },
   fr: { ver: "Voir les informations", ocultar: "Masquer les informations", sinFoto: "Aucune photo disponible" },
 };
-
-function categoriaCorta(categoria: string, language: "es" | "en" | "fr"): string {
-  if (/pendiente|por confirmar/i.test(categoria)) return { es: "Consultar origen", en: "Ask about origin", fr: "Origine sur demande" }[language];
-  const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?|ESPUMOSOS?)\s*[—–-]\s*/i, "");
-  const nombres: Record<string, string> = {
-    "RIBERA DEL DUERO": "Ribera del Duero",
-    "IGP CASTILLA Y LEÓN": "IGP Castilla y León",
-    "IGP TRES RIBERAS": "IGP Tres Riberas",
-    "SIN D.O.": "Sin D.O.",
-    "ALBARIÑO (Rías Baixas)": "Albariño · Rías Baixas",
-    "NAVARRA / CHABLIS / RIOJA": "Navarra · Chablis · Rioja",
-    "RIBEIRO / CASTILLA Y LEÓN": "Ribeiro · Castilla y León",
-    "OTRAS DENOMINACIONES": "Otras D.O.",
-  };
-  if (nombres[corta]) return nombres[corta];
-  return corta === corta.toUpperCase()
-    ? corta.toLocaleLowerCase("es").replace(/^\p{L}/u, letra => letra.toLocaleUpperCase("es"))
-    : corta;
-}
 
 let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
 const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");

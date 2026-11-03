@@ -241,6 +241,47 @@ export async function leerMostrarFotosPlatos(baseUrl, key) {
   }
 }
 
+/**
+ * Columnas de `configuracion_tienda` (fila única, `id = true`, legible con la
+ * anon key; migración del panel) que se publican en el HTML de `/tienda`.
+ * Se pide `select=*` por la misma razón que las tablas de la carta (una
+ * columna nueva o renombrada no puede dar un 400 que rompa el build) y aquí se
+ * queda solo lo que la página usa.
+ */
+const CAMPOS_TIENDA = ['activa', 'descuento_pct', 'vinos_excluidos', 'aviso', 'recogida'];
+
+/**
+ * Configuración de la tienda de vinos (`/tienda`) tal y como está al construir.
+ * Es la semilla del HTML prerenderizado; el navegador la vuelve a leer al
+ * cargar la página (`useConfigTienda`), así que un cambio en el panel se nota
+ * sin esperar a un deploy.
+ *
+ * NUNCA rompe el build y NO falla abierto: si no se puede leer (tabla aún sin
+ * crear en ese entorno → 404, red, fila ausente) devuelve `null` y la página
+ * sale en el estado «comprobando», que el navegador resuelve con su propia
+ * lectura (tienda abierta, o «no disponible» si tampoco la encuentra). Una
+ * tienda que no se puede leer no debe anunciar precios de tienda.
+ *
+ * @returns {Promise<Record<string, unknown> | null>}
+ */
+export async function leerConfiguracionTienda(baseUrl, key) {
+  try {
+    const respuesta = await fetch(`${baseUrl}/rest/v1/configuracion_tienda?select=*&id=eq.true&limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' },
+    });
+    if (!respuesta.ok) {
+      console.warn(`[carta-ssg] No se pudo leer configuracion_tienda (HTTP ${respuesta.status}); /tienda se prerenderiza sin configuración.`);
+      return null;
+    }
+    const fila = (await respuesta.json())?.[0];
+    if (!fila || typeof fila !== 'object') return null;
+    return Object.fromEntries(CAMPOS_TIENDA.filter((campo) => campo in fila).map((campo) => [campo, fila[campo]]));
+  } catch (causa) {
+    console.warn(`[carta-ssg] No se pudo leer configuracion_tienda (${causa?.message ?? causa}); /tienda se prerenderiza sin configuración.`);
+    return null;
+  }
+}
+
 export async function leerVisibilidadMenuTapas(baseUrl, key) {
   try {
     const respuesta = await fetch(`${baseUrl}/rest/v1/configuracion_web?select=*&id=eq.true&limit=1`, {
@@ -280,7 +321,7 @@ function resumirPorCategoria(filas) {
 
 /**
  * @param {{ url?: string, key?: string }} config
- * @returns {Promise<{generadoEn: string, platos: object[], vinos: object[], bebidas: object[], resumen: object, config: {mostrarFotosPlatos: boolean}}>}
+ * @returns {Promise<{generadoEn: string, platos: object[], vinos: object[], bebidas: object[], resumen: object, config: {mostrarFotosPlatos: boolean}, tienda: Record<string, unknown> | null}>}
  */
 export async function fetchCartaSSG({ url, key }) {
   if (!url || !key) {
@@ -291,12 +332,13 @@ export async function fetchCartaSSG({ url, key }) {
   }
 
   const baseUrl = url.replace(/\/+$/, '');
-  const [platos, vinos, bebidas, mostrarFotosPlatos, visibilidadMenuTapas] = await Promise.all([
+  const [platos, vinos, bebidas, mostrarFotosPlatos, visibilidadMenuTapas, tienda] = await Promise.all([
     descargarTabla(baseUrl, key, 'Platos'),
     descargarTabla(baseUrl, key, 'Vinos'),
     descargarTabla(baseUrl, key, 'Bebidas'),
     leerMostrarFotosPlatos(baseUrl, key),
     leerVisibilidadMenuTapas(baseUrl, key),
+    leerConfiguracionTienda(baseUrl, key),
   ]);
 
   return {
@@ -309,6 +351,7 @@ export async function fetchCartaSSG({ url, key }) {
     bebidas,
     resumen: { vinos: resumirPorCategoria(vinos), bebidas: resumirPorCategoria(bebidas) },
     config: { mostrarFotosPlatos, ...visibilidadMenuTapas },
+    tienda,
   };
 }
 
@@ -323,4 +366,5 @@ export const CARTA_SSG_VACIA = {
 };
 export const VINOS_SSG_VACIOS = { generadoEn: '', vinos: [] };
 export const BEBIDAS_SSG_VACIAS = { generadoEn: '', bebidas: [] };
+export const TIENDA_SSG_VACIA = { generadoEn: '', config: null };
 

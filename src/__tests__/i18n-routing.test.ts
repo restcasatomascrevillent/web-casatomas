@@ -104,6 +104,13 @@ describe("rutaEquivalente — lo que usa el selector de idioma del header", () =
     expect(rutaEquivalente("/", "en")).toBe("/en");
   });
 
+  it("la tienda de vinos existe en los tres idiomas: va a su equivalente", () => {
+    expect(existeEnTodosLosIdiomas("/tienda")).toBe(true);
+    expect(rutaEquivalente("/tienda", "en")).toBe("/en/tienda");
+    expect(rutaEquivalente("/en/tienda", "fr")).toBe("/fr/tienda");
+    expect(rutaEquivalente("/fr/tienda", "es")).toBe("/tienda");
+  });
+
   it("las condiciones existen en los tres idiomas: va a su equivalente", () => {
     expect(rutaEquivalente("/condiciones", "en")).toBe("/en/condiciones");
     expect(rutaEquivalente("/fr/condiciones", "es")).toBe("/condiciones");

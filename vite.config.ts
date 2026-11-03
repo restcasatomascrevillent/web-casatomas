@@ -33,6 +33,11 @@ const MODULOS = {
     generadoEn: carta.generadoEn,
     bebidas: carta.bebidas ?? [],
   }),
+  // Ajustes de la tienda de vinos (`/tienda`): unos pocos bytes, solo en su chunk.
+  "virtual:carta-ssg/tienda": (carta: CartaDescargada) => ({
+    generadoEn: carta.generadoEn,
+    config: carta.tienda ?? null,
+  }),
 };
 
 /**
@@ -46,6 +51,8 @@ interface CartaDescargada {
   bebidas?: unknown[];
   resumen: unknown;
   config?: { mostrarFotosPlatos: boolean };
+  /** Fila de `configuracion_tienda` (ver `leerConfiguracionTienda`), o `null`. */
+  tienda?: Record<string, unknown> | null;
 }
 
 type VirtualId = keyof typeof MODULOS;

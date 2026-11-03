@@ -141,8 +141,8 @@ const cartaChildren = (lang: Language): RouteRecord[] => [
 
 /**
  * Páginas que existen en las TRES ramas además de la portada y la carta:
- * el formulario de reserva (`reservas`), la política de privacidad, y las
- * condiciones de reserva y de la newsletter. Las enlazan los botones
+ * el formulario de reserva (`reservas`), la política de privacidad, las
+ * condiciones de reserva y de la newsletter, y la tienda de vinos. Las enlazan los botones
  * «Reservar», las casillas del formulario y el pie de página de cada idioma,
  * y cada una usa el idioma de su rama (`useTranslations`). Fábricas por la
  * misma razón que `buildCatchAllRoute` (un objeto por rama).
@@ -162,11 +162,22 @@ const buildCondicionesRoute = (): RouteRecord => ({
   lazy: lazyRoute(() => import("./pages/Condiciones")),
 });
 
+/**
+ * Tienda de vinos (escaparate: precios de tienda de los vinos de la carta; se
+ * compran en el restaurante, no por internet), en las tres ramas. Perezosa
+ * como el resto: su chunk solo lo descarga quien la abre.
+ */
+const buildTiendaRoute = (): RouteRecord => ({
+  path: "tienda",
+  lazy: lazyRoute(() => import("./pages/Tienda")),
+});
+
 /** Las páginas multiidioma que no son de la carta, para una rama. */
 const paginasComunes = (): RouteRecord[] => [
   buildReservasRoute(),
   buildPoliticaPrivacidadRoute(),
   buildCondicionesRoute(),
+  buildTiendaRoute(),
   ...["el-restaurante", "contacto", "regala", "touza"].map(path => ({ path, lazy: lazyRoute(() => import("./pages/Informacion")) })),
 ];
 

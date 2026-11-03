@@ -33,12 +33,14 @@ interface CartaPageLayoutProps {
   migas: Miga[];
   /** Enlace de vuelta al pie. `null` en la propia `/carta`, que ya es el índice. */
   volverA?: { texto: string; path: string } | null;
+  /** Algo más en la cabecera, bajo el `detalle` (la tienda pone ahí sus ventajas). */
+  extra?: ReactNode;
   children: ReactNode;
 }
 
 /**
  * Marco común de las páginas de carta (`/carta`, `/carta/:categoria`,
- * `/carta/vinos`, `/carta/bebidas`).
+ * `/carta/vinos`, `/carta/bebidas`) y de la tienda de vinos (`/tienda`).
  *
  * Reutiliza tal cual el `Header` y el `Footer` de la portada y la banda oscura
  * (`bg-dark-slate`) que ya usa `PoliticaPrivacidad`, para que estas páginas se
@@ -62,6 +64,7 @@ const CartaPageLayout = ({
   detalle,
   migas,
   volverA,
+  extra,
   children,
 }: CartaPageLayoutProps) => {
   const { language } = useTranslations();
@@ -145,6 +148,7 @@ const CartaPageLayout = ({
             <p className="text-muted-foreground mt-3 max-w-2xl text-base md:text-lg">{subtitulo}</p>
           )}
           {detalle && <p className="text-accent mt-2 text-sm font-semibold">{detalle}</p>}
+          {extra}
         </div>
       </div>
 

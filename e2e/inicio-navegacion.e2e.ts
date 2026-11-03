@@ -164,7 +164,7 @@ test.describe("Cabecera y pie a 1440 px", () => {
     };
     const portada = await huella("/");
     expect(portada.pie.length).toBeGreaterThan(5);
-    for (const ruta of ["/carta", "/touza", "/reservas"]) {
+    for (const ruta of ["/carta", "/touza", "/reservas", "/tienda"]) {
       expect(await huella(ruta), ruta).toEqual(portada);
     }
     // Las páginas legales no llevan la cabecera del sitio (tienen la suya,

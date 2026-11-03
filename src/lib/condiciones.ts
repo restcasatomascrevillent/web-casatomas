@@ -21,3 +21,6 @@ export const RESERVAS_PATH = "/reservas";
  * aprobada. El pie de las tres ramas enlaza a esta misma ruta.
  */
 export const AVISO_LEGAL_PATH = "/aviso-legal";
+
+/** Tienda de vinos, sin prefijo de idioma (existe en las tres ramas). La enlazan el menú y el pie. */
+export const TIENDA_PATH = "/tienda";
