@@ -137,3 +137,14 @@ export interface BebidasSSG {
   bebidas: BebidaSSG[];
 }
 
+
+/**
+ * `virtual:carta-ssg/tienda`: la fila de `configuracion_tienda` tal y como se
+ * leyó al construir (solo las columnas que usa `/tienda`), o `null` si no se
+ * pudo leer. Sin normalizar: lo hace `normalizarConfigTienda` (`@/lib/tienda`),
+ * igual que con lo que llega en vivo.
+ */
+export interface TiendaSSG {
+  generadoEn: string;
+  config: Record<string, unknown> | null;
+}

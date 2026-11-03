@@ -56,7 +56,7 @@ export function construirRutaIdioma(pathRelativoEs: string, lang: Language): str
  * router? Es el espejo de lo que `App.tsx` monta bajo `/en` y `/fr`
  * (`cartaChildren` + `paginasComunes`): la portada, la carta (índice, vinos,
  * bebidas y cada categoría), el formulario de reservas, la política de
- * privacidad y las condiciones.
+ * privacidad, las condiciones y la tienda de vinos.
  *
  * Todo lo demás existe solo en español: las páginas de los enlaces de los
  * correos (`/reserva/respuesta`, `/newsletter/baja`; los correos van en
@@ -72,6 +72,7 @@ export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
     ruta === "/reservas" ||
     ruta === "/politica-privacidad" ||
     ruta === "/condiciones" ||
+    ruta === "/tienda" ||
     ["/el-restaurante", "/contacto", "/regala", "/touza"].includes(ruta)
   );
 }

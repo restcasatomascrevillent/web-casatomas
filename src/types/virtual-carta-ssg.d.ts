@@ -22,3 +22,9 @@ declare module "virtual:carta-ssg/bebidas" {
   const bebidas: BebidasSSG;
   export default bebidas;
 }
+
+declare module "virtual:carta-ssg/tienda" {
+  import type { TiendaSSG } from "@/lib/carta-ssg-types";
+  const tienda: TiendaSSG;
+  export default tienda;
+}

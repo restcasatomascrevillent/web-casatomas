@@ -1,0 +1,11 @@
+[
+  {
+    "id": true,
+    "activa": true,
+    "descuento_pct": 30,
+    "vinos_excluidos": [],
+    "aviso": null,
+    "recogida": "Pide las botellas en la barra o resérvalas por teléfono y pásate a recogerlas de martes a domingo.",
+    "updated_at": "2026-11-03T10:00:00+00:00"
+  }
+]

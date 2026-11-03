@@ -16,6 +16,8 @@ export { expect };
 export const SUPABASE_FALSO = `http://127.0.0.1:${process.env.E2E_SUPABASE_PORT ?? 54329}`;
 export const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 export const NOVEDADES = readFileSync(path.resolve(process.cwd(), "e2e/fixtures/novedades-botones.json"), "utf8");
+/** La configuración de la tienda que lee el build (`scripts/e2e-build.mjs`): en vivo, la misma. */
+export const CONFIG_TIENDA = readFileSync(path.resolve(process.cwd(), "e2e/fixtures/configuracion-tienda.json"), "utf8");
 
 export const test = base.extend<{ erroresJs: string[] }>({
   erroresJs: async ({ page, context, baseURL }, entregar) => {
@@ -30,7 +32,8 @@ export const test = base.extend<{ erroresJs: string[] }>({
       if (url.origin === propio) return route.continue();
       if (url.origin !== SUPABASE_FALSO) return route.abort("blockedbyclient");
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
-      const cuerpo = url.pathname === "/rest/v1/novedades" ? NOVEDADES : "[]";
+      const cuerpo =
+        url.pathname === "/rest/v1/novedades" ? NOVEDADES : url.pathname === "/rest/v1/configuracion_tienda" ? CONFIG_TIENDA : "[]";
       return route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: cuerpo });
     });
     await entregar(errores);
