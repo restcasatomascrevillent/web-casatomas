@@ -118,21 +118,18 @@ const COPA_PARKER = {
   es: {
     verCopa: "Ver precio por copa",
     verBotella: "Ver precio de la botella",
-    copa: "Copa",
     copaPedido: "copa",
     parker: (puntos: number, anada?: number | null) => `Puntuación Parker: ${puntos} puntos${anada ? ` (añada ${anada})` : ""}`,
   },
   en: {
     verCopa: "See price by the glass",
     verBotella: "See bottle price",
-    copa: "Glass",
     copaPedido: "glass",
     parker: (puntos: number, anada?: number | null) => `Parker score: ${puntos} points${anada ? ` (${anada} vintage)` : ""}`,
   },
   fr: {
     verCopa: "Voir le prix au verre",
     verBotella: "Voir le prix de la bouteille",
-    copa: "Verre",
     copaPedido: "verre",
     parker: (puntos: number, anada?: number | null) => `Note Parker : ${puntos} points${anada ? ` (millésime ${anada})` : ""}`,
   },
@@ -789,8 +786,15 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                       >
                         {precioConocido(precioVisible)
                           ? <span className="min-w-0 font-libre-baskerville text-base font-bold leading-tight text-accent min-[360px]:text-lg">
-                              {copaOpen && <span className="mr-1.5 font-sans text-xs font-semibold uppercase tracking-wide">{COPA_PARKER[language].copa}</span>}
                               {mostrarPrecio(precioVisible, language)}
+                              {/* «/ copa» detrás del precio y en la misma letra de la carta (serif), fina,
+                                  en cursiva y gris: antes era «COPA» en mayúsculas de palo seco delante del
+                                  precio y al dueño no le gustaba (04/11/2026). */}
+                              {copaOpen && (
+                                <span className="ml-1 whitespace-nowrap text-sm font-normal italic text-muted-foreground min-[360px]:text-base">
+                                  / {COPA_PARKER[language].copaPedido}
+                                </span>
+                              )}
                             </span>
                           // «Consultar precio» no es un precio: no se pinta como tal.
                           : <span className="min-w-0 font-sans text-sm font-medium leading-tight text-muted-foreground">{mostrarPrecio(item.precio_eur, language)}</span>}

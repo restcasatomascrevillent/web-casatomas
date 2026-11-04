@@ -105,7 +105,7 @@ for (const ancho of [320, 375, 1280]) {
 
       await expect(tarj).toContainText(/1\.?450,00\s*€/);
       await copa.click();
-      await expect(tarj).toContainText(/Copa\s*7,50\s*€/);
+      await expect(tarj).toContainText(/7,50\s*€\s*\/\s*copa/);
       await expect(tarj.getByRole("button", { name: /Ver precio de la botella/ })).toHaveAttribute("aria-pressed", "true");
       await expect(tarjeta(page, SIN_COPA).getByRole("button", { name: /copa/ })).toHaveCount(0);
     });

@@ -79,7 +79,7 @@ describe("CartaVinos — copa y puntuación Parker", () => {
     const boton = within(ficha).getByRole("button", { name: /Ver precio por copa/ });
     await user.click(boton);
     expect(boton).toHaveAttribute("aria-pressed", "true");
-    expect(ficha).toHaveTextContent(/Copa\s*7,50\s*€/);
+    expect(ficha).toHaveTextContent(/7,50\s*€\s*\/\s*copa/);
     await user.click(within(ficha).getByRole("button", { name: /Añadir — Pago de Carraovejas \(copa\)/ }));
     await user.click(within(ficha).getByRole("button", { name: /Ver precio de la botella/ }));
     expect(ficha).toHaveTextContent(/50,00\s*€/);
