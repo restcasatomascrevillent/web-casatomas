@@ -7,6 +7,7 @@ import CartaDelDia, { CLASES_TITULO_CARTA } from "@/components/espacios/CartaDel
 import { parsearMenuDiario, type MenuDelDia, type MenuDiarioRow } from "@/lib/menu-dia";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useVisibilidadMenuTapas } from "@/hooks/useVisibilidadMenuTapas";
+import { dentroDeHorario, HORARIO_POR_DEFECTO, momentoMadrid, type HorarioWeb, type MomentoMadrid } from "@/lib/horario-web";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -108,7 +109,9 @@ const getIdiomAliases = (language: string): string[] => {
 
 /**
  * Las dos promociones fijas del restaurante, con día y hora propios: el menú
- * de mediodía (martes a jueves) y las tapas de los jueves. Viven bajo la
+ * de mediodía (por defecto, martes a jueves) y las tapas (por defecto, los
+ * jueves). Desde el 04/11/2026 los días y las horas se eligen en el Gestor Web
+ * del panel (`src/lib/horario-web.ts`). Viven bajo la
  * rejilla de "Novedades" — más su sitio natural que "Nuestros espacios", que
  * va de fotos del local — como una franja horizontal ancha (icono, título y
  * descripción, botón), el mismo patrón que la tarjeta de Touza en Espacios,
@@ -173,29 +176,45 @@ const MenuDiarioCards = () => {
 
   // El build puede ser del domingo y la visita del jueves. Una fecha inicial
   // neutra mantiene idénticos el HTML estático y la primera hidratación.
+  // `ahora` (día y minuto de Madrid) decide además si toca enseñar cada botón
+  // según su horario del panel (04/11/2026): se recalcula cada 30 s, así un
+  // botón aparece o desaparece a su hora sin recargar la página.
   const [today, setToday] = useState<Date | null>(null);
+  const [ahora, setAhora] = useState<MomentoMadrid | null>(null);
   useEffect(() => {
     const formatter = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
     });
     const actualizar = () => {
-      const fecha = parseISO(formatter.format(new Date()));
+      const instante = new Date();
+      const fecha = parseISO(formatter.format(instante));
       setToday(anterior => anterior && isSameDay(anterior, fecha) ? anterior : fecha);
+      const momento = momentoMadrid(instante);
+      setAhora(anterior => anterior && anterior.dia === momento.dia && anterior.minuto === momento.minuto ? anterior : momento);
     };
     actualizar();
-    const intervalo = window.setInterval(actualizar, 60_000);
+    const intervalo = window.setInterval(actualizar, 30_000);
     window.addEventListener("focus", actualizar);
     return () => { window.clearInterval(intervalo); window.removeEventListener("focus", actualizar); };
   }, []);
-  const todayDay = today?.getDay() ?? -1;
-  const isMenuDayToday = visibilidad.menu && todayDay >= 2 && todayDay <= 4;
-  const isTapasDayToday = visibilidad.tapas && todayDay === 4;
+  const horarioMenu = visibilidad.horarioMenu ?? HORARIO_POR_DEFECTO.menu;
+  const horarioTapas = visibilidad.horarioTapas ?? HORARIO_POR_DEFECTO.tapas;
+  const isMenuDayToday = visibilidad.menu && ahora !== null && dentroDeHorario(horarioMenu, ahora);
+  const isTapasDayToday = visibilidad.tapas && ahora !== null && dentroDeHorario(horarioTapas, ahora);
 
   const todayMenu = menusDelDia.find((menu) => today && isSameDay(menu.date, today)) ?? null;
   const todayTapas = tapasSemanales.find((tapas) => today && isSameDay(tapas.date, today)) ?? null;
 
-  const menuDaysLabel = `${format(new Date(2025, 0, 21), "EEE", { locale: dateLocale })} - ${format(new Date(2025, 0, 23), "EEE", { locale: dateLocale })}`;
-  const tapasDayLabel = format(new Date(2025, 0, 23), "EEE", { locale: dateLocale });
+  // «mar - jue», «jue», «lun, mié, vie» (+ «· 13:00–16:00» si tiene horas), en el idioma de la página.
+  const etiquetaHorario = (h: HorarioWeb) => {
+    const dia = (iso: number) => format(new Date(2025, 0, 19 + iso), "EEE", { locale: dateLocale });
+    const seguidos = h.dias.length > 1 && h.dias.every((d, i) => i === 0 || d === h.dias[i - 1] + 1);
+    const dias = h.dias.length === 7 ? "" : seguidos ? `${dia(h.dias[0])} - ${dia(h.dias[h.dias.length - 1])}` : h.dias.map(dia).join(", ");
+    const horas = h.desde && h.hasta ? `${h.desde}–${h.hasta}` : "";
+    return [dias, horas].filter(Boolean).join(" · ");
+  };
+  const menuDaysLabel = etiquetaHorario(horarioMenu);
+  const tapasDayLabel = etiquetaHorario(horarioTapas);
 
   if (!isMenuDayToday && !isTapasDayToday) return null;
 
@@ -213,7 +232,7 @@ const MenuDiarioCards = () => {
                   <h3 className="font-libre-baskerville text-xl font-bold text-primary sm:text-2xl">
                     {t.espacios.middayMenuTitle}
                   </h3>
-                  <Badge className="bg-accent hover:bg-accent-hover">{menuDaysLabel}</Badge>
+                  {menuDaysLabel && <Badge className="bg-accent hover:bg-accent-hover">{menuDaysLabel}</Badge>}
                 </div>
                 <p className="mt-1 text-muted-foreground">{t.espacios.middayMenuDescription}</p>
               </div>
@@ -240,7 +259,7 @@ const MenuDiarioCards = () => {
                   <h3 className="font-libre-baskerville text-xl font-bold text-primary sm:text-2xl">
                     {t.espacios.tapasTitle}
                   </h3>
-                  <Badge className="bg-accent hover:bg-accent-hover capitalize">{tapasDayLabel}</Badge>
+                  {tapasDayLabel && <Badge className="bg-accent hover:bg-accent-hover capitalize">{tapasDayLabel}</Badge>}
                 </div>
                 <p className="mt-1 text-muted-foreground">{t.espacios.tapasDescription}</p>
               </div>
