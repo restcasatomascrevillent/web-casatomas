@@ -167,12 +167,14 @@ describe("/tienda: escaparate", () => {
   });
 });
 
-describe("/tienda solo en la demo", () => {
-  it("sin banda «Maqueta» (dueño, 04/11/2026), pero fuera de los buscadores: noindex,nofollow", () => {
+describe("/tienda publicada (dueño, 04/11/2026)", () => {
+  it("sin banda «Maqueta» y abierta a los buscadores: ni noindex ni nofollow", () => {
     pintar();
     expect(screen.queryByText(/Maqueta/)).toBeNull();
     expect(screen.queryByText("Esta página no está publicada en la web real.")).toBeNull();
-    expect(seo.props).toMatchObject({ noindex: true, nofollow: true });
+    expect(seo.props?.noindex).toBeFalsy();
+    expect(seo.props?.nofollow).toBeFalsy();
+    expect(String(seo.props?.canonical)).toMatch(/^https?:\/\/[^/]+\/tienda$/);
   });
 
   it("tampoco en inglés y francés", () => {

@@ -11,7 +11,6 @@
  * cálculo sirve para el prerenderizado (Node) y para el navegador.
  */
 import type { Language } from "./types";
-import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
 
 export const LANGUAGES: readonly Language[] = ["es", "en", "fr"];
 
@@ -73,7 +72,7 @@ export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
     ruta === "/reservas" ||
     ruta === "/politica-privacidad" ||
     ruta === "/condiciones" ||
-    (TIENDA_VISIBLE && ruta === "/tienda") ||
+    ruta === "/tienda" ||
     ["/el-restaurante", "/contacto", "/regala", "/touza"].includes(ruta)
   );
 }

@@ -99,10 +99,6 @@ const TiendaPagina = () => {
         lang={language}
         languageAlternates={alternatesDePagina(RUTA_ES, SITE_URL)}
         keywords={textos.seo.keywords}
-        // La tienda solo existe en la demo (`TIENDA_VISIBLE`): que ningún buscador
-        // la guarde ni siga sus enlaces.
-        noindex
-        nofollow
       />
       <JsonLd data={breadcrumbSchema([{ nombre: textos.miga, path: RUTA_ES }], language)} />
 

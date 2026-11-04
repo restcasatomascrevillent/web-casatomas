@@ -10,7 +10,6 @@ import type { Language } from "@/i18n/types";
 import { RESERVAS_PATH, TIENDA_PATH } from "@/lib/condiciones";
 import { cn } from "@/lib/utils";
 import { instalarFocoNoTapado } from "@/lib/foco-no-tapado";
-import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -187,13 +186,12 @@ const Header = () => {
   };
 
   // Casi todo son anclas de la portada; «Tienda» es una página propia
-  // (`/tienda`), que va justo después de la carta. Solo en los builds donde
-  // existe (maqueta de la demo, `TIENDA_VISIBLE`); ahí se enseña siempre,
-  // también con la tienda cerrada en el panel: la cabecera se prerenderiza
-  // igual en todas las páginas y la propia página explica el cierre.
+  // (`/tienda`), que va justo después de la carta. Se enseña siempre, también
+  // con la tienda cerrada en el panel: la cabecera se prerenderiza igual en
+  // todas las páginas y la propia página explica el cierre.
   const navItems: ({ id: string; label: string; ruta?: undefined } | { id: string; label: string; ruta: string })[] = [
     { id: "carta", label: t.header.nav.carta },
-    ...(TIENDA_VISIBLE ? [{ id: "tienda", label: t.header.nav.tienda, ruta: construirRutaIdioma(TIENDA_PATH, language) }] : []),
+    { id: "tienda", label: t.header.nav.tienda, ruta: construirRutaIdioma(TIENDA_PATH, language) },
     { id: "novedades", label: t.header.nav.novedades },
     { id: "espacios", label: t.header.nav.espacios },
     { id: "nosotros", label: t.header.nav.nosotros },
