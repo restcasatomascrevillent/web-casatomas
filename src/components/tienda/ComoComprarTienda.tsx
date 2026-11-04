@@ -12,6 +12,8 @@ interface ComoComprarTiendaProps {
   textos: TextosTienda;
   /** Texto del panel (`configuracion_tienda.recogida`), si lo hay. */
   recogida: string | null;
+  /** Cuántos vinos hay a la venta («192 vinos a la venta»). */
+  vinos: number;
 }
 
 /**
@@ -20,9 +22,11 @@ interface ComoComprarTiendaProps {
  * hacerlo: el texto del panel (`recogida`), la dirección con «Cómo llegar», el
  * horario y el teléfono pulsable — los mismos datos que ya enseña la web en
  * Contacto (`t.contacto`), no una copia —, y el aviso de mayoría de edad.
+ * Arriba, cuántos vinos hay a la venta (dueño, 04/11/2026: antes iba en la
+ * cabecera de la página, con el subtítulo y dos píldoras que repetían esto).
  * Ningún formulario: ni se pide ni se guarda nada del visitante.
  */
-const ComoComprarTienda = ({ textos, recogida }: ComoComprarTiendaProps) => {
+const ComoComprarTienda = ({ textos, recogida, vinos }: ComoComprarTiendaProps) => {
   const { t, language } = useTranslations();
   const c = textos.comprar;
   return (
@@ -38,6 +42,7 @@ const ComoComprarTienda = ({ textos, recogida }: ComoComprarTiendaProps) => {
           <h2 id="como-comprar-titulo" className="font-libre-baskerville text-2xl font-bold text-primary">
             {c.titulo}
           </h2>
+          <p className="font-semibold text-accent">{textos.detalle(vinos)}</p>
           <p className="leading-relaxed text-foreground">{c.intro}</p>
           {/* Petición del dueño (04/11/2026): el precio de tienda es solo para
               llevar; quien lo tome en la mesa paga el de la carta. */}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Info, Loader2, Phone, Search, Store } from "lucide-react";
+import { Info, Loader2, Search } from "lucide-react";
 import datosVinos from "virtual:carta-ssg/vinos";
 import datosTienda from "virtual:carta-ssg/tienda";
 import { Seo } from "@/components/Seo";
@@ -99,7 +99,8 @@ const TiendaPagina = () => {
         lang={language}
         languageAlternates={alternatesDePagina(RUTA_ES, SITE_URL)}
         keywords={textos.seo.keywords}
-        // Maqueta de la demo: que ningún buscador la guarde ni siga sus enlaces.
+        // La tienda solo existe en la demo (`TIENDA_VISIBLE`): que ningún buscador
+        // la guarde ni siga sus enlaces.
         noindex
         nofollow
       />
@@ -107,34 +108,9 @@ const TiendaPagina = () => {
 
       <CartaPageLayout
         titulo={textos.titulo}
-        subtitulo={activa ? textos.subtitulo : undefined}
-        detalle={activa ? textos.detalle(aLaVenta.length) : undefined}
         migas={[{ nombre: textos.miga }]}
         volverA={null}
-        extra={
-          activa && (
-            <ul className="mt-5 flex flex-wrap gap-2 font-sans text-sm">
-              {[
-                { icono: Store, texto: textos.ventajas.restaurante },
-                { icono: Phone, texto: textos.ventajas.reserva },
-              ].map(({ icono: Icono, texto }) => (
-                <li
-                  key={texto}
-                  className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-background/85 px-3 py-1.5 font-medium text-foreground"
-                >
-                  <Icono className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-                  {texto}
-                </li>
-              ))}
-            </ul>
-          )
-        }
       >
-        {/* Maqueta: la tienda solo existe en la demo (`TIENDA_VISIBLE`). */}
-        <p className="mb-8 flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 font-sans text-sm text-amber-950">
-          <strong className="font-bold uppercase tracking-wide">{textos.maqueta.etiqueta}</strong>
-          <span>{textos.maqueta.texto}</span>
-        </p>
         {pendiente ? (
           <p role="status" className="flex items-center justify-center gap-2 py-16 font-sans text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
@@ -154,7 +130,7 @@ const TiendaPagina = () => {
               </div>
             )}
 
-            <ComoComprarTienda textos={textos} recogida={config.recogida} />
+            <ComoComprarTienda textos={textos} recogida={config.recogida} vinos={aLaVenta.length} />
 
             <section aria-labelledby="tienda-listado" className="min-w-0 space-y-6 font-sans">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">

@@ -91,9 +91,11 @@ describe("/tienda: escaparate", () => {
   it("cabecera y vinos a la venta, cada uno solo con su precio de tienda", async () => {
     const { container } = pintar();
     expect(screen.getByRole("heading", { level: 1, name: "Tienda de vinos" })).toBeInTheDocument();
-    expect(screen.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toBeInTheDocument();
-    expect(screen.getByText("Se compran en el restaurante")).toBeInTheDocument();
-    expect(screen.getByText("Resérvalos por teléfono")).toBeInTheDocument();
+    // Cabecera solo con el título (dueño, 04/11/2026): sin subtítulo ni píldoras;
+    // cuántos vinos hay va arriba de «Cómo comprar».
+    expect(screen.queryByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toBeNull();
+    expect(screen.queryByText("Se compran en el restaurante")).toBeNull();
+    expect(screen.queryByText("Resérvalos por teléfono")).toBeNull();
 
     const macan = tarjeta("Macán Clásico 2020");
     // 45 € de carta con el 30 % del panel → 31,50 €, como un precio normal.
@@ -112,7 +114,7 @@ describe("/tienda: escaparate", () => {
     // Excluido en el panel y sin precio: no se venden.
     expect(screen.queryByText("Excluido de la tienda")).toBeNull();
     expect(screen.queryByText("Sin precio")).toBeNull();
-    expect(screen.getByText("2 vinos a la venta")).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Cómo comprar" })).getByText("2 vinos a la venta")).toBeInTheDocument();
     await waitFor(() => expect(fetchFalso).toHaveBeenCalledWith(expect.stringContaining("/rest/v1/Vinos"), expect.anything()));
   });
 
@@ -165,17 +167,19 @@ describe("/tienda: escaparate", () => {
   });
 });
 
-describe("/tienda es una maqueta de la demo", () => {
-  it("banda visible «Maqueta · solo en la demo» y noindex,nofollow", () => {
+describe("/tienda solo en la demo", () => {
+  it("sin banda «Maqueta» (dueño, 04/11/2026), pero fuera de los buscadores: noindex,nofollow", () => {
     pintar();
-    expect(screen.getByText("Maqueta · solo en la demo")).toBeVisible();
-    expect(screen.getByText("Esta página no está publicada en la web real.")).toBeInTheDocument();
+    expect(screen.queryByText(/Maqueta/)).toBeNull();
+    expect(screen.queryByText("Esta página no está publicada en la web real.")).toBeNull();
     expect(seo.props).toMatchObject({ noindex: true, nofollow: true });
   });
 
-  it("también en inglés y francés", () => {
+  it("tampoco en inglés y francés", () => {
     pintar("/en/tienda");
-    expect(screen.getByText("Mock-up · demo only")).toBeInTheDocument();
+    expect(screen.queryByText(/Mock-up/)).toBeNull();
+    pintar("/fr/tienda");
+    expect(screen.queryByText(/Maquette/)).toBeNull();
   });
 });
 

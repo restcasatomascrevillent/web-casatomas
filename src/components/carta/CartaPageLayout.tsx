@@ -33,8 +33,6 @@ interface CartaPageLayoutProps {
   migas: Miga[];
   /** Enlace de vuelta al pie. `null` en la propia `/carta`, que ya es el índice. */
   volverA?: { texto: string; path: string } | null;
-  /** Algo más en la cabecera, bajo el `detalle` (la tienda pone ahí sus ventajas). */
-  extra?: ReactNode;
   children: ReactNode;
 }
 
@@ -64,7 +62,6 @@ const CartaPageLayout = ({
   detalle,
   migas,
   volverA,
-  extra,
   children,
 }: CartaPageLayoutProps) => {
   const { language } = useTranslations();
@@ -148,7 +145,6 @@ const CartaPageLayout = ({
             <p className="text-muted-foreground mt-3 max-w-2xl text-base md:text-lg">{subtitulo}</p>
           )}
           {detalle && <p className="text-accent mt-2 text-sm font-semibold">{detalle}</p>}
-          {extra}
         </div>
       </div>
 

@@ -15,12 +15,9 @@ import type { Language } from "@/i18n/types";
 export interface TextosTienda {
   seo: { title: string; description: string; keywords: string[] };
   miga: string;
-  /** Banda de la maqueta (la tienda solo existe en la demo). */
-  maqueta: { etiqueta: string; texto: string };
   titulo: string;
-  subtitulo: string;
+  /** Cuántos vinos hay a la venta, arriba de «Cómo comprar». */
   detalle: (n: number) => string;
-  ventajas: { restaurante: string; reserva: string };
   comprobando: string;
   cerrada: { titulo: string; texto: string; verCarta: string; llamar: string };
   edad: { titulo: string; texto: string };
@@ -61,14 +58,8 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       keywords: ["tienda de vinos Crevillent", "comprar vino Crevillente", "vinos Casa Tomás", "vino para llevar Alicante"],
     },
     miga: "Tienda",
-    maqueta: { etiqueta: "Maqueta · solo en la demo", texto: "Esta página no está publicada en la web real." },
     titulo: "Tienda de vinos",
-    subtitulo: "Los vinos de nuestra bodega, para llevártelos a casa.",
     detalle: (n) => (n === 1 ? "1 vino a la venta" : `${n} vinos a la venta`),
-    ventajas: {
-      restaurante: "Se compran en el restaurante",
-      reserva: "Resérvalos por teléfono",
-    },
     comprobando: "Cargando la tienda…",
     cerrada: {
       titulo: "La tienda no está disponible ahora",
@@ -117,14 +108,8 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       keywords: ["wine shop Crevillent", "buy wine Crevillente", "Casa Tomás wines", "wine to take away Alicante"],
     },
     miga: "Shop",
-    maqueta: { etiqueta: "Mock-up · demo only", texto: "This page isn't published on the live website." },
     titulo: "Wine shop",
-    subtitulo: "The wines from our cellar, to take home.",
     detalle: (n) => (n === 1 ? "1 wine for sale" : `${n} wines for sale`),
-    ventajas: {
-      restaurante: "Buy them at the restaurant",
-      reserva: "Reserve them by phone",
-    },
     comprobando: "Loading the shop…",
     cerrada: {
       titulo: "The shop isn't available right now",
@@ -173,14 +158,8 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       keywords: ["boutique de vins Crevillent", "acheter du vin Crevillente", "vins Casa Tomás", "vin à emporter Alicante"],
     },
     miga: "Boutique",
-    maqueta: { etiqueta: "Maquette · uniquement en démo", texto: "Cette page n'est pas publiée sur le site réel." },
     titulo: "Boutique de vins",
-    subtitulo: "Les vins de notre cave, à emporter chez vous.",
     detalle: (n) => (n === 1 ? "1 vin en vente" : `${n} vins en vente`),
-    ventajas: {
-      restaurante: "En vente au restaurant",
-      reserva: "Réservez-les par téléphone",
-    },
     comprobando: "Chargement de la boutique…",
     cerrada: {
       titulo: "La boutique n'est pas disponible pour le moment",

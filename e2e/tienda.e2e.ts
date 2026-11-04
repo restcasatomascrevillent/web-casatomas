@@ -127,10 +127,12 @@ test.describe("escritorio 1440 px", () => {
   test("escaparate: precio de tienda de cada vino, «Cómo comprar», filtros y «Mostrar más», con axe", async ({ page, supabase: _ }) => {
     await abrirTienda(page);
     await expect(page.getByRole("heading", { level: 1, name: "Tienda de vinos" })).toBeVisible();
-    await expect(page.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toBeVisible();
-    await expect(page.getByText("Se compran en el restaurante", { exact: true })).toBeVisible();
-    // Maqueta solo en la demo: banda a la vista y fuera de los buscadores.
-    await expect(page.getByText("Maqueta · solo en la demo")).toBeVisible();
+    // Cabecera solo con el título; cuántos vinos hay, arriba de «Cómo comprar» (dueño, 04/11/2026).
+    await expect(page.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toHaveCount(0);
+    await expect(page.getByText("Se compran en el restaurante", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Cómo comprar" }).getByText(/^\d+ vinos a la venta$/)).toBeVisible();
+    // Solo en la demo, pero sin banda «Maqueta»; y fuera de los buscadores.
+    await expect(page.getByText(/Maqueta/)).toHaveCount(0);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex,nofollow");
 
     const macan = tarjeta(page, "Macán Clásico 2020");
