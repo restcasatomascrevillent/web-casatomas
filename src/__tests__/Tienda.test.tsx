@@ -127,6 +127,10 @@ describe("/tienda: escaparate", () => {
     expect(within(bloque).getByRole("link", { name: /^\+34 966 10 78 87/ })).toHaveAttribute("href", "tel:+34966107887");
     expect(within(bloque).getByRole("link", { name: "Cómo llegar" })).toHaveAttribute("href", expect.stringContaining("google.com/maps"));
     expect(within(bloque).getByText(/Venta solo a mayores de 18 años/)).toBeInTheDocument();
+    // Precio de tienda solo para llevar; en mesa, el de la carta (04/11/2026).
+    expect(within(bloque).getByText("Precio de tienda solo para llevar.")).toBeInTheDocument();
+    expect(within(bloque).getByText(/se cobra al precio de la carta/)).toBeInTheDocument();
+    expect(within(bloque).getByRole("link", { name: "Ver la carta de vinos" })).toHaveAttribute("href", "/carta/vinos");
     // El aviso del panel, encima.
     expect(screen.getByText("Esta semana, la tienda solo por la tarde.")).toBeInTheDocument();
   });
@@ -157,6 +161,7 @@ describe("/tienda: escaparate", () => {
     expect(screen.getByRole("article", { name: "Macán Classic 2020" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "How to buy" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Call to reserve bottles" })).toHaveAttribute("href", "tel:+34966107887");
+    expect(screen.getByRole("link", { name: "See the wine list" })).toHaveAttribute("href", "/en/carta/vinos");
   });
 });
 

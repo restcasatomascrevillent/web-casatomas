@@ -34,6 +34,8 @@ export interface TextosTienda {
     telefono: string;
     llamar: string;
     pago: string;
+    /** Precio de tienda solo para llevar; en mesa, el de la carta. */
+    soloParaLlevar: { titulo: string; texto: string; verCarta: string };
   };
   listado: {
     titulo: string;
@@ -88,6 +90,11 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       telefono: "Teléfono",
       llamar: "Llamar para reservar botellas",
       pago: "Pagas en el restaurante, en efectivo o con tarjeta.",
+      soloParaLlevar: {
+        titulo: "Precio de tienda solo para llevar.",
+        texto: "Si quieres tomar el vino en el restaurante, se cobra al precio de la carta.",
+        verCarta: "Ver la carta de vinos",
+      },
     },
     listado: {
       titulo: "Vinos a la venta",
@@ -139,6 +146,11 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       telefono: "Phone",
       llamar: "Call to reserve bottles",
       pago: "You pay at the restaurant, in cash or by card.",
+      soloParaLlevar: {
+        titulo: "Shop prices are for takeaway only.",
+        texto: "If you'd like to drink the wine at the restaurant, the wine list price applies.",
+        verCarta: "See the wine list",
+      },
     },
     listado: {
       titulo: "Wines for sale",
@@ -190,6 +202,11 @@ export const TEXTOS_TIENDA: Record<Language, TextosTienda> = {
       telefono: "Téléphone",
       llamar: "Appeler pour réserver des bouteilles",
       pago: "Vous payez au restaurant, en espèces ou par carte.",
+      soloParaLlevar: {
+        titulo: "Prix boutique uniquement à emporter.",
+        texto: "Si vous souhaitez boire le vin au restaurant, c'est le prix de la carte qui s'applique.",
+        verCarta: "Voir la carte des vins",
+      },
     },
     listado: {
       titulo: "Vins en vente",

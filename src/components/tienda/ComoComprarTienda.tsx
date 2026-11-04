@@ -1,9 +1,11 @@
-import { AlertCircle, Clock, MapPin, Phone } from "lucide-react";
+import { AlertCircle, Clock, MapPin, Phone, Wine } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PHONE_HREF, TelLink } from "@/components/TelLink";
 import { GOOGLE_MAPS_URL } from "@/lib/negocio";
 import { AREA_TOQUE_ENLACE } from "@/lib/area-toque";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { construirRutaIdioma } from "@/i18n/routing";
 import type { TextosTienda } from "@/i18n/tienda";
 
 interface ComoComprarTiendaProps {
@@ -21,7 +23,7 @@ interface ComoComprarTiendaProps {
  * Ningún formulario: ni se pide ni se guarda nada del visitante.
  */
 const ComoComprarTienda = ({ textos, recogida }: ComoComprarTiendaProps) => {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const c = textos.comprar;
   return (
     <section
@@ -37,6 +39,20 @@ const ComoComprarTienda = ({ textos, recogida }: ComoComprarTiendaProps) => {
             {c.titulo}
           </h2>
           <p className="leading-relaxed text-foreground">{c.intro}</p>
+          {/* Petición del dueño (04/11/2026): el precio de tienda es solo para
+              llevar; quien lo tome en la mesa paga el de la carta. */}
+          <div className="flex items-start gap-3 rounded-lg border-l-4 border-accent bg-background px-4 py-3 text-sm leading-relaxed">
+            <Wine className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
+            <p className="min-w-0 text-foreground">
+              <strong className="font-semibold">{c.soloParaLlevar.titulo}</strong> {c.soloParaLlevar.texto}{" "}
+              <Link
+                to={construirRutaIdioma("/carta/vinos", language)}
+                className={`${AREA_TOQUE_ENLACE} font-medium text-accent underline underline-offset-2 hover:decoration-2`}
+              >
+                {c.soloParaLlevar.verCarta}
+              </Link>
+            </p>
+          </div>
           {recogida && (
             <p className="whitespace-pre-line rounded-lg border border-border bg-background px-4 py-3 text-sm leading-relaxed text-foreground">
               {recogida}
