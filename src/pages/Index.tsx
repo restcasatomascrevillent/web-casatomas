@@ -13,8 +13,6 @@ import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import { idleImport } from "@/lib/lazyIdle";
 import type { Language } from "@/i18n/types";
 import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
-import { NAVIDAD } from "@/lib/navidad";
-import { FranjaNavidad } from "@/components/navidad/Navidad";
 
 const SEO_HOME: Record<Language, { title: string; description: string }> = {
   es: {
@@ -101,8 +99,6 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
         <Hero />
-        {/* Estética de Navidad: solo en la demo (`lib/navidad.ts`). */}
-        {NAVIDAD && <FranjaNavidad language={language} />}
         <SectionErrorBoundary id="carta"><CartaSection /></SectionErrorBoundary>
         <SectionBoundary id="novedades"><NovedadesSection /></SectionBoundary>
         <SectionBoundary id="espacios"><EspaciosSection /></SectionBoundary>

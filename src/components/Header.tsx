@@ -3,8 +3,6 @@ import { Menu, X, Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { LOGO_HEIGHT, LOGO_WIDTH, logoSmall } from "@/assets/logo";
-import { NAVIDAD } from "@/lib/navidad";
-import { FileteCabecera } from "@/components/navidad/Navidad";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useLocation, useNavigate } from "react-router-dom";
 import { construirRutaIdioma, rutaEquivalente } from "@/i18n/routing";
@@ -210,8 +208,6 @@ const Header = () => {
           : "bg-transparent"
       }`}
     >
-      {/* Navidad (solo demo): filete de guirnalda en el borde inferior. */}
-      {NAVIDAD && <FileteCabecera />}
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
