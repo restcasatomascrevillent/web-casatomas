@@ -9,13 +9,15 @@ function Location() { const l = useLocation(); return <output data-testid="locat
 describe('controles de dieta', () => {
   it('combina, desactiva y limpia filtros sin perder el ancla ni otros parámetros', () => {
     render(<MemoryRouter initialEntries={['/?origen=mesa#carta']}><MenuDietario><p>Categorías originales</p></MenuDietario><Location /></MemoryRouter>);
-    fireEvent.click(screen.getByRole('button', { name: 'Vegano' }));
-    expect(screen.getByRole('button', { name: /Vegano/ })).toHaveAttribute('aria-pressed', 'true');
+    // «Vegano» ya no se ofrece (dueño, 04/11/2026).
+    expect(screen.queryByRole('button', { name: /Vegano/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Vegetariano' }));
+    expect(screen.getByRole('button', { name: /Vegetariano/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Categorías originales')).toBeInTheDocument();
     expect(screen.getByText('Selecciona tus preferencias y entra en una categoría.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Sin lactosa' }));
-    expect(screen.getByTestId('location')).toHaveTextContent('origen=mesa&dietas=vegano%2Clactosa#carta');
-    fireEvent.click(screen.getByRole('button', { name: /Vegano/ }));
+    expect(screen.getByTestId('location')).toHaveTextContent('origen=mesa&dietas=vegetariano%2Clactosa#carta');
+    fireEvent.click(screen.getByRole('button', { name: /Vegetariano/ }));
     expect(screen.getByTestId('location')).toHaveTextContent('dietas=lactosa');
     fireEvent.click(screen.getByRole('button', { name: 'Quitar filtros' }));
     expect(screen.getByText('Categorías originales')).toBeInTheDocument();

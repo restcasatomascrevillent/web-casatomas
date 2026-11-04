@@ -2,10 +2,16 @@ import { claveAlergeno, cumpleFiltroDietetico, datosAlergenos, normalizarTexto, 
 import type { PlatoSSG } from './carta-ssg-types';
 import confirmaciones from '@/data/dietas-confirmadas.json';
 
-export const DIETAS = ['celiaquia', 'vegano', 'vegetariano', 'lactosa'] as const;
+/**
+ * Filtros que se ofrecen en la carta. «Vegano» se quitó a petición del dueño
+ * (04/11/2026); `cumpleDieta` lo sigue sabiendo evaluar porque una receta vegana
+ * confirmada también cuenta como vegetariana. Un `?dietas=vegano` antiguo se ignora.
+ */
+export const DIETAS = ['celiaquia', 'vegetariano', 'lactosa'] as const;
+export type Dieta = (typeof DIETAS)[number];
 const etiquetasConfirmadas = confirmaciones as Record<string, string[]>;
 
-export function leerFiltros(search: string): ClaveFiltroDietetico[] {
+export function leerFiltros(search: string): Dieta[] {
   const values = new URLSearchParams(search).get('dietas')?.split(',') ?? [];
   return DIETAS.filter(dieta => values.includes(dieta));
 }

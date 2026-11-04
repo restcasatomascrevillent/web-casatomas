@@ -39,6 +39,8 @@ describe('filtros de la carta', () => {
     expect(filtrarPlatos(platos, [])).toEqual(platos);
   });
   it('lee solo filtros válidos y elimina duplicados', () => {
-    expect(leerFiltros('?dietas=vegano,incorrecto,vegano,lactosa')).toEqual(['vegano','lactosa']);
+    expect(leerFiltros('?dietas=vegetariano,incorrecto,vegetariano,lactosa')).toEqual(['vegetariano','lactosa']);
+    // «Vegano» ya no se ofrece: un enlace antiguo con él lo ignora.
+    expect(leerFiltros('?dietas=vegano,lactosa')).toEqual(['lactosa']);
   });
 });
