@@ -13,6 +13,7 @@ import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 import { HANDLE_PAGINA_NO_ENCONTRADA } from "@/lib/hidratacion-404";
+import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
 
 // Sin esto, React Query usa sus valores por defecto: `staleTime: 0` (cada
 // montaje de un componente con `useQuery` — novedades, reseñas, menús del
@@ -141,8 +142,8 @@ const cartaChildren = (lang: Language): RouteRecord[] => [
 
 /**
  * Páginas que existen en las TRES ramas además de la portada y la carta:
- * el formulario de reserva (`reservas`), la política de privacidad, y las
- * condiciones de reserva y de la newsletter. Las enlazan los botones
+ * el formulario de reserva (`reservas`), la política de privacidad, las
+ * condiciones de reserva y de la newsletter, y la tienda de vinos. Las enlazan los botones
  * «Reservar», las casillas del formulario y el pie de página de cada idioma,
  * y cada una usa el idioma de su rama (`useTranslations`). Fábricas por la
  * misma razón que `buildCatchAllRoute` (un objeto por rama).
@@ -162,11 +163,24 @@ const buildCondicionesRoute = (): RouteRecord => ({
   lazy: lazyRoute(() => import("./pages/Condiciones")),
 });
 
+/**
+ * Tienda de vinos (escaparate: precios de tienda de los vinos de la carta; se
+ * compran en el restaurante, no por internet), en las tres ramas. Perezosa
+ * como el resto: su chunk solo lo descarga quien la abre. Es una MAQUETA solo
+ * en la demo: en el build de producción no se monta (`TIENDA_VISIBLE`), así
+ * que `/tienda` da el 404 normal y no se prerenderiza ni sale en el sitemap.
+ */
+const buildTiendaRoute = (): RouteRecord => ({
+  path: "tienda",
+  lazy: lazyRoute(() => import("./pages/Tienda")),
+});
+
 /** Las páginas multiidioma que no son de la carta, para una rama. */
 const paginasComunes = (): RouteRecord[] => [
   buildReservasRoute(),
   buildPoliticaPrivacidadRoute(),
   buildCondicionesRoute(),
+  ...(TIENDA_VISIBLE ? [buildTiendaRoute()] : []),
   ...["el-restaurante", "contacto", "regala", "touza"].map(path => ({ path, lazy: lazyRoute(() => import("./pages/Informacion")) })),
 ];
 

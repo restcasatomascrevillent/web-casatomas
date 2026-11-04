@@ -11,6 +11,7 @@
  * cálculo sirve para el prerenderizado (Node) y para el navegador.
  */
 import type { Language } from "./types";
+import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
 
 export const LANGUAGES: readonly Language[] = ["es", "en", "fr"];
 
@@ -56,7 +57,7 @@ export function construirRutaIdioma(pathRelativoEs: string, lang: Language): str
  * router? Es el espejo de lo que `App.tsx` monta bajo `/en` y `/fr`
  * (`cartaChildren` + `paginasComunes`): la portada, la carta (índice, vinos,
  * bebidas y cada categoría), el formulario de reservas, la política de
- * privacidad y las condiciones.
+ * privacidad, las condiciones y la tienda de vinos.
  *
  * Todo lo demás existe solo en español: las páginas de los enlaces de los
  * correos (`/reserva/respuesta`, `/newsletter/baja`; los correos van en
@@ -72,6 +73,7 @@ export function existeEnTodosLosIdiomas(pathRelativoEs: string): boolean {
     ruta === "/reservas" ||
     ruta === "/politica-privacidad" ||
     ruta === "/condiciones" ||
+    (TIENDA_VISIBLE && ruta === "/tienda") ||
     ["/el-restaurante", "/contacto", "/regala", "/touza"].includes(ruta)
   );
 }

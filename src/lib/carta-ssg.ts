@@ -203,6 +203,24 @@ export function imagenOptimizada(
   return `/_vercel/image?url=${encodeURIComponent(url)}&w=${ancho}&q=75`;
 }
 
+/** Anchos que permite `images.sizes` de `vercel.json` (cualquier otro da 400). */
+export const ANCHOS_IMAGEN = [640, 768, 1024] as const;
+
+/**
+ * `srcset` con los anchos del optimizador de Vercel para una foto de Supabase
+ * Storage, o `null` si la URL no pasa por él (el `<img>` usa entonces solo
+ * `src`). Mismas reglas de host que `imagenOptimizada`.
+ */
+export function srcSetOptimizada(url: string | null): string | null {
+  if (!url) return null;
+  const partes = ANCHOS_IMAGEN.map((w) => {
+    const u = imagenOptimizada(url, w);
+    return u && u !== url ? `${u} ${w}w` : null;
+  });
+  if (partes.some((p) => p === null)) return null;
+  return partes.join(", ");
+}
+
 /**
  * Misma regla que el panel (`admin-casatomas/src/components/carta/rutasFotoCarta.ts`,
  * `RE_CARTA`). El panel guarda las fotos ya procesadas con `-carta` antes de la

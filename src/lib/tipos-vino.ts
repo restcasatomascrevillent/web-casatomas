@@ -24,3 +24,28 @@ export function tipoDesdeCategoria(categoria: string): TipoVino | null {
   const valor = categoria.startsWith('tipo:') ? categoria.slice(5) : '';
   return TIPOS_VINO.includes(valor as TipoVino) ? valor as TipoVino : null;
 }
+
+/**
+ * La denominación de una categoría de la carta, sin el tipo delante y en
+ * formato legible: «VINOS TINTOS — RIBERA DEL DUERO» → «Ribera del Duero».
+ * Las categorías con el origen aún sin confirmar se enseñan como «Consultar
+ * origen». La comparten la carta de vinos (`CartaVinos`) y la tienda.
+ */
+export function categoriaCorta(categoria: string, language: Language): string {
+  if (/pendiente|por confirmar/i.test(categoria)) return { es: 'Consultar origen', en: 'Ask about origin', fr: 'Origine sur demande' }[language];
+  const corta = categoria.replace(/^VINOS?\s+(?:TINTOS?|BLANCOS?|ROSADOS?|ESPUMOSOS?)\s*[—–-]\s*/i, '');
+  const nombres: Record<string, string> = {
+    'RIBERA DEL DUERO': 'Ribera del Duero',
+    'IGP CASTILLA Y LEÓN': 'IGP Castilla y León',
+    'IGP TRES RIBERAS': 'IGP Tres Riberas',
+    'SIN D.O.': 'Sin D.O.',
+    'ALBARIÑO (Rías Baixas)': 'Albariño · Rías Baixas',
+    'NAVARRA / CHABLIS / RIOJA': 'Navarra · Chablis · Rioja',
+    'RIBEIRO / CASTILLA Y LEÓN': 'Ribeiro · Castilla y León',
+    'OTRAS DENOMINACIONES': 'Otras D.O.',
+  };
+  if (nombres[corta]) return nombres[corta];
+  return corta === corta.toUpperCase()
+    ? corta.toLocaleLowerCase('es').replace(/^\p{L}/u, letra => letra.toLocaleUpperCase('es'))
+    : corta;
+}

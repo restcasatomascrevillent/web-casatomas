@@ -5,6 +5,7 @@ import {
   CARTA_SSG_VACIA,
   VINOS_SSG_VACIOS,
   BEBIDAS_SSG_VACIAS,
+  TIENDA_SSG_VACIA,
 } from "./scripts/carta-ssg.mjs";
 import { NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 
@@ -17,6 +18,7 @@ const VACIOS: Record<string, unknown> = {
   "virtual:carta-ssg": CARTA_SSG_VACIA,
   "virtual:carta-ssg/vinos": VINOS_SSG_VACIOS,
   "virtual:carta-ssg/bebidas": BEBIDAS_SSG_VACIAS,
+  "virtual:carta-ssg/tienda": TIENDA_SSG_VACIA,
   // Sin esto ningún test podía importar NovedadesSection (ni nada que la use).
   "virtual:novedades-ssg": NOVEDADES_SSG_VACIA,
 };

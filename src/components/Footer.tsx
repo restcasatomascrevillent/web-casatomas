@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 import { openCookiePreferences } from "@/lib/cookie-consent";
-import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH } from "@/lib/condiciones";
+import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
+import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH, TIENDA_PATH } from "@/lib/condiciones";
 
 // Zonas de toque de al menos 24×24 px (WCAG 2.2, 2.5.8): con `text-sm` la
 // línea mide 20 px, así que cada enlace crece hasta 24 px de alto sin cambiar
@@ -53,6 +54,14 @@ const Footer = () => {
                   {t.footer.reserveLink}
                 </Link>
               </li>
+              {/* Maqueta solo en la demo (`TIENDA_VISIBLE`). */}
+              {TIENDA_VISIBLE && (
+                <li>
+                  <Link to={construirRutaIdioma(TIENDA_PATH, language)} className={ENLACE}>
+                    {t.footer.shopLink}
+                  </Link>
+                </li>
+              )}
               {[
                 { path: "/el-restaurante", label: { es: "El restaurante", en: "The restaurant", fr: "Le restaurant" } },
                 { path: "/contacto", label: { es: "Contacto y horarios", en: "Contact and hours", fr: "Contact et horaires" } },

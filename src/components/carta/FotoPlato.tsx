@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { Pause, Play } from "lucide-react";
 import { modoFotoPlato } from "@/lib/foto-plato";
 
 interface FotoPlatoProps {
@@ -14,14 +15,17 @@ interface FotoPlatoProps {
   width: number;
   height: number;
   onError?: () => void;
+  /** Nombre accesible del botón de vídeo (i18n); por defecto en español. */
+  etiquetaReproducir?: string;
+  etiquetaPausar?: string;
 }
 
 const MEDIA_MENOS_MOVIMIENTO = "(prefers-reduced-motion: reduce)";
 
 /**
  * Foto de un plato en la carta: `<img>` (quieta o «sticker» animado por CSS) o,
- * si el plato tiene vídeo, `<video>` en bucle que solo carga y se reproduce
- * mientras está en pantalla. Ver `modoFotoPlato` para las reglas.
+ * si el plato tiene vídeo, `<video>` con la foto de póster que NO se descarga
+ * hasta que el cliente pulsa «Reproducir vídeo» (ahorra ~1 MB de Storage por visita). Ver `modoFotoPlato` para las reglas.
  *
  * Va DENTRO del contenedor `relative overflow-hidden` de la tarjeta: el brillo
  * del sticker es un `<span>` absoluto encima de la foto.
@@ -36,10 +40,14 @@ const FotoPlato = ({
   width,
   height,
   onError,
+  etiquetaReproducir = "Reproducir vídeo",
+  etiquetaPausar = "Pausar vídeo",
 }: FotoPlatoProps) => {
   const [hidratado, setHidratado] = useState(false);
   const [reducirMovimiento, setReducirMovimiento] = useState(false);
   const [videoFallido, setVideoFallido] = useState(false);
+  const [pedido, setPedido] = useState(false);
+  const [sonando, setSonando] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -60,21 +68,17 @@ const FotoPlato = ({
     videoFallido,
   });
 
-  // Carga y reproducción solo en pantalla. `preload="none"` + `play()` desde
-  // aquí (en vez de `autoPlay`, que obliga a descargar el vídeo nada más
-  // montarse aunque esté fuera de pantalla).
+  // Sin `src` hasta que el cliente pulsa el botón: así el navegador no baja
+  // el MP4. Una vez pedido, se pausa solo al salir de pantalla.
   useEffect(() => {
     const el = videoRef.current;
-    if (modo !== "video" || !el) return;
-    if (typeof IntersectionObserver === "undefined") return;
+    if (modo !== "video" || !el || !pedido) return;
     el.muted = true;
+    el.play().catch(() => undefined);
+    if (typeof IntersectionObserver === "undefined") return;
     const observador = new IntersectionObserver(
       ([entrada]) => {
-        if (entrada?.isIntersecting) {
-          el.play().catch(() => undefined);
-        } else {
-          el.pause();
-        }
+        if (entrada && !entrada.isIntersecting) el.pause();
       },
       { threshold: 0.25 },
     );
@@ -83,25 +87,57 @@ const FotoPlato = ({
       observador.disconnect();
       el.pause();
     };
-  }, [modo]);
+  }, [modo, pedido]);
+
+  const alternar = () => {
+    const el = videoRef.current;
+    if (!pedido) {
+      setPedido(true);
+    } else if (el) {
+      if (el.paused) void el.play().catch(() => undefined);
+      else el.pause();
+    }
+  };
 
   if (modo === "video" && video) {
+    const etiqueta = pedido && sonando ? etiquetaPausar : etiquetaReproducir;
     return (
-      <video
-        ref={videoRef}
-        src={video}
-        poster={src}
-        muted
-        loop
-        playsInline
-        preload="none"
-        aria-label={alt}
-        width={width}
-        height={height}
-        className="w-full h-full object-cover"
-        data-modo-foto="video"
-        onError={() => setVideoFallido(true)}
-      />
+      <>
+        <video
+          ref={videoRef}
+          src={pedido ? video : undefined}
+          poster={src}
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-label={alt}
+          width={width}
+          height={height}
+          className="w-full h-full object-cover"
+          data-modo-foto="video"
+          onPlay={() => setSonando(true)}
+          onPause={() => setSonando(false)}
+          onError={() => pedido && setVideoFallido(true)}
+        />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            alternar();
+          }}
+          aria-label={etiqueta}
+          className={`absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-opacity hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            sonando ? "opacity-0 focus-visible:opacity-100" : ""
+          }`}
+        >
+          {sonando ? (
+            <Pause className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Play className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
+      </>
     );
   }
 

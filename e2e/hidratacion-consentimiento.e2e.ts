@@ -35,7 +35,7 @@ const HIDRATACION = /hydrat|did not match|server.rendered|Minified React error #
 const CONSENTIMIENTO = { maps: true, ts: "2026-01-01T00:00:00.000Z" };
 
 /** Lo que el visitante ya tenía guardado al abrir la página, antes de que corra ningún script de la web. */
-type Sembrado = (page: Page) => Promise<void>;
+type Sembrado = (page: Page) => Promise<unknown>;
 
 const consentimientoEnLocalStorage: Sembrado = (page) =>
   page.addInitScript((valor) => window.localStorage.setItem("cookieConsent", JSON.stringify(valor)), CONSENTIMIENTO);

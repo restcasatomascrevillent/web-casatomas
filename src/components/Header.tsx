@@ -7,9 +7,10 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { useLocation, useNavigate } from "react-router-dom";
 import { construirRutaIdioma, rutaEquivalente } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
-import { RESERVAS_PATH } from "@/lib/condiciones";
+import { RESERVAS_PATH, TIENDA_PATH } from "@/lib/condiciones";
 import { cn } from "@/lib/utils";
 import { instalarFocoNoTapado } from "@/lib/foco-no-tapado";
+import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -185,8 +186,14 @@ const Header = () => {
     scrollToSection(sectionId);
   };
 
-  const navItems = [
+  // Casi todo son anclas de la portada; «Tienda» es una página propia
+  // (`/tienda`), que va justo después de la carta. Solo en los builds donde
+  // existe (maqueta de la demo, `TIENDA_VISIBLE`); ahí se enseña siempre,
+  // también con la tienda cerrada en el panel: la cabecera se prerenderiza
+  // igual en todas las páginas y la propia página explica el cierre.
+  const navItems: ({ id: string; label: string; ruta?: undefined } | { id: string; label: string; ruta: string })[] = [
     { id: "carta", label: t.header.nav.carta },
+    ...(TIENDA_VISIBLE ? [{ id: "tienda", label: t.header.nav.tienda, ruta: construirRutaIdioma(TIENDA_PATH, language) }] : []),
     { id: "novedades", label: t.header.nav.novedades },
     { id: "espacios", label: t.header.nav.espacios },
     { id: "nosotros", label: t.header.nav.nosotros },
@@ -231,20 +238,33 @@ const Header = () => {
           {/* Desktop Navigation: con justify-between en la fila, el hueco al
               logo y el hueco al icono del planeta quedan siempre iguales,
               sin importar que el bloque de la derecha sea más ancho. */}
-          <nav className="hidden lg:flex items-center gap-6">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.id}
-                to={`${home}#${item.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(item.id);
-                }}
-                className="text-foreground/80 hover:text-foreground font-medium transition-colors px-3 py-2"
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          {/* Seis enlaces desde que está «Tienda»: entre 1024 y 1279 px van más
+              juntos (y nunca en dos líneas: en francés «Notre histoire» se partía). */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-6">
+            {navItems.map((item) =>
+              item.ruta ? (
+                <NavLink
+                  key={item.id}
+                  to={item.ruta}
+                  className="whitespace-nowrap text-foreground/80 hover:text-foreground font-medium transition-colors px-2 py-2 xl:px-3"
+                  activeClassName="text-foreground"
+                >
+                  {item.label}
+                </NavLink>
+              ) : (
+                <NavLink
+                  key={item.id}
+                  to={`${home}#${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.id);
+                  }}
+                  className="whitespace-nowrap text-foreground/80 hover:text-foreground font-medium transition-colors px-2 py-2 xl:px-3"
+                >
+                  {item.label}
+                </NavLink>
+              ),
+            )}
           </nav>
 
           {/* CTA Button Desktop */}
@@ -347,8 +367,15 @@ const Header = () => {
                     key={item.id}
                   >
                     <NavLink
-                      to={`${home}#${item.id}`}
-                      onClick={(event) => { event.preventDefault(); handleNavClick(item.id); }}
+                      to={item.ruta ?? `${home}#${item.id}`}
+                      onClick={(event) => {
+                        if (item.ruta) {
+                          setIsMobileMenuOpen(false);
+                          return;
+                        }
+                        event.preventDefault();
+                        handleNavClick(item.id);
+                      }}
                       className="block w-full text-left px-4 py-3 text-lg font-medium rounded-lg hover:bg-accent/10 transition-colors"
                     >
                       {item.label}

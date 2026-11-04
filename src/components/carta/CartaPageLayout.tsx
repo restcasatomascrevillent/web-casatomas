@@ -38,7 +38,7 @@ interface CartaPageLayoutProps {
 
 /**
  * Marco común de las páginas de carta (`/carta`, `/carta/:categoria`,
- * `/carta/vinos`, `/carta/bebidas`).
+ * `/carta/vinos`, `/carta/bebidas`) y de la tienda de vinos (`/tienda`).
  *
  * Reutiliza tal cual el `Header` y el `Footer` de la portada y la banda oscura
  * (`bg-dark-slate`) que ya usa `PoliticaPrivacidad`, para que estas páginas se

@@ -46,9 +46,17 @@ const FILAS_CARTA = {
  */
 const NOVEDADES = JSON.parse(readFileSync(new URL("../e2e/fixtures/novedades-botones.json", import.meta.url), "utf8"));
 
+/**
+ * Tienda de vinos abierta (`configuracion_tienda`, ver `e2e/fixtures/`): el
+ * build la lee para prerenderizar `/tienda`, y los e2e (`novedades-comun.ts`,
+ * `tienda.e2e.ts`) devuelven LA MISMA en el navegador.
+ */
+const CONFIG_TIENDA = JSON.parse(readFileSync(new URL("../e2e/fixtures/configuracion-tienda.json", import.meta.url), "utf8"));
+
 const servidor = http.createServer((req, res) => {
   const tabla = /^\/rest\/v1\/([^?/]+)/.exec(req.url ?? "")?.[1];
-  const filas = tabla === "novedades" ? NOVEDADES : tabla ? FILAS_CARTA[tabla] : undefined;
+  const filas =
+    tabla === "novedades" ? NOVEDADES : tabla === "configuracion_tienda" ? CONFIG_TIENDA : tabla ? FILAS_CARTA[tabla] : undefined;
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(filas ?? []));
 });

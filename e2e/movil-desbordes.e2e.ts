@@ -42,6 +42,7 @@ const RUTAS = [
   "/contacto",
   "/el-restaurante",
   "/touza",
+  "/tienda",
   "/politica-privacidad",
   "/condiciones",
   "/aviso-legal",
@@ -49,6 +50,7 @@ const RUTAS = [
   "/en/reservas",
   "/fr/carta",
   "/fr/regala",
+  "/en/tienda",
   "/404",
 ];
 

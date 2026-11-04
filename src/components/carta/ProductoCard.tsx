@@ -311,6 +311,8 @@ const ProductoCard = ({
                         alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
                         style={encuadre}
                         loading={prioridad ? "eager" : "lazy"}
+                        etiquetaReproducir={t.platos.playVideo}
+                        etiquetaPausar={t.platos.pauseVideo}
                         width={640}
                         height={fotoCarta ? 480 : 384}
                       />

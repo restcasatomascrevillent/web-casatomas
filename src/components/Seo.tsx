@@ -12,6 +12,8 @@ interface SeoProps {
   ogImageAlt?: string;
   keywords?: readonly string[];
   noindex?: boolean;
+  /** Con `noindex`: tampoco seguir sus enlaces (`noindex,nofollow`). */
+  nofollow?: boolean;
   /** Idioma de ESTA página. Fija el `lang` real de `<html>` (ver `index.html`). */
   lang?: Language;
   /**
@@ -40,6 +42,7 @@ export function Seo({
   ogImageAlt = OG_IMAGE_CAPTION,
   keywords = ["restaurante Crevillent", "Casa Tomás", "cocina tradicional", "restaurante Alicante"],
   noindex = false,
+  nofollow = false,
   lang = "es",
   languageAlternates,
 }: SeoProps) {
@@ -58,7 +61,7 @@ export function Seo({
       {languageAlternates?.map((alt) => (
         <link key={alt.hrefLang} rel="alternate" hrefLang={alt.hrefLang} href={alt.href} />
       ))}
-      {noindex && <meta name="robots" content="noindex,follow" />}
+      {noindex && <meta name="robots" content={nofollow ? "noindex,nofollow" : "noindex,follow"} />}
 
       {/* Open Graph */}
       <meta property="og:title" content={title} />
