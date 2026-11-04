@@ -78,6 +78,15 @@ describe("vinosALaVenta", () => {
     const vinos = [vino("a", 20), vino("b", 0), vino("c", 30), { ...vino("d", 10), id: "" }, vino("e", Number.NaN), vino("f", 12)];
     expect(vinosALaVenta(vinos, { ...CONFIG, vinos_excluidos: ["c"] }).map((v) => v.id)).toEqual(["a", "f"]);
   });
+
+  it("un vino nuevo de la carta sale solo, con el descuento configurado: nadie tiene que ponerlo a la venta", () => {
+    // Petición del dueño (04/11/2026). La tienda guarda solo los EXCLUIDOS, así
+    // que un vino que el panel nunca ha tocado está a la venta.
+    const config = { ...CONFIG, descuento_pct: 25, vinos_excluidos: ["viejo-quitado"] };
+    const nuevo = vino("recien-anadido", 40);
+    expect(vinosALaVenta([vino("viejo-quitado", 30), nuevo], config)).toEqual([nuevo]);
+    expect(precioTienda(nuevo.precio_eur, config.descuento_pct)).toBe(30);
+  });
 });
 
 describe("lecturas en vivo", () => {
