@@ -17,8 +17,7 @@ export const RESERVAS_PATH = "/reservas";
 
 /**
  * Aviso legal (LSSI-CE, art. 10). Solo en español: es el texto vigente que
- * firma el titular (migrado del WordPress antiguo) y no hay versión traducida
- * aprobada. El pie de las tres ramas enlaza a esta misma ruta.
+ * firma el titular y no hay versión traducida aprobada. El pie de las tres ramas enlaza a esta misma ruta.
  */
 export const AVISO_LEGAL_PATH = "/aviso-legal";
 

@@ -18,7 +18,7 @@ import { translations as es } from "@/i18n/languages/es";
 import { translations as en } from "@/i18n/languages/en";
 import { translations as fr } from "@/i18n/languages/fr";
 import type { Language } from "@/i18n/types";
-import { NEGOCIO, SITE_URL } from "@/lib/negocio";
+import { NEGOCIO, SITE_URL, TITULAR } from "@/lib/negocio";
 import { RESPONSABLE_TRATAMIENTO, TEXTOS_PRIVACIDAD, type TextosPrivacidad } from "@/lib/politica-privacidad-textos";
 
 const TRADUCCIONES = { es, en, fr } as const;
@@ -111,7 +111,12 @@ describe("textos de la política de privacidad — las tres versiones dicen lo m
   }
 
   it("los datos del responsable son los mismos en los tres idiomas y vienen de una sola fuente", () => {
-    expect(RESPONSABLE_TRATAMIENTO.razonSocial).toBe("Restaurante Casa Tomás");
+    // El responsable es la sociedad titular (la misma que el aviso legal), no el nombre comercial.
+    expect(RESPONSABLE_TRATAMIENTO.razonSocial).toBe("MASIDE 2011 SL");
+    expect(RESPONSABLE_TRATAMIENTO.cif).toBe("B54583356");
+    expect(RESPONSABLE_TRATAMIENTO.nombreComercial).toBe("Restaurante Casa Tomás");
+    expect(TITULAR.domicilio).toContain(NEGOCIO.calle);
+    expect(TITULAR.domicilio).toContain(NEGOCIO.cp);
     expect(RESPONSABLE_TRATAMIENTO.direccion).toContain(NEGOCIO.calle);
     expect(RESPONSABLE_TRATAMIENTO.direccion).toContain(NEGOCIO.cp);
   });
@@ -208,11 +213,12 @@ describe("página de la política de privacidad", () => {
       );
     });
 
-    it(`${lang}: los plazos de 2 años y 3 meses salen en negrita`, () => {
+    it(`${lang}: los plazos (2 años, 3 meses, 12 meses, 6 años) salen en negrita`, () => {
       const { container } = renderPagina(lang, RUTAS[lang]);
       const seccion = screen.getByRole("heading", { level: 2, name: p.retention.heading }).closest("section")!;
-      expect([...seccion.querySelectorAll("strong")].map((s) => s.textContent).filter((t) => /\d/.test(t ?? "") )).toHaveLength(2);
-      expect(container.querySelectorAll('a[target="_blank"]').length).toBeGreaterThanOrEqual(6); // 5 proveedores + AEPD
+      const plazos = [...seccion.querySelectorAll("strong")].map((s) => s.textContent).filter((t) => /\d/.test(t ?? ""));
+      expect(plazos.map((t) => t!.match(/\d+/)![0])).toEqual(["2", "3", "12", "6"]);
+      expect(container.querySelectorAll('a[target="_blank"]').length).toBeGreaterThanOrEqual(8); // 7 proveedores + AEPD
     });
   }
 });
