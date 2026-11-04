@@ -457,6 +457,87 @@ All colors MUST be HSL.
   .hero-section { min-height: 100svh; }
 }
 
+/* Tamaños del contenido del hero (`Hero.tsx`). Antes eran clases de Tailwind con tamaños fijos
+   por ANCHO; en pantallas bajas (móvil pequeño 320×568 o 360×640, iPhone SE 375×667, portátil
+   1366×768 con la barra del navegador ≈ 650 px, 1024×600) el hero medía más que la pantalla y
+   «Ver carta» o los dos botones quedaban fuera (dueño, 04/11/2026: «el hero no es responsive al
+   100 %»). Ahora, por debajo de 740 px de alto, el logo encoge con el ALTO disponible (svh) y los
+   márgenes se recortan: logo, lema y los dos botones caben siempre en la primera pantalla. */
+.hero-contenido { padding-top: 6rem; padding-bottom: 8rem; }
+.hero-cabecera { margin-bottom: 2rem; }
+.hero-logo { width: 16rem; margin-bottom: 1.5rem; }
+.hero-lema { font-size: 1.5rem; }
+.hero-flecha { bottom: 5rem; }
+@media (min-width: 640px) {
+  .hero-contenido { padding-bottom: 6rem; }
+  .hero-flecha { bottom: 6rem; }
+}
+@media (min-width: 768px) {
+  .hero-logo { width: 24rem; }
+  .hero-lema { font-size: 1.875rem; }
+}
+@media (min-width: 1024px) {
+  .hero-contenido { padding-bottom: 5rem; }
+  .hero-logo { width: 28rem; }
+  .hero-flecha { bottom: 2rem; }
+}
+
+/* Pantalla baja (no apaisada). 29 rem / 22 rem = lo que ocupa todo lo demás (cabecera fija, lema
+   en tres o dos líneas, botones apilados o en fila y el hueco de la flecha); 1,45 = proporción
+   ancho/alto del logo. */
+@media (min-height: 521px) and (max-height: 740px) {
+  .hero-section { min-height: 100svh; }
+  .hero-contenido { padding-top: 5rem; padding-bottom: 5.5rem; }
+  .hero-cabecera { margin-bottom: 1.25rem; }
+  .hero-logo { width: clamp(7rem, calc((100svh - 29rem) * 1.45), 16rem); margin-bottom: 0.75rem; }
+  .hero-lema { font-size: 1.25rem; }
+  .hero-flecha { bottom: 3rem; }
+}
+@media (min-height: 521px) and (max-height: 740px) and (min-width: 768px) {
+  .hero-contenido { padding-top: 6rem; padding-bottom: 4.5rem; }
+  .hero-logo { width: clamp(9rem, calc((100svh - 22rem) * 1.45), 24rem); }
+  .hero-lema { font-size: 1.5rem; }
+  .hero-flecha { bottom: 1.5rem; }
+}
+@media (min-height: 521px) and (max-height: 740px) and (min-width: 1024px) {
+  .hero-logo { width: clamp(9rem, calc((100svh - 22rem) * 1.45), 28rem); }
+}
+
+/* Móvil en horizontal (`bajo:` de Tailwind, ≤ 520 px de alto): todo en una pantalla, con el logo
+   algo mayor que antes (5 rem se quedaba diminuto con media pantalla vacía). Los dos botones van en
+   fila aunque el móvil mida menos de 640 px de ancho (iPhone SE apaisado, 568×320: apilados,
+   «Ver carta» quedaba fuera) y el hueco de arriba es el de la cabecera fija: 4 rem, y 5 rem desde
+   768 px de ancho (Pixel 5 apaisado, 802×293: el logo se metía bajo la cabecera). */
+@media (max-height: 520px) {
+  .hero-contenido { padding-top: 4.5rem; padding-bottom: 1rem; }
+  .hero-cabecera { margin-bottom: 0.75rem; }
+  .hero-logo { width: 7rem; margin-bottom: 0.25rem; }
+  .hero-lema { font-size: 1.125rem; }
+  .hero-botones { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+}
+@media (max-height: 520px) and (min-width: 768px) {
+  .hero-contenido { padding-top: 5.5rem; }
+}
+
+/* Pantallas de menos de 340 px de alto (móviles plegables: pantalla exterior del Galaxy Z Flip,
+   360×298; Flip y Fold en horizontal, ≈ 790×308): logo, lema y botones más pequeños para que todo
+   quepa sin desplazar. Los botones con `.hero-section .hero-botones a` para ganar a `px-8 text-lg`. */
+@media (max-height: 340px) {
+  .hero-contenido { padding-bottom: 0.5rem; }
+  .hero-cabecera { margin-bottom: 0.5rem; }
+  .hero-logo { width: 4.5rem; margin-bottom: 0.125rem; }
+  .hero-section h1 { margin-bottom: 0.375rem; }
+  .hero-lema { font-size: 1rem; }
+  .hero-botones { gap: 0.5rem; }
+  .hero-section .hero-botones a { font-size: 0.9375rem; padding-left: 0.875rem; padding-right: 0.875rem; }
+}
+/* Pantalla exterior de los plegables (≈ 320–360 × 300): los dos botones no caben en una fila y
+   apilados no caben con el lema. El lema (decorativo, en gallego) se omite ahí; logo, H1 y botones
+   se quedan. */
+@media (max-height: 340px) and (max-width: 420px) {
+  .hero-lema { display: none; }
+}
+
 /* Soft colour without animated, blurred offscreen layers. */
 .hero-backdrop {
   background:

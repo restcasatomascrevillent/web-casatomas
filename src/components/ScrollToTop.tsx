@@ -24,6 +24,9 @@ const useLayoutEffectCliente = typeof window === "undefined" ? useEffect : useLa
  * `scroll-behavior: smooth` de `index.css` ya lleva hasta ahí (lo hace
  * `Header`), y forzar aquí un salto a 0 lo interrumpiría a medio camino.
  *
+ * Si solo cambian los parámetros de la misma página con REPLACE (los filtros
+ * de la carta, `?dietas=`), no se sube: es la misma página.
+ *
  * Al volver con «atrás» (o el gesto de atrás del móvil), la página vuelve a
  * donde se dejó: antes subía arriba del todo, y quien volvía de «Échale un
  * vistazo» en una novedad tenía que bajar otra vez hasta Novedades. Cada
@@ -35,6 +38,7 @@ const ScrollToTop = () => {
   const { pathname, hash, key } = useLocation();
   const tipo = useNavigationType();
   const claveActual = useRef(key);
+  const rutaActual = useRef(pathname);
   const primera = useRef(true);
 
   // Se apunta la posición de la entrada actual mientras se desplaza. El
@@ -51,7 +55,9 @@ const ScrollToTop = () => {
     // Misma entrada: p. ej. el «atrás» que cierra el diálogo de «Ver menú»
     // (`MenuNovedadDialog`) vuelve a la entrada en la que ya se estaba.
     if (!primera.current && key === claveActual.current) return;
+    const mismaPagina = pathname === rutaActual.current;
     claveActual.current = key;
+    rutaActual.current = pathname;
     // Primera carga: la decide el navegador (y `Header` si hay ancla).
     if (primera.current) {
       primera.current = false;
@@ -59,6 +65,13 @@ const ScrollToTop = () => {
       return;
     }
     if (hash) return;
+    // Misma página y REPLACE: solo cambian los parámetros de la URL, p. ej. los filtros de la
+    // carta (`?dietas=`, `useFiltrosCarta`). No es otra página: el visitante sigue donde estaba
+    // (dueño, 04/11/2026: «cuando pulsas los filtros de la carta te mueve al hero»).
+    if (mismaPagina && tipo === "REPLACE") {
+      posiciones.set(key, window.scrollY);
+      return;
+    }
 
     const guardada = tipo === "POP" ? posiciones.get(key) : undefined;
     if (guardada === undefined) {
