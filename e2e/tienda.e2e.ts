@@ -10,7 +10,8 @@
  *
  * Recorridos: escritorio y móvil con axe, «Cómo comprar» con el teléfono
  * pulsable, filtros y «Mostrar más», 320 px con letra al 200 % sin desbordes,
- * el enlace del menú y la tienda apagada en el panel.
+ * el enlace del menú, la tienda apagada en el panel y que es indexable (sin
+ * `noindex` y en el sitemap en los tres idiomas).
  */
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -131,9 +132,9 @@ test.describe("escritorio 1440 px", () => {
     await expect(page.getByText("Los vinos de nuestra bodega, para llevártelos a casa.")).toHaveCount(0);
     await expect(page.getByText("Se compran en el restaurante", { exact: true })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Cómo comprar" }).getByText(/^\d+ vinos a la venta$/)).toBeVisible();
-    // Solo en la demo, pero sin banda «Maqueta»; y fuera de los buscadores.
+    // Publicada (dueño, 04/11/2026): sin banda «Maqueta» y abierta a los buscadores.
     await expect(page.getByText(/Maqueta/)).toHaveCount(0);
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex,nofollow");
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
 
     const macan = tarjeta(page, "Macán Clásico 2020");
     // 45 € de carta con el 30 % del panel → 31,50 €, enseñado como un precio normal.
@@ -189,6 +190,27 @@ test.describe("escritorio 1440 px", () => {
     await expect(page.getByRole("article")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Ver la carta de vinos" })).toHaveAttribute("href", "/carta/vinos");
     await axe(page, "tienda no disponible");
+  });
+});
+
+test.describe("buscadores (tienda publicada, dueño 04/11/2026)", () => {
+  /** Origen público de canonical, hreflang y sitemap (`SITE_URL`, como en `reserva-condiciones.e2e.ts`). */
+  const URL_SITIO = "https://restaurantecasatomascrevillente.es";
+
+  test("/tienda, /en/tienda y /fr/tienda: HTML prerenderizado sin noindex y en el sitemap con sus alternates", async ({ request }) => {
+    for (const ruta of ["/tienda", "/en/tienda", "/fr/tienda"]) {
+      const html = await (await request.get(ruta)).text();
+      expect(html, ruta).not.toMatch(/name="robots"[^>]*noindex/);
+    }
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    for (const ruta of ["/tienda", "/en/tienda", "/fr/tienda"]) {
+      expect(sitemap).toContain(`<loc>${URL_SITIO}${ruta}</loc>`);
+    }
+    const inicio = sitemap.indexOf(`<loc>${URL_SITIO}/fr/tienda</loc>`);
+    const bloque = sitemap.slice(inicio, sitemap.indexOf("</url>", inicio));
+    for (const [hreflang, ruta] of [["es", "/tienda"], ["en", "/en/tienda"], ["fr", "/fr/tienda"], ["x-default", "/tienda"]]) {
+      expect(bloque).toContain(`hreflang="${hreflang}" href="${URL_SITIO}${ruta}"`);
+    }
   });
 });
 

@@ -7,7 +7,6 @@ import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
 import { calcularVersion } from "./scripts/version.mjs";
-import { tiendaEnBuild } from "./scripts/tienda-maqueta.mjs";
 
 /**
  * Un `fetch` a Supabase, TRES módulos virtuales.
@@ -192,11 +191,6 @@ export default defineConfig(({ mode, command }) => {
   const siteUrl = (env.VITE_SITE_URL || "https://restaurantecasatomascrevillente.es").replace(/\/+$/, "");
 
   return {
-    // Tienda de vinos: maqueta solo en la demo (ver `scripts/tienda-maqueta.mjs`).
-    // Constante en el bundle: en producción su ruta y sus enlaces desaparecen.
-    define: {
-      "import.meta.env.VITE_TIENDA_VISIBLE": JSON.stringify(String(tiendaEnBuild(process.env))),
-    },
     server: {
       host: "::",
       port: 8080,

@@ -13,7 +13,6 @@ import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 import { HANDLE_PAGINA_NO_ENCONTRADA } from "@/lib/hidratacion-404";
-import { TIENDA_VISIBLE } from "@/lib/tienda-visible";
 
 // Sin esto, React Query usa sus valores por defecto: `staleTime: 0` (cada
 // montaje de un componente con `useQuery` — novedades, reseñas, menús del
@@ -166,9 +165,8 @@ const buildCondicionesRoute = (): RouteRecord => ({
 /**
  * Tienda de vinos (escaparate: precios de tienda de los vinos de la carta; se
  * compran en el restaurante, no por internet), en las tres ramas. Perezosa
- * como el resto: su chunk solo lo descarga quien la abre. Es una MAQUETA solo
- * en la demo: en el build de producción no se monta (`TIENDA_VISIBLE`), así
- * que `/tienda` da el 404 normal y no se prerenderiza ni sale en el sitemap.
+ * como el resto: su chunk solo lo descarga quien la abre. Publicada en todos
+ * los entornos, producción incluida: se prerenderiza y sale en el sitemap.
  */
 const buildTiendaRoute = (): RouteRecord => ({
   path: "tienda",
@@ -180,7 +178,7 @@ const paginasComunes = (): RouteRecord[] => [
   buildReservasRoute(),
   buildPoliticaPrivacidadRoute(),
   buildCondicionesRoute(),
-  ...(TIENDA_VISIBLE ? [buildTiendaRoute()] : []),
+  buildTiendaRoute(),
   ...["el-restaurante", "contacto", "regala", "touza"].map(path => ({ path, lazy: lazyRoute(() => import("./pages/Informacion")) })),
 ];
 
