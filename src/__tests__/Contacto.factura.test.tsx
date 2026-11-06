@@ -24,20 +24,7 @@ async function abrir() {
   continuar();
   fireEvent.change(screen.getByLabelText(c.giftFormBuyerEmail), { target: { value: "ana@example.com" } });
   continuar();
-  for (let i = 0; i < 4; i++) continuar();
-}
-function pedirFactura() {
-  fireEvent.click(screen.getByRole("button", { name: c.giftInvoiceRequest }));
-  expect(screen.getByRole("button", { name: c.giftInvoiceRequest })).toHaveAttribute("aria-pressed", "true");
-  continuar();
-  expect((screen.getByLabelText(c.giftInvoiceName) as HTMLInputElement).value).toBe("Ana");
-  continuar();
-}
-function completarFactura() {
-  fireEvent.change(screen.getByLabelText(c.giftInvoiceTaxId), { target: { value: " 12345678Z " } });
-  continuar();
-  fireEvent.change(screen.getByLabelText(c.giftInvoiceAddress), { target: { value: " Calle Mayor, 1, 03330 Crevillent " } });
-  continuar();
+  for (let i = 0; i < 3; i++) continuar(); // teléfono, destinatario y dedicatoria: queda en la fecha de entrega
 }
 describe("Compra guiada del cheque", () => {
   beforeEach(() => { gastosMock.config = APAGADOS; vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ mensaje: "Prueba sin cobrar" }) })); });
@@ -55,38 +42,33 @@ describe("Compra guiada del cheque", () => {
     expect(screen.getAllByText(/^101,78\s€$/)).toHaveLength(2); // cabecera del diálogo y total del resumen
     expect(screen.getByText(/iguales para cualquier forma de pago/)).toBeTruthy();
   });
-  it("permite elegir factura, valida cada paso y conserva datos al retroceder", async () => {
-    await abrir(); pedirFactura();
+  it("no ofrece pedir la factura: de la fecha de entrega pasa directo al resumen", async () => {
+    await abrir();
+    expect(screen.getByText("Paso 6 de 8")).toBeInTheDocument();
     continuar();
-    expect(await screen.findByRole("alert")).toHaveTextContent(c.giftInvoiceMissingData);
-    expect(fetch).not.toHaveBeenCalled();
-    completarFactura();
-    fireEvent.click(screen.getByRole("button", { name: "Atrás" }));
-    expect(screen.getByLabelText(c.giftInvoiceAddress)).toHaveValue(" Calle Mayor, 1, 03330 Crevillent ");
-    continuar();
-    continuar();
-    fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-    const body=JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
-    expect(body.solicita_factura).toBe(true);
-    expect(body.datos_factura).toEqual({ nombre: "Ana", nif: "12345678Z", direccion: "Calle Mayor, 1, 03330 Crevillent" });
-    expect(await screen.findByRole("alert")).toHaveTextContent("Prueba sin cobrar");
+    expect(screen.getByRole("heading", { name: "Revisa la información de compra" })).toBeInTheDocument();
+    expect(screen.queryByText(/necesito factura|factura por email/i)).toBeNull();
+    expect(screen.queryByLabelText(/NIF/)).toBeNull();
   });
-  it("no lleva al pago si el backend antiguo no registra la factura", async () => {
-    await abrir(); pedirFactura(); completarFactura();
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: async () => ({ url: "https://checkout.stripe.com/test" }) } as Response);
-    continuar();
-    fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(c.giftInvoiceNotReady);
-  });
-  it("sin factura, omite las preguntas fiscales", async () => {
+  it("el resumen avisa de que la factura se pide al canjear, en el restaurante o por email", async () => {
     await abrir(); continuar();
-    expect(screen.queryByLabelText(c.giftInvoiceTaxId)).toBeNull();
+    const aviso = screen.getByRole("note");
+    expect(aviso).toHaveTextContent(c.giftInvoiceWarningTitle);
+    expect(aviso).toHaveTextContent(/se canjee el cheque: en el propio restaurante o escribiendo a casatomascrevillent@gmail\.com con el código del cheque y tus datos fiscales/);
+    expect(screen.getByRole("link", { name: "casatomascrevillent@gmail.com" })).toHaveAttribute("href", "mailto:casatomascrevillent@gmail.com");
+    // Solo en el resumen: la vista previa del pago no lo repite.
     continuar();
+    expect(screen.queryByRole("note")).toBeNull();
+  });
+  it("la compra no manda datos de factura", async () => {
+    await abrir(); continuar(); continuar();
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-    const body=JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
-    expect(body.solicita_factura).toBe(false); expect(body.datos_factura).toBeUndefined();
+    const body = JSON.parse(vi.mocked(fetch).mock.calls[0][1]?.body as string);
+    expect(body).not.toHaveProperty("solicita_factura");
+    expect(body).not.toHaveProperty("datos_factura");
+    expect(body).toMatchObject({ importe_eur: 100, comprador_nombre: "Ana", comprador_email: "ana@example.com" });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Prueba sin cobrar");
   });
   it("permite elegir sin importe ni dedicatoria antes del pago", async () => {
     await abrir(); continuar(); continuar();

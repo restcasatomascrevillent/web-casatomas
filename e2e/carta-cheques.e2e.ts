@@ -101,7 +101,7 @@ const test = base.extend<{ backend: Backend }>({
         if (backend.modoCompra === "lento") await new Promise((r) => setTimeout(r, 1500));
         return route.fulfill({
           status: 200, headers: CORS, contentType: "application/json",
-          body: JSON.stringify({ url: `${propio}/?cheque_regalo=exito&session_id=cs_test_e2e#contacto`, factura_solicitada: cuerpo.solicita_factura === true, ocultar_importe: cuerpo.ocultar_importe === true }),
+          body: JSON.stringify({ url: `${propio}/?cheque_regalo=exito&session_id=cs_test_e2e#contacto`, factura_solicitada: false, ocultar_importe: cuerpo.ocultar_importe === true }),
         });
       }
       return route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: "[]" });
@@ -212,7 +212,11 @@ test.describe("Compra de cheque regalo (Stripe simulado)", () => {
     await siguiente.click();
     await dialogo.locator("textarea:visible").fill("ana@example.com");
     await siguiente.click();
-    for (let paso = 0; paso < 6; paso++) await siguiente.click(); // teléfono, destinatario, dedicatoria, fecha, factura, resumen
+    for (let paso = 0; paso < 4; paso++) await siguiente.click(); // teléfono, destinatario, dedicatoria, fecha
+    // Ya no se pide factura: el resumen avisa de que se pide al canjear el cheque.
+    await expect(dialogo.getByRole("note")).toContainText(es.contacto.giftInvoiceWarningTitle);
+    await expect(dialogo.getByRole("link", { name: "casatomascrevillent@gmail.com" })).toBeVisible();
+    await siguiente.click(); // resumen
     await expect(dialogo.getByRole("button", { name: es.contacto.giftFormSubmit })).toBeVisible();
     return dialogo;
   }
@@ -234,7 +238,8 @@ test.describe("Compra de cheque regalo (Stripe simulado)", () => {
     await expect(page.getByText(es.contacto.toasts.giftSuccessTitle).first()).toBeVisible();
     expect(page.url()).not.toContain("cheque_regalo");
     expect(backend.compras).toHaveLength(1);
-    expect(backend.compras[0]).toMatchObject({ importe_eur: 50, comprador_nombre: "Ana Prueba", comprador_email: "ana@example.com", solicita_factura: false });
+    expect(backend.compras[0]).toMatchObject({ importe_eur: 50, comprador_nombre: "Ana Prueba", comprador_email: "ana@example.com" });
+    expect(backend.compras[0]).not.toHaveProperty("solicita_factura");
   });
 
   test("doble clic en «Ir al pago seguro» no crea dos cheques", async ({ page, backend }) => {
