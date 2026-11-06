@@ -66,6 +66,9 @@ export const NEGOCIO = {
   pais: "ES",
 } as const;
 
+/** Titular de la web (aviso legal, política de privacidad): vive en `titular.ts`, sin dependencias. */
+export { TITULAR } from "./titular";
+
 /**
  * Describe lo que de verdad muestra `og-image.jpg` (carne a la brasa con
  * patatas asadas) — fuente única para el `alt`/`caption` de esa foto en

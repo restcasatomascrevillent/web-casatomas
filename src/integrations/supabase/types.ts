@@ -1736,6 +1736,9 @@ export type Database = {
       }
       configuracion_web: {
         Row: {
+          encuesta_vinos_activa: boolean
+          horario_menu_dia_casa_tomas: Json | null
+          horario_tapas_casa_tomas: Json | null
           id: boolean
           mostrar_fotos_platos_casa_tomas: boolean
           mostrar_fotos_platos_touza: boolean
@@ -1745,6 +1748,9 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          encuesta_vinos_activa?: boolean
+          horario_menu_dia_casa_tomas?: Json | null
+          horario_tapas_casa_tomas?: Json | null
           id?: boolean
           mostrar_fotos_platos_casa_tomas?: boolean
           mostrar_fotos_platos_touza?: boolean
@@ -1754,6 +1760,9 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          encuesta_vinos_activa?: boolean
+          horario_menu_dia_casa_tomas?: Json | null
+          horario_tapas_casa_tomas?: Json | null
           id?: boolean
           mostrar_fotos_platos_casa_tomas?: boolean
           mostrar_fotos_platos_touza?: boolean
@@ -5651,7 +5660,11 @@ export type Database = {
           expanded: boolean | null
           featured: boolean | null
           id: string
+          copeo: boolean
           imagen_posicion_y: number | null
+          precio_copa_eur: number | null
+          puntuacion_parker: number | null
+          puntuacion_parker_anada: number | null
           imagen_url: string | null
           ingredientes: string | null
           nombre: string | null
@@ -5689,7 +5702,11 @@ export type Database = {
           expanded?: boolean | null
           featured?: boolean | null
           id: string
+          copeo?: boolean
           imagen_posicion_y?: number | null
+          precio_copa_eur?: number | null
+          puntuacion_parker?: number | null
+          puntuacion_parker_anada?: number | null
           imagen_url?: string | null
           ingredientes?: string | null
           nombre?: string | null
@@ -5727,7 +5744,11 @@ export type Database = {
           expanded?: boolean | null
           featured?: boolean | null
           id?: string
+          copeo?: boolean
           imagen_posicion_y?: number | null
+          precio_copa_eur?: number | null
+          puntuacion_parker?: number | null
+          puntuacion_parker_anada?: number | null
           imagen_url?: string | null
           ingredientes?: string | null
           nombre?: string | null
@@ -6495,6 +6516,10 @@ export type Database = {
       configuracion_web_visibilidad_menu_tapas: {
         Args: { p_mostrar: boolean; p_seccion: string }
         Returns: undefined
+      }
+      votar_vino_favorito: {
+        Args: { p_acepta_bases: boolean; p_contacto: string; p_idioma?: string; p_nombre: string; p_vino_id: string }
+        Returns: Json
       }
       consulta_flexible_agente: { Args: { p: Json }; Returns: Json }
       contenido_texto_agente: {

@@ -74,6 +74,8 @@ const PoliticaPrivacidad = () => {
                     <h2 className="text-xl font-bold mb-3 text-accent">{p.controller.heading}</h2>
                     <div className="rounded-lg border border-border p-5 space-y-1 text-sm text-muted-foreground">
                         <p><strong className="text-foreground">{p.controller.companyLabel}</strong> {RESPONSABLE_TRATAMIENTO.razonSocial}</p>
+                        <p><strong className="text-foreground">{p.controller.tradeNameLabel}</strong> {RESPONSABLE_TRATAMIENTO.nombreComercial}</p>
+                        <p><strong className="text-foreground">{p.controller.taxIdLabel}</strong> {RESPONSABLE_TRATAMIENTO.cif}</p>
                         <p><strong className="text-foreground">{p.controller.addressLabel}</strong> {RESPONSABLE_TRATAMIENTO.direccion}</p>
                         <p><strong className="text-foreground">{p.controller.phoneLabel}</strong> <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" /></p>
                         <p><strong className="text-foreground">{p.controller.emailLabel}</strong> {NEGOCIO.email}</p>

@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 // deno.land/std, que llenaba los logs de "Deno.core.runMicrotasks() is not
 // supported" cada vez que el worker se apagaba.
 import Stripe from "npm:stripe@23.0.0";
+import { enviarAvisoCompra } from "../_shared/cheques-regalo/aviso-compra.ts";
 import { generarCodigo } from "../_shared/cheques-regalo/codigo.ts";
 import { enviarEmailCheque } from "../_shared/cheques-regalo/email.ts";
 import { prepararChequeEmail } from "../_shared/cheques-regalo/preparar-email.ts";
@@ -11,7 +12,8 @@ import { enviarFacturaCheque } from "../_shared/enviar-factura-cheque.ts";
 
 /**
  * Webhook de Stripe para los cheques regalo: confirma el pago, genera el
- * código y manda el email con él. Función APARTE de `cheques-regalo-web`
+ * código, manda el email con él al comprador y avisa al restaurante con todos
+ * los datos de la compra (`enviarAvisoCompra`). Función APARTE de `cheques-regalo-web`
  * (que crea la sesión de pago) porque su auth es otra por completo — Stripe
  * firma la petición con `STRIPE_WEBHOOK_SECRET`, nunca manda el apikey de
  * Supabase, así que `verify_jwt` tiene que estar desactivado aquí.
@@ -123,15 +125,23 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
     return;
   }
 
+  // Lo cobrado es el cheque más los gastos de gestión, cada uno redondeado a
+  // céntimos igual que sus dos líneas en `cheques-regalo-web/crear`. Antes solo
+  // se comparaba el cheque: con los gastos encendidos, ningún pago se daba por bueno.
+  const cobradoEsperado = Math.round(Number(fila.importe_eur) * 100) + Math.round(Number(fila.gastos_gestion_eur ?? 0) * 100);
   if ((fila.stripe_session_id && fila.stripe_session_id !== session.id)
-    || session.currency !== "eur" || session.amount_total !== Math.round(Number(fila.importe_eur) * 100)) {
+    || session.currency !== "eur" || session.amount_total !== cobradoEsperado) {
     throw new Error(`La sesión de Stripe no coincide con el cheque ${chequeId}`);
   }
 
   if (fila.estado === "pagado") {
     // Reintento de Stripe. Si lo que falló la otra vez fue el email, se
-    // reenvía con el código ya guardado; si salió, no queda nada por hacer.
-    if (fila.codigo && !fila.email_enviado_en) await enviarYMarcarEmail({ ...fila, codigo: fila.codigo });
+    // reenvía con el código ya guardado (y entonces tampoco salió el aviso al
+    // restaurante, que va detrás); si salió, no queda nada por hacer.
+    if (fila.codigo && !fila.email_enviado_en) {
+      await enviarYMarcarEmail({ ...fila, codigo: fila.codigo });
+      await enviarAvisoCompra({ ...fila, codigo: fila.codigo });
+    }
     await enviarFacturaCheque(supabase, chequeId);
     if (fila.stripe_fee_eur == null) await guardarComisionStripe(chequeId, fila.stripe_payment_intent_id);
     return;
@@ -170,6 +180,8 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
   if (!codigo || !chequeEmitido) throw new Error(`5 códigos repetidos seguidos para el cheque ${chequeId}`);
 
   await enviarYMarcarEmail(chequeEmitido);
+  // A mejor esfuerzo: nunca lanza, así un fallo del aviso no hace reintentar a Stripe.
+  await enviarAvisoCompra(chequeEmitido);
   await enviarFacturaCheque(supabase, chequeId);
   await guardarComisionStripe(chequeId, paymentIntentId);
 }

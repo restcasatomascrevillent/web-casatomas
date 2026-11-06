@@ -8,7 +8,7 @@ import FiltrosTipoVino, { BarraFiltrosVino } from "./FiltrosTipoVino";
 import { origenComprobable } from "@/lib/origenes-vino";
 import { categoriaCorta, etiquetaTipoVino, tipoDesdeCategoria, tipoVino } from "@/lib/tipos-vino";
 import { filtrarVinos, hayFiltroVinos, nombreVinoVisible } from "@/lib/filtro-vinos";
-import { Search, AlertCircle, Plus, MapPin, Eye, EyeOff, Info } from "lucide-react";
+import { Search, AlertCircle, Plus, MapPin, Eye, EyeOff, Info, Wine, Award } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,7 @@ import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import BackToTopButton from "./BackToTopButton";
+import VotoVinoFavorito from "./VotoVinoFavorito";
 // Vocabulario único de alérgenos: este fichero tenía su propia copia de
 // `normalizeAlergenos`, que ya divergía de la del resto de la carta.
 import {
@@ -91,6 +92,12 @@ interface Vino {
   nombre_en?: string;
   nombre_fr?: string;
   expanded?: boolean;
+  /** Se sirve por copas y su precio (04/11/2026, panel › Gestor Web › Vinos). */
+  copeo?: boolean | null;
+  precio_copa_eur?: number | null;
+  /** Puntos de Robert Parker / The Wine Advocate y la añada a la que corresponden. */
+  puntuacion_parker?: number | null;
+  puntuacion_parker_anada?: number | null;
 }
 
 type VinoRecord = Vino & Record<string, unknown>;
@@ -100,6 +107,42 @@ const INFORMACION_VINO = {
   en: { ver: "View information", ocultar: "Hide information", sinFoto: "No photo available" },
   fr: { ver: "Voir les informations", ocultar: "Masquer les informations", sinFoto: "Aucune photo disponible" },
 };
+
+/**
+ * Copa y Parker (04/11/2026, petición del dueño). La copa es un tercer botón
+ * redondo (con una copa) que cambia el pie de la tarjeta al precio de la copa,
+ * y «Añadir» añade entonces la copa al pedido. La puntuación Parker va como un
+ * icono pequeño con los puntos junto al tipo de vino.
+ */
+const COPA_PARKER = {
+  es: {
+    verCopa: "Ver precio por copa",
+    verBotella: "Ver precio de la botella",
+    copaPedido: "copa",
+    parker: (puntos: number, anada?: number | null) => `Puntuación Parker: ${puntos} puntos${anada ? ` (añada ${anada})` : ""}`,
+  },
+  en: {
+    verCopa: "See price by the glass",
+    verBotella: "See bottle price",
+    copaPedido: "glass",
+    parker: (puntos: number, anada?: number | null) => `Parker score: ${puntos} points${anada ? ` (${anada} vintage)` : ""}`,
+  },
+  fr: {
+    verCopa: "Voir le prix au verre",
+    verBotella: "Voir le prix de la bouteille",
+    copaPedido: "verre",
+    parker: (puntos: number, anada?: number | null) => `Note Parker : ${puntos} points${anada ? ` (millésime ${anada})` : ""}`,
+  },
+};
+
+/** Se sirve por copas y tiene un precio de copa que enseñar. */
+const tieneCopa = (vino: Pick<Vino, "copeo" | "precio_copa_eur">) =>
+  vino.copeo === true && typeof vino.precio_copa_eur === "number" && vino.precio_copa_eur > 0;
+
+const puntosParker = (vino: Pick<Vino, "puntuacion_parker">) =>
+  typeof vino.puntuacion_parker === "number" && vino.puntuacion_parker >= 50 && vino.puntuacion_parker <= 100
+    ? vino.puntuacion_parker
+    : null;
 
 let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
 const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");
@@ -136,6 +179,8 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
   const [hasMoreByCategory, setHasMoreByCategory] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [infoCards, setInfoCards] = useState<Record<string, boolean>>({});
+  // Tarjetas con el precio de la copa a la vista (botón de la copa).
+  const [copaCards, setCopaCards] = useState<Record<string, boolean>>({});
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({});
   const [mapVinos, setMapVinos] = useState<Vino[]>(() => initialMapVinos ?? []);
   const [mapLoading, setMapLoading] = useState(() => !initialMapVinos);
@@ -567,6 +612,10 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
 
       {isAdult !== false && (
       <>
+      {/* «Vota tu vino favorito» (04/11/2026): aviso de 3 s al entrar y botón para votar,
+          solo con la votación abierta en el panel y la edad ya confirmada. */}
+      <VotoVinoFavorito vinos={mapVinos} listo={isAdult === true} language={language} />
+
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
         <div className="relative max-w-md mx-auto w-full">
@@ -614,6 +663,10 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
             const itemRecord = item as VinoRecord;
             const cardKey = getCardKey(itemRecord);
             const infoOpen = isInfoCardOpen(itemRecord);
+            const conCopa = tieneCopa(item);
+            const copaOpen = conCopa && Boolean(copaCards[cardKey]);
+            const parker = puntosParker(item);
+            const precioVisible = copaOpen ? item.precio_copa_eur : item.precio_eur;
             const imageUrl = getWineImage(itemRecord);
             const hasVisibleImage = Boolean(imageUrl && !brokenImages[cardKey]);
             const expanded = hasVisibleImage && isCardExpanded(itemRecord);
@@ -677,9 +730,37 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                             >
                               <Info className="h-4 w-4" aria-hidden="true" />
                             </button>
+                            {conCopa && (
+                              <button
+                                type="button"
+                                onClick={() => setCopaCards((prev) => ({ ...prev, [cardKey]: !copaOpen }))}
+                                aria-label={`${copaOpen ? COPA_PARKER[language].verBotella : COPA_PARKER[language].verCopa} — ${item.displayNombre || item.nombre}`}
+                                aria-pressed={copaOpen}
+                                title={copaOpen ? COPA_PARKER[language].verBotella : COPA_PARKER[language].verCopa}
+                                className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${copaOpen ? "bg-accent text-accent-foreground hover:bg-accent-hover" : "bg-muted/60 text-foreground hover:bg-muted"}`}
+                              >
+                                <Wine className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <p className={`font-sans text-xs leading-relaxed text-muted-foreground ${expanded ? "col-start-1 row-start-2" : ""}`}>{etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "", language)}</p>
+                        <p className={`font-sans text-xs leading-relaxed text-muted-foreground ${expanded ? "col-start-1 row-start-2" : ""}`}>
+                          {etiquetaTipoVino(tipoVino(item.categoria), language)} · {categoriaCorta(item.categoria ?? "", language)}
+                          {parker !== null && (
+                            // Icono de la puntuación Parker: puntos a la vista; añada al pasar por encima
+                            // y para el lector de pantalla.
+                            <span
+                              title={COPA_PARKER[language].parker(parker, item.puntuacion_parker_anada)}
+                              aria-label={COPA_PARKER[language].parker(parker, item.puntuacion_parker_anada)}
+                              role="img"
+                              className="ml-2 inline-flex translate-y-[-1px] items-center gap-0.5 whitespace-nowrap rounded-full border border-accent/40 bg-accent/10 px-1.5 py-px align-middle text-[11px] font-semibold leading-4 text-accent"
+                            >
+                              <Award className="h-3 w-3" aria-hidden="true" />
+                              {parker}
+                              <span className="font-normal">RP</span>
+                            </span>
+                          )}
+                        </p>
                       </CardHeader>
 
                       {infoOpen && (
@@ -703,11 +784,24 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                       <CardFooter
                         className={`mt-auto flex items-center justify-between border-t border-border/60 bg-muted/10 ${expanded ? "gap-2 px-3 py-2 max-[359px]:gap-1" : "flex-wrap gap-2 px-4 py-3"}`}
                       >
-                        {precioConocido(item.precio_eur)
-                          ? <span className="min-w-0 font-libre-baskerville text-base font-bold leading-tight text-accent min-[360px]:text-lg">{mostrarPrecio(item.precio_eur, language)}</span>
+                        {precioConocido(precioVisible)
+                          ? <span className="min-w-0 font-libre-baskerville text-base font-bold leading-tight text-accent min-[360px]:text-lg">
+                              {mostrarPrecio(precioVisible, language)}
+                              {/* «/ copa» detrás del precio y en la misma letra de la carta (serif), fina,
+                                  en cursiva y gris: antes era «COPA» en mayúsculas de palo seco delante del
+                                  precio y al dueño no le gustaba (04/11/2026). */}
+                              {copaOpen && (
+                                <span className="ml-1 whitespace-nowrap text-sm font-normal italic text-muted-foreground min-[360px]:text-base">
+                                  / {COPA_PARKER[language].copaPedido}
+                                </span>
+                              )}
+                            </span>
                           // «Consultar precio» no es un precio: no se pinta como tal.
                           : <span className="min-w-0 font-sans text-sm font-medium leading-tight text-muted-foreground">{mostrarPrecio(item.precio_eur, language)}</span>}
-                        {showAddButton && <Button size="sm" disabled={!precioConocido(item.precio_eur)} title={!precioConocido(item.precio_eur) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}`} className={`h-10 rounded-full bg-accent font-sans text-sm text-accent-foreground hover:bg-accent-hover ${expanded ? "shrink-0 px-3 max-[359px]:px-2" : "px-4"}`}><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
+                        {showAddButton && <Button size="sm" disabled={!precioConocido(precioVisible)} title={!precioConocido(precioVisible) ? CONSULTAR_PRECIO[language] : undefined} onClick={() => addToPedido(copaOpen
+                          // La copa es otra línea del pedido (otro id y otro precio que la botella).
+                          ? { ...item, id: `${item.id}:copa`, precio_eur: item.precio_copa_eur as number, displayNombre: `${item.displayNombre || item.nombre} (${COPA_PARKER[language].copaPedido})` }
+                          : item)} aria-label={`${t.vinos.add} — ${item.displayNombre || item.nombre}${copaOpen ? ` (${COPA_PARKER[language].copaPedido})` : ""}`} className={`h-10 rounded-full bg-accent font-sans text-sm text-accent-foreground hover:bg-accent-hover ${expanded ? "shrink-0 px-3 max-[359px]:px-2" : "px-4"}`}><Plus className="mr-1 h-4 w-4" aria-hidden="true" />{t.vinos.add}</Button>}
                       </CardFooter>
                     </div>
 

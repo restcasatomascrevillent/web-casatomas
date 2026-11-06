@@ -86,6 +86,15 @@ describe("aviso legal (solo en español)", () => {
     montar("es", "/aviso-legal", <AvisoLegal />);
     compruebaPieCompleto(es, "");
   });
+
+  it("identifica al titular con sus datos del Registro Mercantil (LSSI-CE, art. 10)", () => {
+    montar("es", "/aviso-legal", <AvisoLegal />);
+    const datos = screen.getByText("Datos registrales:").parentElement;
+    expect(datos).toHaveTextContent("Registro Mercantil de Alicante, tomo 3549, folio 153, sección 8.ª, hoja A-126769, inscripción 1.ª");
+    expect(screen.getByText("CIF:").parentElement).toHaveTextContent("B54583356");
+    expect(screen.getByText("Titular:").parentElement).toHaveTextContent("MASIDE 2011, S.L.U. (sociedad unipersonal)");
+    expect(screen.getByText("Domicilio:").parentElement).toHaveTextContent("Carrer Santa Maria de la Cabeza, 2, local 2, 03330 Crevillent");
+  });
 });
 
 describe("salto al apartado de cookies", () => {

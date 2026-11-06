@@ -72,6 +72,13 @@ export interface VinoSSG {
   alergenos_en?: string;
   alergenos_fr?: string;
   traducciones?: unknown;
+  /** Se sirve por copas (04/11/2026): la tarjeta enseña un botón con una copa. */
+  copeo?: boolean;
+  /** Precio de una copa; solo cuenta con `copeo`. */
+  precio_copa_eur?: number | null;
+  /** Puntos de Robert Parker / The Wine Advocate (50–100) y su añada. */
+  puntuacion_parker?: number | null;
+  puntuacion_parker_anada?: number | null;
 }
 
 /** Una bebida sin alcohol. Mismas columnas que consume `CartaBebidas.tsx`. */
@@ -124,6 +131,9 @@ export interface CartaSSG {
     mostrarFotosPlatos: boolean;
     mostrarMenuDelDia?: boolean;
     mostrarTapas?: boolean;
+    /** Días y horas guardados en el panel (`HorarioWeb` o null = lo de siempre). */
+    horarioMenuDelDia?: unknown;
+    horarioTapas?: unknown;
   };
 }
 

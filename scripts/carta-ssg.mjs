@@ -80,6 +80,9 @@ const CAMPOS_SALIDA = {
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
     'alergenos_en', 'alergenos_fr',
     'traducciones',
+    // Copa y Parker (04/11/2026, migración 20261104140000 del panel). Con
+    // `select=*` en una BD sin esas columnas no vienen y se descartan sin error.
+    'copeo', 'precio_copa_eur', 'puntuacion_parker', 'puntuacion_parker_anada',
   ],
   Bebidas: [
     'id',
@@ -292,6 +295,10 @@ export async function leerVisibilidadMenuTapas(baseUrl, key) {
     return {
       mostrarMenuDelDia: filas?.[0]?.mostrar_menu_dia_casa_tomas !== false,
       mostrarTapas: filas?.[0]?.mostrar_tapas_casa_tomas !== false,
+      // Días y horas (04/11/2026). NULL o sin la columna = lo de siempre (lo decide
+      // src/lib/horario-web.ts); aquí solo se copia lo guardado.
+      horarioMenuDelDia: filas?.[0]?.horario_menu_dia_casa_tomas ?? null,
+      horarioTapas: filas?.[0]?.horario_tapas_casa_tomas ?? null,
     };
   } catch {
     return { mostrarMenuDelDia: true, mostrarTapas: true };

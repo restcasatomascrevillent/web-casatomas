@@ -4,81 +4,85 @@ import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { TelLink } from "@/components/TelLink";
 import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
-import { AVISO_LEGAL_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
-import { NEGOCIO, SITE_URL } from "@/lib/negocio";
+import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
+import { NEGOCIO, SITE_URL, TITULAR } from "@/lib/negocio";
 import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
-/**
- * Datos del titular tal y como figuran en el aviso legal del WordPress antiguo
- * (`/aviso-legal/`, última modificación 08/08/2023). La política de privacidad
- * (`RESPONSABLE_TRATAMIENTO`) dice «Restaurante Casa Tomás» como razón social:
- * aquí manda el texto legal vigente. El email no figuraba en el WordPress (el
- * campo estaba vacío) y se toma de `NEGOCIO`.
- */
-const TITULAR = {
-  nombreComercial: "Restaurante Casa Tomás",
-  denominacionSocial: "MASIDE 2011 SL",
-  cif: "B54583356",
-  domicilio: `${NEGOCIO.calle}, ${NEGOCIO.cp} ${NEGOCIO.localidad}, ${NEGOCIO.region}.`,
-} as const;
+/** Dominio en el que se publica la web (el de `SITE_URL`). */
+const DOMINIO = new URL(SITE_URL).host;
+
+type Seccion = { readonly id: string; readonly title: string; readonly paragraphs: readonly string[] };
 
 /**
- * Dominio que cita el aviso legal (apartados 1 y 2).
- *
- * PENDIENTE (F-31): Pablo tiene que confirmar si es con «www» o sin él. Es el
- * texto del WordPress antiguo; la web publica en `SITE_URL`, sin «www». Para
- * cambiarlo basta con tocar esta línea.
+ * Texto del aviso legal (04/11/2026, revisado a petición del dueño: «básate en la información real
+ * de la web»). Describe lo
+ * que la web hace de verdad: carta, reservas, cheques regalo con pago por Stripe, tienda-escaparate
+ * de vinos (sin venta online), asistente automático (chat) y la votación del vino favorito. Los
+ * datos personales y las cookies van en la política de privacidad, a la que se remite.
  */
-const DOMINIO = "www.restaurantecasatomascrevillente.es";
-
-type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
-
 const SECCIONES: readonly Seccion[] = [
   {
-    title: "2. Derechos de propiedad intelectual e industrial",
+    id: "objeto",
+    title: "2. Objeto y servicios del sitio web",
     paragraphs: [
-      "El sitio web, incluyendo a título enunciativo pero no limitativo su programación, edición, compilación y demás elementos necesarios para su funcionamiento, los diseños, logotipos, texto y/o gráficos, son propiedad del RESPONSABLE o, si es el caso, dispone de licencia o autorización expresa por parte de los autores. Todos los contenidos del sitio web se encuentran debidamente protegidos por la normativa de propiedad intelectual e industrial, así como inscritos en los registros públicos correspondientes. Independientemente de la finalidad para la que fueran destinados, la reproducción total o parcial, uso, explotación, distribución y comercialización, requiere en todo caso la autorización escrita previa por parte del RESPONSABLE. Cualquier uso no autorizado previamente se considera un incumplimiento grave de los derechos de propiedad intelectual o industrial del autor.",
-      `Los diseños, logotipos, texto y/o gráficos ajenos al RESPONSABLE y que pudieran aparecer en el sitio web, pertenecen a sus respectivos propietarios, siendo ellos mismos responsables de cualquier posible controversia que pudiera suscitarse respecto a los mismos. El RESPONSABLE autoriza expresamente a que terceros puedan redirigir directamente a los contenidos concretos del sitio web, y en todo caso redirigir al sitio web principal de ${DOMINIO}.`,
-      "El RESPONSABLE reconoce a favor de sus titulares los correspondientes derechos de propiedad intelectual e industrial, no implicando su sola mención o aparición en el sitio web la existencia de derechos o responsabilidad alguna sobre los mismos, como tampoco respaldo, patrocinio o recomendación por parte del mismo.",
-      `Para realizar cualquier tipo de observación respecto a posibles incumplimientos de los derechos de propiedad intelectual o industrial, así como sobre cualquiera de los contenidos del sitio web, puede hacerlo a través del correo electrónico ${NEGOCIO.email}.`,
+      `El sitio web ${DOMINIO} da a conocer el restaurante y permite: consultar la carta de platos, vinos y bebidas con sus precios y alérgenos; pedir mesa mediante el formulario de reservas; comprar cheques regalo, que se pagan en línea con tarjeta a través de la pasarela de pago Stripe; consultar la tienda de vinos, que es un escaparate (las botellas se compran en el restaurante, no se venden ni se envían por internet); hacer preguntas a un asistente automático (chat); suscribirse a la newsletter, y, cuando esté abierta, participar en la votación del vino favorito.`,
+      "Las reservas y la newsletter tienen sus propias condiciones, que se aceptan al enviar el formulario de reserva. Los cheques regalo son válidos durante 12 meses desde la fecha de compra. El tratamiento de los datos personales se explica en la política de privacidad.",
     ],
   },
   {
-    title: "3. Exención de responsabilidades",
+    id: "uso",
+    title: "3. Condiciones de uso",
     paragraphs: [
-      "El RESPONSABLE se exime de cualquier tipo de responsabilidad derivada de la información publicada en su sitio web siempre que no tenga conocimiento efectivo de que esta información haya sido manipulada o introducida por un tercero ajeno al mismo o, si lo tiene, haya actuado con diligencia para retirar los datos o hacer imposible el acceso a ellos.",
+      "Quien accede al sitio web es usuario y acepta este aviso legal. El usuario se compromete a hacer un uso lícito de la web y de sus formularios, a facilitar datos veraces y a no introducir contenidos ilícitos, ofensivos o que dañen a terceros, ni intentar acceder a zonas restringidas o alterar su funcionamiento.",
+      "La carta de vinos y la tienda de vinos se dirigen a mayores de 18 años. La venta y el suministro de bebidas alcohólicas a menores de 18 años están prohibidos; la edad se comprueba en el restaurante al servir o vender.",
     ],
   },
   {
-    title: "Política de enlaces",
+    id: "contenidos",
+    title: "4. Información de la carta, precios y alérgenos",
     paragraphs: [
-      "Desde el sitio web, es posible que se redirija a contenidos de terceros sitios web. Dado que el RESPONSABLE no puede controlar siempre los contenidos introducidos por terceros en sus respectivos sitios web, no asume ningún tipo de responsabilidad respecto a dichos contenidos. En todo caso, procederá a la retirada inmediata de cualquier contenido que pudiera contravenir la legislación nacional o internacional, la moral o el orden público, procediendo a la retirada inmediata de la redirección a dicho sitio web, poniendo en conocimiento de las autoridades competentes el contenido en cuestión.",
-      "El RESPONSABLE no se hace responsable de la información y contenidos almacenados, a título enunciativo pero no limitativo, en foros, chats, generadores de blogs, comentarios, redes sociales o cualquier otro medio que permita a terceros publicar contenidos de forma independiente en la página web del RESPONSABLE. Sin embargo, y en cumplimiento de lo dispuesto en los artículos 11 y 16 de la LSSICE, se pone a disposición de todos los usuarios, autoridades y fuerzas de seguridad, colaborando de forma activa en la retirada o, en su caso, bloqueo de todos aquellos contenidos que puedan afectar o contravenir la legislación nacional o internacional, los derechos de terceros o la moral y el orden público. En caso de que el usuario considere que existe en el sitio web algún contenido que pudiera ser susceptible de esta clasificación, se ruega lo notifique de forma inmediata al administrador del sitio web.",
-      "Este sitio web se ha revisado y probado para que funcione correctamente. En principio, puede garantizarse el correcto funcionamiento los 365 días del año, 24 horas al día. Sin embargo, el RESPONSABLE no descarta la posibilidad de que existan ciertos errores de programación, o que acontezcan causas de fuerza mayor, catástrofes naturales, huelgas o circunstancias semejantes que hagan imposible el acceso a la página web.",
+      "Los precios de la web incluyen el IVA. La carta, los precios, las fotos y la disponibilidad de los productos pueden cambiar sin previo aviso; en caso de diferencia, prevalece la información que se facilite en el restaurante.",
+      "La información sobre alérgenos se ofrece de acuerdo con el Reglamento (UE) 1169/2011. Antes de pedir, comunique al personal cualquier alergia o intolerancia: le confirmará la composición del plato y el riesgo de contaminación cruzada.",
+      "Las respuestas del asistente automático (chat) se generan de forma automática a partir de la información de la web y son orientativas: no sustituyen la confirmación del personal sobre reservas, alérgenos o precios.",
     ],
   },
   {
-    title: "Direcciones IP",
+    id: "propiedad",
+    title: "5. Propiedad intelectual e industrial",
     paragraphs: [
-      "Los servidores del sitio web podrán detectar de manera automática la dirección IP y el nombre de dominio utilizados por el usuario. Una dirección IP es un número asignado automáticamente a un ordenador cuando este se conecta a Internet. Toda esta información se registra en un fichero de actividad del servidor debidamente inscrito que permite el posterior procesamiento de los datos con el fin de obtener mediciones únicamente estadísticas que permitan conocer el número de impresiones de páginas, el número de visitas realizadas a los servidores web, el orden de visitas, el punto de acceso, etc.",
+      `Los textos, fotografías, logotipos, el diseño y el código del sitio web pertenecen a ${TITULAR.denominacionSocial} o a sus autores, que han autorizado su uso. No se pueden reproducir, distribuir, transformar ni comunicar públicamente, total o parcialmente, sin autorización previa y por escrito, salvo para uso personal y privado.`,
+      "Las marcas, logotipos y contenidos de terceros que aparezcan en la web pertenecen a sus titulares. Se permite enlazar a cualquier página de la web, siempre que el enlace no induzca a error sobre su origen.",
     ],
   },
   {
-    title: "4. Ley aplicable y jurisdicción",
+    id: "responsabilidad",
+    title: "6. Responsabilidad y enlaces",
     paragraphs: [
-      "Para la resolución de todas las controversias o cuestiones relacionadas con el presente sitio web o de las actividades en él desarrolladas, será de aplicación la legislación española, a la que se someten expresamente las partes, siendo competentes para la resolución de todos los conflictos derivados o relacionados con su uso los Juzgados y Tribunales del domicilio del USUARIO o el lugar del cumplimiento de la obligación.",
+      "La web se revisa para que funcione correctamente, pero no se puede garantizar que esté disponible en todo momento ni libre de errores por causas técnicas o ajenas al titular. El titular no responde de los daños que se deriven de una interrupción del servicio ni de un uso indebido de la web por parte del usuario.",
+      "La web enlaza a servicios de terceros (redes sociales, Google, la pasarela de pago, el mapa de vinos). El titular no controla sus contenidos ni responde de ellos; si tiene conocimiento de que un enlace lleva a contenidos ilícitos, lo retirará, conforme a los artículos 16 y 17 de la LSSI-CE.",
+    ],
+  },
+  {
+    id: "datos",
+    title: "7. Datos personales y cookies",
+    paragraphs: [
+      "Los datos personales que se facilitan en la web (reservas, cheques regalo, newsletter, chat y votación) los trata el titular conforme al Reglamento (UE) 2016/679 (RGPD) y a la Ley Orgánica 3/2018. Quién los trata, para qué, durante cuánto tiempo, con qué proveedores y cómo ejercer sus derechos se explica en la política de privacidad, que también detalla las cookies que usa la web.",
+    ],
+  },
+  {
+    id: "reclamaciones",
+    title: "8. Reclamaciones, ley aplicable y jurisdicción",
+    paragraphs: [
+      `Para cualquier queja o reclamación puede escribirnos a ${NEGOCIO.email}, llamarnos o pedir una hoja de reclamaciones oficial en el restaurante.`,
+      "Este aviso legal se rige por la legislación española. Si el usuario es consumidor, son competentes los juzgados y tribunales de su domicilio, conforme a la normativa de consumidores y usuarios.",
     ],
   },
 ];
 
 /**
- * Aviso legal (LSSI-CE, art. 10). Mismo esqueleto visual que
- * `PoliticaPrivacidad` y `Condiciones` y, como ellas, `noindex` (por eso no
- * entra en el sitemap). Solo en español: ver `AVISO_LEGAL_PATH`.
- *
- * El texto es el del WordPress antiguo. Único cambio de fondo: el apartado de
- * cookies del WordPress describía las cookies de aquella web; las de esta se
- * explican en la política de privacidad, y aquí se remite a ella.
+ * Aviso legal (LSSI-CE, art. 10). Mismo esqueleto visual que `PoliticaPrivacidad` y `Condiciones`
+ * y, como ellas, `noindex` (por eso no entra en el sitemap). Solo en español: ver
+ * `AVISO_LEGAL_PATH`. Los datos del titular vienen de `TITULAR` (`lib/negocio.ts`).
  */
 const AvisoLegal = () => (
   <div className="min-h-screen bg-background">
@@ -100,38 +104,29 @@ const AvisoLegal = () => (
           Volver al inicio
         </Link>
         <h1 className="text-3xl md:text-4xl font-bold">Aviso legal</h1>
-        <p className="text-stone-light mt-2 text-sm">Ley de Servicios de la Sociedad de la Información (LSSI)</p>
+        <p className="text-stone-light mt-2 text-sm">Ley 34/2002 de Servicios de la Sociedad de la Información (LSSI-CE) · Última actualización: noviembre de 2026</p>
       </div>
     </div>
 
     <div className="max-w-4xl mx-auto px-4 py-12 space-y-10 text-foreground">
       <section className="space-y-2 text-sm text-muted-foreground">
         <p>
-          {TITULAR.denominacionSocial}, responsable del sitio web, en adelante RESPONSABLE, pone a disposición de los
-          usuarios el presente documento, con el que pretende dar cumplimiento a las obligaciones dispuestas en la Ley
-          34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSICE), BOE
-          N.º 166, así como informar a todos los usuarios del sitio web respecto a cuáles son las condiciones de uso.
-        </p>
-        <p>
-          Toda persona que acceda a este sitio web asume el papel de usuario, comprometiéndose a la observancia y
-          cumplimiento riguroso de las disposiciones aquí dispuestas, así como a cualquier otra disposición legal que
-          fuera de aplicación.
-        </p>
-        <p>
-          {TITULAR.denominacionSocial} se reserva el derecho de modificar cualquier tipo de información que pudiera
-          aparecer en el sitio web, sin que exista obligación de preavisar o poner en conocimiento de los usuarios dichas
-          obligaciones, entendiéndose como suficiente la publicación en el sitio web de {TITULAR.denominacionSocial}.
+          En cumplimiento del artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la
+          Información y de Comercio Electrónico (LSSI-CE), estos son los datos del titular de este sitio web y las
+          condiciones de su uso.
         </p>
       </section>
 
       <section>
-        <h2 className="text-xl font-bold mb-3 text-accent">1. Datos identificativos</h2>
+        <h2 className="text-xl font-bold mb-3 text-accent">1. Datos del titular</h2>
         <div className="rounded-lg border border-border p-5 space-y-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">
-          <p><strong className="text-foreground">Nombre de dominio:</strong> {DOMINIO}</p>
+          <p><strong className="text-foreground">Titular:</strong> {TITULAR.denominacionSocial} (sociedad unipersonal)</p>
           <p><strong className="text-foreground">Nombre comercial:</strong> {TITULAR.nombreComercial}</p>
-          <p><strong className="text-foreground">Denominación social:</strong> {TITULAR.denominacionSocial}</p>
           <p><strong className="text-foreground">CIF:</strong> {TITULAR.cif}</p>
-          <p><strong className="text-foreground">Domicilio social:</strong> {TITULAR.domicilio}</p>
+          <p><strong className="text-foreground">Domicilio:</strong> {TITULAR.domicilio}</p>
+          {TITULAR.registroMercantil && (
+            <p><strong className="text-foreground">Datos registrales:</strong> {TITULAR.registroMercantil}</p>
+          )}
           <p>
             <strong className="text-foreground">Teléfono:</strong>{" "}
             <TelLink className="text-accent underline underline-offset-2 hover:decoration-2" />
@@ -142,24 +137,29 @@ const AvisoLegal = () => (
               {NEGOCIO.email}
             </a>
           </p>
+          <p><strong className="text-foreground">Sitio web:</strong> {DOMINIO}</p>
         </div>
       </section>
 
       {SECCIONES.map((seccion) => (
-        <section key={seccion.title}>
+        <section key={seccion.id} id={seccion.id}>
           <h2 className="text-xl font-bold mb-3 text-accent">{seccion.title}</h2>
           <div className="space-y-2 text-sm text-muted-foreground">
             {seccion.paragraphs.map((parrafo) => (
               <p key={parrafo}>{parrafo}</p>
             ))}
-            {seccion.title.startsWith("3.") && (
+            {seccion.id === "objeto" && (
               <p>
-                <strong className="text-foreground">Uso de cookies.</strong> Las cookies que utiliza este sitio web, su
-                finalidad y cómo cambiar el consentimiento se explican en la{" "}
-                <Link to={`${POLITICA_PRIVACIDAD_PATH}#cookies`} className="text-accent underline underline-offset-2 hover:decoration-2">
-                  política de privacidad y cookies
+                <Link to={CONDICIONES_PATH} className="inline-flex min-h-11 items-center text-accent underline underline-offset-2 hover:decoration-2">
+                  Condiciones de reserva y newsletter
                 </Link>
-                .
+              </p>
+            )}
+            {seccion.id === "datos" && (
+              <p>
+                <Link to={POLITICA_PRIVACIDAD_PATH} className="inline-flex min-h-11 items-center text-accent underline underline-offset-2 hover:decoration-2">
+                  Política de privacidad y cookies
+                </Link>
               </p>
             )}
           </div>
