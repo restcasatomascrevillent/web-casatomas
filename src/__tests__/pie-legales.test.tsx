@@ -86,6 +86,13 @@ describe("aviso legal (solo en español)", () => {
     montar("es", "/aviso-legal", <AvisoLegal />);
     compruebaPieCompleto(es, "");
   });
+
+  it("identifica al titular con sus datos del Registro Mercantil (LSSI-CE, art. 10)", () => {
+    montar("es", "/aviso-legal", <AvisoLegal />);
+    const datos = screen.getByText("Datos registrales:").parentElement;
+    expect(datos).toHaveTextContent("Registro Mercantil de Alicante, tomo 3549, folio 153, hoja A-126769, inscripción 1.ª");
+    expect(screen.getByText("CIF:").parentElement).toHaveTextContent("B54583356");
+  });
 });
 
 describe("salto al apartado de cookies", () => {
