@@ -24,10 +24,6 @@ export interface DatosComprador {
   fechaEntrega: string;
   ocultarImporte: boolean;
   incluirDedicatoria: boolean;
-  solicitaFactura: boolean;
-  facturaNombre: string;
-  facturaNif: string;
-  facturaDireccion: string;
 }
 
 const DATOS_COMPRADOR_VACIOS: DatosComprador = {
@@ -39,10 +35,6 @@ const DATOS_COMPRADOR_VACIOS: DatosComprador = {
   fechaEntrega: "",
   ocultarImporte: false,
   incluirDedicatoria: true,
-  solicitaFactura: false,
-  facturaNombre: "",
-  facturaNif: "",
-  facturaDireccion: "",
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -140,10 +132,6 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
       return;
     }
 
-    if (datos.solicitaFactura && (!datos.facturaNombre.trim() || !datos.facturaNif.trim() || !datos.facturaDireccion.trim())) {
-      setErrorFormulario(t.contacto.giftInvoiceMissingData);
-      return;
-    }
     if (enviandoRef.current) return;
     enviandoRef.current = true;
     setErrorFormulario(null);
@@ -153,13 +141,8 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
         method: "POST",
         headers: functionHeaders(),
         body: JSON.stringify({
+          // Sin factura: la web ya no la emite al comprar; se pide al canjear el cheque.
           importe_eur: parseFloat(giftAmount),
-          solicita_factura: datos.solicitaFactura,
-          datos_factura: datos.solicitaFactura ? {
-            nombre: datos.facturaNombre.trim(),
-            nif: datos.facturaNif.trim(),
-            direccion: datos.facturaDireccion.trim(),
-          } : undefined,
           comprador_nombre: nombre,
           comprador_email: email,
           comprador_telefono: datos.telefono.trim() || undefined,
@@ -170,14 +153,10 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
           fecha_entrega_deseada: datos.fechaEntrega || undefined,
         }),
       });
-      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; message?: string; factura_solicitada?: boolean; ocultar_importe?: boolean } | null;
+      const cuerpo = (await leerCuerpo(response)) as { url?: string; mensaje?: string; message?: string; ocultar_importe?: boolean } | null;
 
       if (!response.ok || !cuerpo?.url) {
         throw new Error(cuerpo?.mensaje || cuerpo?.message || `No se pudo abrir el pago (HTTP ${response.status}).`);
-      }
-
-      if (datos.solicitaFactura && cuerpo.factura_solicitada !== true) {
-        throw new Error(t.contacto.giftInvoiceNotReady);
       }
 
       if (datos.ocultarImporte && cuerpo.ocultar_importe !== true) {

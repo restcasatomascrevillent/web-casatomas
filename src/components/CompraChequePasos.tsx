@@ -10,21 +10,22 @@ import { crearSesionVistaRegalo, type SesionVistaRegalo } from "@/lib/cheques/vi
 import { calcularGastosGestion, GASTOS_GESTION_APAGADOS } from "../../supabase/functions/_shared/cheques-regalo/gastos-gestion";
 import { VistaRegaloCompra } from "./VistaRegaloCompra";
 import { Label } from "@/components/ui/label";
-import { Check, FileText, Loader2 } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
+import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { DatosComprador } from "./ContactoSection";
 
 const copyByLanguage = {
-  es: { showAmount: "Mostrar el importe en el regalo y en el PDF", dedication: "Incluir dedicatoria en el PDF", preview: "Vista previa del cheque PDF", loading: "Generando vista previa…", previewError: "La vista previa no está disponible ahora. Puedes continuar con la compra.", sample: "Código de ejemplo. El definitivo se genera al confirmar el pago.", next: "Continuar", back: "Atrás", step: "Paso", of: "de", optional: "Opcional · puedes continuar sin rellenarlo", invoice: "¿Necesitas factura?", no: "No necesito factura", review: "Revisa la información de compra", required: "Completa este dato para continuar.", locale: "es-ES", voucher: "Cheque regalo", fees: "Gastos de gestión", total: "Total a pagar", feesNote: "Gastos de gestión de la compra online, iguales para cualquier forma de pago." },
-  en: { showAmount: "Show the amount on the gift and PDF", dedication: "Include a dedication in the PDF", preview: "Gift PDF preview", loading: "Generating preview…", previewError: "The preview is unavailable right now. You can continue with your purchase.", sample: "Sample code. The final code is generated after payment.", next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", invoice: "Do you need an invoice?", no: "No invoice needed", review: "Review your purchase details", required: "Complete this field to continue.", locale: "en-GB", voucher: "Gift voucher", fees: "Handling fee", total: "Total to pay", feesNote: "Online purchase handling fee, the same for every payment method." },
-  fr: { showAmount: "Afficher le montant sur le cadeau et le PDF", dedication: "Inclure une dédicace dans le PDF", preview: "Aperçu du chèque PDF", loading: "Génération de l’aperçu…", previewError: "L’aperçu est indisponible. Vous pouvez continuer votre achat.", sample: "Code d’exemple. Le code définitif est généré après le paiement.", next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", invoice: "Souhaitez-vous une facture ?", no: "Pas de facture", review: "Vérifiez les informations d’achat", required: "Renseignez ce champ pour continuer.", locale: "fr-FR", voucher: "Chèque cadeau", fees: "Frais de gestion", total: "Total à payer", feesNote: "Frais de gestion de l’achat en ligne, identiques quel que soit le moyen de paiement." },
+  es: { showAmount: "Mostrar el importe en el regalo y en el PDF", dedication: "Incluir dedicatoria en el PDF", preview: "Vista previa del cheque PDF", loading: "Generando vista previa…", previewError: "La vista previa no está disponible ahora. Puedes continuar con la compra.", sample: "Código de ejemplo. El definitivo se genera al confirmar el pago.", next: "Continuar", back: "Atrás", step: "Paso", of: "de", optional: "Opcional · puedes continuar sin rellenarlo", review: "Revisa la información de compra", required: "Completa este dato para continuar.", locale: "es-ES", voucher: "Cheque regalo", fees: "Gastos de gestión", total: "Total a pagar", feesNote: "Gastos de gestión de la compra online, iguales para cualquier forma de pago." },
+  en: { showAmount: "Show the amount on the gift and PDF", dedication: "Include a dedication in the PDF", preview: "Gift PDF preview", loading: "Generating preview…", previewError: "The preview is unavailable right now. You can continue with your purchase.", sample: "Sample code. The final code is generated after payment.", next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", review: "Review your purchase details", required: "Complete this field to continue.", locale: "en-GB", voucher: "Gift voucher", fees: "Handling fee", total: "Total to pay", feesNote: "Online purchase handling fee, the same for every payment method." },
+  fr: { showAmount: "Afficher le montant sur le cadeau et le PDF", dedication: "Inclure une dédicace dans le PDF", preview: "Aperçu du chèque PDF", loading: "Génération de l’aperçu…", previewError: "L’aperçu est indisponible. Vous pouvez continuer votre achat.", sample: "Code d’exemple. Le code définitif est généré après le paiement.", next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", review: "Vérifiez les informations d’achat", required: "Renseignez ce champ pour continuer.", locale: "fr-FR", voucher: "Chèque cadeau", fees: "Frais de gestion", total: "Total à payer", feesNote: "Frais de gestion de l’achat en ligne, identiques quel que soit le moyen de paiement." },
 };
 type Props = {
   open: boolean; onOpenChange: (open: boolean) => void; importe: string; datos: DatosComprador;
   setDatos: Dispatch<SetStateAction<DatosComprador>>; enviando: boolean; error: string | null;
   setError: (error: string | null) => void; confirmar: () => Promise<void>;
 };
-type Field = { key: keyof DatosComprador | "factura" | "resumen" | "vista"; label: string; type: string; required?: boolean; max?: number; complete?: string; placeholder?: string };
+type Field = { key: keyof DatosComprador | "resumen" | "vista"; label: string; type: string; required?: boolean; max?: number; complete?: string; placeholder?: string };
 export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos, enviando, error, setError, confirmar }: Props) {
   const { t, language } = useTranslations();
   const c = t.contacto, copy = copyByLanguage[language || "es"];
@@ -67,12 +68,6 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
     { key: "destinatario", label: c.giftFormRecipientName, type: "text", max: 200, placeholder: c.giftFormRecipientNamePlaceholder },
     { key: "mensaje", label: c.giftFormMessage, type: "textarea", max: 500, placeholder: c.giftFormMessagePlaceholder },
     { key: "fechaEntrega", label: c.giftFormDeliveryDate, type: "date" },
-    { key: "factura", label: copy.invoice, type: "choice" },
-    ...(datos.solicitaFactura ? [
-      { key: "facturaNombre", label: c.giftInvoiceName, type: "text", required: true, max: 200, complete: "organization" },
-      { key: "facturaNif", label: c.giftInvoiceTaxId, type: "text", required: true, max: 30 },
-      { key: "facturaDireccion", label: c.giftInvoiceAddress, type: "textarea", required: true, max: 300, complete: "street-address" },
-    ] as Field[] : []),
     { key: "resumen", label: copy.review, type: "summary" },
     { key: "vista", label: copy.preview, type: "preview" },
   ];
@@ -83,7 +78,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
   }, [open, step]);
   const value = field.key in datos ? String(datos[field.key as keyof DatosComprador]) : "";
   function next() {
-    if (field.required && !value.trim()) { setError(field.key === "nombre" ? c.toasts.giftMissingName : field.key.startsWith("factura") ? c.giftInvoiceMissingData : copy.required); return; }
+    if (field.required && !value.trim()) { setError(field.key === "nombre" ? c.toasts.giftMissingName : copy.required); return; }
     if (field.key === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email.trim())) { setError(c.toasts.giftInvalidEmail); return; }
     setError(null);
     if (final) void confirmar(); else goTo(step + 1);
@@ -93,6 +88,16 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
     flushSync(() => setStep(nextStep));
     body.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([hidden]):not([type="checkbox"]), textarea:not([hidden])')?.focus({ preventScroll: true });
   }
+  // La web ya no emite facturas al comprar: se piden al canjear el cheque, en el restaurante o por
+  // email al restaurante. Va arriba del resumen, el último paso antes de la vista previa y el pago.
+  const [antesEmail, despuesEmail = ""] = c.giftInvoiceWarning.split("{email}");
+  const avisoFactura = <div role="note" className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+    <Info aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
+    <div className="min-w-0 space-y-1">
+      <p className="font-semibold">{c.giftInvoiceWarningTitle}</p>
+      <p className="break-words">{antesEmail}<a href={`mailto:${NEGOCIO.email}`} className="font-medium underline underline-offset-2 [overflow-wrap:anywhere]">{NEGOCIO.email}</a>{despuesEmail}</p>
+    </div>
+  </div>;
   const opciones = <div className="space-y-3 rounded-xl border p-3 text-sm">
     <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
     <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
@@ -115,16 +120,8 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
         <div ref={body} className="min-h-14 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
           <div className="space-y-3 w-full min-w-0 my-auto">
             {!final && <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>}
-            {field.type === "choice" ? <div className="space-y-3">
-              <p className="text-sm text-center text-muted-foreground">{c.giftInvoiceDescription}</p>
-              <Button type="button" aria-pressed={datos.solicitaFactura} disabled={enviando} variant="outline" className={`w-full h-auto min-h-14 p-4 whitespace-normal text-left justify-start gap-3 ${datos.solicitaFactura ? "border-accent bg-accent/10" : ""}`}
-                onClick={() => { setDatos(d => ({ ...d, solicitaFactura: true, facturaNombre: d.facturaNombre || d.nombre })); setError(null); }}>
-                <FileText className="h-5 w-5 shrink-0" />{c.giftInvoiceRequest}{datos.solicitaFactura && <Check className="h-5 w-5 shrink-0 ml-auto" />}
-              </Button>
-              <Button type="button" aria-pressed={!datos.solicitaFactura} disabled={enviando} variant="outline" className={`w-full min-h-14 ${!datos.solicitaFactura ? "border-accent bg-accent/10" : ""}`} onClick={() => { setDatos(d => ({ ...d, solicitaFactura: false })); setError(null); }}>{copy.no}</Button>
-            </div> : field.type === "summary" ? <div className="space-y-4"><dl className="rounded-xl bg-muted/50 p-4 text-sm space-y-3">
+            {field.type === "summary" ? <div className="space-y-4">{avisoFactura}<dl className="rounded-xl bg-muted/50 p-4 text-sm space-y-3">
               {fields.filter(f => (f.key !== "mensaje" || datos.incluirDedicatoria) && f.key in datos && String(datos[f.key as keyof DatosComprador] || "").trim()).map(f => <div key={f.key}><dt className="text-muted-foreground">{f.label}</dt><dd className="font-medium break-words whitespace-pre-wrap">{String(datos[f.key as keyof DatosComprador])}</dd></div>)}
-              <div><dt className="text-muted-foreground">{copy.invoice}</dt><dd>{datos.solicitaFactura ? c.giftInvoiceRequest : copy.no}</dd></div>
             </dl>{gastos > 0 && <div className="rounded-xl border p-4 text-sm space-y-2">
               <p className="flex justify-between gap-3"><span>{copy.voucher}</span><span>{eur(importeCheque)}</span></p>
               <p className="flex justify-between gap-3"><span>{copy.fees}</span><span>{eur(gastos)}</span></p>
