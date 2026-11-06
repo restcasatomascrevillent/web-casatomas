@@ -88,7 +88,7 @@ export const RESPONSABLE_TRATAMIENTO = {
   razonSocial: TITULAR.denominacionSocial,
   nombreComercial: TITULAR.nombreComercial,
   cif: TITULAR.cif,
-  direccion: "Carrer Santa Maria de la Cabeza, 2 — 03330 Crevillent (Alicante)",
+  direccion: TITULAR.domicilio,
 } as const;
 
 const es: TextosPrivacidad = {
