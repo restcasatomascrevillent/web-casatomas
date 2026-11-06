@@ -112,7 +112,7 @@ describe("textos de la política de privacidad — las tres versiones dicen lo m
 
   it("los datos del responsable son los mismos en los tres idiomas y vienen de una sola fuente", () => {
     // El responsable es la sociedad titular (la misma que el aviso legal), no el nombre comercial.
-    expect(RESPONSABLE_TRATAMIENTO.razonSocial).toBe("MASIDE 2011 SL");
+    expect(RESPONSABLE_TRATAMIENTO.razonSocial).toBe("MASIDE 2011, S.L.U.");
     expect(RESPONSABLE_TRATAMIENTO.cif).toBe("B54583356");
     expect(RESPONSABLE_TRATAMIENTO.nombreComercial).toBe("Restaurante Casa Tomás");
     expect(TITULAR.domicilio).toContain(NEGOCIO.calle);

@@ -14,7 +14,7 @@
  * cifras).
  *
  * Revisión del 04/11/2026 (petición del dueño: «básate en la información real
- * de la web»): responsable = la sociedad titular (MASIDE 2011 SL, no el nombre
+ * de la web»): responsable = la sociedad titular (MASIDE 2011, S.L.U., no el nombre
  * comercial), y todo lo que la web trata de verdad: reservas, newsletter,
  * cheques regalo (pago con Stripe y factura), asistente de la web (chat con
  * OpenAI), asistente telefónico, votación del vino favorito y estadísticas

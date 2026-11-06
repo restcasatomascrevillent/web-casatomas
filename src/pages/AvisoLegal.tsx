@@ -120,7 +120,7 @@ const AvisoLegal = () => (
       <section>
         <h2 className="text-xl font-bold mb-3 text-accent">1. Datos del titular</h2>
         <div className="rounded-lg border border-border p-5 space-y-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">
-          <p><strong className="text-foreground">Titular:</strong> {TITULAR.denominacionSocial}</p>
+          <p><strong className="text-foreground">Titular:</strong> {TITULAR.denominacionSocial} (sociedad unipersonal)</p>
           <p><strong className="text-foreground">Nombre comercial:</strong> {TITULAR.nombreComercial}</p>
           <p><strong className="text-foreground">CIF:</strong> {TITULAR.cif}</p>
           <p><strong className="text-foreground">Domicilio:</strong> {TITULAR.domicilio}</p>

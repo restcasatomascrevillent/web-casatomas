@@ -92,6 +92,7 @@ describe("aviso legal (solo en español)", () => {
     const datos = screen.getByText("Datos registrales:").parentElement;
     expect(datos).toHaveTextContent("Registro Mercantil de Alicante, tomo 3549, folio 153, hoja A-126769, inscripción 1.ª");
     expect(screen.getByText("CIF:").parentElement).toHaveTextContent("B54583356");
+    expect(screen.getByText("Titular:").parentElement).toHaveTextContent("MASIDE 2011, S.L.U. (sociedad unipersonal)");
   });
 });
 
