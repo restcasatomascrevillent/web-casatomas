@@ -66,6 +66,8 @@ jobs:
               exit 1
             fi
             echo "EXPECTED_COMMIT=$SHA_DESPLIEGUE" >> "$GITHUB_ENV"
+            # La versión publicada tiene que ser la de versionado.json de ese commit (la de la release).
+            echo "EXPECTED_VERSION=$(node -p "require('./versionado.json').version")" >> "$GITHUB_ENV"
           else
             URL="${ENTRADA_BASE_URL:-${VARIABLE_BASE_URL:-$PROD}}"
           fi
@@ -107,6 +109,7 @@ jobs:
             "",
             `- URL: ${limpio(process.env.BASE_URL)}`,
             `- Commit esperado: ${process.env.EXPECTED_COMMIT ? limpio(process.env.EXPECTED_COMMIT).slice(0, 7) : "no se exige"}`,
+            `- Versión esperada: ${process.env.EXPECTED_VERSION ? limpio(process.env.EXPECTED_VERSION) : "no se exige"}`,
             "",
           ];
           const fichero = "test-results/humo-resultado.json";
