@@ -79,6 +79,8 @@ export interface VinoSSG {
   /** Puntos de Robert Parker / The Wine Advocate (50–100) y su añada. */
   puntuacion_parker?: number | null;
   puntuacion_parker_anada?: number | null;
+  /** «94», «94+» o «93–95» (08/11/2026): solo verificadas y de la añada que se sirve. */
+  puntuacion_parker_texto?: string | null;
 }
 
 /** Una bebida sin alcohol. Mismas columnas que consume `CartaBebidas.tsx`. */
