@@ -35,6 +35,7 @@ const RUTAS = [
   "/",
   "/carta",
   "/carta/entrantes",
+  "/carta/carnes", // con el desplegable «Más sobre nuestras carnes» del pie
   "/carta/vinos",
   "/carta/bebidas",
   "/reservas",

@@ -22,8 +22,8 @@ const TEXTOS: Record<
     description: (n: number) => string;
     keywords: string[];
     migaCarta: string;
+    /** Nombre de la sección: miga, `h1` y nombre del `Menu` del JSON-LD. */
     miga: string;
-    titulo: string;
     detalle: (n: number) => string;
     alertTitle: string;
     alertBody: string;
@@ -38,7 +38,6 @@ const TEXTOS: Record<
     keywords: ["carta de vinos Crevillent", "bodega restaurante Alicante", "vinos Casa Tomás", "denominación de origen"],
     migaCarta: "Carta",
     miga: "Vinos",
-    titulo: "Carta de vinos",
     detalle: (n) => `${n} referencias`,
     alertTitle: "Solo para mayores de 18 años",
     alertBody: "La venta y el suministro de bebidas alcohólicas a menores de 18 años está prohibido. Disfrútalo con moderación.",
@@ -52,7 +51,6 @@ const TEXTOS: Record<
     keywords: ["wine list Crevillent", "restaurant wine cellar Alicante", "Casa Tomás wines", "designation of origin"],
     migaCarta: "Menu",
     miga: "Wines",
-    titulo: "Wine list",
     detalle: (n) => `${n} wines`,
     alertTitle: "18+ only",
     alertBody: "The sale and serving of alcoholic drinks to anyone under 18 is prohibited. Please enjoy responsibly.",
@@ -66,7 +64,6 @@ const TEXTOS: Record<
     keywords: ["carte des vins Crevillent", "cave à vins restaurant Alicante", "vins Casa Tomás", "appellation d'origine"],
     migaCarta: "Carte",
     miga: "Vins",
-    titulo: "Carte des vins",
     detalle: (n) => `${n} références`,
     alertTitle: "Réservé aux plus de 18 ans",
     alertBody: "La vente et le service de boissons alcoolisées aux mineurs de moins de 18 ans sont interdits. À consommer avec modération.",
@@ -141,7 +138,7 @@ const CartaVinosPagina = () => {
           data={menuPagina(
             menuSchema(secciones, language, undefined, {
               id: `${url}#menu`,
-              nombre: `${textos.titulo} — Casa Tomás`,
+              nombre: `${textos.miga} — Casa Tomás`,
               url,
             }),
           )}
@@ -149,7 +146,7 @@ const CartaVinosPagina = () => {
       )}
 
       <CartaPageLayout
-        titulo={textos.titulo}
+        titulo={textos.miga}
         detalle={textos.detalle(vinos.length)}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: textos.miga }]}
       >
