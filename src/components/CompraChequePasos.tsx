@@ -116,7 +116,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
         <div className="flex justify-between text-xs text-muted-foreground pr-10"><span>{copy.step} {step + 1} {copy.of} {fields.length}</span><span className="font-semibold text-accent">{gastos > 0 ? eur(importeCheque + gastos) : importe + " €"}</span></div>
         <div className="h-1 rounded-full bg-accent/10 overflow-hidden"><div className="h-full bg-accent transition-all" style={{ width: ((step + 1) / fields.length * 100) + "%" }} /></div>
       </DialogHeader>
-      <form className="flex min-h-0 flex-1 flex-col" onSubmit={e => { e.preventDefault(); next(); }} noValidate>
+      <form className="flex min-h-0 flex-1 flex-col" onSubmit={e => { e.preventDefault(); next(); }} noValidate data-track-form="cheque">
         <div ref={body} className="min-h-14 flex-1 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col min-w-0" aria-live="polite">
           <div className="space-y-3 w-full min-w-0 my-auto">
             {!final && <h2 className="text-xl sm:text-2xl font-semibold text-center">{field.label}</h2>}

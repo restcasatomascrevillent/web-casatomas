@@ -1,3 +1,4 @@
+import { registrarActividad } from "@/lib/actividad/registro";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Bot, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -274,6 +275,12 @@ const AIChatbot = ({
         if (isOpen && initialInput) setInput(initialInput.slice(0, MAX_MENSAJE_LEN));
     }, [isOpen, initialInput]);
 
+    // Super Admin › Logs: abrir y cerrar el asistente (sin contenido).
+    useEffect(() => {
+        if (mounted) registrarActividad("chat", { accion: isOpen ? "abrir" : "cerrar" });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
+
     useEffect(() => {
         if (!isOpen) {
             return;
@@ -467,6 +474,8 @@ const AIChatbot = ({
         if (!messageToSend || isSending) return;
 
         const userMessage = { role: "user" as const, content: messageToSend };
+        // Super Admin › Logs: que se ha preguntado algo, NUNCA el texto.
+        registrarActividad("chat", { accion: "mensaje" });
         setMessages(prev => [...prev, userMessage]);
         setInput("");
         setIsSending(true);
@@ -524,6 +533,7 @@ const AIChatbot = ({
                 if (!textoControl || !esControlConocido) {
                     throw new Error(`chat-web respondio ${response.status}`);
                 }
+                registrarActividad("chat", { accion: "respuesta", props: { codigo: codigo ?? "control" } });
 
                 setMessages(prev => [
                     ...prev,
@@ -536,6 +546,7 @@ const AIChatbot = ({
             }
 
             const assistantReply = extractAssistantText(cuerpo) ?? DEFAULT_ASSISTANT_REPLY;
+            registrarActividad("chat", { accion: "respuesta" });
 
             setMessages(prev => [
                 ...prev,
@@ -546,6 +557,7 @@ const AIChatbot = ({
             ]);
         } catch (error) {
             console.error("chat-web request failed:", error);
+            registrarActividad("chat", { accion: "error" });
             setMessages(prev => [
                 ...prev,
                 {

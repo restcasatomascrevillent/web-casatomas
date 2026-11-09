@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { registrarActividad } from "@/lib/actividad/registro";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useTranslations } from "@/i18n/LanguageProvider";
@@ -29,6 +30,14 @@ const NotFound = () => {
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    // Super Admin › Logs: solo abre ticket si se activa en Configuración y supera su umbral (enlace interno roto).
+    let referenteInterno = false;
+    try {
+      referenteInterno = !!document.referrer && new URL(document.referrer).origin === window.location.origin;
+    } catch {
+      referenteInterno = false;
+    }
+    registrarActividad("error_404", { ruta: location.pathname, props: { referente_interno: referenteInterno }, error: { mensaje: "Página no encontrada" } });
   }, [location.pathname]);
 
   return (

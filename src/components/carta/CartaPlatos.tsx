@@ -41,6 +41,8 @@ import {
 import { getUserPedido, setUserPedido } from "@/utils/sessionManager";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { registrarActividad } from "@/lib/actividad/registro";
+import { useBusquedaRegistrada } from "@/lib/actividad/useBusquedaRegistrada";
 import BackToTopButton from "./BackToTopButton";
 import { resolveTranslatedItem } from "@/lib/carta-i18n";
 import {
@@ -310,8 +312,10 @@ const CartaPlatos = ({
 
     return items;
   }, [debouncedSearchTerm, dietaryFilters, translatedPlatos]);
+  useBusquedaRegistrada(debouncedSearchTerm, filteredItems.length, "platos");
 
   const handleCategoryChange = (category: string) => {
+    registrarActividad("carta_categoria", { objetivo: category, props: { carta: "platos" } });
     setSelectedCategory(category);
     if (!platosByCategory[category]) {
       fetchPlatosByCategory(category, false);
@@ -430,6 +434,7 @@ const CartaPlatos = ({
       : `fallback:${item.nombre}|${item.precio_eur}|${normalizarUnidadPlato(item.unidad)}|${item.categoria ?? ""}`;
 
   const addToPedido = (item: any) => {
+    registrarActividad("pedido", { accion: "anadir", objetivo: item?.displayNombre || item?.nombre, props: { carta: "platos" } });
     const cantidadInicial = item.cantidad ?? getInitialCantidad(item.unidad);
     const pedidoItem = {
       ...item,
@@ -480,13 +485,24 @@ const CartaPlatos = ({
     return Boolean(item.expanded);
   };
 
+  /** Super Admin › Logs: qué plato se abre (foto o información). */
+  const registrarPlato = (itemId: string, modo: "ficha" | "info") => {
+    const plato = (translatedPlatos as Array<{ id?: string; displayNombre?: string; nombre?: string; categoria?: string }>).find((p) => p.id === itemId);
+    registrarActividad("plato_abierto", {
+      objetivo: plato?.displayNombre || plato?.nombre || itemId,
+      props: { id: itemId, carta: "platos", categoria: plato?.categoria ?? undefined, modo },
+    });
+  };
+
   const handleToggleCard = (itemId: string, currentExpanded: boolean) => {
+    if (!currentExpanded) registrarPlato(itemId, "ficha");
     setExpandedCards((prev) => ({ ...prev, [itemId]: !currentExpanded }));
   };
 
   const isInfoCardOpen = (item: any) => Boolean(infoCards[item.id]);
 
   const handleToggleInfoCard = (itemId: string, currentOpen: boolean) => {
+    if (!currentOpen) registrarPlato(itemId, "info");
     setInfoCards((prev) => ({ ...prev, [itemId]: !currentOpen }));
   };
 

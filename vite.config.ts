@@ -125,9 +125,8 @@ interface NovedadesDescargadas {
  * saber qué versión tiene la demo y cuál producción. Solo en el build del cliente: el SSG
  * compila también para servidor y ahí no hace falta.
  */
-function versionJsonPlugin(): Plugin {
+function versionJsonPlugin(version: ReturnType<typeof calcularVersion>): Plugin {
   let ssr = false;
-  const version = calcularVersion();
   return {
     name: "version-json",
     apply: "build",
@@ -189,8 +188,14 @@ function novedadesSsgPlugin(env: Record<string, string>, { requerido }: { requer
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const siteUrl = (env.VITE_SITE_URL || "https://restaurantecasatomascrevillente.es").replace(/\/+$/, "");
+  const version = calcularVersion();
 
   return {
+    // Versión y commit en los eventos de Super Admin › Logs (src/lib/actividad/instalar.ts).
+    define: {
+      "import.meta.env.VITE_VERSION_WEB": JSON.stringify(version.version ?? ""),
+      "import.meta.env.VITE_COMMIT_WEB": JSON.stringify((version.commit ?? "").slice(0, 12)),
+    },
     server: {
       host: "::",
       port: 8080,
@@ -199,7 +204,7 @@ export default defineConfig(({ mode, command }) => {
       react(),
       cartaSsgPlugin(env, { requerido: command === "build" }),
       novedadesSsgPlugin(env, { requerido: command === "build" }),
-      versionJsonPlugin(),
+      versionJsonPlugin(version),
     ].filter(Boolean),
     resolve: {
       alias: {

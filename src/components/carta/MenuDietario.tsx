@@ -1,3 +1,4 @@
+import { registrarActividad } from "@/lib/actividad/registro";
 import { type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
@@ -43,12 +44,15 @@ export default function MenuDietario({ compacto = false, children }: { compacto?
   const controles = <div className="w-full max-w-2xl">
     <div role="group" aria-label={copy.title} className="grid grid-cols-3 gap-1 sm:gap-3">
       {DIETAS.map(dieta => <button key={dieta} type="button" aria-pressed={filtros.includes(dieta)}
-        onClick={() => cambiar(filtros.includes(dieta) ? filtros.filter(x => x !== dieta) : [...filtros, dieta])}
+        onClick={() => {
+          registrarActividad("filtro", { accion: filtros.includes(dieta) ? "desactivar" : "activar", objetivo: `dieta:${dieta}`, props: { carta: "platos" } });
+          cambiar(filtros.includes(dieta) ? filtros.filter(x => x !== dieta) : [...filtros, dieta]);
+        }}
         className={`min-h-11 min-w-0 whitespace-normal break-words text-center leading-tight border-b-2 px-0.5 py-2 text-xs sm:text-sm sm:whitespace-nowrap font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${filtros.includes(dieta) ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-primary'}`}>
         {copy.labels[dieta]}
       </button>)}
     </div>
-    {filtros.length > 0 && <button type="button" onClick={() => cambiar([])} className="min-h-11 text-xs underline underline-offset-4">{copy.clear}</button>}
+    {filtros.length > 0 && <button type="button" onClick={() => { registrarActividad("filtro", { accion: "limpiar", objetivo: "dieta", props: { carta: "platos" } }); cambiar([]); }} className="min-h-11 text-xs underline underline-offset-4">{copy.clear}</button>}
     {filtros.length > 0 && <div className="mt-2 space-y-2 text-xs leading-relaxed text-muted-foreground">
       {(filtros.includes('celiaquia') || filtros.includes('lactosa')) && <p>{copy.note}</p>}
       {filtros.includes('vegetariano') && <p>{copy.plant}</p>}

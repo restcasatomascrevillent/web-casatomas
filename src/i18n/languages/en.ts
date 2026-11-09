@@ -552,7 +552,7 @@ export const translations: Translations = {
     cookie: {
       title: "Cookie Policy",
       message:
-        "We use necessary cookies to run the site. The interactive wine map's cookies are optional and only load if you accept them. Learn more in our",
+        "We use necessary cookies to run the site. The interactive wine map and usage statistics are optional and only load if you accept them. Learn more in our",
       link: "Cookie Policy",
       reject: "Reject",
       configure: "Customize",
@@ -565,6 +565,8 @@ export const translations: Translations = {
       mapsDescription: "Loads the Mapbox map on the wine menu to show where each wine comes from. Mapbox receives anonymous usage data when it's shown.",
       mapsDisabledNotice: "Enable map cookies to see where our wines come from.",
       mapsEnableCta: "Enable map",
+      statsTitle: "Usage statistics",
+      statsDescription: "A random identifier so we can see which pages and buttons are used during a visit and spot where the website fails. It doesn't store what you type or your name, and it isn't shared with third parties.",
       save: "Save preferences",
     },
     map: {
