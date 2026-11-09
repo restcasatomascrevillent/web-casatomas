@@ -30,7 +30,7 @@ export default function Informacion() {
       {ruta === "/el-restaurante" && <><NosotrosSection /><div className="max-w-7xl mx-auto px-4"><EspaciosGallery /></div></>}
       {ruta === "/contacto" && <><ContactoSection modo="contacto" /><p className="text-center"><a href={GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer" className={`${AREA_TOQUE_ENLACE} text-accent underline`}>{{ es: "Cómo llegar a Casa Tomás", en: "Directions to Casa Tomás", fr: "Itinéraire vers Casa Tomás" }[language]}</a></p></>}
       {ruta === "/regala" && <ContactoSection modo="regalo" />}
-      {ruta === "/touza" && <div className="max-w-3xl mx-auto my-12 px-4 text-center space-y-6"><h2 className="text-2xl font-bold">{t.espacios.cards[3].title}</h2><p>{t.espacios.cards[3].description}</p><Button asChild><a href={TOUZA_URL} target="_blank" rel="noopener noreferrer">{t.espacios.visitTouza}</a></Button></div>}
+      {ruta === "/touza" && <div className="max-w-3xl mx-auto my-12 px-4 text-center space-y-6"><h2 className="text-2xl font-bold">{t.espacios.cards[3].title}</h2><p>{t.espacios.cards[3].description}</p>{PAGINAS_INFORMACION["/touza"][language].parrafos.map(parrafo => <p key={parrafo} className="text-base md:text-lg text-muted-foreground leading-relaxed">{parrafo}</p>)}<Button asChild><a href={TOUZA_URL} target="_blank" rel="noopener noreferrer">{t.espacios.visitTouza}</a></Button></div>}
       <div className="flex flex-wrap justify-center gap-4 mt-12 px-4">
         <Button asChild><Link to={construirRutaIdioma("/reservas", language)}>{t.footer.reserveLink}</Link></Button>
         <Button asChild variant="outline"><Link to={construirRutaIdioma("/carta", language)}>{t.footer.menuLink}</Link></Button>

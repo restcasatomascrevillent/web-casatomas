@@ -210,7 +210,7 @@ export const translations = {
       ],
       galleryButton: "Ver galería de fotos",
       visitTouza: "Visitar Touza Cocktail",
-      middayMenuTitle: "Menú de mediodía",
+      middayMenuTitle: "Menú del día",
       middayMenuDescription: "De martes a jueves, disfruta de un menú de mediodía de temporada elaborado con producto fresco.",
       todayMenuTitle: "Menú de hoy",
       todayTapasTitle: "Tapas de hoy",

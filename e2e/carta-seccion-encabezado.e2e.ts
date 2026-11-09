@@ -5,7 +5,8 @@
  *  - el único `h1` es el nombre de la sección («Carnes»), con migas y
  *    contador; en vinos, «Carta de vinos» (decisión del dueño, 09/11/2026);
  *  - los filtros y el primer plato quedan pegados al encabezado, en la primera
- *    pantalla, sin párrafos en medio;
+ *    pantalla, sin párrafos en medio (solo el subtítulo `h2` de la sección,
+ *    09/11/2026);
  *  - el texto descriptivo va al pie, en un `<details>` cerrado que se abre y se
  *    cierra con teclado (Enter / Espacio) y con el dedo;
  *  - `title`, `description` y `canonical` siguen siendo los de la sección.
@@ -34,12 +35,18 @@ for (const [nombre, viewport, tactil] of [
       await expect(page.getByRole("navigation", { name: "breadcrumb" })).toContainText("Carnes");
       await expect(page.getByText("1 plato", { exact: true })).toBeVisible();
 
-      // Nada de párrafos entre la cabecera y los platos: el primero se ve sin
-      // desplazarse y los filtros quedan a menos de 120 px del `h1`.
+      // Nada de párrafos entre la cabecera y los platos: solo el subtítulo
+      // `h2` de una línea (09/11/2026, «chuleta»). El primer plato se ve sin
+      // desplazarse y los filtros quedan a menos de 120 px de ese subtítulo.
       await expect(page.locator("#plato-20")).toBeInViewport();
-      const finH1 = (await h1.boundingBox())!.y + (await h1.boundingBox())!.height;
+      const h2 = page.getByRole("heading", { level: 2, name: SEO.h2 });
+      await expect(h2).toBeVisible();
+      const yH1 = (await h1.boundingBox())!.y;
+      const cajaH2 = (await h2.boundingBox())!;
+      expect(cajaH2.y).toBeGreaterThan(yH1);
       const filtros = (await page.locator("main details").first().boundingBox())!.y;
-      expect(filtros - finH1).toBeLessThan(120);
+      expect(filtros).toBeGreaterThan(cajaH2.y);
+      expect(filtros - (cajaH2.y + cajaH2.height)).toBeLessThan(120);
       await expect(page.getByText(SEO.intro[0])).toBeHidden();
 
       // Metadatos propios de la sección, distintos del nombre visible.

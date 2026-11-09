@@ -15,9 +15,36 @@ export const PAGINAS_INFORMACION = {
     fr: { h1: "Offrez un repas chez Casa Tomás", title: "Chèque cadeau restaurant à Crevillente | Casa Tomás", description: "Offrez un repas chez Casa Tomás à Crevillente. Choisissez le montant de votre chèque cadeau et ajoutez un message personnalisé." },
   },
   "/touza": {
-    es: { h1: "Touza Cocktail Bar", title: "Touza Cocktail Bar | Casa Tomás", description: "Conoce Touza Cocktail Bar, el otro proyecto de los propietarios de Casa Tomás. Descubre su propuesta y accede a la web de Touza." },
-    en: { h1: "Touza Cocktail Bar", title: "Touza Cocktail Bar | Casa Tomás", description: "Discover Touza Cocktail Bar, another project from the owners of Casa Tomás. Explore its offering and visit the Touza website." },
-    fr: { h1: "Touza Cocktail Bar", title: "Touza Cocktail Bar | Casa Tomás", description: "Découvrez Touza Cocktail Bar, un autre projet des propriétaires de Casa Tomás. Retrouvez sa proposition et visitez le site de Touza." },
+    es: {
+      h1: "Touza Cocktail Bar en Crevillente",
+      title: "Touza Cocktail Bar en Crevillente | Casa Tomás",
+      description: "Touza Crevillente: la coctelería de Casa Tomás, con cócteles clásicos y de autor, cócteles sin alcohol, tapas de la casa y un reservado para celebraciones.",
+      parrafos: [
+        "Touza es la coctelería de Casa Tomás en Crevillente. Nace de las raíces gallegas de la casa y del carácter mediterráneo de la tierra que nos acoge, y esa mezcla de Atlántico y Mediterráneo es la que encontrarás en su carta de cócteles.",
+        "Además de clásicos como el Margarita, el Negroni o el Mojito, en Touza preparamos creaciones propias que solo puedes probar aquí, y también cócteles sin alcohol. Para acompañarlos, puedes tapear con las tapas más emblemáticas de Casa Tomás.",
+        "¿Tienes algo que celebrar? Touza dispone de un reservado exclusivo para disfrutar con los tuyos de un ambiente tranquilo y con más intimidad: para tu evento, el reservado de Touza es tu sitio.",
+      ],
+    },
+    en: {
+      h1: "Touza Cocktail Bar in Crevillente",
+      title: "Touza Cocktail Bar in Crevillente | Casa Tomás",
+      description: "Touza Crevillente: the cocktail bar of Casa Tomás, with classic and signature cocktails, alcohol-free cocktails, tapas from the house and a private room.",
+      parrafos: [
+        "Touza is the cocktail bar of Casa Tomás in Crevillente. It grows out of the Galician roots of the house and the Mediterranean character of the land that welcomes us, and that blend of Atlantic and Mediterranean is what you will find on its cocktail list.",
+        "Alongside classics such as the Margarita, the Negroni or the Mojito, at Touza we make our own creations that you can only taste here, as well as alcohol-free cocktails. To go with them, you can enjoy the most emblematic tapas of Casa Tomás.",
+        "Got something to celebrate? Touza has an exclusive private room where you can enjoy a quiet, more intimate atmosphere with your people: for your event, Touza's private room is the place.",
+      ],
+    },
+    fr: {
+      h1: "Touza Cocktail Bar à Crevillente",
+      title: "Touza Cocktail Bar à Crevillente | Casa Tomás",
+      description: "Touza Crevillente : le bar à cocktails de Casa Tomás, avec cocktails classiques et de création, cocktails sans alcool, tapas de la maison et un salon privé.",
+      parrafos: [
+        "Touza est le bar à cocktails de Casa Tomás à Crevillente. Il est né des racines galiciennes de la maison et du caractère méditerranéen de la terre qui nous accueille, et c'est ce mélange d'Atlantique et de Méditerranée que vous retrouverez sur sa carte de cocktails.",
+        "En plus des classiques comme la Margarita, le Negroni ou le Mojito, nous préparons chez Touza des créations maison que vous ne goûterez qu'ici, ainsi que des cocktails sans alcool. Pour les accompagner, vous pouvez déguster les tapas les plus emblématiques de Casa Tomás.",
+        "Vous avez quelque chose à fêter ? Touza dispose d'un salon privé exclusif pour profiter entre proches d'une ambiance calme et plus intime : pour votre événement, le salon privé de Touza est l'endroit idéal.",
+      ],
+    },
   },
 } as const;
 
