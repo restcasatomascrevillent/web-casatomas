@@ -144,10 +144,12 @@ export class Rastreador {
 
     // El mismo evento dos veces seguidas (doble clic, efecto repetido): uno.
     const clave = `${tipo}|${d.accion ?? ""}|${d.objetivo ?? ""}|${ruta}|${d.valor ?? ""}`;
-    if (tipo !== "pagina_salida" && tipo !== "scroll" && this.ultimoEvento?.clave === clave && ahora - this.ultimoEvento.t < VENTANA_DUPLICADO_MS) return null;
+    // Los errores no: dos iguales seguidos son dos fallos (tienen su propio tope de repeticiones, abajo).
+    const esError = tipo.startsWith("error_");
+    if (!esError && tipo !== "pagina_salida" && tipo !== "scroll" && this.ultimoEvento?.clave === clave && ahora - this.ultimoEvento.t < VENTANA_DUPLICADO_MS) return null;
     this.ultimoEvento = { clave, t: ahora };
 
-    if (tipo.startsWith("error_")) {
+    if (esError) {
       const firma = `${tipo}|${(d.error?.mensaje ?? d.objetivo ?? "").slice(0, 120)}`;
       const n = (this.erroresVistos.get(firma) ?? 0) + 1;
       this.erroresVistos.set(firma, n);

@@ -48,6 +48,8 @@ export function clasificarClic(objetivo: EventTarget | null, origenPagina: strin
   if (!el || el.matches("input, textarea, select, option")) return null;
   const zona = zonaDe(el);
   const objetivoTexto = etiquetaDe(el);
+  // Botones que son solo un número (días del calendario, paginación): no dicen nada como «botón más usado».
+  if (!(el instanceof HTMLAnchorElement) && /^\d{1,3}$/.test(objetivoTexto)) return null;
 
   if (el instanceof HTMLAnchorElement) {
     const href = el.getAttribute("href") ?? "";

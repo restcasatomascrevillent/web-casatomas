@@ -91,6 +91,12 @@ describe("sesión, orden y duplicados", () => {
     avanzar(1000);
     expect(r.registrar("clic", { objetivo: "Reservar" })).not.toBeNull();
   });
+  it("dos errores iguales seguidos son dos (no se confunden con un doble clic)", () => {
+    const { r, avanzar } = crear({ consentimiento: false });
+    expect(r.registrar("error_js", { error: { mensaje: "x" } })).not.toBeNull();
+    avanzar(50);
+    expect(r.registrar("error_js", { error: { mensaje: "x" } })).not.toBeNull();
+  });
   it("como mucho 3 repeticiones del mismo error por carga", () => {
     const { r, avanzar } = crear({ consentimiento: false });
     const n = [1, 2, 3, 4, 5].filter(() => { avanzar(1000); return r.registrar("error_js", { error: { mensaje: "x" } }) !== null; }).length;
@@ -165,6 +171,7 @@ describe("clasificación", () => {
     expect(clasificarClic(el('<input data-objetivo name="email" value="a@b.es">'), origen)).toBeNull();
     expect(clasificarClic(el('<div data-track-ignorar><button data-objetivo>x</button></div>'), origen)).toBeNull();
     expect(etiquetaDe(el('<button data-objetivo>  Ver   la carta  </button>'))).toBe("Ver la carta");
+    expect(clasificarClic(el('<button data-objetivo name="day">14</button>'), origen)).toBeNull();
   });
   it("procedencia: solo el host del referente y utm/qr de la URL", () => {
     expect(procedenciaDe("https://www.google.es/search?q=casa+tomas", "https://x.es/?utm_source=ig&qr=mesa-3&otra=1")).toEqual({ referente: "www.google.es", utm_source: "ig", qr: "mesa-3" });
