@@ -11,6 +11,8 @@ import type { Language } from "../i18n/types";
  *    de los datos de la carta (`etiquetaCategoriaIdioma`), igual que en las
  *    categorías sin entrada. Nada de `h1` comercial ni de otro `h1` oculto.
  *  - `title` y `description` solo van al `<head>` (`Seo`).
+ *  - `h2` (opcional) es un subtítulo visible bajo la cabecera, antes de los
+ *    platos (09/11/2026: «chuleta» en `/carta/carnes`).
  *  - `intro` es el contenido ampliado: se pinta al FINAL del listado, dentro
  *    de un desplegable cerrado (`MasSobreSeccion`) cuyo rótulo es `masSobre`.
  *    Está en el HTML prerenderizado, no se carga al abrirlo.
@@ -28,6 +30,11 @@ import type { Language } from "../i18n/types";
 export interface SeoCategoria {
   /** `<title>` del documento. No se pinta en la página. */
   title: string;
+  /**
+   * Subtítulo (H2) visible opcional: se pinta bajo la cabecera (el `h1` con
+   * el nombre de la sección), antes de los platos. No sustituye al `h1`.
+   */
+  h2?: string;
   /** `<meta name="description">`: resumen breve y concreto de la página. */
   description: string;
   /** Rótulo del desplegable del contenido ampliado («Más sobre nuestras carnes»). */
@@ -41,16 +48,19 @@ export const SEO_CATEGORIA: Record<string, Record<Language, SeoCategoria>> = {
     es: {
       title: "Chuletón y carnes a la brasa en Crevillente | Casa Tomás",
       masSobre: "Más sobre nuestras carnes",
+      // «chuleta» (09/11/2026): el dueño quiere salir por «comer chuleta en Crevillente».
+      h2: "Chuleta y chuletón de vaca madurada en Crevillente",
       description:
-        "Chuletón de vaca madurada 60 días, chuletón de ternera, cochinillo, solomillo gallego y pluma de bellota 5J en Casa Tomás, Crevillente. Precios y alérgenos.",
+        "Chuleta y chuletón de vaca madurada 60 días, chuletón de ternera, cochinillo, solomillo gallego y pluma 5J en Casa Tomás, Crevillente. Precios y alérgenos.",
       intro: [
-        "Si buscas dónde comer un buen chuletón en Crevillente, esta es la sección. La pieza estrella de Casa Tomás es el chuletón de vaca madurada 60 días, y a su lado servimos el chuletón de ternera y el entrecot de ternera nacional, que sacamos de nuestra propia selección de chuletones: los deshuesamos y aprovechamos las mejores piezas.",
+        "Si buscas dónde comer una buena chuleta o un buen chuletón en Crevillente, esta es la sección. La pieza estrella de Casa Tomás es el chuletón de vaca madurada 60 días, y a su lado servimos el chuletón de ternera y el entrecot de ternera nacional, que sacamos de nuestra propia selección de chuletones: los deshuesamos y aprovechamos las mejores piezas.",
         "Para quien prefiere una carne más tierna están el solomillo gallego, el solomillo trinchado salteado con ajetes y el solomillo de ternera con foie y salsa PX. Entre los asados, dos clásicos para compartir en la mesa: el cochinillo y la paletilla asada al estilo tradicional. Completa la sección la pluma de bellota 5J. Arriba tienes cada plato con su precio y sus alérgenos.",
       ],
     },
     en: {
       title: "Steak & Grilled Meat in Crevillente | Casa Tomás",
       masSobre: "More about our meat dishes",
+      h2: "Aged beef chop and T-bone steak (chuleta and chuletón) in Crevillente",
       description:
         "60-day aged beef T-bone, veal T-bone, suckling pig, Galician sirloin and 5J acorn-fed pluma at Casa Tomás, Crevillente. Prices and allergens.",
       intro: [
@@ -61,6 +71,7 @@ export const SEO_CATEGORIA: Record<string, Record<Language, SeoCategoria>> = {
     fr: {
       title: "Côte de bœuf et viandes à Crevillente | Casa Tomás",
       masSobre: "En savoir plus sur nos viandes",
+      h2: "Côte et côte de bœuf maturées (chuleta et chuletón) à Crevillente",
       description:
         "Côte de bœuf maturée 60 jours, côte de veau, cochon de lait, filet galicien et pluma ibérique 5J chez Casa Tomás, à Crevillente. Prix et allergènes.",
       intro: [
