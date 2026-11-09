@@ -246,6 +246,14 @@ export function restaurantSchema(opts: {
       url: `${SITE_URL}/og-image.jpg`,
       caption: OG_IMAGE_CAPTION,
     },
+    // Copia estable (public/) de src/assets/logo/logo-casa-tomas-512.png: los
+    // assets de Vite llevan hash en el nombre y no sirven como URL fija.
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/logo-casa-tomas.png`,
+      width: 512,
+      height: 352,
+    },
     telephone: NEGOCIO.telefono,
     email: NEGOCIO.email,
     url: `${SITE_URL}/`,

@@ -11,6 +11,7 @@ import type { Language } from "@/i18n/types";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { RESERVAS_PATH } from "@/lib/condiciones";
 import { formatearPrecio } from "@/lib/precios";
+import { SITE_URL } from "@/lib/negocio";
 
 /** Rango del selector de comensales de Mi mesa. */
 export const COMENSALES_MIN = 1;
@@ -328,7 +329,8 @@ export const leerComensalesReserva = (search: string): ComensalesReserva => {
 // Compartir
 // ---------------------------------------------------------------------------
 
-export const URL_CARTA_FALLBACK = "https://casa-tomas-story.vercel.app/carta";
+/** Carta en el dominio final (`SITE_URL`), no en la vieja casa-tomas-story.vercel.app. */
+export const URL_CARTA_FALLBACK = `${SITE_URL}/carta`;
 
 /**
  * URL de la carta en el origen actual. `ruta` es la carta ya con el prefijo
