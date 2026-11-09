@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from "react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
+import { registrarActividad } from "@/lib/actividad/registro";
 
 const TEXTOS: Record<Language, { mensaje: string; boton: string }> = {
   es: { mensaje: "No se pudo cargar esta sección.", boton: "Recargar página" },
@@ -42,7 +43,16 @@ class ErrorBoundaryBase extends Component<BoundaryProps, BoundaryState> {
     return { failed: true };
   }
 
-  componentDidCatch(error: unknown) {
+  componentDidCatch(error: unknown, info?: { componentStack?: string | null }) {
+    // Super Admin › Logs: el fallo de pintado, con su pila (se sanea en el servidor).
+    registrarActividad("error_react", {
+      objetivo: this.props.id ?? "app",
+      props: { componente: this.props.id ?? "app" },
+      error: {
+        mensaje: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+        pila: error instanceof Error ? `${error.stack ?? ""}${info?.componentStack ? `\n${info.componentStack}` : ""}` : undefined,
+      },
+    });
     if (typeof window === "undefined" || !esErrorDeChunk(error)) return;
 
     // Un solo recargado automático: si el chunk falló porque el despliegue

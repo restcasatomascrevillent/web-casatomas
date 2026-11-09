@@ -117,7 +117,7 @@ const es: TextosPrivacidad = {
       "Cheques regalo: nombre, email y teléfono (opcional) de quien compra; nombre de quien lo recibe y dedicatoria (opcionales); y, si pide factura, nombre o razón social, NIF y dirección. El pago lo procesa Stripe: no vemos ni guardamos los datos de su tarjeta.",
       "Asistente de la web (chat): los mensajes que escribe. No incluya en el chat datos de salud ni otros datos sensibles; para alergias, hable con el personal.",
       "Votación «Vota tu vino favorito»: nombre, email o teléfono y el vino votado.",
-      "Navegación: estadísticas de visitas anónimas y agregadas, sin cookies, y los registros técnicos del servidor (dirección IP, fecha y página visitada) por seguridad.",
+      "Navegación: estadísticas de visitas anónimas y agregadas, sin cookies, y los registros técnicos del servidor (dirección IP, fecha y página visitada) por seguridad. Si acepta «Estadísticas de uso», también las páginas que ve y las acciones que hace en la web (botones, platos o vinos que abre, pasos de los formularios), unidas por un identificador aleatorio, nunca su nombre ni lo que escribe en los formularios. Y siempre, los errores técnicos de la web, sin datos personales.",
     ],
     assistantLabel: "Asistente telefónico:",
     assistant:
@@ -175,6 +175,16 @@ const es: TextosPrivacidad = {
         basis: "Interés legítimo (Art. 6.1.f RGPD)",
         description: "Saber cuántas visitas recibe cada página, de forma anónima y agregada, para mejorar la web.",
       },
+      {
+        purpose: "Estadísticas de uso propias (recorridos)",
+        basis: "Consentimiento (Art. 6.1.a RGPD)",
+        description: "Solo si acepta «Estadísticas de uso»: saber qué páginas y botones se usan en una visita, qué se consulta de la carta y dónde se abandona una reserva o una compra, para mejorar la web. Puede retirar el consentimiento en cualquier momento desde «Configurar cookies».",
+      },
+      {
+        purpose: "Detección de errores de la web",
+        basis: "Interés legítimo (Art. 6.1.f RGPD)",
+        description: "Registrar los fallos técnicos de la web (sin datos personales ni identificadores) para corregirlos.",
+      },
     ],
     conditionsLinkText: "Ver las condiciones de la newsletter",
   },
@@ -206,6 +216,10 @@ const es: TextosPrivacidad = {
         text: "Mientras no retire su consentimiento. Al darse de baja dejamos de enviarle la newsletter de inmediato; podemos conservar la constancia de su consentimiento, de la confirmación de su email y de su baja durante el tiempo necesario para acreditarlos ante posibles reclamaciones.",
       },
       {
+        label: "Estadísticas y errores de la web:",
+        text: "Las estadísticas de uso propias se borran a los **90 días** y los errores técnicos a los **180 días**.",
+      },
+      {
         label: "Cookies:",
         text: "Consulte el apartado de cookies para los plazos específicos de cada cookie.",
       },
@@ -214,7 +228,7 @@ const es: TextosPrivacidad = {
   cookies: {
     heading: "5. Cookies",
     intro:
-      'Usamos cookies y almacenamiento local propios, necesarios para que la web funcione o para recordar lo que usted ha elegido, y una cookie de terceros que solo se activa si la acepta en el aviso de cookies o en "Configurar cookies" (pie de página). Las estadísticas de visitas no usan cookies.',
+      'Usamos cookies y almacenamiento local propios, necesarios para que la web funcione o para recordar lo que usted ha elegido, y dos opcionales (las estadísticas de uso propias y el mapa de terceros) que solo se activan si las acepta en el aviso de cookies o en "Configurar cookies" (pie de página). Las estadísticas de visitas de Vercel no usan cookies.',
     items: [
       {
         name: "cookie_consent / cookieConsent",
@@ -255,6 +269,19 @@ const es: TextosPrivacidad = {
           "Solo en la página de pago de Stripe al comprar un cheque regalo: prevención del fraude y funcionamiento del pago.",
       },
       {
+        name: "ct_actividad",
+        type: "Propia · Opcional, requiere su consentimiento",
+        duration: "6 meses",
+        purpose:
+          "Estadísticas de uso propias: un identificador aleatorio del navegador y de la visita (30 minutos sin actividad abren otra) para unir las páginas y acciones de una misma visita. No contiene datos personales y no se comparte con terceros. Sin su consentimiento no se crea.",
+      },
+      {
+        name: "ct_interno",
+        type: "Propia · Necesaria",
+        duration: "Sin caducidad (hasta que borre los datos del navegador)",
+        purpose: "Solo en los dispositivos del personal del restaurante: marca sus visitas para excluirlas de las estadísticas.",
+      },
+      {
         name: "Mapbox (mapbox.com, events.mapbox.com)",
         type: "Tercero · Opcional, requiere su consentimiento",
         duration: "Según la política de Mapbox",
@@ -263,7 +290,7 @@ const es: TextosPrivacidad = {
       },
     ],
     outro:
-      'Puede cambiar su elección sobre la cookie opcional de Mapbox en cualquier momento desde "Configurar cookies", al pie de cualquier página, o borrando las cookies de este sitio desde los ajustes de su navegador.',
+      'Puede cambiar su elección sobre las estadísticas de uso y la cookie de Mapbox en cualquier momento desde "Configurar cookies", al pie de cualquier página, o borrando las cookies de este sitio desde los ajustes de su navegador. Si su navegador envía la señal Global Privacy Control, no activamos las estadísticas de uso.',
   },
   rights: {
     heading: "6. Sus derechos",
@@ -291,7 +318,7 @@ const es: TextosPrivacidad = {
     items: [
       {
         name: "Supabase (base de datos):",
-        text: "Almacenamiento de reservas, cheques regalo, conversaciones del chat y votos. Servidores en la Unión Europea (Irlanda).",
+        text: "Almacenamiento de reservas, cheques regalo, conversaciones del chat, votos y estadísticas de uso y errores de la web. Servidores en la Unión Europea (Irlanda).",
         href: "https://supabase.com/privacy",
       },
       {
@@ -358,7 +385,7 @@ const en: TextosPrivacidad = {
       "Gift vouchers: name, email and telephone (optional) of the buyer; name of the recipient and dedication (optional); and, if you ask for an invoice, name or company name, tax ID and address. Payment is processed by Stripe: we never see or store your card details.",
       "Website assistant (chat): the messages you write. Please do not include health data or other sensitive data in the chat; for allergies, speak to our staff.",
       "“Vote for your favourite wine”: name, email or telephone and the wine you voted for.",
-      "Browsing: anonymous, aggregated visit statistics, without cookies, and the server's technical logs (IP address, date and page visited) for security.",
+      "Browsing: anonymous, aggregated visit statistics, without cookies, and the server's technical logs (IP address, date and page visited) for security. If you accept “Usage statistics”, also the pages you view and the actions you take on the website (buttons, dishes or wines you open, form steps), linked by a random identifier, never your name or what you type in forms. And always, the website's technical errors, without personal data.",
     ],
     assistantLabel: "Phone assistant:",
     assistant:
@@ -416,6 +443,16 @@ const en: TextosPrivacidad = {
         basis: "Legitimate interest (Art. 6.1.f GDPR)",
         description: "Knowing how many visits each page receives, anonymously and in aggregate, in order to improve the website.",
       },
+      {
+        purpose: "Our own usage statistics (journeys)",
+        basis: "Consent (Art. 6.1.a GDPR)",
+        description: "Only if you accept “Usage statistics”: knowing which pages and buttons are used during a visit, what is viewed on the menu and where a booking or a purchase is abandoned, in order to improve the website. You can withdraw your consent at any time from “Cookie settings”.",
+      },
+      {
+        purpose: "Detection of website errors",
+        basis: "Legitimate interest (Art. 6.1.f GDPR)",
+        description: "Recording the website's technical failures (without personal data or identifiers) in order to fix them.",
+      },
     ],
     conditionsLinkText: "See the newsletter conditions",
   },
@@ -447,6 +484,10 @@ const en: TextosPrivacidad = {
         text: "For as long as you do not withdraw your consent. When you unsubscribe we stop sending you the newsletter immediately; we may keep the record of your consent, of the confirmation of your email and of your unsubscription for as long as necessary to prove them in the event of claims.",
       },
       {
+        label: "Website statistics and errors:",
+        text: "Our own usage statistics are deleted after **90 days** and technical errors after **180 days**.",
+      },
+      {
         label: "Cookies:",
         text: "See the cookies section for the specific periods of each cookie.",
       },
@@ -455,7 +496,7 @@ const en: TextosPrivacidad = {
   cookies: {
     heading: "5. Cookies",
     intro:
-      'We use our own cookies and local storage, necessary for the website to work or to remember what you have chosen, and one third-party cookie that is only activated if you accept it in the cookie notice or in "Cookie settings" (footer). Visit statistics do not use cookies.',
+      'We use our own cookies and local storage, necessary for the website to work or to remember what you have chosen, and two optional ones (our own usage statistics and the third-party map) that are only activated if you accept them in the cookie notice or in "Cookie settings" (footer). Vercel\'s visit statistics do not use cookies.',
     items: [
       {
         name: "cookie_consent / cookieConsent",
@@ -496,6 +537,19 @@ const en: TextosPrivacidad = {
           "Only on Stripe's payment page when you buy a gift voucher: fraud prevention and operation of the payment.",
       },
       {
+        name: "ct_actividad",
+        type: "First-party · Optional, requires your consent",
+        duration: "6 months",
+        purpose:
+          "Our own usage statistics: a random identifier for the browser and the visit (30 minutes without activity start a new one) to link the pages and actions of the same visit. It contains no personal data and is not shared with third parties. Without your consent it is not created.",
+      },
+      {
+        name: "ct_interno",
+        type: "First-party · Necessary",
+        duration: "No expiry (until you clear your browser data)",
+        purpose: "Only on the restaurant staff's devices: marks their visits so they are excluded from the statistics.",
+      },
+      {
         name: "Mapbox (mapbox.com, events.mapbox.com)",
         type: "Third-party · Optional, requires your consent",
         duration: "According to Mapbox's policy",
@@ -504,7 +558,7 @@ const en: TextosPrivacidad = {
       },
     ],
     outro:
-      'You can change your choice about the optional Mapbox cookie at any time from "Cookie settings", at the bottom of any page, or by deleting this site\'s cookies in your browser settings.',
+      'You can change your choice about usage statistics and the Mapbox cookie at any time from "Cookie settings", at the bottom of any page, or by deleting this site\'s cookies in your browser settings. If your browser sends the Global Privacy Control signal, we do not activate usage statistics.',
   },
   rights: {
     heading: "6. Your rights",
@@ -532,7 +586,7 @@ const en: TextosPrivacidad = {
     items: [
       {
         name: "Supabase (database):",
-        text: "Storage of bookings, gift vouchers, chat conversations and votes. Servers in the European Union (Ireland).",
+        text: "Storage of bookings, gift vouchers, chat conversations, votes and website usage statistics and errors. Servers in the European Union (Ireland).",
         href: "https://supabase.com/privacy",
       },
       {
@@ -599,7 +653,7 @@ const fr: TextosPrivacidad = {
       "Chèques-cadeaux : nom, e-mail et téléphone (facultatif) de l'acheteur ; nom du bénéficiaire et dédicace (facultatifs) ; et, si vous demandez une facture, nom ou raison sociale, numéro fiscal et adresse. Le paiement est traité par Stripe : nous ne voyons ni ne conservons les données de votre carte.",
       "Assistant du site (chat) : les messages que vous écrivez. N'indiquez pas de données de santé ni d'autres données sensibles dans le chat ; pour les allergies, adressez-vous au personnel.",
       "« Votez pour votre vin préféré » : nom, e-mail ou téléphone et le vin choisi.",
-      "Navigation : statistiques de visites anonymes et agrégées, sans cookies, et journaux techniques du serveur (adresse IP, date et page visitée) pour la sécurité.",
+      "Navigation : statistiques de visites anonymes et agrégées, sans cookies, et journaux techniques du serveur (adresse IP, date et page visitée) pour la sécurité. Si vous acceptez « Statistiques d'utilisation », également les pages que vous consultez et les actions que vous effectuez sur le site (boutons, plats ou vins ouverts, étapes des formulaires), reliées par un identifiant aléatoire, jamais votre nom ni ce que vous saisissez dans les formulaires. Et toujours, les erreurs techniques du site, sans données personnelles.",
     ],
     assistantLabel: "Assistant téléphonique :",
     assistant:
@@ -657,6 +711,16 @@ const fr: TextosPrivacidad = {
         basis: "Intérêt légitime (Art. 6.1.f RGPD)",
         description: "Savoir combien de visites reçoit chaque page, de manière anonyme et agrégée, afin d'améliorer le site.",
       },
+      {
+        purpose: "Statistiques d'utilisation propres (parcours)",
+        basis: "Consentement (Art. 6.1.a RGPD)",
+        description: "Uniquement si vous acceptez « Statistiques d'utilisation » : savoir quelles pages et quels boutons sont utilisés pendant une visite, ce qui est consulté sur la carte et où une réservation ou un achat est abandonné, afin d'améliorer le site. Vous pouvez retirer votre consentement à tout moment depuis « Paramétrer les cookies ».",
+      },
+      {
+        purpose: "Détection des erreurs du site",
+        basis: "Intérêt légitime (Art. 6.1.f RGPD)",
+        description: "Enregistrer les défaillances techniques du site (sans données personnelles ni identifiants) afin de les corriger.",
+      },
     ],
     conditionsLinkText: "Voir les conditions de la newsletter",
   },
@@ -688,6 +752,10 @@ const fr: TextosPrivacidad = {
         text: "Tant que vous ne retirez pas votre consentement. Lorsque vous vous désinscrivez, nous cessons immédiatement de vous envoyer la newsletter ; nous pouvons conserver la preuve de votre consentement, de la confirmation de votre e-mail et de votre désinscription le temps nécessaire pour les justifier en cas de réclamation.",
       },
       {
+        label: "Statistiques et erreurs du site :",
+        text: "Nos statistiques d'utilisation sont supprimées au bout de **90 jours** et les erreurs techniques au bout de **180 jours**.",
+      },
+      {
         label: "Cookies :",
         text: "Consultez la section sur les cookies pour les durées propres à chaque cookie.",
       },
@@ -696,7 +764,7 @@ const fr: TextosPrivacidad = {
   cookies: {
     heading: "5. Cookies",
     intro:
-      "Nous utilisons nos propres cookies et notre stockage local, nécessaires au fonctionnement du site ou pour mémoriser vos choix, ainsi qu'un cookie tiers qui n'est activé que si vous l'acceptez dans l'avis sur les cookies ou dans « Paramétrer les cookies » (pied de page). Les statistiques de visites n'utilisent pas de cookies.",
+      "Nous utilisons nos propres cookies et notre stockage local, nécessaires au fonctionnement du site ou pour mémoriser vos choix, ainsi que deux cookies facultatifs (nos statistiques d'utilisation et la carte tierce) qui ne sont activés que si vous les acceptez dans l'avis sur les cookies ou dans « Paramétrer les cookies » (pied de page). Les statistiques de visites de Vercel n'utilisent pas de cookies.",
     items: [
       {
         name: "cookie_consent / cookieConsent",
@@ -737,6 +805,19 @@ const fr: TextosPrivacidad = {
           "Uniquement sur la page de paiement de Stripe lors de l'achat d'un chèque-cadeau : prévention de la fraude et fonctionnement du paiement.",
       },
       {
+        name: "ct_actividad",
+        type: "Propre · Facultatif, nécessite votre consentement",
+        duration: "6 mois",
+        purpose:
+          "Nos statistiques d'utilisation : un identifiant aléatoire du navigateur et de la visite (30 minutes sans activité en ouvrent une autre) pour relier les pages et actions d'une même visite. Il ne contient aucune donnée personnelle et n'est pas partagé avec des tiers. Sans votre consentement, il n'est pas créé.",
+      },
+      {
+        name: "ct_interno",
+        type: "Propre · Nécessaire",
+        duration: "Sans expiration (jusqu'à ce que vous effaciez les données du navigateur)",
+        purpose: "Uniquement sur les appareils du personnel du restaurant : marque leurs visites pour les exclure des statistiques.",
+      },
+      {
         name: "Mapbox (mapbox.com, events.mapbox.com)",
         type: "Tiers · Facultatif, nécessite votre consentement",
         duration: "Selon la politique de Mapbox",
@@ -745,7 +826,7 @@ const fr: TextosPrivacidad = {
       },
     ],
     outro:
-      "Vous pouvez modifier votre choix concernant le cookie facultatif de Mapbox à tout moment depuis « Paramétrer les cookies », en bas de chaque page, ou en supprimant les cookies de ce site dans les réglages de votre navigateur.",
+      "Vous pouvez modifier votre choix concernant les statistiques d'utilisation et le cookie de Mapbox à tout moment depuis « Paramétrer les cookies », en bas de chaque page, ou en supprimant les cookies de ce site dans les réglages de votre navigateur. Si votre navigateur envoie le signal Global Privacy Control, nous n'activons pas les statistiques d'utilisation.",
   },
   rights: {
     heading: "6. Vos droits",
@@ -773,7 +854,7 @@ const fr: TextosPrivacidad = {
     items: [
       {
         name: "Supabase (base de données) :",
-        text: "Stockage des réservations, des chèques-cadeaux, des conversations du chat et des votes. Serveurs dans l'Union européenne (Irlande).",
+        text: "Stockage des réservations, des chèques-cadeaux, des conversations du chat, des votes et des statistiques d'utilisation et erreurs du site. Serveurs dans l'Union européenne (Irlande).",
         href: "https://supabase.com/privacy",
       },
       {

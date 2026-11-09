@@ -10,13 +10,13 @@ estrategia_merge: merge       # solo «Create a merge commit»: con squash o reb
 # Reglas de este repo (CLAUDE.md y docs/PROCESO-DE-CAMBIOS.md). Mandan sobre el
 # proceso general de los becarios cuando no coincidan.
 reglas_repo:
-  rama_trabajo: staging       # se desarrolla en staging o en una rama que luego se integra en staging
-  pr_promocion: automatico    # al subir a staging, el workflow «Propuesta a producción» abre o actualiza el PR staging → main
+  rama_trabajo: staging       # cada cambio en feature/* o fix/* con PR a staging (la demo)
+  pr_promocion: release       # PR release/X.Y.Z → main con SOLO lo elegido: scripts/release.mjs preparar (o Actions «Release · preparar»)
   fusiona_pr: dueño           # ningún becario fusiona PR ni empuja a main; tras el «sí», el dueño acepta el PR en GitHub
   sin_force_push: true
   autor_commits: "Claude <noreply@anthropic.com>"   # git -c user.name=Claude -c user.email=noreply@anthropic.com commit …
-  version: "La calcula scripts/version.mjs; no se edita versionado.json salvo que el dueño cambie de mayor"
-  supabase: "Funciones primero en la demo; en producción solo tras aceptar el PR y con el «sí» del dueño. Las migraciones viven en el repo del panel (admin-casatomas)"
+  version: "X.Y.Z en versionado.json y CHANGELOG.md; solo los escribe scripts/release.mjs al preparar la release"
+  supabase: "Funciones primero en la demo; en producción solo tras aceptar el PR de la release y con el «sí» del dueño. Las migraciones viven en el repo del panel (admin-casatomas)"
   proyecto_viejo: "jeamoczmbfsnwkfjxcyo no se toca"
 
 # Condición de inicio: el equipo no arranca hasta que las tres sean true.
@@ -51,7 +51,7 @@ comandos:                 # se ejecutan desde la raíz del repo
 ci_cd:
   proveedor: github-actions + vercel
   desplegar_demo: "git push origin HEAD:staging"   # Vercel publica la demo en 1–3 min; comprobar estado READY
-  desplegar_prod: ""      # no lo lanza ningún becario: lo publica Vercel cuando el dueño acepta el PR staging → main
+  desplegar_prod: ""      # no lo lanza ningún becario: lo publica Vercel cuando el dueño acepta el PR release/X.Y.Z → main
   desplegar_funciones_demo: "SUPABASE_ACCESS_TOKEN=\"$SUPABASE_ACCESS_TOKEN_DEMO\" npx supabase functions deploy <función> --project-ref sfonaclosuafvlhutkon"
   desplegar_funciones_prod: "SUPABASE_ACCESS_TOKEN=\"$SUPABASE_ACCESS_TOKEN_PROD\" npx supabase functions deploy <función> --project-ref haqmmdfdzzatdnrrcgez"   # solo tras aceptar el PR y con el «sí» del dueño
   estado_ultima_ejecucion: "gh run list --workflow ci.yml --branch staging -L 1"   # en la nube, con las herramientas de GitHub

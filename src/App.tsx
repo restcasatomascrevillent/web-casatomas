@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import CookieConsent from "./components/CookieConsent";
+import SeguimientoActividad from "./components/SeguimientoActividad";
 import MobileReserveCTA from "./components/MobileReserveCTA";
 import FloatingActions from "./components/FloatingActions";
 import ScrollToTop from "./components/ScrollToTop";
@@ -89,6 +90,9 @@ const Layout = ({ lang }: { lang: Language }) => (
         cuenta como page view. Las tres ramas (/, /en, /fr) montan su propio
         Layout; `inject()` es idempotente (no duplica el <script>). */}
     <Analytics />
+    {/* Actividad y errores para Super Admin › Logs (src/lib/actividad): renderiza `null`, se instala
+        cuando el navegador está ocioso y solo manda actividad con el consentimiento «Estadísticas». */}
+    <SeguimientoActividad />
   </QueryClientProvider>
 );
 

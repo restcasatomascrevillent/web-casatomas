@@ -124,20 +124,57 @@ describe("CookieConsent", () => {
     await user.click(buttons[1]); // Configurar: el del medio
 
     const switches = await screen.findAllByRole("switch");
-    expect(switches).toHaveLength(2);
+    expect(switches).toHaveLength(3);
     expect(switches[0]).toBeChecked();
     expect(switches[0]).toBeDisabled(); // Necesarias: siempre activas, no se puede apagar
     expect(switches[1]).not.toBeChecked(); // Mapa: no preseleccionado (opt-in real, no casilla premarcada)
+    expect(switches[2]).not.toBeChecked(); // Estadísticas de uso: tampoco
 
     await user.click(switches[1]);
     expect(switches[1]).toBeChecked();
 
     await user.click(screen.getByRole("button", { name: /guardar preferencias/i }));
 
-    expect(readStoredConsent()).toMatchObject({ maps: true });
+    expect(readStoredConsent()).toMatchObject({ maps: true, estadisticas: false });
     await waitFor(() => {
       expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     });
+  });
+
+  it("«Estadísticas de uso» es un interruptor propio: se puede aceptar sin el mapa", async () => {
+    const user = userEvent.setup();
+    renderConsent();
+    await waitFor(() => expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3));
+    await user.click(screen.getAllByRole("button")[1]);
+    const switches = await screen.findAllByRole("switch");
+    expect(switches[2]).toHaveAccessibleName(/estadísticas de uso/i);
+    await user.click(switches[2]);
+    await user.click(screen.getByRole("button", { name: /guardar preferencias/i }));
+    expect(readStoredConsent()).toMatchObject({ maps: false, estadisticas: true });
+  });
+
+  it("«Aceptar todas» y «Rechazar» deciden también las estadísticas; una elección antigua sin ellas cuenta como «no»", async () => {
+    const { estadisticasAceptadas } = await import("@/lib/cookie-consent");
+    localStorage.setItem("cookieConsent", JSON.stringify({ maps: true, ts: new Date().toISOString() }));
+    expect(estadisticasAceptadas()).toBe(false);
+    const user = userEvent.setup();
+    localStorage.clear();
+    renderConsent();
+    await waitFor(() => expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(3));
+    await user.click(screen.getByRole("button", { name: /aceptar todas/i }));
+    expect(readStoredConsent()).toMatchObject({ maps: true, estadisticas: true });
+    expect(estadisticasAceptadas()).toBe(true);
+  });
+
+  it("Global Privacy Control desactiva las estadísticas aunque estén aceptadas", async () => {
+    const { estadisticasAceptadas } = await import("@/lib/cookie-consent");
+    localStorage.setItem("cookieConsent", JSON.stringify({ maps: true, estadisticas: true, ts: new Date().toISOString() }));
+    Object.defineProperty(navigator, "globalPrivacyControl", { value: true, configurable: true });
+    try {
+      expect(estadisticasAceptadas()).toBe(false);
+    } finally {
+      Object.defineProperty(navigator, "globalPrivacyControl", { value: undefined, configurable: true });
+    }
   });
 
   it("reopens the preferences dialog on openCookiePreferences(), even after consent was already given", async () => {

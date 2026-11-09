@@ -1,3 +1,4 @@
+import { useBusquedaRegistrada } from "@/lib/actividad/useBusquedaRegistrada";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, Search, X } from "lucide-react";
@@ -294,6 +295,8 @@ const BuscadorCarta = ({ titulos, children }: BuscadorCartaProps) => {
   );
 
   const resultados = total(gruposPlatos) + total(gruposVinos) + total(gruposBebidas);
+  // Super Admin › Logs: cuántas letras y cuántos resultados, nunca el texto buscado.
+  useBusquedaRegistrada(activa ? consulta : "", resultados, "toda");
   const grupos = gruposPlatos.length + gruposVinos.length + gruposBebidas.length;
   const rutaVinos = conFiltros(construirRutaIdioma("/carta/vinos", language));
   const rutaBebidas = conFiltros(construirRutaIdioma("/carta/bebidas", language));

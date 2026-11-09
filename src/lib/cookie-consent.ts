@@ -1,21 +1,28 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Único rastreador opcional real del sitio: el mapa de vinos (Mapbox),
- * que pide tiles a `api.mapbox.com` y manda telemetría anónima a
- * `events.mapbox.com` (ambos ya en el `connect-src` de `vercel.json`).
+ * Rastreadores opcionales reales del sitio, cada uno con su interruptor:
+ *  · el mapa de vinos (Mapbox), que pide tiles a `api.mapbox.com` y manda
+ *    telemetría anónima a `events.mapbox.com`;
+ *  · las estadísticas de uso propias (Super Admin › Logs, `src/lib/actividad`):
+ *    un identificador aleatorio del navegador y de la visita para unir las
+ *    páginas y acciones de una misma visita. Sin consentimiento no se crea ni
+ *    se manda nada de actividad (solo errores técnicos, sin identificadores).
  * Todo lo demás con lo que se habla desde el navegador es Supabase (datos
- * del propio restaurante) o Vercel Analytics, que no usa cookies — no hay
- * nada más que clasificar, así que no se inventan categorías que no
- * controlen nada real.
+ * del propio restaurante) o Vercel Analytics, que no usa cookies.
+ *
+ * Las elecciones guardadas ANTES de existir «Estadísticas» no traen ese campo:
+ * cuentan como «no» (nada se activa sin que el visitante lo elija) y el aviso
+ * no se vuelve a enseñar; se puede activar desde «Configurar cookies».
  */
 export type CookiePreferences = {
   /** Idioma, "Mi mesa", confirmación de edad para vinos... siempre activas. */
   necessary: true;
   maps: boolean;
+  estadisticas: boolean;
 };
 
-type StoredConsent = { maps: boolean; ts: string };
+type StoredConsent = { maps: boolean; estadisticas?: boolean; ts: string };
 
 const STORAGE_KEY = "cookieConsent";
 const COOKIE_NAME = "cookie_consent";
@@ -77,8 +84,9 @@ export const getStoredConsent = (): StoredConsent | null => {
  */
 let eleccionSinGuardar: StoredConsent | null = null;
 
-export const saveConsent = (maps: boolean): void => {
-  const value: StoredConsent = { maps, ts: new Date().toISOString() };
+/** `estadisticas` por defecto igual que `maps`: «Aceptar todas» / «Rechazar» deciden las dos. */
+export const saveConsent = (maps: boolean, estadisticas: boolean = maps): void => {
+  const value: StoredConsent = { maps, estadisticas, ts: new Date().toISOString() };
   const serialized = JSON.stringify(value);
   try {
     localStorage.setItem(STORAGE_KEY, serialized);
@@ -120,3 +128,20 @@ const mapaAceptadoEnElServidor = (): boolean => false;
  */
 export const useMapsConsent = (): boolean =>
   useSyncExternalStore(suscribirseAlConsentimiento, mapaAceptado, mapaAceptadoEnElServidor);
+
+/**
+ * ¿Ha aceptado las estadísticas de uso propias? Global Privacy Control (señal
+ * del navegador de «no vender ni compartir») cuenta como «no».
+ */
+export const estadisticasAceptadas = (): boolean => {
+  if (typeof navigator !== "undefined" && (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true) {
+    return false;
+  }
+  return (getStoredConsent() ?? eleccionSinGuardar)?.estadisticas === true;
+};
+
+/** Se llama cada vez que cambia la elección en esta pestaña; devuelve la función para dejar de escuchar. */
+export const alCambiarConsentimiento = (avisar: () => void): (() => void) => {
+  if (typeof window === "undefined") return () => {};
+  return suscribirseAlConsentimiento(avisar);
+};
