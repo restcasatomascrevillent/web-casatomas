@@ -1,9 +1,13 @@
+import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
 interface MasSobreSeccionProps {
   /** Rótulo del desplegable, p. ej. «Más sobre nuestras carnes». */
   resumen: string;
-  parrafos: string[];
+  /** Párrafos de texto plano (páginas de categoría de la carta). */
+  parrafos?: string[];
+  /** Contenido propio en lugar de `parrafos` (p. ej. la portada: H2 + párrafo con enlaces). */
+  children?: ReactNode;
 }
 
 /**
@@ -20,16 +24,17 @@ interface MasSobreSeccionProps {
  *  - Sin `open` controlado por React: el estado lo lleva el navegador, así que
  *    el HTML del SSG y la hidratación coinciden siempre.
  */
-const MasSobreSeccion = ({ resumen, parrafos }: MasSobreSeccionProps) => (
+const MasSobreSeccion = ({ resumen, parrafos = [], children }: MasSobreSeccionProps) => (
   <details className="group mt-12 max-w-3xl border-t border-border/70 pt-3">
     <summary className="flex min-h-11 w-fit max-w-full cursor-pointer list-none items-center gap-2 rounded-sm text-sm md:text-base font-semibold text-primary transition-colors hover:text-accent [&::-webkit-details-marker]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
       <span>{resumen}</span>
       <ChevronDown className="h-4 w-4 shrink-0 group-open:rotate-180" aria-hidden="true" />
     </summary>
     <div className="mt-2 space-y-4 pb-2 text-base text-muted-foreground leading-relaxed">
-      {parrafos.map((parrafo) => (
-        <p key={parrafo}>{parrafo}</p>
-      ))}
+      {children ??
+        parrafos.map((parrafo) => (
+          <p key={parrafo}>{parrafo}</p>
+        ))}
     </div>
   </details>
 );

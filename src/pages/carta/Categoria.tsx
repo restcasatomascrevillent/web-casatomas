@@ -220,12 +220,10 @@ const CartaCategoria = () => {
         detalle={`${platosTraducidos.length} ${textos.plato(platosTraducidos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
-        {/* Entre la cabecera y los platos solo los filtros y, si la sección lo
-            tiene, un subtítulo H2 de una línea (`seoPropio.h2`). El texto
-            descriptivo va al pie, en `MasSobreSeccion`. */}
-        {seoPropio?.h2 && (
-          <h2 className="font-libre-baskerville text-xl md:text-2xl font-bold text-primary mb-6">{seoPropio.h2}</h2>
-        )}
+        {/* Entre la cabecera y los platos solo los filtros. El subtítulo H2
+            (`seoPropio.h2`) y el texto descriptivo van al pie, dentro del
+            desplegable cerrado `MasSobreSeccion` (09/11/2026, el dueño no
+            quiere subtítulos visibles: «es una app de restaurante»). */}
         <MenuDietario compacto />
         {platosTraducidos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">
@@ -259,7 +257,16 @@ const CartaCategoria = () => {
           }[language]) : textos.vacia}</p>
         )}
 
-        {seoPropio && <MasSobreSeccion resumen={seoPropio.masSobre} parrafos={seoPropio.intro} />}
+        {seoPropio && (
+          <MasSobreSeccion resumen={seoPropio.masSobre}>
+            {seoPropio.h2 && (
+              <h2 className="font-libre-baskerville text-xl md:text-2xl font-bold text-primary text-balance">{seoPropio.h2}</h2>
+            )}
+            {seoPropio.intro.map((parrafo) => (
+              <p key={parrafo}>{parrafo}</p>
+            ))}
+          </MasSobreSeccion>
+        )}
 
         <nav aria-label={textos.otrasSecciones} className="mt-14">
           <h2 className="text-xl font-bold text-primary mb-4">{textos.otrasSecciones}</h2>
