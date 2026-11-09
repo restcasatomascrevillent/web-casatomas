@@ -2,6 +2,19 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.1.0] - 2026-11-09
+
+Objetivo: Todo lo de staging a producción (SEO, carta, actividad…)
+
+### Añadido
+- Seo: recuperar «dónde comer en Crevillente», Touza, menú del día y chuleta ([#33](https://github.com/restcasatomascrevillent/web-casatomas/pull/33))
+
+### Cambiado
+- Carta-vinos: el título de la carta de vinos vuelve a ser «Carta de vinos» ([#34](https://github.com/restcasatomascrevillent/web-casatomas/pull/34))
+
+### Otros
+- Proceso: nunca desplegar ni promocionar en Vercel a mano ([#30](https://github.com/restcasatomascrevillent/web-casatomas/pull/30))
+
 ## [1.0.0] - 2026-11-09
 
 Objetivo: Super Admin › Logs: actividad y errores de la web, y el nuevo sistema de releases
