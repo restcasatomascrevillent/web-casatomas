@@ -902,7 +902,7 @@ const CartaPlatos = ({
                       <CardHeader className="pb-3 px-6 flex-shrink-0 border-b bg-muted/20">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            <CardTitle as="h2" className="text-lg leading-tight whitespace-normal break-words">
+                            <CardTitle as="p" className="text-lg leading-tight whitespace-normal break-words">
                               {item.displayNombre}
                             </CardTitle>
                             <div className="pt-2">
