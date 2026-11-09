@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Info, Loader2 } from "lucide-react";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { construirRutaIdioma } from "@/i18n/routing";
+import { ANCLA_CONDICIONES_CHEQUES, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
 import type { DatosComprador } from "./ContactoSection";
 
 const copyByLanguage = {
@@ -20,6 +22,16 @@ const copyByLanguage = {
   en: { showAmount: "Show the amount on the gift and PDF", dedication: "Include a dedication in the PDF", preview: "Gift PDF preview", loading: "Generating preview…", previewError: "The preview is unavailable right now. You can continue with your purchase.", sample: "Sample code. The final code is generated after payment.", next: "Continue", back: "Back", step: "Step", of: "of", optional: "Optional · you can leave this blank", review: "Review your purchase details", required: "Complete this field to continue.", locale: "en-GB", voucher: "Gift voucher", fees: "Handling fee", total: "Total to pay", feesNote: "Online purchase handling fee, the same for every payment method." },
   fr: { showAmount: "Afficher le montant sur le cadeau et le PDF", dedication: "Inclure une dédicace dans le PDF", preview: "Aperçu du chèque PDF", loading: "Génération de l’aperçu…", previewError: "L’aperçu est indisponible. Vous pouvez continuer votre achat.", sample: "Code d’exemple. Le code définitif est généré après le paiement.", next: "Continuer", back: "Retour", step: "Étape", of: "sur", optional: "Facultatif · vous pouvez laisser ce champ vide", review: "Vérifiez les informations d’achat", required: "Renseignez ce champ pour continuer.", locale: "fr-FR", voucher: "Chèque cadeau", fees: "Frais de gestion", total: "Total à payer", feesNote: "Frais de gestion de l’achat en ligne, identiques quel que soit le moyen de paiement." },
 };
+/**
+ * Aviso legal junto al botón de pago (último paso): enlaza las condiciones de compra (desistimiento
+ * de 30 días incluido, art. 97 TRLGDCU) y la política de privacidad. En pestaña nueva: navegar aquí
+ * cerraría el diálogo y se perdería lo rellenado.
+ */
+const LEGAL_COMPRA = {
+  es: { antes: "Al continuar al pago aceptas las", condiciones: "condiciones de compra", medio: "de los cheques regalo (tienes 30 días para devolverlo si no lo has usado) y confirmas que has leído la", privacidad: "política de privacidad", nuevaPestana: "(se abre en una pestaña nueva)" },
+  en: { antes: "By continuing to payment you accept the gift voucher", condiciones: "purchase terms", medio: "(you have 30 days to return it if you haven't used it) and confirm that you have read the", privacidad: "privacy policy", nuevaPestana: "(opens in a new tab)" },
+  fr: { antes: "En poursuivant vers le paiement, vous acceptez les", condiciones: "conditions d'achat", medio: "des chèques-cadeaux (vous disposez de 30 jours pour le rendre s'il n'a pas été utilisé) et confirmez avoir lu la", privacidad: "politique de confidentialité", nuevaPestana: "(s'ouvre dans un nouvel onglet)" },
+} as const;
 type Props = {
   open: boolean; onOpenChange: (open: boolean) => void; importe: string; datos: DatosComprador;
   setDatos: Dispatch<SetStateAction<DatosComprador>>; enviando: boolean; error: string | null;
@@ -28,7 +40,7 @@ type Props = {
 type Field = { key: keyof DatosComprador | "resumen" | "vista"; label: string; type: string; required?: boolean; max?: number; complete?: string; placeholder?: string };
 export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos, enviando, error, setError, confirmar }: Props) {
   const { t, language } = useTranslations();
-  const c = t.contacto, copy = copyByLanguage[language || "es"];
+  const c = t.contacto, copy = copyByLanguage[language || "es"], legal = LEGAL_COMPRA[language || "es"];
   // Al cerrar, `sesionVista` pasa a null mientras el diálogo aún se está desmontando: la vista
   // previa recibiría `undefined`, abriría una sesión propia y repetiría la petición a
   // `plantilla-vista`. `ultimaSesion` le sigue dando la misma (con su caché) hasta desmontarse.
@@ -98,6 +110,17 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
       <p className="break-words">{antesEmail}<a href={`mailto:${NEGOCIO.email}`} className="font-medium underline underline-offset-2 [overflow-wrap:anywhere]">{NEGOCIO.email}</a>{despuesEmail}</p>
     </div>
   </div>;
+  const enlaceLegal = "font-medium underline underline-offset-2 hover:decoration-2";
+  const avisoLegal = <p className="text-xs text-muted-foreground" data-testid="cheque-aviso-legal">
+    {legal.antes}{" "}
+    <a href={`${construirRutaIdioma(CONDICIONES_PATH, language)}#${ANCLA_CONDICIONES_CHEQUES}`} target="_blank" rel="noopener noreferrer" className={enlaceLegal}>
+      {legal.condiciones}<span className="sr-only"> {legal.nuevaPestana}</span>
+    </a>{" "}
+    {legal.medio}{" "}
+    <a href={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)} target="_blank" rel="noopener noreferrer" className={enlaceLegal}>
+      {legal.privacidad}<span className="sr-only"> {legal.nuevaPestana}</span>
+    </a>.
+  </p>;
   const opciones = <div className="space-y-3 rounded-xl border p-3 text-sm">
     <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={!datos.ocultarImporte} onCheckedChange={v => setDatos(d => ({ ...d, ocultarImporte: v !== true }))} />{copy.showAmount}</label>
     <label className="flex min-h-11 cursor-pointer items-center gap-3"><Checkbox disabled={enviando} checked={datos.incluirDedicatoria} onCheckedChange={v => setDatos(d => ({ ...d, incluirDedicatoria: v === true }))} />{copy.dedication}</label>
@@ -127,7 +150,7 @@ export function CompraChequePasos({ open, onOpenChange, importe, datos, setDatos
               <p className="flex justify-between gap-3"><span>{copy.fees}</span><span>{eur(gastos)}</span></p>
               <p className="flex justify-between gap-3 border-t pt-2 font-semibold"><span>{copy.total}</span><span>{eur(importeCheque + gastos)}</span></p>
               <p className="text-xs text-muted-foreground">{copy.feesNote}</p>
-            </div>}</div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || ultimaSesion.current || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} /></div> : <div className="space-y-3">
+            </div>}</div> : final ? <div className="space-y-4">{opciones}<VistaRegaloCompra sesion={sesionVista || ultimaSesion.current || undefined} importe={importe} nombre={datos.nombre} destinatario={datos.destinatario} mensaje={datos.mensaje} ocultarImporte={datos.ocultarImporte} incluirDedicatoria={datos.incluirDedicatoria} texto={copy} />{avisoLegal}</div> : <div className="space-y-3">
               {field.key === "mensaje" && opciones}
               <Label htmlFor={"gift-step-" + field.key} className="sr-only">{field.label}</Label>
               <Textarea style={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria) ? { display: "none" } : undefined} hidden={field.type === "date" || (field.key === "mensaje" && !datos.incluirDedicatoria)} id={field.type === "date" ? undefined : "gift-step-" + field.key}

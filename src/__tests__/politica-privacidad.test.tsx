@@ -213,11 +213,11 @@ describe("página de la política de privacidad", () => {
       );
     });
 
-    it(`${lang}: los plazos (2 años, 3 meses, 12 meses, 6 años, 90 y 180 días) salen en negrita`, () => {
+    it(`${lang}: los plazos (2 años, 3 meses, 12 meses, 6 años, 90, 180, 7 y 90 días) salen en negrita`, () => {
       const { container } = renderPagina(lang, RUTAS[lang]);
       const seccion = screen.getByRole("heading", { level: 2, name: p.retention.heading }).closest("section")!;
       const plazos = [...seccion.querySelectorAll("strong")].map((s) => s.textContent).filter((t) => /\d/.test(t ?? ""));
-      expect(plazos.map((t) => t!.match(/\d+/)![0])).toEqual(["2", "3", "12", "6", "90", "180"]);
+      expect(plazos.map((t) => t!.match(/\d+/)![0])).toEqual(["2", "3", "12", "6", "90", "180", "7", "90"]);
       expect(container.querySelectorAll('a[target="_blank"]').length).toBeGreaterThanOrEqual(8); // 7 proveedores + AEPD
     });
   }

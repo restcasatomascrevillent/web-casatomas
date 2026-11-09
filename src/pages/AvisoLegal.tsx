@@ -26,7 +26,7 @@ const SECCIONES: readonly Seccion[] = [
     title: "2. Objeto y servicios del sitio web",
     paragraphs: [
       `El sitio web ${DOMINIO} da a conocer el restaurante y permite: consultar la carta de platos, vinos y bebidas con sus precios y alérgenos; pedir mesa mediante el formulario de reservas; comprar cheques regalo, que se pagan en línea con tarjeta a través de la pasarela de pago Stripe; consultar la tienda de vinos, que es un escaparate (las botellas se compran en el restaurante, no se venden ni se envían por internet); hacer preguntas a un asistente automático (chat); suscribirse a la newsletter, y, cuando esté abierta, participar en la votación del vino favorito.`,
-      "Las reservas y la newsletter tienen sus propias condiciones, que se aceptan al enviar el formulario de reserva. Los cheques regalo son válidos durante 12 meses desde la fecha de compra. El tratamiento de los datos personales se explica en la política de privacidad.",
+      "Las reservas, la compra de cheques regalo (validez, devolución en 30 días y demás condiciones), la newsletter y el sorteo de la votación del vino favorito tienen sus propias condiciones, que se aceptan al reservar, al pagar el cheque o al participar. El tratamiento de los datos personales se explica en la política de privacidad.",
     ],
   },
   {
@@ -151,7 +151,7 @@ const AvisoLegal = () => (
             {seccion.id === "objeto" && (
               <p>
                 <Link to={CONDICIONES_PATH} className="inline-flex min-h-11 items-center text-accent underline underline-offset-2 hover:decoration-2">
-                  Condiciones de reserva y newsletter
+                  Condiciones de reserva, cheques regalo, newsletter y sorteo
                 </Link>
               </p>
             )}
