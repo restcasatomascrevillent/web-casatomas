@@ -83,6 +83,9 @@ const CAMPOS_SALIDA = {
     // Copa y Parker (04/11/2026, migración 20261104140000 del panel). Con
     // `select=*` en una BD sin esas columnas no vienen y se descartan sin error.
     'copeo', 'precio_copa_eur', 'puntuacion_parker', 'puntuacion_parker_anada',
+    // Texto de la puntuación («94+», «93–95»; 08/11/2026, migración 20261118100000
+    // del panel). Solo verificadas y de la añada que se sirve; si no viene, se ignora.
+    'puntuacion_parker_texto',
   ],
   Bebidas: [
     'id',

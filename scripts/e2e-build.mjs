@@ -24,12 +24,16 @@ const URL_FALSA = `http://127.0.0.1:${PUERTO}`;
  * Filas mínimas por tabla de la carta: `carta-ssg` aborta el build si alguna
  * llega vacía. Los ocho entrantes de más alargan `/carta/entrantes` lo
  * bastante para que llegar al último (`#plato-9`, el que enlaza la novedad de
- * abajo) obligue a desplazarse por debajo de la cabecera fija.
+ * abajo) obligue a desplazarse por debajo de la cabecera fija. «Carnes» es
+ * una de las categorías con SEO propio (`src/lib/carta-seo.ts`): con ella,
+ * `/carta/carnes` lleva el desplegable «Más sobre nuestras carnes» del pie
+ * (`e2e/carta-seccion-encabezado.e2e.ts`).
  */
 const FILAS_CARTA = {
   Platos: [
     { id: 1, nombre: "Plato E2E", categoria: "Entrantes", precio_eur: 10, descripcion: "Fila de prueba de los E2E" },
     ...Array.from({ length: 8 }, (_, i) => ({ id: i + 2, nombre: `Entrante E2E ${i + 2}`, categoria: "Entrantes", precio_eur: 6 + i })),
+    { id: 20, nombre: "Carne E2E", categoria: "Carnes", precio_eur: 25 },
   ],
   Vinos: [{ id: 1, nombre: "Vino E2E", categoria: "Tintos", precio_eur: 20, ubicacion_pais: "España" }],
   Bebidas: [{ id: 1, nombre: "Bebida E2E", categoria: "Refrescos", precio_eur: 2 }],

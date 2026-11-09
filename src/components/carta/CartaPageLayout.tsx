@@ -86,9 +86,12 @@ const CartaPageLayout = ({
           comprobado en el navegador).
           `pt-24` deja hueco a la cabecera fija (h-16 en móvil, h-20 en md).
           El `<main>` empieza aquí (no en la lista de platos) para que
-          «Saltar al contenido» lleve a las migas y al `h1` de la página. */}
+          «Saltar al contenido» lleve a las migas y al `h1` de la página.
+          Alto según el contenido (nada de alto mínimo): con un `h1` corto,
+          que es el nombre de la sección («Carnes»), la banda se ajusta sola
+          y no deja hueco. */}
       <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
-      <div className="relative overflow-hidden bg-muted pt-24 md:pt-28 pb-10 px-4 md:px-8 lg:px-16">
+      <div className="relative overflow-hidden bg-muted pt-24 md:pt-28 pb-8 md:pb-10 px-4 md:px-8 lg:px-16">
         {/* La foto solo ocupa un panel pegado a la izquierda a partir de
             `md` (con su propio degradado hacia `bg-muted` en el borde
             derecho): a todo lo ancho de la banda, la lámpara —centrada en
@@ -148,7 +151,9 @@ const CartaPageLayout = ({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 py-12 md:py-16">{children}</div>
+      {/* Poco aire arriba: lo primero (los filtros de una sección, el aviso de
+          vinos, el buscador del índice) tiene que quedar pegado a la cabecera. */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pt-6 pb-12 md:pt-8 md:pb-16">{children}</div>
 
       {volverAResuelto && (
         <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 pb-12">
