@@ -83,6 +83,12 @@ it("las categorías con SEO propio tienen title corto, Crevillente e introducci�
       const palabras = seo.intro.join(" ").split(/\s+/).length;
       expect(palabras, `${slug}/${lang}`).toBeGreaterThanOrEqual(110);
       expect(palabras, `${slug}/${lang}`).toBeLessThanOrEqual(200);
+      // Presentación aparte (08/11/2026): el `h1` es el nombre de la sección,
+      // no un texto comercial guardado aquí, y la introducción va en un
+      // desplegable con su rótulo, DEBAJO de los platos (nunca «abajo»).
+      expect(seo, `${slug}/${lang}`).not.toHaveProperty("h1");
+      expect(seo.masSobre.length, `${slug}/${lang}`).toBeGreaterThan(0);
+      expect(seo.intro.join(" "), `${slug}/${lang}`).not.toMatch(/\babajo\b|\bbelow\b|ci-dessous/i);
     }
   }
 });

@@ -7,6 +7,7 @@ import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
 import ProductoCard from "@/components/carta/ProductoCard";
+import MasSobreSeccion from "@/components/carta/MasSobreSeccion";
 import {
   CATEGORIAS_CARTA,
   anclaPlato,
@@ -173,6 +174,9 @@ const CartaCategoria = () => {
   // también para pintar la rejilla — no hace falta resolver dos veces.
   const secciones = agruparPorCategoria(platos, language);
   const platosTraducidos = filtrarPlatos(secciones[0]?.items ?? [], filtros);
+  // Solo metadatos (`title`, `description`) y el contenido ampliado del
+  // desplegable del pie. El título visible es SIEMPRE `etiqueta`, el nombre
+  // de la sección en los datos, tenga o no SEO propio.
   const seoPropio = SEO_CATEGORIA[categoria.slug]?.[language];
 
   return (
@@ -212,17 +216,12 @@ const CartaCategoria = () => {
       )}
 
       <CartaPageLayout
-        titulo={seoPropio?.h1 ?? etiqueta}
+        titulo={etiqueta}
         detalle={`${platosTraducidos.length} ${textos.plato(platosTraducidos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
-        {seoPropio && (
-          <div className="max-w-3xl space-y-4 mb-10 text-base md:text-lg text-muted-foreground leading-relaxed">
-            {seoPropio.intro.map((parrafo) => (
-              <p key={parrafo}>{parrafo}</p>
-            ))}
-          </div>
-        )}
+        {/* Nada entre la cabecera y los platos salvo los filtros: el texto
+            descriptivo va al pie, en `MasSobreSeccion`. */}
         <MenuDietario compacto />
         {platosTraducidos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">
@@ -256,6 +255,7 @@ const CartaCategoria = () => {
           }[language]) : textos.vacia}</p>
         )}
 
+        {seoPropio && <MasSobreSeccion resumen={seoPropio.masSobre} parrafos={seoPropio.intro} />}
 
         <nav aria-label={textos.otrasSecciones} className="mt-14">
           <h2 className="text-xl font-bold text-primary mb-4">{textos.otrasSecciones}</h2>
