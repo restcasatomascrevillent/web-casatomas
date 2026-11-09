@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
@@ -9,18 +9,24 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { NEGOCIO, SITE_URL } from "@/lib/negocio";
 import {
+  ANCLA_CONDICIONES_CHEQUES,
   ANCLA_CONDICIONES_NEWSLETTER,
   ANCLA_CONDICIONES_RESERVA,
+  ANCLA_CONDICIONES_SORTEO,
   CONDICIONES_PATH,
   POLITICA_PRIVACIDAD_PATH,
 } from "@/lib/condiciones";
+import { TEXTOS_CHEQUES_SORTEO } from "@/lib/condiciones-compra-textos";
+import { formatearDiaEncuesta, useEncuestaVinos } from "@/hooks/useEncuestaVinos";
 import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 type Seccion = { readonly title: string; readonly paragraphs: readonly string[] };
 
 /**
- * Condiciones de reserva y de la newsletter (es/en/fr). Mismo esqueleto
- * visual que `PoliticaPrivacidad` y, como ella, `noindex`.
+ * Condiciones de reserva, de compra de cheques regalo, de la newsletter y
+ * bases del sorteo «Vota tu vino favorito» (es/en/fr). Mismo esqueleto visual
+ * que `PoliticaPrivacidad` y, como ella, `noindex`. Los textos de cheques y
+ * sorteo viven en `lib/condiciones-compra-textos.ts` (ruta perezosa).
  *
  * Existe en las tres ramas (`/condiciones`, `/en/condiciones`,
  * `/fr/condiciones`), igual que el formulario de reserva (`/reservas`,
@@ -31,6 +37,8 @@ type Seccion = { readonly title: string; readonly paragraphs: readonly string[] 
 const Condiciones = () => {
   const { t, language } = useTranslations();
   const c = t.conditionsPage;
+  const cs = TEXTOS_CHEQUES_SORTEO[language];
+  const encuesta = useEncuestaVinos();
   const inicio = construirRutaIdioma("/", language);
   const { hash } = useLocation();
 
@@ -65,10 +73,17 @@ const Condiciones = () => {
     return detener;
   }, [hash]);
 
-  /** Sustituye `{phone}` por el teléfono pulsable y `{privacy}` por el enlace a la política. */
+  /** Sustituye `{phone}` por el teléfono pulsable, `{email}` por el correo y `{privacy}` por el enlace a la política. */
   const conEnlaces = (texto: string) =>
-    texto.split(/(\{phone\}|\{privacy\})/).map((parte, indice) => {
+    texto.split(/(\{phone\}|\{email\}|\{privacy\})/).map((parte, indice) => {
       if (parte === "{phone}") return <TelLink key={indice} className="text-accent underline underline-offset-2 hover:decoration-2" />;
+      if (parte === "{email}") {
+        return (
+          <a key={indice} href={`mailto:${NEGOCIO.email}`} className="text-accent underline underline-offset-2 hover:decoration-2 [overflow-wrap:anywhere]">
+            {NEGOCIO.email}
+          </a>
+        );
+      }
       if (parte === "{privacy}") {
         return (
           <Link
@@ -83,7 +98,7 @@ const Condiciones = () => {
       return <Fragment key={indice}>{parte}</Fragment>;
     });
 
-  const bloque = (id: string, titulo: string, intro: string, secciones: readonly Seccion[]) => (
+  const bloque = (id: string, titulo: string, intro: string, secciones: readonly Seccion[], extra?: ReactNode) => (
     <section id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-6 space-y-6">
       <div>
         <h2 id={`${id}-titulo`} className="text-2xl font-bold text-foreground">
@@ -91,6 +106,7 @@ const Condiciones = () => {
         </h2>
         <p className="text-sm text-muted-foreground mt-2">{intro}</p>
       </div>
+      {extra}
       {secciones.map((seccion) => (
         <div key={seccion.title}>
           <h3 className="text-lg font-bold mb-2 text-accent">{seccion.title}</h3>
@@ -142,8 +158,18 @@ const Condiciones = () => {
                 </a>
               </li>
               <li>
+                <a href={`#${ANCLA_CONDICIONES_CHEQUES}`} className={`${AREA_TOQUE_APILADO} text-accent underline underline-offset-2 hover:decoration-2`}>
+                  {cs.tocGift}
+                </a>
+              </li>
+              <li>
                 <a href={`#${ANCLA_CONDICIONES_NEWSLETTER}`} className={`${AREA_TOQUE_APILADO} text-accent underline underline-offset-2 hover:decoration-2`}>
                   {c.newsletterHeading}
+                </a>
+              </li>
+              <li>
+                <a href={`#${ANCLA_CONDICIONES_SORTEO}`} className={`${AREA_TOQUE_APILADO} text-accent underline underline-offset-2 hover:decoration-2`}>
+                  {cs.tocDraw}
                 </a>
               </li>
             </ul>
@@ -151,7 +177,26 @@ const Condiciones = () => {
         </div>
 
         {bloque(ANCLA_CONDICIONES_RESERVA, c.bookingHeading, c.bookingIntro, c.bookingSections)}
+        {bloque(ANCLA_CONDICIONES_CHEQUES, cs.giftHeading, cs.giftIntro, cs.giftSections)}
         {bloque(ANCLA_CONDICIONES_NEWSLETTER, c.newsletterHeading, c.newsletterIntro, c.newsletterSections)}
+        {bloque(
+          ANCLA_CONDICIONES_SORTEO,
+          cs.drawHeading,
+          cs.drawIntro,
+          cs.drawSections,
+          // Premio y último día de la edición abierta: los fija el panel (configuracion_web).
+          <div className="rounded-lg border border-accent/40 bg-accent/5 p-4 text-sm" data-testid="sorteo-edicion-actual">
+            <p className="font-semibold text-foreground">{cs.drawCurrent.title}</p>
+            {encuesta.activa && encuesta.premio && encuesta.fin ? (
+              <div className="mt-1 space-y-1 text-muted-foreground">
+                <p><strong className="text-foreground">{cs.drawCurrent.prize}</strong> <span className="[overflow-wrap:anywhere]">{encuesta.premio}</span></p>
+                <p><strong className="text-foreground">{cs.drawCurrent.lastDay}</strong> {formatearDiaEncuesta(encuesta.fin, language)} {cs.drawCurrent.included}</p>
+              </div>
+            ) : (
+              <p className="mt-1 text-muted-foreground">{cs.drawCurrent.none}</p>
+            )}
+          </div>,
+        )}
 
         {/* Contacto: los mismos datos que la política de privacidad (`NEGOCIO`). */}
         <section className="rounded-lg bg-muted/20 border border-border p-6">

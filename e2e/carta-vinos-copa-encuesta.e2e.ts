@@ -38,7 +38,7 @@ const test = base.extend<{ red: { votos: unknown[] } }>({
       if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: CORS });
       let cuerpo: unknown = [];
       if (url.pathname === "/rest/v1/Vinos") cuerpo = CATALOGO;
-      if (url.pathname === "/rest/v1/configuracion_web") cuerpo = [{ id: true, encuesta_vinos_activa: true }];
+      if (url.pathname === "/rest/v1/configuracion_web") cuerpo = [{ id: true, encuesta_vinos_activa: true, encuesta_vinos_premio: "Una botella de Mauro", encuesta_vinos_fin: `${new Date().getFullYear() + 1}-06-30` }];
       if (url.pathname === "/rest/v1/rpc/votar_vino_favorito") {
         red.votos.push(route.request().postDataJSON());
         cuerpo = { ok: true, vino: COPA };
@@ -114,6 +114,9 @@ for (const ancho of [320, 375, 1280]) {
       await abrirCarta(page, ancho);
       await page.getByRole("button", { name: /Vota tu vino favorito y gana un sorteo/ }).click();
       const dialogo = page.getByRole("dialog");
+      // Premio y último día de la edición (los pone el panel; bases en /condiciones#sorteo).
+      await expect(dialogo).toContainText("Premio: Una botella de Mauro.");
+      await expect(dialogo.getByRole("link", { name: /bases/ })).toHaveAttribute("href", "/condiciones#sorteo");
       await dialogo.getByLabel("Tu vino favorito").selectOption({ label: COPA });
       await dialogo.getByLabel("Tu nombre").fill("Ana");
       await dialogo.getByLabel("Email o teléfono").fill("ana@example.com");

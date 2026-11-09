@@ -144,7 +144,9 @@ const CookieConsent = () => {
                 </p>
               </div>
               <div className="flex flex-row flex-wrap gap-2 w-full md:w-auto bajo:flex-nowrap bajo:w-auto">
-                <Button onClick={rejectAll} variant="outline" size="sm" className="flex-1 md:flex-none max-md:px-2">
+                {/* «Rechazar» con el mismo estilo que «Aceptar»: la guía de cookies de la AEPD pide que
+                    las dos opciones estén al mismo nivel y que el diseño no empuje a aceptar. */}
+                <Button onClick={rejectAll} size="sm" className="flex-1 md:flex-none max-md:px-2">
                   {t.cookie.reject}
                 </Button>
                 <Button onClick={openPreferences} variant="outline" size="sm" className="flex-1 md:flex-none max-md:px-2">
