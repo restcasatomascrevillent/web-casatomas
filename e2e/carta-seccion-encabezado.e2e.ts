@@ -2,8 +2,8 @@
  * Encabezado de las secciones de la carta (08/11/2026, petición del dueño con
  * la captura de `/carta/carnes`) contra el build SSG real de `dist-e2e/`:
  *
- *  - el único `h1` es el nombre de la sección («Carnes», «Vinos»), con migas y
- *    contador;
+ *  - el único `h1` es el nombre de la sección («Carnes»), con migas y
+ *    contador; en vinos, «Carta de vinos» (decisión del dueño, 09/11/2026);
  *  - los filtros y el primer plato quedan pegados al encabezado, en la primera
  *    pantalla, sin párrafos en medio;
  *  - el texto descriptivo va al pie, en un `<details>` cerrado que se abre y se
@@ -85,10 +85,10 @@ for (const [nombre, viewport, tactil] of [
   });
 }
 
-test("la carta de vinos también se titula con el nombre de su sección", async ({ page, erroresJs: _ }) => {
+test("la carta de vinos se titula «Carta de vinos», con la miga «Vinos»", async ({ page, erroresJs: _ }) => {
   await page.goto("/carta/vinos");
   await expect(page.locator("h1")).toHaveCount(1);
-  await expect(page.locator("h1")).toHaveText("Vinos");
+  await expect(page.locator("h1")).toHaveText("Carta de vinos");
   await expect(page.getByRole("navigation", { name: "breadcrumb" })).toContainText("Vinos");
   await expect(page).toHaveTitle("Carta de vinos | Casa Tomás Crevillente");
 });
