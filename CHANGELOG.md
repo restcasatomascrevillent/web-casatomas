@@ -2,6 +2,14 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.1.1] - 2026-11-09
+
+Objetivo: Texto SEO de la portada y de /carta/carnes en un desplegable al pie, y un solo h2 por plato en la carta
+
+### Cambiado
+- Seo: el texto SEO de la portada y el H2 de /carta/carnes pasan a un desplegable cerrado al pie ([#37](https://github.com/restcasatomascrevillent/web-casatomas/pull/37))
+- Carta: un solo h2 por plato en las tarjetas que giran ([#38](https://github.com/restcasatomascrevillent/web-casatomas/pull/38))
+
 ## [1.1.0] - 2026-11-09
 
 Objetivo: Todo lo de staging a producción (SEO, carta, actividad…)

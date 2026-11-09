@@ -433,7 +433,7 @@ const ProductoCard = ({
             <CardHeader className="pb-3 px-5 pt-4 flex-shrink-0 border-b bg-muted/20">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <CardTitle as="h2" className="text-base md:text-lg leading-tight whitespace-normal break-words">
+                  <CardTitle as="p" className="text-base md:text-lg leading-tight whitespace-normal break-words">
                     {plato.displayNombre}
                   </CardTitle>
                   <div className="pt-2">
