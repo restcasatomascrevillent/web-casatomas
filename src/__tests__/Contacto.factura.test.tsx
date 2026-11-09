@@ -60,6 +60,21 @@ describe("Compra guiada del cheque", () => {
     continuar();
     expect(screen.queryByRole("note")).toBeNull();
   });
+  it("la nota de validez enlaza las condiciones de compra de los cheques", () => {
+    render(<MemoryRouter><ContactoSection /></MemoryRouter>);
+    expect(screen.getByRole("link", { name: "Condiciones de compra y devolución en 30 días" })).toHaveAttribute("href", "/condiciones#cheques-regalo");
+  });
+  it("junto al botón de pago enlaza las condiciones de compra (30 días) y la política, en pestaña nueva", async () => {
+    await abrir(); continuar();
+    expect(screen.queryByTestId("cheque-aviso-legal")).toBeNull(); // solo en el último paso, junto al botón
+    continuar();
+    const aviso = screen.getByTestId("cheque-aviso-legal");
+    expect(aviso).toHaveTextContent(/Al continuar al pago aceptas las condiciones de compra .*30 días para devolverlo/);
+    const condiciones = screen.getByRole("link", { name: /condiciones de compra/ });
+    expect(condiciones).toHaveAttribute("href", "/condiciones#cheques-regalo");
+    expect(condiciones).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: /política de privacidad/ })).toHaveAttribute("href", "/politica-privacidad");
+  });
   it("la compra no manda datos de factura", async () => {
     await abrir(); continuar(); continuar();
     fireEvent.click(screen.getByRole("button", { name: c.giftFormSubmit }));

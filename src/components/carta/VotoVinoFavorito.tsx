@@ -1,12 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
 import { CheckCircle2, Loader2, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
-import { marcarVotoEnEsteNavegador, useEncuestaVinosActiva, yaVotoEnEsteNavegador } from "@/hooks/useEncuestaVinos";
+import { formatearDiaEncuesta, marcarVotoEnEsteNavegador, useEncuestaVinos, yaVotoEnEsteNavegador } from "@/hooks/useEncuestaVinos";
+import { ANCLA_CONDICIONES_SORTEO, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH } from "@/lib/condiciones";
 import { nombreVinoVisible } from "@/lib/filtro-vinos";
 import { etiquetaTipoVino, tipoVino, TIPOS_VINO } from "@/lib/tipos-vino";
 import { construirRutaIdioma } from "@/i18n/routing";
@@ -29,8 +29,12 @@ const TEXTOS = {
     nombre: "Tu nombre",
     contacto: "Email o teléfono",
     contactoAyuda: "Solo para avisarte si ganas.",
-    bases: "Quiero participar en el sorteo y acepto que Casa Tomás use mi nombre y mi contacto solo para avisarme si gano.",
+    premio: (premio: string, dia: string) => `Premio: ${premio}. Puedes votar hasta el ${dia} (incluido).`,
+    basesAntes: "Soy mayor de 18 años, quiero participar en el sorteo y acepto sus",
+    basesEnlace: "bases",
+    basesDespues: ". Casa Tomás usará mi nombre y mi contacto solo para el sorteo y para avisarme si gano.",
     privacidad: "Política de privacidad",
+    pestanaNueva: "(se abre en una pestaña nueva)",
     enviar: "Enviar mi voto",
     enviando: "Enviando…",
     gracias: (vino: string) => `¡Gracias! Tu voto por ${vino} está registrado. Si ganas, te avisaremos.`,
@@ -58,8 +62,12 @@ const TEXTOS = {
     nombre: "Your name",
     contacto: "Email or phone",
     contactoAyuda: "Only to let you know if you win.",
-    bases: "I want to enter the prize draw and I agree that Casa Tomás may use my name and contact details only to tell me if I win.",
+    premio: (premio: string, dia: string) => `Prize: ${premio}. You can vote until ${dia} (inclusive).`,
+    basesAntes: "I am 18 or over, I want to enter the prize draw and I accept its",
+    basesEnlace: "rules",
+    basesDespues: ". Casa Tomás will use my name and contact details only for the draw and to tell me if I win.",
     privacidad: "Privacy policy",
+    pestanaNueva: "(opens in a new tab)",
     enviar: "Send my vote",
     enviando: "Sending…",
     gracias: (vino: string) => `Thank you! Your vote for ${vino} has been recorded. If you win, we'll let you know.`,
@@ -87,8 +95,12 @@ const TEXTOS = {
     nombre: "Votre nom",
     contacto: "E-mail ou téléphone",
     contactoAyuda: "Uniquement pour vous prévenir si vous gagnez.",
-    bases: "Je souhaite participer au tirage au sort et j'accepte que Casa Tomás utilise mon nom et mes coordonnées uniquement pour me prévenir si je gagne.",
+    premio: (premio: string, dia: string) => `Prix : ${premio}. Vous pouvez voter jusqu'au ${dia} (inclus).`,
+    basesAntes: "J'ai 18 ans ou plus, je souhaite participer au tirage au sort et j'accepte son",
+    basesEnlace: "règlement",
+    basesDespues: ". Casa Tomás utilisera mon nom et mes coordonnées uniquement pour le tirage et pour me prévenir si je gagne.",
     privacidad: "Politique de confidentialité",
+    pestanaNueva: "(s'ouvre dans un nouvel onglet)",
     enviar: "Envoyer mon vote",
     enviando: "Envoi…",
     gracias: (vino: string) => `Merci ! Votre vote pour ${vino} est enregistré. Si vous gagnez, nous vous préviendrons.`,
@@ -146,7 +158,7 @@ export default function VotoVinoFavorito({
   language: Language;
 }) {
   const textos = TEXTOS[language];
-  const activa = useEncuestaVinosActiva();
+  const { activa, premio, fin } = useEncuestaVinos();
   const { toast } = useToast();
   const [abierto, setAbierto] = useState(false);
   const [votado, setVotado] = useState(false);
@@ -197,6 +209,7 @@ export default function VotoVinoFavorito({
         onAbiertoChange={setAbierto}
         vinos={vinos}
         language={language}
+        detallePremio={premio && fin ? textos.premio(premio, formatearDiaEncuesta(fin, language)) : null}
         onVotado={() => {
           marcarVotoEnEsteNavegador();
           setVotado(true);
@@ -211,12 +224,15 @@ function DialogoVoto({
   onAbiertoChange,
   vinos,
   language,
+  detallePremio,
   onVotado,
 }: {
   abierto: boolean;
   onAbiertoChange: (abierto: boolean) => void;
   vinos: VinoVotable[];
   language: Language;
+  /** «Premio: … Puedes votar hasta el …»: lo fija el panel (bases del sorteo, apartado 4). */
+  detallePremio: string | null;
   onVotado: () => void;
 }) {
   const textos = TEXTOS[language];
@@ -293,6 +309,7 @@ function DialogoVoto({
             {textos.titulo}
           </DialogTitle>
           <DialogDescription>{textos.descripcion}</DialogDescription>
+          {detallePremio && <p className="font-sans text-sm font-medium text-foreground">{detallePremio}</p>}
         </DialogHeader>
 
         {gracias ? (
@@ -353,11 +370,28 @@ function DialogoVoto({
                 onChange={(e) => setBases(e.target.checked)}
                 className="mt-0.5 h-5 w-5 shrink-0 accent-[hsl(var(--accent))]"
               />
+              {/* Enlaces en pestaña nueva: navegar aquí cerraría el diálogo y se perdería el voto. */}
               <label htmlFor={ids.bases} className="text-sm leading-snug text-muted-foreground">
-                {textos.bases}{" "}
-                <Link to={construirRutaIdioma("/politica-privacidad", language)} className="text-accent underline underline-offset-2">
+                {textos.basesAntes}{" "}
+                <a
+                  href={`${construirRutaIdioma(CONDICIONES_PATH, language)}#${ANCLA_CONDICIONES_SORTEO}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent underline underline-offset-2"
+                >
+                  {textos.basesEnlace}
+                  <span className="sr-only"> {textos.pestanaNueva}</span>
+                </a>
+                {textos.basesDespues}{" "}
+                <a
+                  href={construirRutaIdioma(POLITICA_PRIVACIDAD_PATH, language)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent underline underline-offset-2"
+                >
                   {textos.privacidad}
-                </Link>
+                  <span className="sr-only"> {textos.pestanaNueva}</span>
+                </a>
               </label>
             </div>
             {error && <p role="alert" className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{error}</p>}

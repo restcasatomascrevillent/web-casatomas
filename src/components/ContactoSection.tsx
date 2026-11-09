@@ -12,9 +12,16 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { TelLink } from "@/components/TelLink";
 import { AREA_TOQUE_EMAIL } from "@/lib/area-toque";
 import { construirRutaIdioma } from "@/i18n/routing";
-import { TIENDA_PATH } from "@/lib/condiciones";
+import { ANCLA_CONDICIONES_CHEQUES, CONDICIONES_PATH, TIENDA_PATH } from "@/lib/condiciones";
 import type { Language } from "@/i18n/types";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
+
+/** Enlace a las condiciones de compra de los cheques regalo, junto a la nota de validez. */
+const CONDICIONES_CHEQUE: Record<Language, string> = {
+  es: "Condiciones de compra y devolución en 30 días",
+  en: "Purchase terms and 30-day returns",
+  fr: "Conditions d'achat et retour sous 30 jours",
+};
 
 export interface DatosComprador {
   nombre: string;
@@ -345,7 +352,14 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                 </div>
 
                 <p className="text-xs text-muted-foreground pt-4">
-                  {t.contacto.giftNote}
+                  {t.contacto.giftNote}.{" "}
+                  {/* Información previa a la compra (art. 97 TRLGDCU): validez, desistimiento de 30 días… */}
+                  <Link
+                    to={`${construirRutaIdioma(CONDICIONES_PATH, language)}#${ANCLA_CONDICIONES_CHEQUES}`}
+                    className="inline-flex min-h-6 items-center font-medium text-accent underline underline-offset-2 hover:decoration-2"
+                  >
+                    {CONDICIONES_CHEQUE[language]}
+                  </Link>
                 </p>
 
                 <div className="pt-4 border-t border-accent/20">
