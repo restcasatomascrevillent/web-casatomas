@@ -121,7 +121,7 @@ interface NovedadesDescargadas {
 }
 
 /**
- * Publica /version.json con la versión M.N de la web (docs/PROCESO-DE-CAMBIOS.md), para
+ * Publica /version.json con la versión X.Y.Z de la web (docs/PROCESO-DE-CAMBIOS.md), para
  * saber qué versión tiene la demo y cuál producción. Solo en el build del cliente: el SSG
  * compila también para servidor y ahí no hace falta.
  */

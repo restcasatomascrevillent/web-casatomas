@@ -163,6 +163,12 @@ test.describe("web en producción o demo (solo lectura)", () => {
       expect(coincide, `el commit publicado (${commit}) no es el esperado (${esperado.slice(0, 7)})`).toBe(true);
       anotar("commit esperado", `${esperado.slice(0, 7)}: coincide`);
     }
+    // Release (docs/PROCESO-DE-CAMBIOS.md): la candidata y producción tienen que llevar la versión exacta.
+    const versionEsperada = process.env.EXPECTED_VERSION?.trim();
+    if (versionEsperada) {
+      expect(version, `la versión publicada (${version}) no es la esperada (${versionEsperada})`).toBe(versionEsperada);
+      anotar("versión esperada", `${versionEsperada}: coincide`);
+    }
   });
 
   test("carta: del menú a /carta, abrir una categoría y ver platos", async ({ page }) => {
