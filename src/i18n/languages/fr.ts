@@ -552,7 +552,7 @@ export const translations: Translations = {
     cookie: {
       title: "Politique de cookies",
       message:
-        "Nous utilisons des cookies nécessaires au fonctionnement du site. Ceux de la carte interactive des vins sont facultatifs et ne s'activent que si vous les acceptez. Plus d'informations dans notre",
+        "Nous utilisons des cookies nécessaires au fonctionnement du site. Ceux de la carte interactive des vins et des statistiques d'utilisation sont facultatifs et ne s'activent que si vous les acceptez. Plus d'informations dans notre",
       link: "Politique de cookies",
       reject: "Refuser",
       configure: "Configurer",
@@ -565,6 +565,8 @@ export const translations: Translations = {
       mapsDescription: "Charge la carte Mapbox sur la carte des vins pour montrer l'origine de chaque appellation. Mapbox reçoit des données d'usage anonymes lors de son affichage.",
       mapsDisabledNotice: "Activez les cookies de la carte pour voir d'où viennent nos vins.",
       mapsEnableCta: "Activer la carte",
+      statsTitle: "Statistiques d'utilisation",
+      statsDescription: "Un identifiant aléatoire pour savoir quelles pages et quels boutons sont utilisés pendant une visite et repérer où le site échoue. Il ne conserve ni ce que vous saisissez ni votre nom, et n'est pas partagé avec des tiers.",
       save: "Enregistrer les préférences",
     },
     map: {
