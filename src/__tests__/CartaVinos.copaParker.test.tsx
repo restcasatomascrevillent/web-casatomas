@@ -18,6 +18,29 @@ const vinos = [
     alergenos_oficiales: [], alergenos_inferidos: [], alergenos_notas: null,
   },
   {
+    // 08/11/2026: texto con «+» (verificada, de la añada que se sirve).
+    id: "mas", nombre: "Mauro", precio_eur: 55, categoria: "VINOS TINTOS — IGP CASTILLA Y LEÓN",
+    puntuacion_parker: 94, puntuacion_parker_anada: 2023, puntuacion_parker_texto: "94+",
+    alergenos_oficiales: [], alergenos_inferidos: [], alergenos_notas: null,
+  },
+  {
+    // Intervalo definitivo y NV (sin añada): «95–97», sin «(añada …)».
+    id: "nv", nombre: "Krug Grande Cuvée", precio_eur: 330, categoria: "VINOS ESPUMOSOS — CHAMPAGNE",
+    puntuacion_parker: 95, puntuacion_parker_anada: null, puntuacion_parker_texto: "95–97",
+    alergenos_oficiales: [], alergenos_inferidos: [], alergenos_notas: null,
+  },
+  {
+    // Datos raros (cero puntos o texto que no casa): nunca «0» ni un texto inventado.
+    id: "cero", nombre: "Vino sin datos", precio_eur: 20, categoria: "VINOS TINTOS — RIOJA",
+    puntuacion_parker: 0, puntuacion_parker_texto: "0",
+    alergenos_oficiales: [], alergenos_inferidos: [], alergenos_notas: null,
+  },
+  {
+    id: "texto-raro", nombre: "Vino texto raro", precio_eur: 20, categoria: "VINOS TINTOS — RIOJA",
+    puntuacion_parker: 91, puntuacion_parker_anada: 2020, puntuacion_parker_texto: "99",
+    alergenos_oficiales: [], alergenos_inferidos: [], alergenos_notas: null,
+  },
+  {
     // «copeo» sin precio de copa (no debería existir: la BD lo impide): sin botón.
     id: "sin-precio", nombre: "Cava Brut Nature", precio_eur: 15, categoria: "VINOS ESPUMOSOS — CAVA",
     copeo: true, precio_copa_eur: null, alergenos_oficiales: [], alergenos_inferidos: [], alergenos_notas: null,
@@ -59,6 +82,17 @@ describe("CartaVinos — copa y puntuación Parker", () => {
     const icono = within(tarjeta("Pago de Carraovejas")).getByRole("img", { name: "Puntuación Parker: 93 puntos (añada 2023)" });
     expect(icono).toHaveTextContent("93RP");
     expect(within(tarjeta("Albariño Rías Baixas")).queryByRole("img", { name: /Parker/ })).not.toBeInTheDocument();
+  });
+
+  it("enseña la puntuación tal cual (94+, intervalo) y nunca cero puntos", async () => {
+    const user = userEvent.setup();
+    pintar();
+    await confirmarEdad(user);
+    expect(within(tarjeta("Mauro")).getByRole("img", { name: "Puntuación Parker: 94+ puntos (añada 2023)" })).toHaveTextContent("94+RP");
+    expect(within(tarjeta("Krug Grande Cuvée")).getByRole("img", { name: "Puntuación Parker: 95–97 puntos" })).toHaveTextContent("95–97RP");
+    expect(within(tarjeta("Vino sin datos")).queryByRole("img", { name: /Parker/ })).not.toBeInTheDocument();
+    // Un texto que no casa con los puntos no se enseña: se usan los puntos.
+    expect(within(tarjeta("Vino texto raro")).getByRole("img", { name: "Puntuación Parker: 91 puntos (añada 2020)" })).toBeInTheDocument();
   });
 
   it("solo los vinos por copas (con precio) tienen el botón de la copa", async () => {

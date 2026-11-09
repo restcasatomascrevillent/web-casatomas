@@ -95,9 +95,15 @@ interface Vino {
   /** Se sirve por copas y su precio (04/11/2026, panel › Gestor Web › Vinos). */
   copeo?: boolean | null;
   precio_copa_eur?: number | null;
-  /** Puntos de Robert Parker / The Wine Advocate y la añada a la que corresponden. */
+  /**
+   * Puntos de Robert Parker / The Wine Advocate y la añada a la que corresponden.
+   * Desde el 08/11/2026 los calcula la base de datos del panel: solo puntuaciones
+   * VERIFICADAS, definitivas y de la añada que se sirve (o NV). Sin ellas, NULL.
+   * `puntuacion_parker_texto` es la puntuación tal cual: «94», «94+» o «93–95».
+   */
   puntuacion_parker?: number | null;
   puntuacion_parker_anada?: number | null;
+  puntuacion_parker_texto?: string | null;
 }
 
 type VinoRecord = Vino & Record<string, unknown>;
@@ -119,19 +125,19 @@ const COPA_PARKER = {
     verCopa: "Ver precio por copa",
     verBotella: "Ver precio de la botella",
     copaPedido: "copa",
-    parker: (puntos: number, anada?: number | null) => `Puntuación Parker: ${puntos} puntos${anada ? ` (añada ${anada})` : ""}`,
+    parker: (puntos: string, anada?: number | null) => `Puntuación Parker: ${puntos} puntos${anada ? ` (añada ${anada})` : ""}`,
   },
   en: {
     verCopa: "See price by the glass",
     verBotella: "See bottle price",
     copaPedido: "glass",
-    parker: (puntos: number, anada?: number | null) => `Parker score: ${puntos} points${anada ? ` (${anada} vintage)` : ""}`,
+    parker: (puntos: string, anada?: number | null) => `Parker score: ${puntos} points${anada ? ` (${anada} vintage)` : ""}`,
   },
   fr: {
     verCopa: "Voir le prix au verre",
     verBotella: "Voir le prix de la bouteille",
     copaPedido: "verre",
-    parker: (puntos: number, anada?: number | null) => `Note Parker : ${puntos} points${anada ? ` (millésime ${anada})` : ""}`,
+    parker: (puntos: string, anada?: number | null) => `Note Parker : ${puntos} points${anada ? ` (millésime ${anada})` : ""}`,
   },
 };
 
@@ -139,10 +145,19 @@ const COPA_PARKER = {
 const tieneCopa = (vino: Pick<Vino, "copeo" | "precio_copa_eur">) =>
   vino.copeo === true && typeof vino.precio_copa_eur === "number" && vino.precio_copa_eur > 0;
 
-const puntosParker = (vino: Pick<Vino, "puntuacion_parker">) =>
-  typeof vino.puntuacion_parker === "number" && vino.puntuacion_parker >= 50 && vino.puntuacion_parker <= 100
-    ? vino.puntuacion_parker
-    : null;
+/**
+ * Lo que enseña el icono Parker: el texto («94», «94+», «93–95») si es válido;
+ * si no (BD sin la columna nueva), los puntos. Nunca un cero ni algo fuera de
+ * 50–100: sin puntuación no hay icono.
+ */
+const puntosParker = (vino: Pick<Vino, "puntuacion_parker" | "puntuacion_parker_texto">): string | null => {
+  const n = vino.puntuacion_parker;
+  if (typeof n !== "number" || n < 50 || n > 100) return null;
+  const texto = typeof vino.puntuacion_parker_texto === "string" ? vino.puntuacion_parker_texto.trim() : "";
+  const m = /^(\d{2,3})(\+|–(\d{2,3}))?$/.exec(texto);
+  if (m && Number(m[1]) === n && (!m[3] || (Number(m[3]) > n && Number(m[3]) <= 100))) return texto;
+  return String(n);
+};
 
 let clienteSupabase: Promise<typeof import("@/integrations/supabase/client")> | undefined;
 const cargarSupabase = () => clienteSupabase ??= import("@/integrations/supabase/client");
