@@ -15,6 +15,7 @@ import type { Language } from "@/i18n/types";
 import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 import { Link } from "react-router-dom";
 import { rutaCategoria } from "@/lib/carta-rutas";
+import MasSobreSeccion from "@/components/carta/MasSobreSeccion";
 
 const SEO_HOME: Record<Language, { title: string; description: string }> = {
   es: {
@@ -35,17 +36,23 @@ const SEO_HOME: Record<Language, { title: string; description: string }> = {
 };
 
 /**
- * Presentación bajo el hero (plan SEO del 09/11/2026): la web antigua salía
+ * Presentación «Sobre Casa Tomás» (plan SEO del 09/11/2026): la web antigua salía
  * en posición 1–2 por «restaurante(s) en Crevillente», «comer / dónde comer
  * en Crevillente», y la nueva no tenía ningún texto con esas frases. Solo
  * nombra lo que hay en la carta y en la web (marisco, chuletón, arroces,
  * menú del día). Los enlaces llevan a las páginas de categoría y al bloque
  * del menú del día (dentro de `#novedades`).
+ *
+ * 09/11/2026: el dueño no la quiere bajo el hero («queda feísimo»). Va al
+ * final de la portada, dentro del mismo desplegable cerrado que el «Más
+ * sobre …» de las categorías de la carta (`MasSobreSeccion`, `<details>`
+ * nativo): el texto sigue en el HTML prerenderizado, sin `display:none`.
  */
 type TrozoPresentacion = string | { texto: string; slug?: string; ancla?: string };
 
-const PRESENTACION: Record<Language, { h2: string; parrafo: TrozoPresentacion[] }> = {
+const PRESENTACION: Record<Language, { resumen: string; h2: string; parrafo: TrozoPresentacion[] }> = {
   es: {
+    resumen: "Sobre Casa Tomás",
     h2: "Dónde comer en Crevillente: cocina gallega, marisco y carnes a la brasa",
     parrafo: [
       "Casa Tomás es un restaurante en Crevillente de raíces gallegas y cocina mediterránea. En nuestra carta encontrarás ",
@@ -60,6 +67,7 @@ const PRESENTACION: Record<Language, { h2: string; parrafo: TrozoPresentacion[] 
     ],
   },
   en: {
+    resumen: "About Casa Tomás",
     h2: "Where to eat in Crevillente: Galician cuisine, seafood and grilled meat",
     parrafo: [
       "Casa Tomás is a restaurant in Crevillente with Galician roots and Mediterranean cooking. On our menu you will find ",
@@ -74,6 +82,7 @@ const PRESENTACION: Record<Language, { h2: string; parrafo: TrozoPresentacion[] 
     ],
   },
   fr: {
+    resumen: "À propos de Casa Tomás",
     h2: "Où manger à Crevillente : cuisine galicienne, fruits de mer et viandes à la braise",
     parrafo: [
       "Casa Tomás est un restaurant à Crevillente aux racines galiciennes et à la cuisine méditerranéenne. Sur notre carte, vous trouverez ",
@@ -92,30 +101,30 @@ const PRESENTACION: Record<Language, { h2: string; parrafo: TrozoPresentacion[] 
 const CLASE_ENLACE_PRESENTACION = "text-accent underline underline-offset-4 hover:text-primary";
 
 const Presentacion = ({ language }: { language: Language }) => {
-  const { h2, parrafo } = PRESENTACION[language];
+  const { resumen, h2, parrafo } = PRESENTACION[language];
   return (
-    <section aria-labelledby="presentacion-titulo" className="py-12 md:py-16 px-4 md:px-8 bg-background">
-      <div className="max-w-3xl mx-auto text-center">
-        <h2 id="presentacion-titulo" className="font-libre-baskerville text-2xl md:text-3xl font-bold text-primary mb-4 text-balance">
-          {h2}
-        </h2>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-          {parrafo.map((trozo, i) =>
-            typeof trozo === "string" ? (
-              trozo
-            ) : trozo.slug ? (
-              <Link key={i} to={rutaCategoria(trozo.slug, language)} className={CLASE_ENLACE_PRESENTACION}>
-                {trozo.texto}
-              </Link>
-            ) : (
-              <a key={i} href={trozo.ancla} className={CLASE_ENLACE_PRESENTACION}>
-                {trozo.texto}
-              </a>
-            ),
-          )}
-        </p>
+    <div className="px-4 md:px-8 pb-12 bg-background">
+      <div className="max-w-3xl mx-auto">
+        <MasSobreSeccion resumen={resumen}>
+          <h2 className="font-libre-baskerville text-xl md:text-2xl font-bold text-primary text-balance">{h2}</h2>
+          <p>
+            {parrafo.map((trozo, i) =>
+              typeof trozo === "string" ? (
+                trozo
+              ) : trozo.slug ? (
+                <Link key={i} to={rutaCategoria(trozo.slug, language)} className={CLASE_ENLACE_PRESENTACION}>
+                  {trozo.texto}
+                </Link>
+              ) : (
+                <a key={i} href={trozo.ancla} className={CLASE_ENLACE_PRESENTACION}>
+                  {trozo.texto}
+                </a>
+              ),
+            )}
+          </p>
+        </MasSobreSeccion>
       </div>
-    </section>
+    </div>
   );
 };
 
@@ -186,12 +195,12 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">
         <Hero />
-        <Presentacion language={language} />
         <SectionErrorBoundary id="carta"><CartaSection /></SectionErrorBoundary>
         <SectionBoundary id="novedades"><NovedadesSection /></SectionBoundary>
         <SectionBoundary id="espacios"><EspaciosSection /></SectionBoundary>
         <SectionBoundary id="nosotros"><NosotrosSection /></SectionBoundary>
         <SectionBoundary id="contacto"><ContactoSection /></SectionBoundary>
+        <Presentacion language={language} />
         </main>
         <SectionErrorBoundary id="footer"><Footer /></SectionErrorBoundary>
       </div>

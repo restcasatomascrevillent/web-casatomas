@@ -11,8 +11,9 @@ import type { Language } from "../i18n/types";
  *    de los datos de la carta (`etiquetaCategoriaIdioma`), igual que en las
  *    categorías sin entrada. Nada de `h1` comercial ni de otro `h1` oculto.
  *  - `title` y `description` solo van al `<head>` (`Seo`).
- *  - `h2` (opcional) es un subtítulo visible bajo la cabecera, antes de los
- *    platos (09/11/2026: «chuleta» en `/carta/carnes`).
+ *  - `h2` (opcional) es un subtítulo que va DENTRO del desplegable del pie,
+ *    encima de `intro` (09/11/2026: «chuleta» en `/carta/carnes`; el dueño
+ *    no lo quiere visible bajo la cabecera).
  *  - `intro` es el contenido ampliado: se pinta al FINAL del listado, dentro
  *    de un desplegable cerrado (`MasSobreSeccion`) cuyo rótulo es `masSobre`.
  *    Está en el HTML prerenderizado, no se carga al abrirlo.
