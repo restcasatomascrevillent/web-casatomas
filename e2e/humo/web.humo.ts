@@ -221,7 +221,7 @@ test.describe("web en producción o demo (solo lectura)", () => {
 
     const dia = diaSemanaMadrid();
     const tocaMenu = dia >= 2 && dia <= 4 && menuActivadoEnPanel;
-    const bloque = page.getByRole("heading", { name: "Menú de mediodía" });
+    const bloque = page.getByRole("heading", { name: "Menú del día" });
     const boton = page.getByRole("button", { name: "Ver menú de hoy" });
 
     if (!tocaMenu) {
