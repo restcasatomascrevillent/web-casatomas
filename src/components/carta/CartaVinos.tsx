@@ -41,6 +41,8 @@ import { ordenarPorOrdenEnCategoria } from "@/lib/orden-carta.mjs";
 import { NEGOCIO } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { registrarActividad } from "@/lib/actividad/registro";
+import { useBusquedaRegistrada } from "@/lib/actividad/useBusquedaRegistrada";
 import BackToTopButton from "./BackToTopButton";
 import VotoVinoFavorito from "./VotoVinoFavorito";
 // Vocabulario único de alérgenos: este fichero tenía su propia copia de
@@ -359,6 +361,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
 
   const addToPedido = (item: Vino & { displayNombre?: string }) => {
     if (!precioConocido(item.precio_eur)) return;
+    registrarActividad("pedido", { accion: "anadir", objetivo: item.displayNombre || item.nombre, props: { carta: "vinos" } });
     const cantidadInicial = item.cantidad ?? 1;
     const pedidoItem = {
       ...item,
@@ -409,6 +412,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
     return filtrarVinos(categoryItems, { categoria: selectedCategory, busqueda: debouncedSearchTerm, language })
       .map((vino) => ({ ...vino, displayNombre: nombreVinoVisible(vino, language) }));
   }, [debouncedSearchTerm, language, selectedCategory, vinosByCategory]);
+  useBusquedaRegistrada(debouncedSearchTerm, filteredItems.length, "vinos");
 
   const mapaVinos = useMemo(
     () => filtrarVinos(mapVinos, { categoria: selectedCategory, busqueda: debouncedSearchTerm, language }),
@@ -430,9 +434,17 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
 
   // Foto e información son excluyentes: abrir una cierra la otra, nunca las
   // dos tarjetas (foto + texto) a la vez estirando la ficha el doble.
+  /** Super Admin › Logs: qué vino se abre y cómo (ficha con foto, información o copa). */
+  const registrarVino = (item: VinoRecord, modo: "ficha" | "info" | "copa") =>
+    registrarActividad("vino_abierto", {
+      objetivo: String(item.nombre ?? ""),
+      props: { id: item.id ? String(item.id) : undefined, carta: "vinos", categoria: item.categoria ? String(item.categoria) : undefined, modo },
+    });
+
   const handleToggleCard = (item: VinoRecord, currentExpanded: boolean) => {
     const key = getCardKey(item);
     const next = !currentExpanded;
+    if (next) registrarVino(item, "ficha");
     setExpandedCards((prev) => ({ ...prev, [key]: next }));
     if (next) setInfoCards((prev) => ({ ...prev, [key]: false }));
   };
@@ -442,6 +454,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
   const handleToggleInfoCard = (item: VinoRecord, currentOpen: boolean) => {
     const key = getCardKey(item);
     const next = !currentOpen;
+    if (next) registrarVino(item, "info");
     setInfoCards((prev) => ({ ...prev, [key]: next }));
     if (next) setExpandedCards((prev) => ({ ...prev, [key]: false }));
   };
@@ -529,6 +542,7 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
   };
 
   const handleCategoryChange = (category: string) => {
+    registrarActividad("filtro", { accion: "cambiar", objetivo: category, props: { carta: "vinos" } });
     setSelectedCategory(category);
     if (!vinosByCategory[category]) {
       fetchVinosByCategory(category, false);
@@ -748,7 +762,10 @@ const CartaVinos = ({ showAddButton = false, showCompleteList = false, initialVi
                             {conCopa && (
                               <button
                                 type="button"
-                                onClick={() => setCopaCards((prev) => ({ ...prev, [cardKey]: !copaOpen }))}
+                                onClick={() => {
+                                  if (!copaOpen) registrarVino(itemRecord, "copa");
+                                  setCopaCards((prev) => ({ ...prev, [cardKey]: !copaOpen }));
+                                }}
                                 aria-label={`${copaOpen ? COPA_PARKER[language].verBotella : COPA_PARKER[language].verCopa} — ${item.displayNombre || item.nombre}`}
                                 aria-pressed={copaOpen}
                                 title={copaOpen ? COPA_PARKER[language].verBotella : COPA_PARKER[language].verCopa}

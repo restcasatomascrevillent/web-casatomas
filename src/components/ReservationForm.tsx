@@ -43,6 +43,7 @@ import {
 import { diasCerradosPorDefecto, fechaIso, leerDiasCerrados } from "@/lib/cierres-reserva";
 import { leerComensalesReserva, MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { construirRutaIdioma } from "@/i18n/routing";
+import { registrarActividad } from "@/lib/actividad/registro";
 import {
   ANCLA_CONDICIONES_NEWSLETTER,
   ANCLA_CONDICIONES_RESERVA,
@@ -175,6 +176,17 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
     [disponibilidad],
   );
 
+  /** Datos agregados de la consulta para Super Admin › Logs (nunca nombre, teléfono ni email). */
+  const datosReservaLogs = () => {
+    const fecha = form.getValues("fecha");
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return {
+      comensales: form.getValues("numero_comensales") ?? null,
+      dias_antelacion: fecha ? Math.round((new Date(fecha).setHours(0, 0, 0, 0) - hoy.getTime()) / 86_400_000) : null,
+    };
+  };
+
   const checkAvailability = async () => {
     const fecha = form.getValues("fecha");
     const numeroComensales = form.getValues("numero_comensales");
@@ -185,6 +197,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
     }
 
     const mostrarFalloDisponibilidad = (fallo: TipoFallo) => {
+      registrarActividad("reserva_disponibilidad", { accion: "error", props: { ...datosReservaLogs(), fallo } });
       setDisponibilidad([]);
       setHasCheckedAvailability(true);
       setSelectedHour(null);
@@ -230,6 +243,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // Dia CERRADO: no es un fallo, es una respuesta valida que dice que ese
       // dia no se reserva. Hasta ahora los dos casos caian en el mismo toast.
       if (resultado.estado === "cerrado") {
+        registrarActividad("reserva_disponibilidad", { accion: "cerrado", props: datosReservaLogs() });
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
         setSelectedHour(null);
@@ -248,9 +262,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // horas libres y el visitante se quedaba mirando una lista vacía sin que
       // nadie le dijera nada. Las horas `completo` se siguen pintando en gris.
       if (!resultado.huecos.some((hueco) => hueco.estado === "libre")) {
+        registrarActividad("reserva_disponibilidad", { accion: "completo", props: datosReservaLogs() });
         toast.message(conTelefono(t.reservationForm.toasts.noSlots));
         return;
       }
+      registrarActividad("reserva_disponibilidad", { accion: "con_huecos", props: datosReservaLogs() });
       toast.success(t.reservationForm.toasts.availabilityChecked);
     } catch (error) {
       // `fetch` lanzó sin respuesta (red, DNS, TLS o CORS — este último es lo
@@ -305,9 +321,17 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
 
       // 201 es el UNICO 2xx de exito. Todo lo demas es un rechazo con motivo.
       if (response.status !== 201) {
-        setRechazo(interpretarRechazoReserva(response.status, cuerpo, t.reservationForm.rejection));
+        const rechazo = interpretarRechazoReserva(response.status, cuerpo, t.reservationForm.rejection);
+        // Solo el código del motivo (contrato de reservas-web) y el estado HTTP: nada del cliente.
+        registrarActividad("reserva_rechazada", {
+          accion: (rechazo.motivo ?? "sin_motivo").toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40),
+          props: { status: response.status },
+        });
+        setRechazo(rechazo);
         return;
       }
+      // 201: el servidor ha GUARDADO la solicitud (queda pendiente de que el restaurante la confirme).
+      registrarActividad("reserva_solicitada", { accion: "ok", props: datosReservaLogs() });
 
       // Se captura ANTES del `form.reset()` de abajo: el resguardo enseña el
       // nombre y el email, y reseteado el formulario ya no habría de dónde
@@ -333,6 +357,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // defecto: culpar a su conexion cuando la funcion estaba caida es lo que
       // dejo el formulario mudo horas).
       console.error("Error sending reservation:", error);
+      registrarActividad("reserva_rechazada", { accion: "sin_respuesta", props: { status: 0 } });
       setRechazo(interpretarRechazoReserva(0, null, t.reservationForm.rejection));
     } finally {
       setIsSubmitting(false);
@@ -453,7 +478,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
 
       <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-3 sm:p-8 rounded-2xl shadow-xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-track-form="reserva">
             <div className="space-y-6 pb-6 border-b border-border/30">
               <Paso className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</Paso>
 

@@ -14,6 +14,7 @@ const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [mapsDraft, setMapsDraft] = useState(false);
+  const [statsDraft, setStatsDraft] = useState(false);
   const bannerRef = useRef<HTMLDivElement>(null);
   // Botón que abrió las preferencias (el del pie, o «Configurar» del aviso): al cerrar el
   // diálogo el foco vuelve a él. No es un `DialogTrigger`, así que Radix no lo sabe.
@@ -30,6 +31,7 @@ const CookieConsent = () => {
     const abrir = () => {
       origenRef.current = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
       setMapsDraft(getStoredConsent()?.maps === true);
+      setStatsDraft(getStoredConsent()?.estadisticas === true);
       setShowPreferences(true);
       setShowBanner(false);
     };
@@ -89,12 +91,13 @@ const CookieConsent = () => {
   const openPreferences = () => {
     origenRef.current = null; // el aviso desaparece: no hay a dónde devolver el foco
     setMapsDraft(getStoredConsent()?.maps === true);
+    setStatsDraft(getStoredConsent()?.estadisticas === true);
     setShowBanner(false);
     setShowPreferences(true);
   };
 
   const savePreferences = () => {
-    saveConsent(mapsDraft);
+    saveConsent(mapsDraft, statsDraft);
     setShowPreferences(false);
   };
 
@@ -189,6 +192,14 @@ const CookieConsent = () => {
                 <p className="text-xs text-muted-foreground">{t.cookie.mapsDescription}</p>
               </div>
               <Switch checked={mapsDraft} onCheckedChange={setMapsDraft} aria-label={t.cookie.mapsTitle} />
+            </div>
+
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold">{t.cookie.statsTitle}</p>
+                <p className="text-xs text-muted-foreground">{t.cookie.statsDescription}</p>
+              </div>
+              <Switch checked={statsDraft} onCheckedChange={setStatsDraft} aria-label={t.cookie.statsTitle} />
             </div>
           </div>
 

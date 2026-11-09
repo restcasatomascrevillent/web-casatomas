@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CompraChequePasos } from "@/components/CompraChequePasos";
+import { registrarActividad } from "@/lib/actividad/registro";
 import { MapPin, Phone, Mail, Gift, PawPrint, Wine } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -81,8 +82,11 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
     if (!resultado) return;
 
     if (resultado === "exito") {
+      // Stripe solo vuelve con «exito» si el pago se completó; la confirmación en la BD llega por el webhook.
+      registrarActividad("cheque_pagado", { accion: "ok" });
       toast({ title: t.contacto.toasts.giftSuccessTitle, description: t.contacto.toasts.giftSuccessDescription });
     } else if (resultado === "cancelado") {
+      registrarActividad("cheque_checkout", { accion: "cancelado" });
       toast({ title: t.contacto.toasts.giftCancelTitle, description: t.contacto.toasts.giftCancelDescription });
     }
 
@@ -163,6 +167,7 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
         throw new Error({ es: "No se pudo confirmar que el importe quede oculto. Inténtalo más tarde.", en: "Your hidden amount preference could not be confirmed. Please try again later.", fr: "Le masquage du montant n’a pas pu être confirmé. Réessayez plus tard." }[language || "es"]);
       }
       // Redirige a Stripe Checkout: no hay nada más que pintar en esta pestaña.
+      registrarActividad("cheque_checkout", { accion: "ir_al_pago", props: { importe: parseFloat(giftAmount) } });
       window.location.href = cuerpo.url;
     } catch (error) {
       // Un fallo de red llega como TypeError de `fetch` ("Failed to fetch",
