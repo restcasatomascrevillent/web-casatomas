@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.3.0] - 2026-11-10
+
+Objetivo: Seguridad: cabeceras CSP más estrictas
+
+### Añadido
+- Seguridad: endurecer la CSP (frame-ancestors, form-action, upgrade-insecure-requests) ([#44](https://github.com/restcasatomascrevillent/web-casatomas/pull/44))
+
 ## [1.2.1] - 2026-11-10
 
 Objetivo: Novedades: un fallo al refrescar ya no borra las tarjetas
