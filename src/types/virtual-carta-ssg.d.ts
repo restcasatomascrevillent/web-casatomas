@@ -28,3 +28,9 @@ declare module "virtual:carta-ssg/tienda" {
   const tienda: TiendaSSG;
   export default tienda;
 }
+
+declare module "virtual:carta-ssg/tienda-visible" {
+  import type { TiendaVisibleSSG } from "@/lib/carta-ssg-types";
+  const tiendaVisible: TiendaVisibleSSG;
+  export default tiendaVisible;
+}
