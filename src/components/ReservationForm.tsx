@@ -60,6 +60,10 @@ type ReservationFormProps = {
   nivelPasos?: "h2" | "h3";
 };
 
+/** Martes a jueves en la comida: menú del día o a la carta. */
+type EleccionComida = "menu" | "carta";
+const OPCIONES_COMIDA: readonly EleccionComida[] = ["menu", "carta"];
+
 /**
  * Pinta la salida de un rechazo sustituyendo `{phone}` por el telefono
  * pulsable que ya usan el footer y la barra de CTA movil.
@@ -112,7 +116,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadHueco[]>([]);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
-  const [quiereMenuDelDia, setQuiereMenuDelDia] = useState(false);
+  /** Martes a jueves en la comida hay que elegir: menú del día o carta (obligatorio). */
+  const [eleccionComida, setEleccionComida] = useState<EleccionComida | null>(null);
+  const [errorEleccionComida, setErrorEleccionComida] = useState(false);
+  const primeraOpcionComidaRef = useRef<HTMLInputElement>(null);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
   const [honeypot, setHoneypot] = useState("");
@@ -195,10 +202,13 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
         .filter((grupo) => grupo.huecos.length > 0),
     [disponibilidad, fechaIsoElegida],
   );
-  /** Menú del día: martes a jueves y hora de comida. Si cambia a algo no válido, se desmarca (efecto de abajo). */
+  /** Menú del día: martes a jueves y hora de comida. Si cambia a algo no válido, se borra la elección (efecto de abajo). */
   const permiteMenuDelDia = admiteMenuDelDia(watchFecha, selectedHour);
   useEffect(() => {
-    if (!permiteMenuDelDia) setQuiereMenuDelDia(false);
+    if (!permiteMenuDelDia) {
+      setEleccionComida(null);
+      setErrorEleccionComida(false);
+    }
   }, [permiteMenuDelDia]);
 
   /** Datos agregados de la consulta para Super Admin › Logs (nunca nombre, teléfono ni email). */
@@ -319,6 +329,13 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       return;
     }
 
+    const debeElegirComida = admiteMenuDelDia(data.fecha, selectedHour);
+    if (debeElegirComida && !eleccionComida) {
+      setErrorEleccionComida(true);
+      primeraOpcionComidaRef.current?.focus();
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const telefonoWebhook = formatearTelefonoWebhook(data.telefono);
@@ -335,7 +352,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           numero_comensales: data.numero_comensales,
           notas_cliente: data.notas_cliente || "",
           estado: "pendiente",
-          ...(quiereMenuDelDia && admiteMenuDelDia(data.fecha, selectedHour) ? { menu_del_dia: true } : {}),
+          // Martes a jueves en la comida: true = menú del día, false = carta.
+          // `reservas-web` solo trata `=== true` como menú; false es carta.
+          ...(debeElegirComida ? { menu_del_dia: eleccionComida === "menu" } : {}),
           // Contrato con `reservas-web/crear`: dos booleanos SEPARADOS. Las
           // condiciones son obligatorias (el schema no deja llegar aquí sin
           // ellas); la newsletter es opcional y viaja tal cual.
@@ -383,7 +402,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       setDisponibilidad([]);
       setSelectedHour(null);
       setHasCheckedAvailability(false);
-      setQuiereMenuDelDia(false);
+      setEleccionComida(null);
+      setErrorEleccionComida(false);
       seguimientoOrigen.reiniciar();
     } catch (error) {
       // Ni siquiera hubo respuesta (red caida, CORS): se representa con
@@ -514,7 +534,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
 
       <div className="bg-card text-card-foreground border border-border/60 backdrop-blur-sm p-3 sm:p-8 rounded-2xl shadow-xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-track-form="reserva">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, () => {
+              // Con otros campos mal, también se avisa de la elección que falta.
+              if (permiteMenuDelDia && !eleccionComida) setErrorEleccionComida(true);
+            })} className="space-y-6" data-track-form="reserva">
             <div className="space-y-6 pb-6 border-b border-border/30">
               <Paso className="text-lg font-semibold text-foreground">{t.reservationForm.stepOne}</Paso>
 
@@ -751,25 +775,59 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
               </div>
 
               {permiteMenuDelDia && (
-                <div className="rounded-xl border border-border/50 bg-white p-4">
-                  <div className="flex flex-row items-start gap-3">
-                    <Checkbox
-                      id="menu-del-dia"
-                      checked={quiereMenuDelDia}
-                      onCheckedChange={(marcada) => {
-                        setQuiereMenuDelDia(marcada === true);
-                        tocarCampo("menu_del_dia");
-                      }}
-                      aria-describedby="menu-del-dia-nota"
-                    />
-                    <label htmlFor="menu-del-dia" className="-my-3 min-h-11 cursor-pointer py-3 font-medium leading-snug text-foreground">
-                      {t.reservationForm.menuDelDiaLabel}
-                    </label>
+                <fieldset
+                  className="space-y-3"
+                  aria-describedby={errorEleccionComida ? "menu-o-carta-nota menu-o-carta-error" : "menu-o-carta-nota"}
+                  aria-invalid={errorEleccionComida || undefined}
+                  data-testid="menu-o-carta"
+                >
+                  <legend className="mb-3 font-medium text-foreground">
+                    {t.reservationForm.menuOCartaLegend}
+                    <span aria-hidden="true"> *</span>
+                  </legend>
+                  <div className="grid grid-cols-2 gap-3">
+                    {OPCIONES_COMIDA.map((opcion, indice) => {
+                      const elegida = eleccionComida === opcion;
+                      return (
+                        <label
+                          key={opcion}
+                          className={cn(
+                            "flex min-h-14 cursor-pointer items-center justify-center rounded-xl border-2 px-3 py-3 text-center font-semibold transition-colors",
+                            "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-offset-2",
+                            elegida
+                              ? "border-primary bg-primary text-white"
+                              : errorEleccionComida
+                                ? "border-destructive bg-white text-foreground"
+                                : "border-border/60 bg-white text-foreground hover:border-primary/60",
+                          )}
+                        >
+                          <input
+                            ref={indice === 0 ? primeraOpcionComidaRef : undefined}
+                            type="radio"
+                            name="menu_o_carta"
+                            value={opcion}
+                            checked={elegida}
+                            onChange={() => {
+                              setEleccionComida(opcion);
+                              setErrorEleccionComida(false);
+                              tocarCampo("menu_del_dia");
+                            }}
+                            className="sr-only"
+                          />
+                          {opcion === "menu" ? t.reservationForm.menuOCartaMenu : t.reservationForm.menuOCartaCarta}
+                        </label>
+                      );
+                    })}
                   </div>
-                  <p id="menu-del-dia-nota" className="mt-1 pl-7 text-sm text-muted-foreground">
-                    {t.reservationForm.menuDelDiaNote}
+                  <p id="menu-o-carta-nota" className="text-sm text-muted-foreground">
+                    {t.reservationForm.menuOCartaNote}
                   </p>
-                </div>
+                  {errorEleccionComida && (
+                    <p id="menu-o-carta-error" role="alert" className="text-sm font-medium text-destructive">
+                      {t.reservationForm.menuOCartaError}
+                    </p>
+                  )}
+                </fieldset>
               )}
 
               <FormField
