@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.4.1] - 2026-11-10
+
+Objetivo: Documentación: el interruptor de la tienda está en Panel › Tienda
+
+### Otros
+- Tienda: el interruptor de la tienda está en Panel › Tienda ([#49](https://github.com/restcasatomascrevillent/web-casatomas/pull/49))
+
 ## [1.4.0] - 2026-11-10
 
 Objetivo: Tienda oculta en la web cuando se apaga en el panel y recarga automática con versiones antiguas
