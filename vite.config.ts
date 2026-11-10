@@ -2,7 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { rm } from "fs/promises";
-import { fetchCartaSSG, CARTA_SSG_VACIA } from "./scripts/carta-ssg.mjs";
+import { fetchCartaSSG, CARTA_SSG_VACIA, tiendaVisibleEnBuild } from "./scripts/carta-ssg.mjs";
 import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
@@ -37,6 +37,12 @@ const MODULOS = {
   "virtual:carta-ssg/tienda": (carta: CartaDescargada) => ({
     generadoEn: carta.generadoEn,
     config: carta.tienda ?? null,
+  }),
+  // ¿Sale «Tienda» en el menú, el pie y la tarjeta de cheques regalo? Lo importa
+  // la cabecera de TODAS las páginas: un booleano, sin los platos de
+  // `virtual:carta-ssg` ni los textos de la tienda (ver `useTiendaVisible`).
+  "virtual:carta-ssg/tienda-visible": (carta: CartaDescargada) => ({
+    visible: tiendaVisibleEnBuild(carta.tienda),
   }),
 };
 

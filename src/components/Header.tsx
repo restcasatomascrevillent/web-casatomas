@@ -10,6 +10,7 @@ import type { Language } from "@/i18n/types";
 import { RESERVAS_PATH, TIENDA_PATH } from "@/lib/condiciones";
 import { cn } from "@/lib/utils";
 import { instalarFocoNoTapado } from "@/lib/foco-no-tapado";
+import { useTiendaVisible } from "@/hooks/useTiendaVisible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +55,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const botonMenuRef = useRef<HTMLButtonElement>(null);
+  const tiendaVisible = useTiendaVisible();
 
   /**
    * Esc cierra el menú móvil y devuelve el foco al botón que lo abre. Se
@@ -186,12 +188,13 @@ const Header = () => {
   };
 
   // Casi todo son anclas de la portada; «Tienda» es una página propia
-  // (`/tienda`), que va justo después de la carta. Se enseña siempre, también
-  // con la tienda cerrada en el panel: la cabecera se prerenderiza igual en
-  // todas las páginas y la propia página explica el cierre.
+  // (`/tienda`), que va justo después de la carta. Desde el 10/11/2026
+  // (petición del dueño) desaparece si se apaga la tienda en el panel
+  // (`useTiendaVisible`: semilla del build y lectura en vivo); quien llegue a
+  // `/tienda` con un enlace guardado ve que no está disponible.
   const navItems: ({ id: string; label: string; ruta?: undefined } | { id: string; label: string; ruta: string })[] = [
     { id: "carta", label: t.header.nav.carta },
-    { id: "tienda", label: t.header.nav.tienda, ruta: construirRutaIdioma(TIENDA_PATH, language) },
+    ...(tiendaVisible ? [{ id: "tienda", label: t.header.nav.tienda, ruta: construirRutaIdioma(TIENDA_PATH, language) }] : []),
     { id: "novedades", label: t.header.nav.novedades },
     { id: "espacios", label: t.header.nav.espacios },
     { id: "nosotros", label: t.header.nav.nosotros },
@@ -236,8 +239,8 @@ const Header = () => {
           {/* Desktop Navigation: con justify-between en la fila, el hueco al
               logo y el hueco al icono del planeta quedan siempre iguales,
               sin importar que el bloque de la derecha sea más ancho. */}
-          {/* Seis enlaces desde que está «Tienda»: entre 1024 y 1279 px van más
-              juntos (y nunca en dos líneas: en francés «Notre histoire» se partía). */}
+          {/* Seis enlaces con «Tienda» (cinco si está apagada): entre 1024 y 1279 px van
+              más juntos (y nunca en dos líneas: en francés «Notre histoire» se partía). */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-6">
             {navItems.map((item) =>
               item.ruta ? (

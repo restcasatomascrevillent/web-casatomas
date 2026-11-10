@@ -15,6 +15,7 @@ import { construirRutaIdioma } from "@/i18n/routing";
 import { ANCLA_CONDICIONES_CHEQUES, CONDICIONES_PATH, TIENDA_PATH } from "@/lib/condiciones";
 import type { Language } from "@/i18n/types";
 import { CHEQUES_REGALO_CREAR_URL, functionHeaders, leerCuerpo } from "@/lib/supabase-functions";
+import { useTiendaVisible } from "@/hooks/useTiendaVisible";
 
 /** Enlace a las condiciones de compra de los cheques regalo, junto a la nota de validez. */
 const CONDICIONES_CHEQUE: Record<Language, string> = {
@@ -63,6 +64,8 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
   // sus tarjetas llevan h2 (y el subtítulo h3) para no saltarse ningún nivel.
   const nivelTitulo = modo === "completo" ? "h3" : "h2";
   const SubTitulo = modo === "completo" ? "h4" : "h3";
+  // Sin el acceso a la tienda si está apagada en el panel (como en la cabecera y el pie).
+  const tiendaVisible = useTiendaVisible();
   const [giftAmount, setGiftAmount] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [datos, setDatos] = useState<DatosComprador>(DATOS_COMPRADOR_VACIOS);
@@ -362,17 +365,19 @@ const ContactoSection = ({ modo = "completo" }: { modo?: "completo" | "contacto"
                   </Link>
                 </p>
 
-                <div className="pt-4 border-t border-accent/20">
-                  <SubTitulo className="font-medium mb-1 flex items-center gap-2">
-                    <Wine className="w-4 h-4 shrink-0 text-accent" aria-hidden="true" />
-                    {ACCESO_TIENDA[language].titulo}
-                  </SubTitulo>
-                  <p className="text-sm text-muted-foreground mb-3">{ACCESO_TIENDA[language].texto}</p>
-                  {/* Mismo aspecto que los botones de importe de arriba. */}
-                  <Button asChild variant="outline" className="h-auto min-h-10 w-full whitespace-normal py-2 border-accent/30 hover:bg-accent/10">
-                    <Link to={construirRutaIdioma(TIENDA_PATH, language)}>{ACCESO_TIENDA[language].boton}</Link>
-                  </Button>
-                </div>
+                {tiendaVisible && (
+                  <div className="pt-4 border-t border-accent/20">
+                    <SubTitulo className="font-medium mb-1 flex items-center gap-2">
+                      <Wine className="w-4 h-4 shrink-0 text-accent" aria-hidden="true" />
+                      {ACCESO_TIENDA[language].titulo}
+                    </SubTitulo>
+                    <p className="text-sm text-muted-foreground mb-3">{ACCESO_TIENDA[language].texto}</p>
+                    {/* Mismo aspecto que los botones de importe de arriba. */}
+                    <Button asChild variant="outline" className="h-auto min-h-10 w-full whitespace-normal py-2 border-accent/30 hover:bg-accent/10">
+                      <Link to={construirRutaIdioma(TIENDA_PATH, language)}>{ACCESO_TIENDA[language].boton}</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>}
