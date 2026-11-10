@@ -52,6 +52,9 @@ Deno.test("vista y PDF aplican las cuatro combinaciones elegidas en la compra", 
     const html = construirHtml(cheque, { ocultarImporte: ocultar_importe }, PLANTILLA_REGALO);
     assert(html.includes("100,00 €") === !ocultar_importe);
     assert(html.includes("Válido hasta el 08/10/2027 (incluido)"));
+    // Condiciones en soporte duradero: devolución en 30 días y enlace a las condiciones completas.
+    assert(html.includes("30 días"));
+    assert(html.includes("/condiciones#cheques-regalo"));
     assert(svg.includes("Válido hasta el 08/10/2027 (incluido)"));
   }
 });

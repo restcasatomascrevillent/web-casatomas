@@ -220,6 +220,14 @@ const es: TextosPrivacidad = {
         text: "Las estadísticas de uso propias se borran a los **90 días** y los errores técnicos a los **180 días**.",
       },
       {
+        label: "Registros técnicos y límites de uso:",
+        text: "Los registros técnicos del servidor (dirección IP, fecha y página) se borran automáticamente en un máximo de **7 días**. Los límites de uso de los formularios y del chat guardan la dirección IP cifrada, nunca en claro, y se borran en un máximo de **90 días**.",
+      },
+      {
+        label: "Lista de exclusión de reservas:",
+        text: "El email o el teléfono de quien ha faltado reiteradamente a sus reservas sin avisar o ha hecho un uso indebido del sistema se conservan mientras se mantenga el motivo por el que se incluyeron. Puede pedirnos que lo revisemos en cualquier momento.",
+      },
+      {
         label: "Cookies:",
         text: "Consulte el apartado de cookies para los plazos específicos de cada cookie.",
       },
@@ -306,14 +314,14 @@ const es: TextosPrivacidad = {
       { right: "Retirar el consentimiento", description: "En la newsletter y la votación, en cualquier momento y sin que afecte a lo anterior." },
     ],
     exercise:
-      "Para ejercer cualquiera de estos derechos, contacte con nosotros en {email} indicando su nombre, el derecho que desea ejercer y adjuntando una copia de su DNI o documento equivalente.",
+      "Para ejercer cualquiera de estos derechos, escríbanos a {email} indicando su nombre y el derecho que desea ejercer. Solo si tenemos dudas razonables sobre su identidad le pediremos que la acredite. Le responderemos en el plazo de un mes.",
     complaint:
       "Si considera que el tratamiento no es conforme a la normativa, puede presentar una reclamación ante la [Agencia Española de Protección de Datos (AEPD)](https://www.aepd.es).",
   },
   providers: {
     heading: "7. Proveedores de servicio y transferencias",
     intro:
-      "Para prestar el servicio utilizamos los siguientes proveedores, que tratan los datos por nuestra cuenta y con contrato de encargo. Algunos están en Estados Unidos: la transferencia se ampara en el Marco de Privacidad de Datos UE-EE. UU. o en las cláusulas contractuales tipo de la Comisión Europea.",
+      "No cedemos sus datos a terceros, salvo obligación legal (por ejemplo, a la Agencia Tributaria o a jueces y tribunales). Para prestar el servicio utilizamos los siguientes proveedores, que tratan los datos por nuestra cuenta y con contrato de encargo. Algunos están en Estados Unidos: la transferencia se ampara en el Marco de Privacidad de Datos UE-EE. UU. o en las cláusulas contractuales tipo de la Comisión Europea.",
     privacyLinkLabel: "Política de privacidad",
     items: [
       {
@@ -488,6 +496,14 @@ const en: TextosPrivacidad = {
         text: "Our own usage statistics are deleted after **90 days** and technical errors after **180 days**.",
       },
       {
+        label: "Technical logs and usage limits:",
+        text: "The server's technical logs (IP address, date and page) are deleted automatically within **7 days** at most. The usage limits on the forms and the chat store the IP address encrypted, never in plain text, and are deleted within **90 days** at most.",
+      },
+      {
+        label: "Booking exclusion list:",
+        text: "The email or phone number of anyone who has repeatedly failed to turn up for bookings without notice or has misused the system is kept for as long as the reason for including it remains. You can ask us to review it at any time.",
+      },
+      {
         label: "Cookies:",
         text: "See the cookies section for the specific periods of each cookie.",
       },
@@ -574,14 +590,14 @@ const en: TextosPrivacidad = {
       { right: "Withdraw consent", description: "For the newsletter and the vote, at any time and without affecting earlier processing." },
     ],
     exercise:
-      "To exercise any of these rights, contact us at {email} stating your name and the right you wish to exercise, and attaching a copy of your ID card or equivalent document.",
+      "To exercise any of these rights, write to us at {email} stating your name and the right you wish to exercise. We will only ask you to prove your identity if we have reasonable doubts about it. We will reply within one month.",
     complaint:
       "If you consider that the processing does not comply with the regulations, you can lodge a complaint with the [Spanish Data Protection Agency (AEPD)](https://www.aepd.es).",
   },
   providers: {
     heading: "7. Service providers and transfers",
     intro:
-      "To provide the service we use the following providers, which process data on our behalf under a data processing agreement. Some are located in the United States: the transfer is covered by the EU-US Data Privacy Framework or by the European Commission's standard contractual clauses.",
+      "We do not disclose your data to third parties, except where required by law (for example, to the Spanish Tax Agency or to the courts). To provide the service we use the following providers, which process data on our behalf under a data processing agreement. Some are located in the United States: the transfer is covered by the EU-US Data Privacy Framework or by the European Commission's standard contractual clauses.",
     privacyLinkLabel: "Privacy policy",
     items: [
       {
@@ -756,6 +772,14 @@ const fr: TextosPrivacidad = {
         text: "Nos statistiques d'utilisation sont supprimées au bout de **90 jours** et les erreurs techniques au bout de **180 jours**.",
       },
       {
+        label: "Journaux techniques et limites d'utilisation :",
+        text: "Les journaux techniques du serveur (adresse IP, date et page) sont supprimés automatiquement dans un délai maximal de **7 jours**. Les limites d'utilisation des formulaires et du chat conservent l'adresse IP chiffrée, jamais en clair, et sont supprimées dans un délai maximal de **90 jours**.",
+      },
+      {
+        label: "Liste d'exclusion des réservations :",
+        text: "L'e-mail ou le téléphone des personnes qui ne se sont pas présentées à plusieurs reprises à leurs réservations sans prévenir ou qui ont fait un usage abusif du système est conservé tant que le motif de leur inscription subsiste. Vous pouvez nous demander de le réexaminer à tout moment.",
+      },
+      {
         label: "Cookies :",
         text: "Consultez la section sur les cookies pour les durées propres à chaque cookie.",
       },
@@ -842,14 +866,14 @@ const fr: TextosPrivacidad = {
       { right: "Retrait du consentement", description: "Pour la newsletter et le vote, à tout moment et sans effet sur ce qui précède." },
     ],
     exercise:
-      "Pour exercer l'un de ces droits, contactez-nous à {email} en indiquant votre nom et le droit que vous souhaitez exercer, et en joignant une copie de votre pièce d'identité ou d'un document équivalent.",
+      "Pour exercer l'un de ces droits, écrivez-nous à {email} en indiquant votre nom et le droit que vous souhaitez exercer. Nous ne vous demanderons de justifier votre identité qu'en cas de doute raisonnable. Nous vous répondrons dans un délai d'un mois.",
     complaint:
       "Si vous estimez que le traitement n'est pas conforme à la réglementation, vous pouvez introduire une réclamation auprès de l'[Agence espagnole de protection des données (AEPD)](https://www.aepd.es).",
   },
   providers: {
     heading: "7. Prestataires de services et transferts",
     intro:
-      "Pour fournir le service, nous faisons appel aux prestataires suivants, qui traitent les données pour notre compte dans le cadre d'un contrat de sous-traitance. Certains sont situés aux États-Unis : le transfert est couvert par le cadre de protection des données UE-États-Unis ou par les clauses contractuelles types de la Commission européenne.",
+      "Nous ne cédons pas vos données à des tiers, sauf obligation légale (par exemple, à l'administration fiscale espagnole ou aux tribunaux). Pour fournir le service, nous faisons appel aux prestataires suivants, qui traitent les données pour notre compte dans le cadre d'un contrat de sous-traitance. Certains sont situés aux États-Unis : le transfert est couvert par le cadre de protection des données UE-États-Unis ou par les clauses contractuelles types de la Commission européenne.",
     privacyLinkLabel: "Politique de confidentialité",
     items: [
       {

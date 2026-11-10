@@ -2,6 +2,16 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.2.0] - 2026-11-09
+
+Objetivo: Revisión legal: condiciones de compra de cheques regalo, bases del sorteo del vino y ajustes de privacidad y cookies
+
+### Añadido
+- Legal: condiciones de compra de cheques regalo, bases del sorteo y ajustes de privacidad ([4585bd4](https://github.com/restcasatomascrevillent/web-casatomas/commit/4585bd4ea22eb6660eaf168efdc03062d4f6313a))
+
+### Otros
+- E2e: la votación del vino lleva premio y último día, y enlaza las bases ([ea838ff](https://github.com/restcasatomascrevillent/web-casatomas/commit/ea838ff2c9accad8dc1d2cb568b6d365bc69921d))
+
 ## [1.1.1] - 2026-11-09
 
 Objetivo: Texto SEO de la portada y de /carta/carnes en un desplegable al pie, y un solo h2 por plato en la carta
