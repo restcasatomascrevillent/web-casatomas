@@ -134,6 +134,36 @@ const manifest = {
       1400
     ],
     "fallback": 840
+  },
+  "touza-interior": {
+    "width": 1600,
+    "height": 1068,
+    "widths": [
+      640,
+      1024,
+      1600
+    ],
+    "fallback": 1024
+  },
+  "touza-coctel": {
+    "width": 1600,
+    "height": 2398,
+    "widths": [
+      400,
+      640,
+      800
+    ],
+    "fallback": 640
+  },
+  "touza-barra": {
+    "width": 1600,
+    "height": 2398,
+    "widths": [
+      400,
+      640,
+      800
+    ],
+    "fallback": 640
   }
 } as const;
 

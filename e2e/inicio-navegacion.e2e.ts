@@ -16,7 +16,7 @@ import { test as base, expect, type Page, type Route } from "@playwright/test";
 
 const SUPABASE_FALSO = `http://127.0.0.1:${process.env.E2E_SUPABASE_PORT ?? 54329}`;
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
-const TOUZA = "https://touza-casatomas.vercel.app";
+const TOUZA = "https://touza.restaurantecasatomascrevillente.es";
 
 const test = base.extend<{ erroresJs: string[] }>({
   erroresJs: async ({ page, context, baseURL }, entregar) => {
@@ -139,6 +139,7 @@ test.describe("Enlace de Touza", () => {
       await expect(enlace).toBeVisible();
       await expect(enlace).toHaveAttribute("target", "_blank");
       await expect(page.locator('a[href*="touza-restaurant-website"]')).toHaveCount(0);
+      await expect(page.locator('a[href*="touza-casatomas.vercel.app"]')).toHaveCount(0);
     });
   }
 });
