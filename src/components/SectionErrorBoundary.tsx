@@ -2,6 +2,7 @@ import { Component, type ReactNode } from "react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 import { registrarActividad } from "@/lib/actividad/registro";
+import { esErrorDeVersionAntigua, recargarUnaVez } from "@/lib/recarga-por-version";
 
 const TEXTOS: Record<Language, { mensaje: string; boton: string }> = {
   es: { mensaje: "No se pudo cargar esta sección.", boton: "Recargar página" },
@@ -17,13 +18,8 @@ const TEXTOS: Record<Language, { mensaje: string; boton: string }> = {
  * recoja ese error, `Suspense` deja su esqueleto de carga en pantalla para
  * siempre: la sección se queda a medias y el resto de la página sigue
  * funcionando, dando la sensación de que "no cargó bien".
+ * La recarga automática (una por versión) vive en `@/lib/recarga-por-version`.
  */
-const esErrorDeChunk = (error: unknown): boolean => {
-  const mensaje = error instanceof Error ? error.message : String(error);
-  return /dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to fetch/i.test(
-    mensaje,
-  );
-};
 
 interface BoundaryProps {
   id?: string;
@@ -53,21 +49,9 @@ class ErrorBoundaryBase extends Component<BoundaryProps, BoundaryState> {
         pila: error instanceof Error ? `${error.stack ?? ""}${info?.componentStack ? `\n${info.componentStack}` : ""}` : undefined,
       },
     });
-    if (typeof window === "undefined" || !esErrorDeChunk(error)) return;
-
-    // Un solo recargado automático: si el chunk falló porque el despliegue
-    // avanzó, la nueva `index.html` trae los hashes correctos y se resuelve
-    // solo. La marca en `sessionStorage` evita un bucle si el chunk sigue
-    // sin poder descargarse (p. ej. sin red de verdad).
-    const key = `chunk-reload:${this.props.id ?? "app"}`;
-    try {
-      if (window.sessionStorage.getItem(key)) return;
-      window.sessionStorage.setItem(key, "1");
-    } catch {
-      // Safari privado o almacenamiento bloqueado: se recarga igual, solo
-      // sin el cortafuegos anti-bucle (peor caso, un reintento de más).
-    }
-    window.location.reload();
+    if (typeof window === "undefined" || !esErrorDeVersionAntigua(error)) return;
+    // Una sola recarga por versión de la web (marca con el commit de la build).
+    recargarUnaVez();
   }
 
   render() {
