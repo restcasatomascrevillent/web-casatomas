@@ -55,8 +55,8 @@ function suscribir(avisar: () => void) {
 
 /**
  * Enlaces a la tienda (menú, pie y tarjeta de cheques regalo): se quitan
- * cuando el panel apaga la tienda (Gestor Web › Tienda o Tienda › Ajustes,
- * petición del dueño del 10/11/2026). La propia `/tienda` sigue existiendo
+ * cuando el panel apaga la tienda (interruptor «Visible en la web» de Panel ›
+ * Tienda, petición del dueño del 10/11/2026). La propia `/tienda` sigue existiendo
  * para quien llegue con un enlace guardado y explica que no está disponible.
  *
  * Mismo criterio que `useMostrarFotosPlatos`: la semilla del build
