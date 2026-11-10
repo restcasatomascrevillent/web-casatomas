@@ -97,7 +97,7 @@ export async function generarPdfFactura(f: FacturaCheque): Promise<string> {
   const euro = (v: number) => (v / 100).toFixed(2).replace(".", ",") + " €";
   text(euro(chequeCents), 455, 450 + offset, 12);
   if (gastosCents > 0) {
-    text("Gastos de gestión", 52, 405 + offset, 11, true); text(euro(gastosCents), 455, 405 + offset, 11);
+    text("Preparación y emisión", 52, 405 + offset, 11, true); text(euro(gastosCents), 455, 405 + offset, 11);
   }
   text("Base imponible", 325, 381 + offset); text(euro(base), 455, 381 + offset);
   if (rate > 0) {
