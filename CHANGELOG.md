@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.2.1] - 2026-11-10
+
+Objetivo: Novedades: un fallo al refrescar ya no borra las tarjetas
+
+### Cambiado
+- Novedades: un fallo al refrescar ya no borra las tarjetas ([#41](https://github.com/restcasatomascrevillent/web-casatomas/pull/41))
+
 ## [1.2.0] - 2026-11-09
 
 Objetivo: Revisión legal: condiciones de compra de cheques regalo, bases del sorteo del vino y ajustes de privacidad y cookies
