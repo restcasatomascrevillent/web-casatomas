@@ -295,6 +295,10 @@ describe("rechazos de reservas-web — texto por motivo", () => {
     // (trae `error` + `mensaje` en español). El formulario no deja enviarlo
     // sin la casilla, pero si llegara no debe salir en español en /en y /fr.
     "condiciones_no_aceptadas",
+    // Menú del día / mismo día / servicio bloqueado (códigos nuevos de reservas-web).
+    "SERVICIO_BLOQUEADO",
+    "MISMO_DIA_TELEFONO",
+    "MENU_DIA_NO_DISPONIBLE",
   ];
 
   it("en y francés traducen todos los motivos; el español no sustituye nada (manda el servidor)", () => {

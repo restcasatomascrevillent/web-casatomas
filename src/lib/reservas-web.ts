@@ -288,6 +288,10 @@ const SALIDA_POR_MOTIVO: Record<string, SalidaRechazo> = {
   max_reservas_telefono: "call",
   max_reservas_email: "call",
   sin_disponibilidad: "otherTime",
+  // Cierre de servicio, mismo día 12:30–16:00 y menú del día: salida por teléfono.
+  SERVICIO_BLOQUEADO: "call",
+  MISMO_DIA_TELEFONO: "call",
+  MENU_DIA_NO_DISPONIBLE: "call",
 };
 
 /** Salida de reserva cuando no hay `motivo` reconocible. */

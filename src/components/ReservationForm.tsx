@@ -40,6 +40,7 @@ import {
   type DisponibilidadHueco,
   type RechazoReserva,
 } from "@/lib/reservas-web";
+import { admiteMenuDelDia, horaSoloTelefonoHoy } from "@/lib/reserva-menu-dia";
 import { diasCerradosPorDefecto, fechaIso, leerDiasCerrados } from "@/lib/cierres-reserva";
 import { leerComensalesReserva, MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { construirRutaIdioma } from "@/i18n/routing";
@@ -110,6 +111,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadHueco[]>([]);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
+  const [quiereMenuDelDia, setQuiereMenuDelDia] = useState(false);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
   const [honeypot, setHoneypot] = useState("");
@@ -165,16 +167,27 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   }, [form]);
 
   /** Huecos agrupados por turno, en el mismo orden en que los manda el motor. */
+  const fechaIsoElegida = watchFecha ? fechaIso(watchFecha) : null;
+  /** Hoy mismo, la comida (12:30–16:00) solo se reserva por teléfono: esas horas no se ofrecen. */
+  const esHoyElegido = fechaIsoElegida !== null && horaSoloTelefonoHoy("13:00", fechaIsoElegida);
   const huecosPorTurno = useMemo(
     () =>
       (["comida", "cena"] as const)
         .map((turno) => ({
           turno,
-          huecos: disponibilidad.filter((hueco) => hueco.turno === turno),
+          huecos: disponibilidad.filter(
+            (hueco) =>
+              hueco.turno === turno && !(fechaIsoElegida && horaSoloTelefonoHoy(hueco.hora, fechaIsoElegida)),
+          ),
         }))
         .filter((grupo) => grupo.huecos.length > 0),
-    [disponibilidad],
+    [disponibilidad, fechaIsoElegida],
   );
+  /** Menú del día: martes a jueves y hora de comida. Si cambia a algo no válido, se desmarca (efecto de abajo). */
+  const permiteMenuDelDia = admiteMenuDelDia(watchFecha, selectedHour);
+  useEffect(() => {
+    if (!permiteMenuDelDia) setQuiereMenuDelDia(false);
+  }, [permiteMenuDelDia]);
 
   /** Datos agregados de la consulta para Super Admin › Logs (nunca nombre, teléfono ni email). */
   const datosReservaLogs = () => {
@@ -306,6 +319,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           numero_comensales: data.numero_comensales,
           notas_cliente: data.notas_cliente || "",
           estado: "pendiente",
+          ...(quiereMenuDelDia && admiteMenuDelDia(data.fecha, selectedHour) ? { menu_del_dia: true } : {}),
           // Contrato con `reservas-web/crear`: dos booleanos SEPARADOS. Las
           // condiciones son obligatorias (el schema no deja llegar aquí sin
           // ellas); la newsletter es opcional y viaja tal cual.
@@ -350,6 +364,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       setDisponibilidad([]);
       setSelectedHour(null);
       setHasCheckedAvailability(false);
+      setQuiereMenuDelDia(false);
     } catch (error) {
       // Ni siquiera hubo respuesta (red caida, CORS): se representa con
       // status 0, y ahi `interpretarRechazoReserva` decide con `navigator.onLine`
@@ -593,6 +608,18 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                 <FormLabel className="text-foreground font-medium block">
                   {t.reservationForm.timesLabel}
                 </FormLabel>
+                {esHoyElegido && (
+                  <p
+                    role="status"
+                    className="flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-foreground"
+                  >
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                    <span>
+                      {t.reservationForm.sameDayPhoneNotice}:{" "}
+                      <TelLink className="font-medium text-primary underline underline-offset-2" />
+                    </span>
+                  </p>
+                )}
                 {huecosPorTurno.map(({ turno, huecos }) => (
                   <div key={turno} className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">
@@ -697,6 +724,25 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                   )}
                 />
               </div>
+
+              {permiteMenuDelDia && (
+                <div className="rounded-xl border border-border/50 bg-white p-4">
+                  <div className="flex flex-row items-start gap-3">
+                    <Checkbox
+                      id="menu-del-dia"
+                      checked={quiereMenuDelDia}
+                      onCheckedChange={(marcada) => setQuiereMenuDelDia(marcada === true)}
+                      aria-describedby="menu-del-dia-nota"
+                    />
+                    <label htmlFor="menu-del-dia" className="-my-3 min-h-11 cursor-pointer py-3 font-medium leading-snug text-foreground">
+                      {t.reservationForm.menuDelDiaLabel}
+                    </label>
+                  </div>
+                  <p id="menu-del-dia-nota" className="mt-1 pl-7 text-sm text-muted-foreground">
+                    {t.reservationForm.menuDelDiaNote}
+                  </p>
+                </div>
+              )}
 
               <FormField
                 control={form.control}
