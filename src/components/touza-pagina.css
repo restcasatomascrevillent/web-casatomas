@@ -1,0 +1,67 @@
+/*
+ * Animaciones de /touza (TouzaPagina.tsx). Solo transform y opacity: no mueven
+ * la maquetación (sin CLS). Todo parte visible: sin JS, o con
+ * `prefers-reduced-motion: reduce`, la página se ve quieta y completa.
+ */
+
+/* Cabecera: zoom lento (Ken Burns). El primer fotograma es la foto a escala 1,
+   así que no retrasa el LCP. */
+@keyframes tz-zoom-lento {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+/* Título y entradilla: fundido corto. Empieza al 35 % de opacidad para que el
+   texto se lea desde el primer fotograma. */
+@keyframes tz-entrada {
+  from { opacity: 0.35; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tz-zoom-lento {
+    animation: tz-zoom-lento 12s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+    transform-origin: 50% 60%;
+    will-change: transform;
+  }
+
+  .tz-entrada {
+    animation: tz-entrada 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .tz-entrada-2 {
+    animation-delay: 150ms;
+  }
+
+  /* Fotos de la barra: aparecen al llegar con el scroll. El estado oculto solo
+     lo pone el JS a las que aún no se ven (data-tz="oculto"). */
+  .tz-revelar {
+    transition:
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--tz-retraso, 0ms),
+      transform 700ms cubic-bezier(0.22, 1, 0.36, 1) var(--tz-retraso, 0ms);
+  }
+
+  .tz-revelar[data-tz="oculto"] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* Hover suave en escritorio. */
+.tz-foto img {
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tz-foto {
+  transition: box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .tz-foto:hover img {
+    transform: scale(1.03);
+  }
+
+  .tz-foto:hover {
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.45);
+  }
+}
