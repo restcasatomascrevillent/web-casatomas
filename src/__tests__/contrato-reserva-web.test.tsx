@@ -225,7 +225,9 @@ describe("contrato reservas-web/crear — el formulario envía EXACTAMENTE el cu
     await user.click(screen.getByRole("button", { name: /reservar ahora/i }));
     await screen.findByText(EXITO);
 
-    const enviado = cuerpoEnviado();
+    // `origen` (cómo se hizo la reserva) es telemetría opcional, fuera del contrato.
+    const { origen, ...enviado } = cuerpoEnviado();
+    expect(origen === undefined || typeof origen === "object").toBe(true);
     expect(enviado.fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     // Mismas claves, mismos tipos y mismos valores; nada de más ni de menos.
     expect({ ...enviado, fecha: caso.cuerpo.fecha }).toEqual(caso.cuerpo);
