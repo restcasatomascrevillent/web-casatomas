@@ -70,7 +70,7 @@ const es: TextosChequesSorteo = {
     {
       title: "3. Precio y pago",
       paragraphs: [
-        "El precio es el importe del cheque que eliges. Si la compra online lleva gastos de gestión, son iguales para cualquier forma de pago y se muestran desglosados, junto con el total, antes de pagar. Los importes incluyen los impuestos aplicables.",
+        "El valor del cheque es el importe que eliges. La compra online puede incluir gastos de preparación y emisión por generar el cheque digital y su PDF, tramitar su entrega y mantener la plataforma de emisión. Se aplican por igual con cualquier medio de pago y se muestran desglosados, junto con el precio total, antes de pagar. Los importes incluyen los impuestos aplicables.",
         "El pago se hace en la página de pago seguro de Stripe, con tarjeta o con otro de los medios que ofrezca. No vemos ni guardamos los datos de tu tarjeta.",
       ],
     },
@@ -219,7 +219,7 @@ const en: TextosChequesSorteo = {
     {
       title: "3. Price and payment",
       paragraphs: [
-        "The price is the voucher amount you choose. If the online purchase carries a handling fee, it is the same for every payment method and is shown separately, together with the total, before you pay. All amounts include applicable taxes.",
+        "The gift voucher value is the amount you choose. Online purchases may include preparation and issuance costs for creating the digital voucher and its PDF, arranging digital delivery and maintaining the issuance platform. They apply equally to all payment methods and are itemised with the total before payment. All amounts include applicable taxes.",
         "Payment is made on Stripe's secure payment page, by card or by any other method it offers. We never see or store your card details.",
       ],
     },
@@ -368,7 +368,7 @@ const fr: TextosChequesSorteo = {
     {
       title: "3. Prix et paiement",
       paragraphs: [
-        "Le prix est le montant du chèque que vous choisissez. Si l'achat en ligne comporte des frais de gestion, ils sont identiques quel que soit le moyen de paiement et sont affichés séparément, avec le total, avant de payer. Les montants incluent les taxes applicables.",
+        "La valeur du chèque cadeau est le montant que vous choisissez. L'achat en ligne peut comprendre des frais de préparation et d'émission pour créer le chèque numérique et son PDF, organiser l'envoi numérique et maintenir la plateforme d'émission. Ils s'appliquent à tous les moyens de paiement et sont indiqués séparément, avec le total, avant le paiement. Les montants incluent les taxes applicables.",
         "Le paiement s'effectue sur la page de paiement sécurisé de Stripe, par carte ou par un autre moyen qu'elle propose. Nous ne voyons ni ne conservons les données de votre carte.",
       ],
     },
