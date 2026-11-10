@@ -22,6 +22,7 @@ import {
   AVISO_SIN_ALERGENOS,
   datosAlergenos,
   etiquetaAlergeno,
+  ofreceOpcionSinGluten,
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
 import { anclaPlato } from "@/lib/carta-rutas";
@@ -476,7 +477,7 @@ const ProductoCard = ({
                   {plato.displayDescripcion}
                 </p>
               )}
-              {plato.sin_gluten_disponible === true && <OpcionSinGluten />}
+              {ofreceOpcionSinGluten(plato) && <OpcionSinGluten />}
               {ingredientes.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-foreground">
