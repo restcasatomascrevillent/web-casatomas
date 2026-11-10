@@ -65,6 +65,9 @@ const CAMPOS_SALIDA = {
     'video_url',
     'ingredientes', 'sin_gluten_disponible',
     'etiquetas_dieteticas',
+    // «Apto para celíacos» / «Apto sin lactosa» decididos a mano (10/11/2026, migración
+    // 20261122093000 del panel). Con `select=*` en una BD sin esas columnas no vienen y se descartan.
+    'apto_celiacos', 'apto_sin_lactosa',
     'alergenos_oficiales', 'alergenos_inferidos', 'alergenos_notas',
     'alergenos_en', 'alergenos_fr',
     'traducciones',

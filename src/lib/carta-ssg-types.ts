@@ -15,6 +15,9 @@ export interface PlatoSSG {
   descripcion?: string;
   /** Preparación alternativa ofrecida explícitamente por el restaurante. */
   sin_gluten_disponible?: boolean;
+  /** Decidido a mano en el panel: true/false mandan sobre los alérgenos; ausente = automático. */
+  apto_celiacos?: boolean | null;
+  apto_sin_lactosa?: boolean | null;
   descripcion_en?: string;
   descripcion_fr?: string;
   precio_eur: number;
