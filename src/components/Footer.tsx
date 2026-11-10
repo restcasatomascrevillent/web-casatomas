@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { GOOGLE_REVIEW_URL } from "@/lib/negocio";
 import { openCookiePreferences } from "@/lib/cookie-consent";
+import { useTiendaVisible } from "@/hooks/useTiendaVisible";
 import { AVISO_LEGAL_PATH, CONDICIONES_PATH, POLITICA_PRIVACIDAD_PATH, RESERVAS_PATH, TIENDA_PATH } from "@/lib/condiciones";
 
 // Zonas de toque de al menos 24×24 px (WCAG 2.2, 2.5.8): con `text-sm` la
@@ -17,6 +18,8 @@ const ICONO = "inline-flex min-h-11 min-w-11 items-center justify-center text-st
 
 const Footer = () => {
   const { t, language } = useTranslations();
+  // Sin «Tienda» si está apagada en el panel (como en la cabecera).
+  const tiendaVisible = useTiendaVisible();
   return (
     <footer className="bg-dark-slate text-background py-12 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
@@ -53,11 +56,13 @@ const Footer = () => {
                   {t.footer.reserveLink}
                 </Link>
               </li>
-              <li>
-                <Link to={construirRutaIdioma(TIENDA_PATH, language)} className={ENLACE}>
-                  {t.footer.shopLink}
-                </Link>
-              </li>
+              {tiendaVisible && (
+                <li>
+                  <Link to={construirRutaIdioma(TIENDA_PATH, language)} className={ENLACE}>
+                    {t.footer.shopLink}
+                  </Link>
+                </li>
+              )}
               {[
                 { path: "/el-restaurante", label: { es: "El restaurante", en: "The restaurant", fr: "Le restaurant" } },
                 { path: "/contacto", label: { es: "Contacto y horarios", en: "Contact and hours", fr: "Contact et horaires" } },
