@@ -535,7 +535,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                               field.onChange(date);
                               setCalendarOpen(false);
                             }}
-                            disabled={(date) => date < new Date() || diasCerrados.has(fechaIso(date))}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0)) || diasCerrados.has(fechaIso(date))}
                             locale={dateLocale}
                             initialFocus
                             className="pointer-events-auto rounded-xl"
