@@ -31,10 +31,11 @@ export default function Informacion() {
       {ruta === "/el-restaurante" && <><NosotrosSection /><div className="max-w-7xl mx-auto px-4"><EspaciosGallery /></div></>}
       {ruta === "/contacto" && <><ContactoSection modo="contacto" /><p className="text-center"><a href={GOOGLE_MAPS_URL} target="_blank" rel="noopener noreferrer" className={`${AREA_TOQUE_ENLACE} text-accent underline`}>{{ es: "Cómo llegar a Casa Tomás", en: "Directions to Casa Tomás", fr: "Itinéraire vers Casa Tomás" }[language]}</a></p></>}
       {ruta === "/regala" && <ContactoSection modo="regalo" />}
-      <div className="flex flex-wrap justify-center gap-4 mt-12 px-4">
+      {/* Touza no admite reservas: su página no lleva «Reservar mesa» ni «Nuestra carta». */}
+      {ruta !== "/touza" && <div className="flex flex-wrap justify-center gap-4 mt-12 px-4">
         <Button asChild><Link to={construirRutaIdioma("/reservas", language)}>{t.footer.reserveLink}</Link></Button>
         <Button asChild variant="outline"><Link to={construirRutaIdioma("/carta", language)}>{t.footer.menuLink}</Link></Button>
-      </div>
+      </div>}
     </main>
     <Footer />
   </>;
