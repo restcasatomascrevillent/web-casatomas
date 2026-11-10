@@ -45,6 +45,7 @@ import { diasCerradosPorDefecto, fechaIso, leerDiasCerrados } from "@/lib/cierre
 import { leerComensalesReserva, MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { registrarActividad } from "@/lib/actividad/registro";
+import { useOrigenReserva } from "@/lib/origen-reserva";
 import {
   ANCLA_CONDICIONES_NEWSLETTER,
   ANCLA_CONDICIONES_RESERVA,
@@ -151,6 +152,17 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   });
 
   const watchFecha = form.watch("fecha");
+
+  // «Cómo se hizo la reserva»: horas, campos tocados e intentos (ver lib/origen-reserva.ts).
+  const seguimientoOrigen = useOrigenReserva(language);
+  const { tocar: tocarCampo } = seguimientoOrigen;
+  useEffect(() => {
+    // Solo cambios del visitante (`type: "change"`): no los `setValue`/`reset` del propio código.
+    const sub = form.watch((_valores, { name, type }) => {
+      if (name && type === "change") tocarCampo(name);
+    });
+    return () => sub.unsubscribe();
+  }, [form, tocarCampo]);
   /** 8 o más: solo por teléfono. Se enseña el aviso y no se consulta disponibilidad. */
   const superaMaxWeb = (form.watch("numero_comensales") ?? 0) > MAX_COMENSALES_RESERVA_WEB;
 
@@ -210,6 +222,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
     }
 
     const mostrarFalloDisponibilidad = (fallo: TipoFallo) => {
+      seguimientoOrigen.consulta(true);
       registrarActividad("reserva_disponibilidad", { accion: "error", props: { ...datosReservaLogs(), fallo } });
       setDisponibilidad([]);
       setHasCheckedAvailability(true);
@@ -256,6 +269,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // Dia CERRADO: no es un fallo, es una respuesta valida que dice que ese
       // dia no se reserva. Hasta ahora los dos casos caian en el mismo toast.
       if (resultado.estado === "cerrado") {
+        seguimientoOrigen.consulta(true);
         registrarActividad("reserva_disponibilidad", { accion: "cerrado", props: datosReservaLogs() });
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
@@ -274,7 +288,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // día está completo. Antes caía en el mismo `toast.success` que un día con
       // horas libres y el visitante se quedaba mirando una lista vacía sin que
       // nadie le dijera nada. Las horas `completo` se siguen pintando en gris.
-      if (!resultado.huecos.some((hueco) => hueco.estado === "libre")) {
+      const hayLibre = resultado.huecos.some((hueco) => hueco.estado === "libre");
+      seguimientoOrigen.consulta(!hayLibre);
+      if (!hayLibre) {
         registrarActividad("reserva_disponibilidad", { accion: "completo", props: datosReservaLogs() });
         toast.message(conTelefono(t.reservationForm.toasts.noSlots));
         return;
@@ -325,6 +341,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           // ellas); la newsletter es opcional y viaja tal cual.
           acepta_condiciones: data.acepta_condiciones,
           consentimiento_newsletter: data.consentimiento_newsletter,
+          // Cómo se hizo (opcional; la función lo valida y, si falla, lo ignora).
+          origen: seguimientoOrigen.origen(),
         })
       });
 
@@ -341,6 +359,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           accion: (rechazo.motivo ?? "sin_motivo").toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40),
           props: { status: response.status },
         });
+        seguimientoOrigen.fallo();
         setRechazo(rechazo);
         return;
       }
@@ -365,6 +384,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       setSelectedHour(null);
       setHasCheckedAvailability(false);
       setQuiereMenuDelDia(false);
+      seguimientoOrigen.reiniciar();
     } catch (error) {
       // Ni siquiera hubo respuesta (red caida, CORS): se representa con
       // status 0, y ahi `interpretarRechazoReserva` decide con `navigator.onLine`
@@ -373,6 +393,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // dejo el formulario mudo horas).
       console.error("Error sending reservation:", error);
       registrarActividad("reserva_rechazada", { accion: "sin_respuesta", props: { status: 0 } });
+      seguimientoOrigen.fallo();
       setRechazo(interpretarRechazoReserva(0, null, t.reservationForm.rejection));
     } finally {
       setIsSubmitting(false);
@@ -642,7 +663,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                           <button
                             key={hueco.hora}
                             type="button"
-                            onClick={() => !isCompleto && setSelectedHour(hueco.hora)}
+                            onClick={() => {
+                              if (isCompleto) return;
+                              setSelectedHour(hueco.hora);
+                              tocarCampo("hora");
+                            }}
                             disabled={isCompleto}
                             className={cn(
                               "p-4 rounded-xl border-2 text-center transition-all duration-200",
@@ -731,7 +756,10 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                     <Checkbox
                       id="menu-del-dia"
                       checked={quiereMenuDelDia}
-                      onCheckedChange={(marcada) => setQuiereMenuDelDia(marcada === true)}
+                      onCheckedChange={(marcada) => {
+                        setQuiereMenuDelDia(marcada === true);
+                        tocarCampo("menu_del_dia");
+                      }}
                       aria-describedby="menu-del-dia-nota"
                     />
                     <label htmlFor="menu-del-dia" className="-my-3 min-h-11 cursor-pointer py-3 font-medium leading-snug text-foreground">
