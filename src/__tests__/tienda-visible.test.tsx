@@ -1,5 +1,5 @@
 /**
- * Tienda apagada en el panel (Gestor Web › Tienda o Tienda › Ajustes, petición
+ * Tienda apagada en el panel («Visible en la web» de Panel › Tienda, petición
  * del dueño del 10/11/2026): la web quita «Tienda» del menú, del pie y de la
  * tarjeta de cheques regalo. Solo un `activa: false` explícito la quita; sin
  * dato se enseña como siempre. La semilla del build (`tiendaVisibleEnBuild`)
