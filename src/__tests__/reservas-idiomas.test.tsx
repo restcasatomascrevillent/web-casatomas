@@ -242,7 +242,8 @@ describe.each(TRADUCIDOS)("formulario de reserva en $lang", ({ lang, prefijo, t 
     expect(await screen.findByText(f.successTitle)).toBeInTheDocument();
     expect(screen.getByText(f.successLead)).toBeInTheDocument();
 
-    const enviado = cuerpoEnviado();
+    const { origen, ...enviado } = cuerpoEnviado(); // `origen` es telemetría opcional, fuera del contrato
+    expect(origen === undefined || typeof origen === "object").toBe(true);
     expect(enviado.fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     // Mismos campos y valores que en español; sin `idioma` ni nada de más.
     expect({ ...enviado, fecha: caso.cuerpo.fecha }).toEqual(caso.cuerpo);
