@@ -1,4 +1,4 @@
-import { claveAlergeno, cumpleFiltroDietetico, datosAlergenos, normalizarTexto, normalizeAlergenos, type ClaveFiltroDietetico } from './alergenos';
+import { claveAlergeno, cumpleAptitudPlato, datosAlergenos, normalizarTexto, normalizeAlergenos, type ClaveFiltroDietetico } from './alergenos';
 import type { PlatoSSG } from './carta-ssg-types';
 import confirmaciones from '@/data/dietas-confirmadas.json';
 
@@ -18,9 +18,9 @@ export function leerFiltros(search: string): Dieta[] {
 
 /** Los alérgenos permiten excluir, pero no demuestran que una receta sea vegetal. */
 export function cumpleDieta(plato: PlatoSSG, dieta: ClaveFiltroDietetico): boolean {
-  if (dieta === 'celiaquia' && plato.sin_gluten_disponible === true) return true;
+  // Celíacos y sin lactosa: lo decidido a mano en el panel manda; si no, alérgenos (`cumpleAptitudPlato`).
+  if (dieta === 'celiaquia' || dieta === 'lactosa') return cumpleAptitudPlato(plato, dieta);
   const datos = datosAlergenos(plato);
-  if (dieta === 'celiaquia' || dieta === 'lactosa') return cumpleFiltroDietetico(datos, dieta);
   const etiquetas = [...normalizeAlergenos(plato.etiquetas_dieteticas), ...(etiquetasConfirmadas[plato.id] ?? [])].map(normalizarTexto);
   if (!etiquetas.includes('vegano') && !(dieta === 'vegetariano' && etiquetas.includes('vegetariano'))) return false;
   const excluidos = ['carne', 'pescado', 'crustaceos', 'moluscos', 'marisco', ...(dieta === 'vegano' ? ['huevo', 'lacteos'] : [])];

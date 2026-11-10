@@ -242,7 +242,8 @@ describe.each(TRADUCIDOS)("formulario de reserva en $lang", ({ lang, prefijo, t 
     expect(await screen.findByText(f.successTitle)).toBeInTheDocument();
     expect(screen.getByText(f.successLead)).toBeInTheDocument();
 
-    const enviado = cuerpoEnviado();
+    const { origen, ...enviado } = cuerpoEnviado(); // `origen` es telemetría opcional, fuera del contrato
+    expect(origen === undefined || typeof origen === "object").toBe(true);
     expect(enviado.fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     // Mismos campos y valores que en español; sin `idioma` ni nada de más.
     expect({ ...enviado, fecha: caso.cuerpo.fecha }).toEqual(caso.cuerpo);
@@ -295,6 +296,10 @@ describe("rechazos de reservas-web — texto por motivo", () => {
     // (trae `error` + `mensaje` en español). El formulario no deja enviarlo
     // sin la casilla, pero si llegara no debe salir en español en /en y /fr.
     "condiciones_no_aceptadas",
+    // Menú del día / mismo día / servicio bloqueado (códigos nuevos de reservas-web).
+    "SERVICIO_BLOQUEADO",
+    "MISMO_DIA_TELEFONO",
+    "MENU_DIA_NO_DISPONIBLE",
   ];
 
   it("en y francés traducen todos los motivos; el español no sustituye nada (manda el servidor)", () => {

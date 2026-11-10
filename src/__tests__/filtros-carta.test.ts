@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cumpleDieta, filtrarPlatos, leerFiltros } from '@/lib/filtros-carta';
+import { ofreceOpcionSinGluten } from '@/lib/alergenos';
 import type { PlatoSSG } from '@/lib/carta-ssg-types';
 const plato = (cambios: Partial<PlatoSSG> = {}): PlatoSSG => ({ id: 'test', nombre: 'Plato', precio_eur: 10, ...cambios });
 describe('filtros de la carta', () => {
@@ -42,5 +43,33 @@ describe('filtros de la carta', () => {
     expect(leerFiltros('?dietas=vegetariano,incorrecto,vegetariano,lactosa')).toEqual(['vegetariano','lactosa']);
     // «Vegano» ya no se ofrece: un enlace antiguo con él lo ignora.
     expect(leerFiltros('?dietas=vegano,lactosa')).toEqual(['lactosa']);
+  });
+});
+
+// «Apto para celíacos» / «Apto sin lactosa» decididos a mano en el panel (10/11/2026, migración
+// 20261122093000 de admin-casatomas). Mismas reglas que src/lib/aptitudes-plato.ts del panel.
+describe('aptitudes decididas a mano en el panel', () => {
+  it('true manda aunque los alérgenos digan lo contrario (o falten)', () => {
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['gluten'], apto_celiacos: true }), 'celiaquia')).toBe(true);
+    expect(cumpleDieta(plato({ apto_sin_lactosa: true }), 'lactosa')).toBe(true);
+  });
+  it('false manda aunque los alérgenos lo dejaran pasar o se pueda hacer sin gluten', () => {
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['huevo'], apto_celiacos: false }), 'celiaquia')).toBe(false);
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['gluten'], sin_gluten_disponible: true, apto_celiacos: false }), 'celiaquia')).toBe(false);
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['huevo'], apto_sin_lactosa: false }), 'lactosa')).toBe(false);
+  });
+  it('null o ausente = automático, como antes', () => {
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['huevo'], apto_celiacos: null }), 'celiaquia')).toBe(true);
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['lacteos'], apto_sin_lactosa: null }), 'lactosa')).toBe(false);
+  });
+  it('«se puede hacer sin gluten» hace apto un plato con gluten, pero no suple la falta de alérgenos', () => {
+    expect(cumpleDieta(plato({ alergenos_oficiales: ['gluten'], sin_gluten_disponible: true }), 'celiaquia')).toBe(true);
+    expect(cumpleDieta(plato({ sin_gluten_disponible: true }), 'celiaquia')).toBe(false);
+  });
+  it('la etiqueta «se puede hacer sin gluten» solo sale si el plato lleva gluten', () => {
+    expect(ofreceOpcionSinGluten(plato({ alergenos_oficiales: ['gluten'], sin_gluten_disponible: true }))).toBe(true);
+    expect(ofreceOpcionSinGluten(plato({ alergenos_inferidos: ['gluten'], sin_gluten_disponible: true }))).toBe(true);
+    expect(ofreceOpcionSinGluten(plato({ alergenos_oficiales: ['huevo'], sin_gluten_disponible: true }))).toBe(false);
+    expect(ofreceOpcionSinGluten(plato({ alergenos_oficiales: ['gluten'] }))).toBe(false);
   });
 });

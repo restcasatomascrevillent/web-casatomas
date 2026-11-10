@@ -39,6 +39,8 @@ const test = base.extend<{ opciones: Opciones; capturado: { lotes: Lote[]; tipos
     const propio = new URL(baseURL!).origin;
     await context.addInitScript((estadisticas) => {
       window.localStorage.setItem("cookieConsent", JSON.stringify({ maps: false, estadisticas, ts: new Date().toISOString() }));
+      // Un navegador automatizado no manda actividad salvo que lo pida (src/lib/actividad/clasificar.ts, `silenciarPorPrueba`).
+      window.localStorage.setItem("ct_actividad_e2e", "1");
     }, opciones.estadisticas);
     await page.clock.setFixedTime(AHORA);
     await context.route("**/*", async (route) => {

@@ -386,6 +386,48 @@ export function cumpleFiltroDietetico(
   return true;
 }
 
+/** Un plato con lo que hace falta para decidir si sirve a un celíaco o a quien evita la lactosa. */
+export interface PlatoConAptitudes extends FilaConAlergenos {
+  /** «Se puede hacer sin gluten»: el restaurante ofrece una preparación alternativa. */
+  sin_gluten_disponible?: boolean | null;
+  /**
+   * Decidido a mano en el panel (Platos.apto_celiacos / apto_sin_lactosa, migración
+   * 20261122093000 de admin-casatomas, 10/11/2026): true o false mandan; null o ausente =
+   * automático, con las reglas de los alérgenos. En una BD sin esas columnas no vienen.
+   */
+  apto_celiacos?: boolean | null;
+  apto_sin_lactosa?: boolean | null;
+}
+
+/** ¿El plato lleva gluten según sus listas de alérgenos (oficiales o inferidos)? */
+export function llevaGluten(datos: DatosAlergenos): boolean {
+  return [...datos.oficiales, ...datos.inferidos].some((alergeno) => claveAlergeno(alergeno) === "gluten");
+}
+
+/**
+ * ¿Se muestra «se puede hacer sin gluten»? Solo si el plato lleva gluten: desde el 10/11/2026 el
+ * panel deja marcar la casilla en cualquier plato, y en uno que ya no lleva gluten no aporta nada.
+ */
+export function ofreceOpcionSinGluten(plato: PlatoConAptitudes): boolean {
+  return plato.sin_gluten_disponible === true && llevaGluten(datosAlergenos(plato));
+}
+
+/**
+ * Filtro «Sin gluten» / «Sin lactosa» de un plato. Son las MISMAS reglas que el «Apto para» del
+ * panel (admin-casatomas, src/lib/aptitudes-plato.ts), para que lo que dice el formulario sea lo
+ * que hace el filtro:
+ *  1. Lo decidido a mano en el panel manda (true o false).
+ *  2. Celíacos: si el plato lleva gluten pero «se puede hacer sin gluten», es apto.
+ *  3. Si no, `cumpleFiltroDietetico` (conservador: sin alérgenos no es apto).
+ */
+export function cumpleAptitudPlato(plato: PlatoConAptitudes, filtro: keyof typeof FILTROS_DIETETICOS): boolean {
+  const aMano = filtro === "celiaquia" ? plato.apto_celiacos : plato.apto_sin_lactosa;
+  if (typeof aMano === "boolean") return aMano;
+  const datos = datosAlergenos(plato);
+  if (filtro === "celiaquia" && plato.sin_gluten_disponible === true && llevaGluten(datos)) return true;
+  return cumpleFiltroDietetico(datos, filtro);
+}
+
 /** Aviso para las tarjetas de un plato del que no consta ningún alérgeno. */
 export const AVISO_SIN_ALERGENOS: Record<Language, string> = {
   es: "Sin información de alérgenos — consulte al personal",

@@ -7,12 +7,25 @@
 # los E2E (0 errores),
 # ESLint (0 errores; los avisos no bloquean) y E2E (incluye el build SSG
 # completo). Typecheck y ESLint estaban ya a cero el 30/10/2026 (CT-REM-OPS-09).
+#
+# DOS MODOS (pedido del dueño 10/11/2026: menos tests, que solo se revise lo que se modifica,
+# para no agotar los minutos de GitHub Actions):
+#   - LIGERO (push a staging y PR a staging o a ramas de trabajo): typecheck, ESLint de lo
+#     cambiado (scripts/lint-cambios.mjs) y `npm run test:cambios` (solo los tests afectados).
+#   - COMPLETO (PR o push hacia main, ramas release/*, y el lanzamiento a mano de «Release ·
+#     preparar»): todo lo de siempre, suite completa, E2E con build SSG.
+# Los jobs que protegen producción (tests-y-e2e, calidad, control-release) siguen existiendo con el
+# mismo nombre; en modo ligero el job de calidad se salta (un check saltado cuenta como superado).
+# Un push que solo toca docs/Markdown no lanza CI (paths-ignore); los PR siempre lo lanzan.
 name: CI
 
 on:
   pull_request:
   push:
     branches: [staging, main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   # Lo lanza «Release · preparar» sobre la rama release/X.Y.Z: los PR que abre Actions con su
   # token no disparan otros workflows (docs/PROCESO-DE-CAMBIOS.md).
   workflow_dispatch:
@@ -20,6 +33,13 @@ on:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # "true" → modo COMPLETO (camino a producción). "false" → modo LIGERO (staging y ramas de trabajo).
+  COMPLETA: ${{ github.base_ref == 'main' || github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || startsWith(github.head_ref, 'release/') }}
+  # Base contra la que se mira «lo cambiado» en modo ligero: la rama destino del PR o el commit
+  # anterior del push (si es rama nueva, los scripts usan origin/staging).
+  BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before || 'origin/staging' }}
 
 jobs:
   tests-y-e2e:
@@ -29,16 +49,35 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # Modo ligero: historia completa para comparar con la base. Modo completo: basta 1.
+          fetch-depth: ${{ env.COMPLETA == 'true' && 1 || 0 }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      # ---- Modo LIGERO (staging y ramas de trabajo) ----
+      - name: Typecheck
+        if: env.COMPLETA != 'true'
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Typecheck de los E2E
+        if: env.COMPLETA != 'true'
+        run: npx tsc --noEmit -p e2e
+      - name: ESLint de lo cambiado
+        if: env.COMPLETA != 'true'
+        run: npm run lint:cambios
+      - name: Tests afectados por lo cambiado
+        if: env.COMPLETA != 'true'
+        run: npm run test:cambios
+      # ---- Modo COMPLETO (camino a producción) ----
       - name: Tests unitarios y de componentes
+        if: env.COMPLETA == 'true'
         run: npm test
       - name: Navegador para Playwright
+        if: env.COMPLETA == 'true'
         run: npx playwright install --with-deps chromium
       - name: E2E (build SSG + reservas, carta de vinos, cheques regalo, responsive)
+        if: env.COMPLETA == 'true'
         run: npm run test:e2e
         env:
           CI: "true"
@@ -52,6 +91,8 @@ jobs:
           retention-days: 7
 
   calidad:
+    # Solo en modo completo; en modo ligero el typecheck y el ESLint de lo cambiado van en tests-y-e2e.
+    if: ${{ github.base_ref == 'main' || github.ref_name == 'main' || startsWith(github.ref_name, 'release/') || startsWith(github.head_ref, 'release/') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

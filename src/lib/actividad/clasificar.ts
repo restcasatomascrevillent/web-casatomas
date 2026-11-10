@@ -121,3 +121,36 @@ export function endpointDe(url: string, baseFunciones: string): string | null {
   const rest = /\.supabase\.co\/rest\/v1\/(?:rpc\/)?([a-z0-9_]+)/i.exec(sinConsulta);
   return rest ? `rest:${rest[1].toLowerCase()}` : null;
 }
+
+/**
+ * Por qué una petición se quedó sin respuesta (estado 0), para no abrir
+ * incidencias por visitantes que cambian de página:
+ *   · «cancelada»: la canceló el navegador o la propia web (AbortController,
+ *     o la página se estaba yendo: navegación, recarga, cierre). No es un fallo.
+ *   · «sin_red»: el navegador dice que no hay conexión (`navigator.onLine`).
+ *   · «error_red»: con conexión y sin cancelar (CORS, DNS, servidor caído…).
+ */
+export type CausaSinRespuesta = "cancelada" | "sin_red" | "error_red";
+
+export function causaSinRespuesta(error: unknown, estado: { saliendo: boolean; enLinea: boolean | undefined }): CausaSinRespuesta {
+  const nombre = (error as { name?: unknown } | null)?.name;
+  if (nombre === "AbortError" || estado.saliendo) return "cancelada";
+  if (estado.enLinea === false) return "sin_red";
+  return "error_red";
+}
+
+/**
+ * ¿Es un navegador automatizado (Playwright, Selenium) que NO pidió mandar
+ * actividad? Los e2e de `actividad-logs` lo piden expresamente
+ * (`localStorage.ct_actividad_e2e = "1"`) porque comprueban lo que se envía y
+ * lo interceptan; el resto (e2e locales, prueba de humo contra la demo) no
+ * manda nada.
+ */
+export function silenciarPorPrueba(webdriver: boolean | undefined, almacen: Pick<Storage, "getItem"> | null): boolean {
+  if (webdriver !== true) return false;
+  try {
+    return almacen?.getItem("ct_actividad_e2e") !== "1";
+  } catch {
+    return true;
+  }
+}

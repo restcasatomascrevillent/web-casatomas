@@ -40,10 +40,12 @@ import {
   type DisponibilidadHueco,
   type RechazoReserva,
 } from "@/lib/reservas-web";
+import { admiteMenuDelDia, horaSoloTelefonoHoy } from "@/lib/reserva-menu-dia";
 import { diasCerradosPorDefecto, fechaIso, leerDiasCerrados } from "@/lib/cierres-reserva";
 import { leerComensalesReserva, MAX_COMENSALES_RESERVA_WEB } from "@/lib/mi-mesa";
 import { construirRutaIdioma } from "@/i18n/routing";
 import { registrarActividad } from "@/lib/actividad/registro";
+import { useOrigenReserva } from "@/lib/origen-reserva";
 import {
   ANCLA_CONDICIONES_NEWSLETTER,
   ANCLA_CONDICIONES_RESERVA,
@@ -110,6 +112,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadHueco[]>([]);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
+  const [quiereMenuDelDia, setQuiereMenuDelDia] = useState(false);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [hasCheckedAvailability, setHasCheckedAvailability] = useState(false);
   const [honeypot, setHoneypot] = useState("");
@@ -149,6 +152,17 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   });
 
   const watchFecha = form.watch("fecha");
+
+  // «Cómo se hizo la reserva»: horas, campos tocados e intentos (ver lib/origen-reserva.ts).
+  const seguimientoOrigen = useOrigenReserva(language);
+  const { tocar: tocarCampo } = seguimientoOrigen;
+  useEffect(() => {
+    // Solo cambios del visitante (`type: "change"`): no los `setValue`/`reset` del propio código.
+    const sub = form.watch((_valores, { name, type }) => {
+      if (name && type === "change") tocarCampo(name);
+    });
+    return () => sub.unsubscribe();
+  }, [form, tocarCampo]);
   /** 8 o más: solo por teléfono. Se enseña el aviso y no se consulta disponibilidad. */
   const superaMaxWeb = (form.watch("numero_comensales") ?? 0) > MAX_COMENSALES_RESERVA_WEB;
 
@@ -165,16 +179,27 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   }, [form]);
 
   /** Huecos agrupados por turno, en el mismo orden en que los manda el motor. */
+  const fechaIsoElegida = watchFecha ? fechaIso(watchFecha) : null;
+  /** Hoy mismo, la comida (12:30–16:00) solo se reserva por teléfono: esas horas no se ofrecen. */
+  const esHoyElegido = fechaIsoElegida !== null && horaSoloTelefonoHoy("13:00", fechaIsoElegida);
   const huecosPorTurno = useMemo(
     () =>
       (["comida", "cena"] as const)
         .map((turno) => ({
           turno,
-          huecos: disponibilidad.filter((hueco) => hueco.turno === turno),
+          huecos: disponibilidad.filter(
+            (hueco) =>
+              hueco.turno === turno && !(fechaIsoElegida && horaSoloTelefonoHoy(hueco.hora, fechaIsoElegida)),
+          ),
         }))
         .filter((grupo) => grupo.huecos.length > 0),
-    [disponibilidad],
+    [disponibilidad, fechaIsoElegida],
   );
+  /** Menú del día: martes a jueves y hora de comida. Si cambia a algo no válido, se desmarca (efecto de abajo). */
+  const permiteMenuDelDia = admiteMenuDelDia(watchFecha, selectedHour);
+  useEffect(() => {
+    if (!permiteMenuDelDia) setQuiereMenuDelDia(false);
+  }, [permiteMenuDelDia]);
 
   /** Datos agregados de la consulta para Super Admin › Logs (nunca nombre, teléfono ni email). */
   const datosReservaLogs = () => {
@@ -197,6 +222,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
     }
 
     const mostrarFalloDisponibilidad = (fallo: TipoFallo) => {
+      seguimientoOrigen.consulta(true);
       registrarActividad("reserva_disponibilidad", { accion: "error", props: { ...datosReservaLogs(), fallo } });
       setDisponibilidad([]);
       setHasCheckedAvailability(true);
@@ -243,6 +269,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // Dia CERRADO: no es un fallo, es una respuesta valida que dice que ese
       // dia no se reserva. Hasta ahora los dos casos caian en el mismo toast.
       if (resultado.estado === "cerrado") {
+        seguimientoOrigen.consulta(true);
         registrarActividad("reserva_disponibilidad", { accion: "cerrado", props: datosReservaLogs() });
         setDisponibilidad([]);
         setHasCheckedAvailability(true);
@@ -261,7 +288,9 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // día está completo. Antes caía en el mismo `toast.success` que un día con
       // horas libres y el visitante se quedaba mirando una lista vacía sin que
       // nadie le dijera nada. Las horas `completo` se siguen pintando en gris.
-      if (!resultado.huecos.some((hueco) => hueco.estado === "libre")) {
+      const hayLibre = resultado.huecos.some((hueco) => hueco.estado === "libre");
+      seguimientoOrigen.consulta(!hayLibre);
+      if (!hayLibre) {
         registrarActividad("reserva_disponibilidad", { accion: "completo", props: datosReservaLogs() });
         toast.message(conTelefono(t.reservationForm.toasts.noSlots));
         return;
@@ -306,11 +335,14 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           numero_comensales: data.numero_comensales,
           notas_cliente: data.notas_cliente || "",
           estado: "pendiente",
+          ...(quiereMenuDelDia && admiteMenuDelDia(data.fecha, selectedHour) ? { menu_del_dia: true } : {}),
           // Contrato con `reservas-web/crear`: dos booleanos SEPARADOS. Las
           // condiciones son obligatorias (el schema no deja llegar aquí sin
           // ellas); la newsletter es opcional y viaja tal cual.
           acepta_condiciones: data.acepta_condiciones,
           consentimiento_newsletter: data.consentimiento_newsletter,
+          // Cómo se hizo (opcional; la función lo valida y, si falla, lo ignora).
+          origen: seguimientoOrigen.origen(),
         })
       });
 
@@ -327,6 +359,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           accion: (rechazo.motivo ?? "sin_motivo").toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 40),
           props: { status: response.status },
         });
+        seguimientoOrigen.fallo();
         setRechazo(rechazo);
         return;
       }
@@ -350,6 +383,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       setDisponibilidad([]);
       setSelectedHour(null);
       setHasCheckedAvailability(false);
+      setQuiereMenuDelDia(false);
+      seguimientoOrigen.reiniciar();
     } catch (error) {
       // Ni siquiera hubo respuesta (red caida, CORS): se representa con
       // status 0, y ahi `interpretarRechazoReserva` decide con `navigator.onLine`
@@ -358,6 +393,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
       // dejo el formulario mudo horas).
       console.error("Error sending reservation:", error);
       registrarActividad("reserva_rechazada", { accion: "sin_respuesta", props: { status: 0 } });
+      seguimientoOrigen.fallo();
       setRechazo(interpretarRechazoReserva(0, null, t.reservationForm.rejection));
     } finally {
       setIsSubmitting(false);
@@ -520,7 +556,7 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                               field.onChange(date);
                               setCalendarOpen(false);
                             }}
-                            disabled={(date) => date < new Date() || diasCerrados.has(fechaIso(date))}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0)) || diasCerrados.has(fechaIso(date))}
                             locale={dateLocale}
                             initialFocus
                             className="pointer-events-auto rounded-xl"
@@ -593,6 +629,18 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                 <FormLabel className="text-foreground font-medium block">
                   {t.reservationForm.timesLabel}
                 </FormLabel>
+                {esHoyElegido && (
+                  <p
+                    role="status"
+                    className="flex items-start gap-2 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-foreground"
+                  >
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+                    <span>
+                      {t.reservationForm.sameDayPhoneNotice}:{" "}
+                      <TelLink className="font-medium text-primary underline underline-offset-2" />
+                    </span>
+                  </p>
+                )}
                 {huecosPorTurno.map(({ turno, huecos }) => (
                   <div key={turno} className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">
@@ -615,7 +663,11 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                           <button
                             key={hueco.hora}
                             type="button"
-                            onClick={() => !isCompleto && setSelectedHour(hueco.hora)}
+                            onClick={() => {
+                              if (isCompleto) return;
+                              setSelectedHour(hueco.hora);
+                              tocarCampo("hora");
+                            }}
                             disabled={isCompleto}
                             className={cn(
                               "p-4 rounded-xl border-2 text-center transition-all duration-200",
@@ -697,6 +749,28 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                   )}
                 />
               </div>
+
+              {permiteMenuDelDia && (
+                <div className="rounded-xl border border-border/50 bg-white p-4">
+                  <div className="flex flex-row items-start gap-3">
+                    <Checkbox
+                      id="menu-del-dia"
+                      checked={quiereMenuDelDia}
+                      onCheckedChange={(marcada) => {
+                        setQuiereMenuDelDia(marcada === true);
+                        tocarCampo("menu_del_dia");
+                      }}
+                      aria-describedby="menu-del-dia-nota"
+                    />
+                    <label htmlFor="menu-del-dia" className="-my-3 min-h-11 cursor-pointer py-3 font-medium leading-snug text-foreground">
+                      {t.reservationForm.menuDelDiaLabel}
+                    </label>
+                  </div>
+                  <p id="menu-del-dia-nota" className="mt-1 pl-7 text-sm text-muted-foreground">
+                    {t.reservationForm.menuDelDiaNote}
+                  </p>
+                </div>
+              )}
 
               <FormField
                 control={form.control}

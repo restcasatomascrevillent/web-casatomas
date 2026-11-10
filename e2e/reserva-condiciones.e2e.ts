@@ -40,7 +40,7 @@ const ETIQUETA_IDIOMA = { es: "Español", en: "English", fr: "Français" } as co
 /** Campos exactos que viajan a `reservas-web/crear` (los mismos en los tres idiomas). */
 const CAMPOS_CREAR = [
   "acepta_condiciones", "consentimiento_newsletter", "email", "estado", "fecha", "hora",
-  "nombre", "notas_cliente", "numero_comensales", "telefono",
+  "nombre", "notas_cliente", "numero_comensales", "origen", "telefono",
 ];
 
 /**
@@ -392,6 +392,9 @@ for (const idioma of TRADUCIDOS) {
         consentimiento_newsletter: true,
       });
       expect(cuerpo.fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      // «Cómo se hizo la reserva»: idioma de la web y tiempo rellenando (sin datos personales).
+      expect(cuerpo.origen).toMatchObject({ idioma: idioma.codigo, campos_cambiados: expect.arrayContaining(["hora"]) });
+      expect(typeof cuerpo.origen.duracion_segundos).toBe("number");
       await expect(page.getByText(f.successTitle)).toBeVisible();
       await expect(page.getByText(f.successLead)).toBeVisible();
       await expect(page.getByText(es.reservationForm.successTitle)).toHaveCount(0);

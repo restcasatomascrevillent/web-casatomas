@@ -31,11 +31,15 @@ export interface DatosActividad {
 type Emisor = (tipo: TipoActividad, datos: DatosActividad) => void;
 
 let emisor: Emisor | null = null;
+let recargaEnCurso = false;
 const pendientes: Array<[TipoActividad, DatosActividad, number]> = [];
 const MAX_PENDIENTES = 50;
 
 export function registrarActividad(tipo: TipoActividad, datos: DatosActividad = {}): void {
   if (typeof window === "undefined") return;
+  // La página se está recargando sola (versión antigua): sus errores son de esa
+  // recarga y el que la provocó sale tras recargar, con `recargado` (recarga-por-version).
+  if (recargaEnCurso && tipo.startsWith("error_")) return;
   try {
     if (emisor) emisor(tipo, datos);
     else if (pendientes.length < MAX_PENDIENTES) pendientes.push([tipo, datos, Date.now()]);
@@ -57,9 +61,15 @@ export function conectarEmisor(e: Emisor | null): void {
   }
 }
 
+/** Lo llama `recargarUnaVez` justo antes de recargar la página. */
+export function marcarRecargaEnCurso(): void {
+  recargaEnCurso = true;
+}
+
 /** Solo para pruebas. */
 export function _reiniciarRegistro(): void {
   emisor = null;
+  recargaEnCurso = false;
   pendientes.length = 0;
 }
 

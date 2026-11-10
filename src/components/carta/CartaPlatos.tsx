@@ -47,10 +47,11 @@ import BackToTopButton from "./BackToTopButton";
 import { resolveTranslatedItem } from "@/lib/carta-i18n";
 import {
   AVISO_SIN_ALERGENOS,
-  cumpleFiltroDietetico,
+  cumpleAptitudPlato,
   datosAlergenos,
   etiquetaAlergeno,
   normalizeAlergenos,
+  ofreceOpcionSinGluten,
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
 import { CATEGORIAS_CARTA } from "@/lib/carta-rutas";
@@ -91,6 +92,9 @@ interface Plato {
   categoria: string;
   descripcion?: string;
   sin_gluten_disponible?: boolean;
+  /** Decidido a mano en el panel; ausente o null = automático (ver `cumpleAptitudPlato`). */
+  apto_celiacos?: boolean | null;
+  apto_sin_lactosa?: boolean | null;
   imagen_url?: string | null;
   imagen_posicion_y?: number | null;
   ingredientes?: string[] | string | null;
@@ -291,15 +295,10 @@ const CartaPlatos = ({
     // comparación es por alérgeno completo, no por subcadena, así que un
     // alérgeno personalizado escrito como "sin gluten" ya no excluye el plato.
     if (activeDietaryFilters.length > 0) {
-      items = items.filter((item) => {
-        const datos = datosAlergenos(item);
-        return activeDietaryFilters.every(
-          (filterKey) =>
-            (filterKey === "celiaquia" &&
-              item.sin_gluten_disponible === true) ||
-            cumpleFiltroDietetico(datos, filterKey),
-        );
-      });
+      // Lo decidido a mano en el panel («Apto para celíacos / sin lactosa») manda.
+      items = items.filter((item) =>
+        activeDietaryFilters.every((filterKey) => cumpleAptitudPlato(item, filterKey)),
+      );
     }
 
     if (debouncedSearchTerm) {
@@ -938,9 +937,7 @@ const CartaPlatos = ({
                             {item.displayDescripcion}
                           </p>
                         )}
-                        {item.sin_gluten_disponible === true && (
-                          <OpcionSinGluten />
-                        )}
+                        {ofreceOpcionSinGluten(item) && <OpcionSinGluten />}
                         <div className="space-y-2">
                           <p className="text-sm font-semibold text-foreground">
                             {infoLabels.allergens}:
