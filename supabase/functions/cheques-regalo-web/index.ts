@@ -181,7 +181,7 @@ async function handleCrear(req: Request): Promise<Response> {
           price_data: {
             currency: "eur",
             unit_amount: Math.round(gastosGestion * 100),
-            product_data: { name: "Gastos de gestión", description: "Compra online, iguales para cualquier forma de pago" },
+            product_data: { name: "Gastos de preparación y emisión", description: "Creación del cheque digital, PDF, entrega e infraestructura de emisión" },
           },
         }] : []),
       ],
