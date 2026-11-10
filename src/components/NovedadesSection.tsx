@@ -147,6 +147,16 @@ const NovedadesSection = () => {
   });
 
   const novedades = useMemo(() => data ?? [], [data]);
+  // El refresco en el navegador puede fallar aunque ya tengamos tarjetas (las
+  // del build o las de una consulta anterior): móvil sin cobertura un momento
+  // o, sobre todo, una pestaña abierta desde antes del último deploy, cuyo
+  // chunk perezoso del cliente de Supabase ya no existe (un `import()` fallido
+  // se queda cacheado, así que los reintentos de React Query fallan igual).
+  // React Query conserva `data` y además rellena `error`; antes eso borraba
+  // las tarjetas y enseñaba «No se pudieron cargar las novedades». El aviso
+  // solo tiene sentido si no hay nada que enseñar.
+  const sinDatos = novedades.length === 0;
+  const errorSinDatos = Boolean(error) && sinDatos;
 
   const renderCard = (novedad: Novedad, idx: number) => {
     const Icon = iconMap[novedad.icono || "star"];
@@ -291,16 +301,16 @@ const NovedadesSection = () => {
           </div>
         )}
 
-        {!isLoading && error && (
+        {!isLoading && errorSinDatos && (
           <div className="text-center text-sm text-destructive">{t.novedades.error || "No se pudieron cargar las novedades."}</div>
         )}
 
-        {!isLoading && !error && novedades.length === 0 && (
+        {!isLoading && !error && sinDatos && (
           <div className="text-center text-muted-foreground">{t.novedades.empty}</div>
         )}
 
         <AnimatePresence>
-          {!isLoading && !error && novedades.length > 0 && (
+          {!isLoading && !sinDatos && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {novedades.map((novedad, idx) => renderCard(novedad, idx))}
             </div>
