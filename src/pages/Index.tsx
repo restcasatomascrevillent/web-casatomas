@@ -16,6 +16,7 @@ import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 import { Link } from "react-router-dom";
 import { rutaCategoria } from "@/lib/carta-rutas";
 import MasSobreSeccion from "@/components/carta/MasSobreSeccion";
+import { importarConRecarga } from "@/lib/recarga-por-version";
 
 const SEO_HOME: Record<Language, { title: string; description: string }> = {
   es: {
@@ -134,10 +135,10 @@ const Presentacion = ({ language }: { language: Language }) => {
 // (ver el comentario de `idleImport`). El contenido de estas secciones ya
 // está en el HTML del SSG; lo único que se retrasa es cuándo se vuelven
 // interactivas.
-const NovedadesSection = lazy(idleImport(() => import("@/components/NovedadesSection")));
-const EspaciosSection = lazy(idleImport(() => import("@/components/EspaciosSection")));
-const NosotrosSection = lazy(idleImport(() => import("@/components/NosotrosSection")));
-const ContactoSection = lazy(idleImport(() => import("@/components/ContactoSection")));
+const NovedadesSection = lazy(importarConRecarga(idleImport(() => import("@/components/NovedadesSection"))));
+const EspaciosSection = lazy(importarConRecarga(idleImport(() => import("@/components/EspaciosSection"))));
+const NosotrosSection = lazy(importarConRecarga(idleImport(() => import("@/components/NosotrosSection"))));
+const ContactoSection = lazy(importarConRecarga(idleImport(() => import("@/components/ContactoSection"))));
 
 const SectionPlaceholder = ({ id }: { id: string }) => (
   <section id={id} className="py-16 px-4 md:px-8 lg:px-16 bg-background">

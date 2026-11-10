@@ -14,6 +14,7 @@ import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 import { HANDLE_PAGINA_NO_ENCONTRADA } from "@/lib/hidratacion-404";
+import { importarConRecarga } from "@/lib/recarga-por-version";
 
 // Sin esto, React Query usa sus valores por defecto: `staleTime: 0` (cada
 // montaje de un componente con `useQuery` — novedades, reseñas, menús del
@@ -36,8 +37,8 @@ const queryClient = new QueryClient({
 // `toast(...)`. Antes se importaban de forma estática y entraban en el
 // bundle de arranque de CADA página, aunque esa página nunca fuera a lanzar
 // un toast. Perezosas, así ese peso no cuenta para la primera carga.
-const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
-const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
+const Toaster = lazy(importarConRecarga(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster }))));
+const Sonner = lazy(importarConRecarga(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster }))));
 
 const RouteFallback = () => (
   <div className="min-h-[50vh] flex items-center justify-center text-muted-foreground">
@@ -102,7 +103,7 @@ const Layout = ({ lang }: { lang: Language }) => (
 // (a diferencia de React.lazy + Suspense, que renderizaría el fallback vacío).
 const lazyRoute =
   (factory: () => Promise<{ default: ComponentType }>) =>
-  async () => ({ Component: (await factory()).default });
+  async () => ({ Component: (await importarConRecarga(factory)()).default });
 
 /**
  * Páginas de la carta para UN idioma: mismos componentes de página en las
