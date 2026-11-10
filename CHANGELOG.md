@@ -2,6 +2,18 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.6.0] - 2026-11-10
+
+Objetivo: Reservas web: menú del día (mar-jue), hoy se puede reservar salvo 12:30-16:00 (por teléfono) y registro de cómo se hizo la reserva
+
+### Añadido
+- Reservas: menú del día y mismo día por teléfono en el formulario ([78133f0](https://github.com/restcasatomascrevillent/web-casatomas/commit/78133f001fa049f2260476bbe1c3b599a30c4136))
+- Reservas: se puede elegir hoy en el calendario ([ebd1bcc](https://github.com/restcasatomascrevillent/web-casatomas/commit/ebd1bcc5aea532bd4a461bbbea2522050a04b9c8))
+- Reservas: el formulario manda «origen» (cómo se hizo la reserva) ([d40d691](https://github.com/restcasatomascrevillent/web-casatomas/commit/d40d69125f55668c6148af9fd1b32128674e9299))
+
+### Otros
+- Reservas: el contrato de /crear admite «origen» como dato opcional ([abf5db5](https://github.com/restcasatomascrevillent/web-casatomas/commit/abf5db590860bc04842368a4dc3943bf43cb8b25))
+
 ## [1.5.0] - 2026-11-10
 
 Objetivo: Touza: página rediseñada con fotos y animaciones, sin reservas, y enlace a su subdominio
