@@ -189,7 +189,20 @@ test.describe("escritorio 1440 px", () => {
     await expect(page.getByText("Volvemos el 1 de diciembre.")).toBeVisible();
     await expect(page.getByRole("article")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Ver la carta de vinos" })).toHaveAttribute("href", "/carta/vinos");
+    // Y sale del menú y del pie (10/11/2026, petición del dueño), aunque el HTML del build
+    // la traía (encendida al construir): la web lo lee en vivo, sin esperar a un deploy.
+    await expect(page.locator('header.site-header a[href="/tienda"]')).toHaveCount(0);
+    await expect(page.locator('footer a[href="/tienda"]')).toHaveCount(0);
+    await expect(page.locator("header.site-header nav").getByRole("link", { name: "Carta", exact: true })).toBeVisible();
     await axe(page, "tienda no disponible");
+  });
+
+  test("tienda apagada en el panel: tampoco sale en la tarjeta de cheques regalo", async ({ page, supabase }) => {
+    supabase.config = { ...supabase.config, activa: false };
+    await page.goto("/regala");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator('a[href="/tienda"]')).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Tienda de vinos" })).toHaveCount(0);
   });
 });
 

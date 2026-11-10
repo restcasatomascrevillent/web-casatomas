@@ -2,6 +2,14 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.4.0] - 2026-11-10
+
+Objetivo: Tienda oculta en la web cuando se apaga en el panel y recarga automática con versiones antiguas
+
+### Añadido
+- Tienda: quitar «Tienda» de la web cuando se apaga en el panel ([#46](https://github.com/restcasatomascrevillent/web-casatomas/pull/46))
+- Web: recargar sola una vez cuando la pestaña tiene una versión antigua ([#47](https://github.com/restcasatomascrevillent/web-casatomas/pull/47))
+
 ## [1.3.0] - 2026-11-10
 
 Objetivo: Seguridad: cabeceras CSP más estrictas

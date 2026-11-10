@@ -160,3 +160,11 @@ export interface TiendaSSG {
   generadoEn: string;
   config: Record<string, unknown> | null;
 }
+
+/**
+ * `virtual:carta-ssg/tienda-visible`: si al construir la tienda estaba
+ * encendida en el panel (`null` = no se pudo leer). Ver `tiendaVisibleEnBuild`.
+ */
+export interface TiendaVisibleSSG {
+  visible: boolean | null;
+}

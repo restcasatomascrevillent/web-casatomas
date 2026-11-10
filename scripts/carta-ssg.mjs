@@ -377,4 +377,19 @@ export const CARTA_SSG_VACIA = {
 export const VINOS_SSG_VACIOS = { generadoEn: '', vinos: [] };
 export const BEBIDAS_SSG_VACIAS = { generadoEn: '', bebidas: [] };
 export const TIENDA_SSG_VACIA = { generadoEn: '', config: null };
+export const TIENDA_VISIBLE_SSG_VACIA = { visible: null };
+
+/**
+ * La semilla de `useTiendaVisible` (enlaces a la tienda en el menú, el pie y
+ * la tarjeta de cheques): `false` solo si el panel la apagó (`activa: false`
+ * explícito), `true` si está encendida, `null` si el build no pudo leerla
+ * (los enlaces se enseñan y el navegador lo resuelve con su propia lectura).
+ *
+ * @param {Record<string, unknown> | null | undefined} tienda fila de `leerConfiguracionTienda`
+ * @returns {boolean | null}
+ */
+export function tiendaVisibleEnBuild(tienda) {
+  if (!tienda || typeof tienda !== 'object') return null;
+  return tienda.activa === false ? false : tienda.activa === true ? true : null;
+}
 
