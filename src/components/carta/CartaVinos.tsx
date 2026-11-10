@@ -27,7 +27,7 @@ import {
  * y `mapbox-gl` no se descarga nunca. Para reactivarlo basta con definir
  * `VITE_MAPBOX_TOKEN` (ver `.env.example`).
  */
-const MapaMundoVinos = lazy(() => import("./MapaMundoVinos"));
+const MapaMundoVinos = lazy(importarConRecarga(() => import("./MapaMundoVinos")));
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined) ?? "";
 
 /** Cada cuánto se vuelve a consultar la carta de vinos con la pestaña abierta y visible. */
@@ -54,6 +54,7 @@ import {
   normalizeAlergenos,
   tieneInformacionAlergenos,
 } from "@/lib/alergenos";
+import { importarConRecarga } from "@/lib/recarga-por-version";
 
 interface CartaVinosProps {
   showAddButton?: boolean;

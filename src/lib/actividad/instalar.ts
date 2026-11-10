@@ -6,7 +6,8 @@
  *   · formularios marcados con `data-track-form`: inicio, avance (n.º de
  *     campos), envío, error de validación y abandono estimado — NUNCA valores;
  *   · vídeos (reproducir, pausa, fin);
- *   · peticiones a Supabase (endpoint, código y duración) y sus fallos;
+ *   · peticiones a Supabase (endpoint, método, código y duración) y sus fallos
+ *     (estado 0: cancelada / sin red / error de red);
  *   · errores de JavaScript, promesas y recursos que no cargan;
  *   · tiempos de carga de la página.
  * Nada de grabación de pantalla ni de pulsaciones de teclado.
@@ -14,7 +15,7 @@
 
 import { alCambiarConsentimiento, estadisticasAceptadas } from "@/lib/cookie-consent";
 import { FUNCTIONS_BASE_URL } from "@/lib/supabase-functions";
-import { clasificarClic, endpointDe, idiomaDeRuta, procedenciaDe } from "./clasificar";
+import { causaSinRespuesta, clasificarClic, endpointDe, idiomaDeRuta, procedenciaDe, silenciarPorPrueba } from "./clasificar";
 import { conectarEmisor, type DatosActividad } from "./registro";
 import { Rastreador } from "./rastreador";
 
@@ -66,6 +67,21 @@ async function enviar(cuerpo: string, beacon: boolean): Promise<boolean> {
 
 let fetchOriginal: typeof fetch = (entrada, init) => fetch(entrada, init);
 
+/** Versión y despliegue (commit corto) de `/version.json`, por si la build no los trae. */
+export async function leerVersionPublicada(pedir: typeof fetch): Promise<{ version: string | null; despliegue: string | null }> {
+  try {
+    const res = await pedir(`/version.json?t=${Date.now()}`, { cache: "no-store", credentials: "omit" });
+    if (!res.ok) return { version: null, despliegue: null };
+    const datos = (await res.json()) as { version?: unknown; commit?: unknown };
+    return {
+      version: typeof datos.version === "string" && datos.version ? datos.version : null,
+      despliegue: typeof datos.commit === "string" && datos.commit ? datos.commit.slice(0, 12) : null,
+    };
+  } catch {
+    return { version: null, despliegue: null };
+  }
+}
+
 export interface Seguimiento {
   cambioDeRuta: (ruta: string) => void;
   desinstalar: () => void;
@@ -80,8 +96,17 @@ export function instalarSeguimiento(): Seguimiento | null {
   fetchOriginal = window.fetch.bind(window);
   const interno = esInterno();
   const prueba = navigator.webdriver === true;
-  const version = (import.meta.env.VITE_VERSION_WEB as string | undefined) || null;
-  const despliegue = (import.meta.env.VITE_COMMIT_WEB as string | undefined) || null;
+  // e2e y prueba de humo: no se manda nada (salvo los e2e que lo piden para comprobar el envío).
+  const silenciado = silenciarPorPrueba(navigator.webdriver, almacenSeguro());
+  let version = (import.meta.env.VITE_VERSION_WEB as string | undefined) || null;
+  let despliegue = (import.meta.env.VITE_COMMIT_WEB as string | undefined) || null;
+  // Sin versión en la build (no debería pasar): la de /version.json, para que ningún evento llegue con `version = null`.
+  if (!version || !despliegue) {
+    void leerVersionPublicada(fetchOriginal).then((v) => {
+      version ||= v.version;
+      despliegue ||= v.despliegue;
+    });
+  }
   const tactil = (navigator.maxTouchPoints ?? 0) > 1;
 
   const r = new Rastreador({
@@ -90,7 +115,8 @@ export function instalarSeguimiento(): Seguimiento | null {
     uuid,
     almacen: almacenSeguro(),
     consentimiento: estadisticasAceptadas,
-    enviar,
+    // Silenciado: el lote se da por entregado sin salir del navegador.
+    enviar: silenciado ? async () => true : enviar,
     rutaActual: () => window.location.pathname,
     contexto: () => ({ version, despliegue, interno, prueba, tactil }),
   });
@@ -178,7 +204,20 @@ export function instalarSeguimiento(): Seguimiento | null {
       vista.ultimaInteraccion = ahora();
     }
   });
+  // La página se va (navegación, recarga, cierre): lo que quede sin respuesta lo canceló el navegador.
+  let saliendo = false;
+  escuchar(window, "beforeunload", () => {
+    saliendo = true;
+    // Un enlace tel:/mailto: también dispara beforeunload sin irse: si a los 3 s sigue aquí, no se iba.
+    setTimeout(() => {
+      saliendo = false;
+    }, 3_000);
+  });
+  escuchar(window, "pageshow", () => {
+    saliendo = false;
+  });
   escuchar(window, "pagehide", () => {
+    saliendo = true;
     cerrarVista("cierre");
     formularios.forEach((f, nombre) => abandono(nombre, f));
     enviarCarga();
@@ -272,13 +311,20 @@ export function instalarSeguimiento(): Seguimiento | null {
     try {
       const res = await fetchAnterior(entrada, init);
       const ms = Math.round(performance.now() - t0);
-      r.registrar("peticion", { valor: ms, props: { endpoint, metodo, status: res.status } });
-      if (res.status >= 500) r.registrar("error_peticion", { objetivo: endpoint, valor: ms, props: { endpoint, metodo, status: res.status }, error: { mensaje: `HTTP ${res.status} en ${endpoint}` } });
+      const props = { endpoint, metodo, status: res.status, duracion_ms: ms };
+      r.registrar("peticion", { valor: ms, props });
+      if (res.status >= 500) r.registrar("error_peticion", { objetivo: endpoint, valor: ms, props, error: { mensaje: `HTTP ${res.status} en ${endpoint}` } });
       return res;
     } catch (err) {
       const ms = Math.round(performance.now() - t0);
-      if (!(err instanceof DOMException && err.name === "AbortError")) {
-        r.registrar("error_peticion", { objetivo: endpoint, valor: ms, props: { endpoint, metodo, status: 0 }, error: { mensaje: `Sin respuesta de ${endpoint}${navigator.onLine === false ? " (sin conexión)" : ""}` } });
+      const enLinea = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
+      const causa = causaSinRespuesta(err, { saliendo, enLinea });
+      const props = { endpoint, metodo, status: 0, duracion_ms: ms, causa, en_linea: enLinea };
+      if (causa === "cancelada") {
+        // No es un fallo: queda como petición (con consentimiento), nunca como error.
+        r.registrar("peticion", { valor: ms, props: { ...props, cancelada: true } });
+      } else {
+        r.registrar("error_peticion", { objetivo: endpoint, valor: ms, props, error: { mensaje: `Sin respuesta de ${endpoint}${causa === "sin_red" ? " (sin conexión)" : ""}` } });
       }
       throw err;
     }

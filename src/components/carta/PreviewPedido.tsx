@@ -26,8 +26,9 @@ import {
 import { generarMatrizQr } from "@/lib/qr";
 import { cn } from "@/lib/utils";
 import TicketMesa from "./TicketMesa";
+import { importarConRecarga } from "@/lib/recarga-por-version";
 
-const AIChatbot = lazy(() => import("../AIChatbot"));
+const AIChatbot = lazy(importarConRecarga(() => import("../AIChatbot")));
 
 type Imagen = { firma: string; dataUrl: string };
 
