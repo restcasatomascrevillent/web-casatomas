@@ -41,17 +41,18 @@ class ErrorBoundaryBase extends Component<BoundaryProps, BoundaryState> {
 
   componentDidCatch(error: unknown, info?: { componentStack?: string | null }) {
     // Super Admin › Logs: el fallo de pintado, con su pila (se sanea en el servidor).
-    registrarActividad("error_react", {
+    const evento = {
       objetivo: this.props.id ?? "app",
       props: { componente: this.props.id ?? "app" },
       error: {
         mensaje: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
         pila: error instanceof Error ? `${error.stack ?? ""}${info?.componentStack ? `\n${info.componentStack}` : ""}` : undefined,
       },
-    });
-    if (typeof window === "undefined" || !esErrorDeVersionAntigua(error)) return;
-    // Una sola recarga por versión de la web (marca con el commit de la build).
-    recargarUnaVez();
+    };
+    // Versión antigua: una sola recarga por versión (marca con el commit de la
+    // build). Si recarga, el evento sale al volver, con `recargado = true`.
+    if (typeof window !== "undefined" && esErrorDeVersionAntigua(error) && recargarUnaVez(undefined, { tipo: "error_react", datos: evento })) return;
+    registrarActividad("error_react", evento);
   }
 
   render() {

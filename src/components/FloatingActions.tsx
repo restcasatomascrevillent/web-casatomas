@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { usePedido } from "@/hooks/usePedido";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
+import { importarConRecarga } from "@/lib/recarga-por-version";
 
-const PreviewPedido = lazy(() => import("./carta/PreviewPedido"));
-const AIChatbot = lazy(() => import("./AIChatbot"));
+const PreviewPedido = lazy(importarConRecarga(() => import("./carta/PreviewPedido")));
+const AIChatbot = lazy(importarConRecarga(() => import("./AIChatbot")));
 
 const precargarChatbot = () => {
   import("./AIChatbot");
