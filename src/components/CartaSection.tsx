@@ -19,6 +19,7 @@ import type { Language } from "@/i18n/types";
 import { CATEGORIA_INICIAL } from "@/lib/carta-ssg";
 import { CATEGORIAS_CARTA, etiquetaCategoriaIdioma, rutaCategoria, type CategoriaCarta } from "@/lib/carta-rutas";
 import { construirRutaIdioma } from "@/i18n/routing";
+import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 
 // Mismos módulos que cargan las rutas `/carta/vinos` y `/carta/bebidas` (ver
 // `App.tsx`): Vite dedupea por fichero resuelto, así que precargarlos aquí
@@ -115,6 +116,7 @@ const CartaSection = () => {
 
   const rutaVinos = conFiltros(construirRutaIdioma("/carta/vinos", language));
   const rutaBebidas = conFiltros(construirRutaIdioma("/carta/bebidas", language));
+  const mostrarCartaBebidas = useMostrarCartaBebidas();
 
   const novedades = buscarCategoria(CATEGORIA_INICIAL);
   // Cada pestaña de un grupo se busca por separado: si a una categoría no le
@@ -280,7 +282,8 @@ const CartaSection = () => {
         </nav>
         </MenuDietario>
 
-        <div className="grid grid-cols-2 gap-3 w-full max-w-2xl mx-auto">
+        {/* Sin la carta de Bebidas (apagada en el panel), «Carta de vinos» va sola y centrada. */}
+        <div className={`grid gap-3 w-full mx-auto ${mostrarCartaBebidas ? "grid-cols-2 max-w-2xl" : "grid-cols-1 max-w-xs"}`}>
           {/* La carta de vinos ya no se despliega aquí: tiene su propia
               página (`/carta/vinos`), con el mismo buscador/mapa/pedido
               pero con los vinos ya en el HTML del SSG en vez de a la
@@ -312,19 +315,22 @@ const CartaSection = () => {
               (`/carta/bebidas`) con el mismo buscador/filtro/pedido, y
               precarga del chunk al pasar el cursor/tocar/llegar por
               teclado para que la navegación se sienta instantánea. */}
-          <Button
-            asChild
-            size="lg"
-            onMouseEnter={precargarPaginaBebidas}
-            onFocus={precargarPaginaBebidas}
-            onTouchStart={precargarPaginaBebidas}
-            className="h-auto min-h-11 whitespace-normal py-2 text-center leading-tight px-2 sm:h-11 sm:whitespace-nowrap sm:px-4 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary-hover text-secondary-foreground"
-          >
-            <Link to={rutaBebidas}>
-              <Beer className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
-              {t.carta.buttons.bebidas}
-            </Link>
-          </Button>
+          {/* Carta de Bebidas solo si está encendida en el panel (11/11/2026: apagada por defecto). */}
+          {mostrarCartaBebidas && (
+            <Button
+              asChild
+              size="lg"
+              onMouseEnter={precargarPaginaBebidas}
+              onFocus={precargarPaginaBebidas}
+              onTouchStart={precargarPaginaBebidas}
+              className="h-auto min-h-11 whitespace-normal py-2 text-center leading-tight px-2 sm:h-11 sm:whitespace-nowrap sm:px-4 sm:py-6 text-sm sm:text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 bg-secondary hover:bg-secondary-hover text-secondary-foreground"
+            >
+              <Link to={rutaBebidas}>
+                <Beer className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 shrink-0" />
+                {t.carta.buttons.bebidas}
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* El botón flotante del ticket ya no se monta aquí: lo pone

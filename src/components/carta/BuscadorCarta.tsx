@@ -35,6 +35,7 @@ import { mostrarPrecio, precioConocido } from "@/lib/precios";
 import { origenComprobable } from "@/lib/origenes-vino";
 import { etiquetaUnidadPlato } from "@/lib/unidades-platos";
 import type { TipoVino } from "@/lib/tipos-vino";
+import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 
 /**
  * Textos propios del buscador. Mapa local (como el resto de páginas de la
@@ -282,9 +283,12 @@ const BuscadorCarta = ({ titulos, children }: BuscadorCartaProps) => {
     () => (activa && bodega ? indexarVinos(bodega.vinos, language) : []),
     [activa, bodega, language],
   );
+  // Sin la carta de Bebidas (apagada en el panel, 11/11/2026) tampoco se buscan bebidas: llevarían a
+  // una página que no sale.
+  const mostrarCartaBebidas = useMostrarCartaBebidas();
   const indiceBebidas = useMemo(
-    () => (activa && bodega ? indexarBebidas(bodega.bebidas, language) : []),
-    [activa, bodega, language],
+    () => (activa && bodega && mostrarCartaBebidas ? indexarBebidas(bodega.bebidas, language) : []),
+    [activa, bodega, language, mostrarCartaBebidas],
   );
 
   const gruposPlatos = useMemo(() => buscarPlatos(indicePlatos, terminos, CATEGORIAS_CARTA), [indicePlatos, terminos]);

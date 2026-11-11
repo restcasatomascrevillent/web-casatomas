@@ -27,6 +27,7 @@ import { usePedido } from "@/hooks/usePedido";
 import { useToast } from "@/hooks/use-toast";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
+import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
@@ -127,6 +128,7 @@ const CartaCategoria = () => {
   const { filtros, conFiltros, totalCategoria } = useFiltrosCarta();
   const { language, t } = useTranslations();
   const textos = TEXTOS[language];
+  const mostrarCartaBebidas = useMostrarCartaBebidas();
   // El pedido (y con él el botón flotante del ticket y la entrada al chatbot)
   // es global: lo monta `FloatingActions` en el `Layout`. Aquí solo se añade.
   const { anadir, cantidadDe } = usePedido();
@@ -290,14 +292,17 @@ const CartaCategoria = () => {
                 {textos.vinos}
               </Link>
             </li>
-            <li>
-              <Link
-                to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
-                className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
-              >
-                {textos.bebidas}
-              </Link>
-            </li>
+            {/* La carta de Bebidas solo si está encendida en el panel (11/11/2026: apagada por defecto). */}
+            {mostrarCartaBebidas && (
+              <li>
+                <Link
+                  to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
+                  className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+                >
+                  {textos.bebidas}
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </CartaPageLayout>

@@ -32,6 +32,14 @@ export const MOSTRAR_FOTOS_PLATOS =
   cartaSSG.config?.mostrarFotosPlatos !== false;
 
 /**
+ * Interruptor «Carta de bebidas en la web» del panel (Gestor web › Carta › Bebidas, 11/11/2026),
+ * tal y como estaba al construir. Al revés que las fotos, falla CERRADO: solo un `true` explícito
+ * enseña la carta de Bebidas (el dueño la quiere apagada por defecto). Semilla de
+ * `useMostrarCartaBebidas`, que la vuelve a leer en el navegador.
+ */
+export const MOSTRAR_CARTA_BEBIDAS = cartaSSG.config?.mostrarCartaBebidas === true;
+
+/**
  * Los platos tal y como deben ir al JSON-LD (`Menu` de schema.org): con las
  * fotos apagadas, sin `imagen_url` ni encuadre. Los datos estructurados deben
  * describir lo que la página enseña; anunciar a Google una foto que el dueño

@@ -57,10 +57,20 @@ const NOVEDADES = JSON.parse(readFileSync(new URL("../e2e/fixtures/novedades-bot
  */
 const CONFIG_TIENDA = JSON.parse(readFileSync(new URL("../e2e/fixtures/configuracion-tienda.json", import.meta.url), "utf8"));
 
+/**
+ * Ajustes de la web (`configuracion_web`): la carta de Bebidas encendida (11/11/2026: en un build de
+ * verdad nace apagada), para que los e2e de siempre sigan recorriendo `/carta/bebidas`. En el
+ * navegador los e2e devuelven `[]` y entonces vale lo del build.
+ */
+const CONFIG_WEB = [{ id: true, mostrar_carta_bebidas_casa_tomas: true }];
+
 const servidor = http.createServer((req, res) => {
   const tabla = /^\/rest\/v1\/([^?/]+)/.exec(req.url ?? "")?.[1];
   const filas =
-    tabla === "novedades" ? NOVEDADES : tabla === "configuracion_tienda" ? CONFIG_TIENDA : tabla ? FILAS_CARTA[tabla] : undefined;
+    tabla === "novedades" ? NOVEDADES
+    : tabla === "configuracion_tienda" ? CONFIG_TIENDA
+    : tabla === "configuracion_web" ? CONFIG_WEB
+    : tabla ? FILAS_CARTA[tabla] : undefined;
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(filas ?? []));
 });
