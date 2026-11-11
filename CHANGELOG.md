@@ -2,6 +2,15 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.8.0] - 2026-11-10
+
+Objetivo: Elegir menú del día o carta al reservar de martes a jueves a mediodía
+
+### Añadido
+- Reservas: elección obligatoria «Menú del día» | «A la carta» de martes a jueves en la comida, en español, inglés y francés ([#59](https://github.com/restcasatomascrevillent/web-casatomas/pull/59))
+
+Nota: montada igualando producción con staging; entrada escrita a mano, no por scripts/release.mjs.
+
 ## [1.7.0] - 2026-11-10
 
 Objetivo: Reservas para hoy y menú del día, filtros de dietas del panel, logs con más contexto y arreglos de la release
