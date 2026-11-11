@@ -2,6 +2,16 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.9.0] - 2026-11-11
+
+Objetivo: Fase 1: la carta de Bebidas solo sale si se enciende en el panel (apagada por defecto)
+
+### Añadido
+- Carta: la carta de Bebidas solo sale si el panel la enciende ([#63](https://github.com/restcasatomascrevillent/web-casatomas/pull/63))
+
+### Cambiado
+- Carta: la web vuelve a publicarse con la carta de Bebidas apagada ([#64](https://github.com/restcasatomascrevillent/web-casatomas/pull/64))
+
 ## [1.8.0] - 2026-11-10
 
 Objetivo: Elegir menú del día o carta al reservar de martes a jueves a mediodía
