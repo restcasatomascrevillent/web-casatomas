@@ -12,6 +12,7 @@ import { breadcrumbSchema, menuPagina, menuSchema, SITE_URL } from "@/lib/negoci
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
+import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 
 const RUTA_ES = "/carta/vinos";
 
@@ -104,6 +105,7 @@ const TEXTOS: Record<
 const CartaVinosPagina = () => {
   const { language } = useTranslations();
   const textos = TEXTOS[language];
+  const mostrarCartaBebidas = useMostrarCartaBebidas();
   const url = `${SITE_URL}${construirRutaIdioma(RUTA_ES, language)}`;
   const vinos = datos.vinos ?? [];
 
@@ -178,13 +180,16 @@ const CartaVinosPagina = () => {
           <p className="text-muted-foreground">{textos.vacia}</p>
         )}
 
-        <p className="mt-12 text-sm text-muted-foreground">
-          {textos.buscasAlgo}{" "}
-          <Link to={construirRutaIdioma("/carta/bebidas", language)} className="text-accent underline underline-offset-2 hover:decoration-2">
-            {textos.verBebidas}
-          </Link>
-          .
-        </p>
+        {/* La carta de Bebidas solo si está encendida en el panel (11/11/2026: apagada por defecto). */}
+        {mostrarCartaBebidas && (
+          <p className="mt-12 text-sm text-muted-foreground">
+            {textos.buscasAlgo}{" "}
+            <Link to={construirRutaIdioma("/carta/bebidas", language)} className="text-accent underline underline-offset-2 hover:decoration-2">
+              {textos.verBebidas}
+            </Link>
+            .
+          </p>
+        )}
       </CartaPageLayout>
     </>
   );

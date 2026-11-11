@@ -26,10 +26,20 @@ describe("Configuración pública del menú y las tapas", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [{ mostrar_menu_dia_casa_tomas: true, mostrar_tapas_casa_tomas: false, horario_tapas_casa_tomas: { dias: [5], desde: null, hasta: null } }] }));
     expect(await leerVisibilidadMenuTapas("https://x.test", "key")).toEqual({
       mostrarMenuDelDia: true, mostrarTapas: false, horarioMenuDelDia: null, horarioTapas: { dias: [5], desde: null, hasta: null },
+      // Carta de Bebidas (11/11/2026): sin un true explícito, apagada.
+      mostrarCartaBebidas: false,
     });
   });
   it("mantiene el comportamiento anterior si aún no existen las columnas", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [{ id: true }] }));
-    expect(await leerVisibilidadMenuTapas("https://x.test", "key")).toEqual({ mostrarMenuDelDia: true, mostrarTapas: true, horarioMenuDelDia: null, horarioTapas: null });
+    expect(await leerVisibilidadMenuTapas("https://x.test", "key")).toEqual({
+      mostrarMenuDelDia: true, mostrarTapas: true, horarioMenuDelDia: null, horarioTapas: null, mostrarCartaBebidas: false,
+    });
+  });
+  it("la carta de Bebidas solo se enciende con un true guardado en el panel (11/11/2026)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [{ id: true, mostrar_carta_bebidas_casa_tomas: true }] }));
+    expect(await leerVisibilidadMenuTapas("https://x.test", "key")).toMatchObject({ mostrarCartaBebidas: true });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => [] }));
+    expect(await leerVisibilidadMenuTapas("https://x.test", "key")).toMatchObject({ mostrarCartaBebidas: false });
   });
 });
