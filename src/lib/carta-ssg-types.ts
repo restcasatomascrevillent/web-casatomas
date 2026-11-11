@@ -136,6 +136,11 @@ export interface CartaSSG {
     mostrarFotosPlatos: boolean;
     mostrarMenuDelDia?: boolean;
     mostrarTapas?: boolean;
+    /**
+     * Carta de Bebidas en la web (Gestor web › Carta › Bebidas, 11/11/2026). Solo `true` la
+     * enseña: por defecto está apagada.
+     */
+    mostrarCartaBebidas?: boolean;
     /** Días y horas guardados en el panel (`HorarioWeb` o null = lo de siempre). */
     horarioMenuDelDia?: unknown;
     horarioTapas?: unknown;
