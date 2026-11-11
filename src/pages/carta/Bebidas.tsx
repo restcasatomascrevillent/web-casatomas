@@ -93,12 +93,23 @@ const CartaBebidasPagina = () => {
   // Carta de Bebidas apagada en el panel (11/11/2026, por defecto): la página no sale y lleva a la
   // carta. El HTML del build lleva `noindex` (así tampoco entra en el sitemap) y, en el navegador,
   // `Navigate` manda a `/carta` en el idioma de la página.
+  // El HTML lleva el layout de la carta (su `<main>`, que el build exige en cada página) con un aviso y el
+  // enlace a la carta, por si el navegador tarda en redirigir.
   const mostrarCartaBebidas = useMostrarCartaBebidas();
   if (!mostrarCartaBebidas) {
+    const rutaCarta = construirRutaIdioma("/carta", language);
     return (
       <>
         <Seo title={textos.title} description={textos.description(bebidas.length)} canonical={url} lang={language} noindex />
-        <Navigate to={construirRutaIdioma("/carta", language)} replace />
+        <Navigate to={rutaCarta} replace />
+        <CartaPageLayout titulo={textos.titulo} migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: textos.miga }]}>
+          <p className="text-muted-foreground">
+            {textos.vacia}{" "}
+            <Link to={rutaCarta} className="text-accent underline underline-offset-2 hover:decoration-2">
+              {textos.migaCarta}
+            </Link>
+          </p>
+        </CartaPageLayout>
       </>
     );
   }
