@@ -296,18 +296,21 @@ export async function leerVisibilidadMenuTapas(baseUrl, key) {
     const respuesta = await fetch(`${baseUrl}/rest/v1/configuracion_web?select=*&id=eq.true&limit=1`, {
       headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' },
     });
-    if (!respuesta.ok) return { mostrarMenuDelDia: true, mostrarTapas: true };
+    if (!respuesta.ok) return { mostrarMenuDelDia: true, mostrarTapas: true, mostrarCartaBebidas: false };
     const filas = await respuesta.json();
     return {
       mostrarMenuDelDia: filas?.[0]?.mostrar_menu_dia_casa_tomas !== false,
       mostrarTapas: filas?.[0]?.mostrar_tapas_casa_tomas !== false,
+      // Carta de Bebidas (11/11/2026): apagada salvo un `true` explícito del panel
+      // (Gestor web › Carta › Bebidas). Sin la columna o sin poder leerla, apagada.
+      mostrarCartaBebidas: filas?.[0]?.mostrar_carta_bebidas_casa_tomas === true,
       // Días y horas (04/11/2026). NULL o sin la columna = lo de siempre (lo decide
       // src/lib/horario-web.ts); aquí solo se copia lo guardado.
       horarioMenuDelDia: filas?.[0]?.horario_menu_dia_casa_tomas ?? null,
       horarioTapas: filas?.[0]?.horario_tapas_casa_tomas ?? null,
     };
   } catch {
-    return { mostrarMenuDelDia: true, mostrarTapas: true };
+    return { mostrarMenuDelDia: true, mostrarTapas: true, mostrarCartaBebidas: false };
   }
 }
 
@@ -375,7 +378,9 @@ export const CARTA_SSG_VACIA = {
   generadoEn: '',
   platos: [],
   resumen: { vinos: RESUMEN_VACIO, bebidas: RESUMEN_VACIO },
-  config: { mostrarFotosPlatos: true },
+  // Bebidas encendidas solo aquí (dev sin red y tests): así las pruebas de siempre ven sus enlaces.
+  // En un build de verdad manda `configuracion_web` (apagada por defecto).
+  config: { mostrarFotosPlatos: true, mostrarCartaBebidas: true },
 };
 export const VINOS_SSG_VACIOS = { generadoEn: '', vinos: [] };
 export const BEBIDAS_SSG_VACIAS = { generadoEn: '', bebidas: [] };

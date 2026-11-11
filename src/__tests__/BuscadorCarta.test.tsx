@@ -34,6 +34,8 @@ vi.mock("virtual:carta-ssg", () => ({
       vinos: { total: 2, categorias: [{ nombre: "VINOS BLANCOS — RÍAS BAIXAS", total: 1 }, { nombre: "VINOS TINTOS — RIOJA", total: 1 }] },
       bebidas: { total: 2, categorias: [{ nombre: "Aguas", total: 1 }, { nombre: "Cervezas", total: 1 }] },
     },
+    // Carta de Bebidas encendida en el panel (11/11/2026: por defecto apagada y sin bebidas en el buscador).
+    config: { mostrarFotosPlatos: true, mostrarCartaBebidas: true },
   },
 }));
 vi.mock("virtual:carta-ssg/vinos", () => ({

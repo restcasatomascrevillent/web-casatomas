@@ -36,6 +36,7 @@ import { breadcrumbSchema, menuIndiceSchema, SITE_URL } from "@/lib/negocio";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
+import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 
 const plural = (n: number, singular: string, plural_: string) =>
   `${n} ${n === 1 ? singular : plural_}`;
@@ -191,6 +192,7 @@ const CartaIndice = () => {
   const { conFiltros, totalCategoria } = useFiltrosCarta();
   const { language } = useTranslations();
   const textos = TEXTOS[language];
+  const mostrarCartaBebidas = useMostrarCartaBebidas();
   const secciones = [
     ...CATEGORIAS_CARTA.map((categoria) => ({
       nombre: etiquetaCategoriaIdioma(categoria.clave, language),
@@ -198,7 +200,10 @@ const CartaIndice = () => {
       url: `${SITE_URL}${rutaCategoria(categoria.slug, language)}`,
     })),
     { nombre: textos.vinosTitulo, total: RESUMEN_VINOS.total, url: `${SITE_URL}${construirRutaIdioma("/carta/vinos", language)}` },
-    { nombre: textos.bebidasTitulo, total: RESUMEN_BEBIDAS.total, url: `${SITE_URL}${construirRutaIdioma("/carta/bebidas", language)}` },
+    // La carta de Bebidas solo si está encendida en el panel (11/11/2026: apagada por defecto).
+    ...(mostrarCartaBebidas
+      ? [{ nombre: textos.bebidasTitulo, total: RESUMEN_BEBIDAS.total, url: `${SITE_URL}${construirRutaIdioma("/carta/bebidas", language)}` }]
+      : []),
   ];
 
   return (
@@ -262,12 +267,14 @@ const CartaIndice = () => {
               detalle={textos.vinosDetalle(RESUMEN_VINOS.total)}
               icono={<Wine className="w-6 h-6" />}
             />
-            <TarjetaSeccion
-              to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
-              titulo={textos.bebidasTitulo}
-              detalle={textos.bebidasDetalle(RESUMEN_BEBIDAS.total)}
-              icono={<Beer className="w-6 h-6" />}
-            />
+            {mostrarCartaBebidas && (
+              <TarjetaSeccion
+                to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
+                titulo={textos.bebidasTitulo}
+                detalle={textos.bebidasDetalle(RESUMEN_BEBIDAS.total)}
+                icono={<Beer className="w-6 h-6" />}
+              />
+            )}
           </div>
         </section>
         </BuscadorCarta>
