@@ -50,6 +50,7 @@ export const translations: Translations = {
       playVideo: "Play video",
       pauseVideo: "Pause video",
       noPhoto: "No photo",
+      enlargePhoto: "Enlarge photo",
       viewInfo: "View ingredients and allergens",
       hideInfo: "Hide ingredients and allergens",
       allergensTitle: "Allergens",
