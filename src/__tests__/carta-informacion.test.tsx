@@ -24,9 +24,12 @@ describe('Información y preparación alternativa de los platos', () => {
   });
 
   it('la tarjeta por categoría también muestra la descripción y la opción sin gluten', () => {
-    render(envolver(<ProductoCard plato={resolveTranslatedItem(plato, 'es')} categoria="Snacks" />));
+    const { container } = render(envolver(<ProductoCard plato={resolveTranslatedItem(plato, 'es')} categoria="Snacks" />));
     fireEvent.click(screen.getAllByRole('button', { name: /ver ingredientes y alérgenos/i })[0]);
-    expect(screen.getByText(plato.descripcion)).toBeInTheDocument();
+    // La descripción sale delante (recortada a dos líneas) y entera detrás, tras la «i».
+    const trasera = container.querySelector('[data-cara="trasera"]')!;
+    expect(trasera).not.toHaveAttribute('inert');
+    expect(trasera).toHaveTextContent(plato.descripcion);
     expect(screen.getAllByText('Se puede hacer sin gluten').length).toBeGreaterThan(0);
     expect(screen.getByText('Gluten')).toBeInTheDocument();
   });
