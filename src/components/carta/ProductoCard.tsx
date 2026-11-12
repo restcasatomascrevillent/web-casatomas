@@ -312,14 +312,18 @@ const ProductoCard = ({
                   />
                 </div>
               )}
-              <div className="flex min-w-0 flex-1 flex-col px-4 pt-3 pb-2 sm:px-5 sm:pt-4">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle
-                    as="h2"
-                    className="flex-1 min-w-0 text-base md:text-lg font-bold leading-snug tracking-normal text-primary whitespace-normal break-words"
-                  >
-                    {plato.displayNombre}
-                  </CardTitle>
+              {/* El nombre, centrado en el hueco que queda junto a la foto (en
+                  móvil) o bajo ella (desde tableta). La «i» va en la esquina, en
+                  absoluto, para que no descentre el nombre; el relleno lateral
+                  igual a cada lado le deja sitio. */}
+              <div className="relative flex min-w-0 flex-1 items-center justify-center px-10 py-3 sm:px-12 sm:py-4">
+                <CardTitle
+                  as="h2"
+                  className="min-w-0 text-center text-balance text-base md:text-lg font-bold leading-snug tracking-normal text-primary whitespace-normal break-words"
+                >
+                  {plato.displayNombre}
+                </CardTitle>
+                <div className="absolute right-3 top-2.5 sm:right-4 sm:top-3.5">
                   <BotonGiro abierta={false} onGirar={girar} nombre={plato.displayNombre} t={t.platos} />
                 </div>
               </div>
