@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.10.0] - 2026-11-12
+
+Objetivo: Carta nueva: tarjetas de plato con foto, «i» que gira para ver la descripción y la cantidad en el botón
+
+### Añadido
+- Carta: tarjetas de plato con foto, «i» que gira y cantidad en el botón ([#66](https://github.com/restcasatomascrevillent/web-casatomas/pull/66))
+
 ## [1.9.0] - 2026-11-11
 
 Objetivo: Fase 1: la carta de Bebidas solo sale si se enciende en el panel (apagada por defecto)
