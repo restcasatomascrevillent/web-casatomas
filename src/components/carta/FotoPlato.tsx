@@ -127,7 +127,7 @@ const FotoPlato = ({
             alternar();
           }}
           aria-label={etiqueta}
-          className={`absolute inset-0 m-auto flex h-11 w-11 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-opacity hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+          className={`absolute inset-0 z-[2] m-auto flex h-11 w-11 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-opacity hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             sonando ? "opacity-0 focus-visible:opacity-100" : ""
           }`}
         >

@@ -33,6 +33,8 @@ interface CartaPageLayoutProps {
   migas: Miga[];
   /** Enlace de vuelta al pie. `null` en la propia `/carta`, que ya es el índice. */
   volverA?: { texto: string; path: string } | null;
+  /** Icono de la sección (un SVG decorativo): sale en un disco crema junto al `h1`. */
+  icono?: ReactNode;
   children: ReactNode;
 }
 
@@ -62,6 +64,7 @@ const CartaPageLayout = ({
   detalle,
   migas,
   volverA,
+  icono,
   children,
 }: CartaPageLayoutProps) => {
   const { language } = useTranslations();
@@ -140,10 +143,21 @@ const CartaPageLayout = ({
             </BreadcrumbList>
           </Breadcrumb>
 
-          {/* Mismas clases que los `h2` de sección de la portada. */}
-          <h1 className="font-libre-baskerville text-3xl md:text-5xl font-bold text-primary">
-            {titulo}
-          </h1>
+          {/* Mismas clases que los `h2` de sección de la portada. El disco del
+              icono no añade alto: mide lo mismo que la línea del `h1`. */}
+          <div className={icono ? "flex items-center gap-3 md:gap-4" : undefined}>
+            {icono && (
+              <span
+                aria-hidden="true"
+                className="flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-full bg-[hsl(38_50%_93%)] text-accent shadow-sm [&>svg]:h-6 [&>svg]:w-6 md:[&>svg]:h-8 md:[&>svg]:w-8"
+              >
+                {icono}
+              </span>
+            )}
+            <h1 className="font-libre-baskerville text-3xl md:text-5xl font-bold text-primary">
+              {titulo}
+            </h1>
+          </div>
           {subtitulo && (
             <p className="text-muted-foreground mt-3 max-w-2xl text-base md:text-lg">{subtitulo}</p>
           )}
