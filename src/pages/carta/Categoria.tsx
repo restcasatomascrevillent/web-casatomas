@@ -19,7 +19,7 @@ import {
 import { agruparPorCategoria, platosParaJsonLd, resolverImagen } from "@/lib/carta-ssg";
 import type { ItemTraducido } from "@/lib/carta-i18n";
 import type { PlatoSSG } from "@/lib/carta-ssg-types";
-import { IconoCategoria } from "@/components/icons/IconosCarta";
+import { IconoCategoria } from "@/components/carta/IconoCategoria";
 import { Wine, Beer } from "lucide-react";
 import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
 import { useMontadoSobreEl404 } from "@/lib/hidratacion-404";
@@ -326,7 +326,7 @@ const CartaCategoria = () => {
                   to={conFiltros(rutaCategoria(otra.slug, language))}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background/70 py-2 pl-2.5 pr-3 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
-                  <IconoCategoria clave={otra.clave} className="h-5 w-5 text-accent" />
+                  <IconoCategoria clave={otra.clave} className="h-4 w-4 text-accent" />
                   {etiquetaCategoriaIdioma(otra.clave, language)}
                   <span className="text-xs text-accent font-semibold">{totalCategoria(otra.clave)}</span>
                 </Link>
@@ -337,7 +337,7 @@ const CartaCategoria = () => {
                 to={conFiltros(construirRutaIdioma("/carta/vinos", language))}
                 className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background/70 py-2 pl-2.5 pr-3 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
-                <Wine className="h-5 w-5 text-accent" strokeWidth={1.6} aria-hidden="true" />
+                <Wine className="h-4 w-4 text-accent" aria-hidden="true" />
                 {textos.vinos}
               </Link>
             </li>
@@ -348,7 +348,7 @@ const CartaCategoria = () => {
                   to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background/70 py-2 pl-2.5 pr-3 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
-                  <Beer className="h-5 w-5 text-accent" strokeWidth={1.6} aria-hidden="true" />
+                  <Beer className="h-4 w-4 text-accent" aria-hidden="true" />
                   {textos.bebidas}
                 </Link>
               </li>
