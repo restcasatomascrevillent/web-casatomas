@@ -187,7 +187,9 @@ function BotonGiro({
       aria-label={`${abierta ? t.hideInfo : t.viewInfo} — ${nombre}`}
       aria-expanded={abierta}
       data-boton-giro=""
-      className="flex items-center justify-center w-11 h-11 -mr-1.5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-colors shrink-0"
+      // Círculo relleno en el azul de Casa Tomás (`primary`), como el «+ Añadir» dorado de debajo (12/11/2026, petición
+      // del dueño). Sin margen negativo: queda en la misma columna que el «+».
+      className="flex items-center justify-center w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-all shrink-0"
     >
       {abierta ? <X className="w-5 h-5" aria-hidden="true" /> : <Info className="w-5 h-5" aria-hidden="true" />}
     </button>
