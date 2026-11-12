@@ -435,6 +435,12 @@ const ProductoCard = ({
               </DialogTitle>
               <p className="shrink-0 font-libre-baskerville text-lg font-bold text-accent">
                 {formatearPrecio(plato.precio_eur)}
+                {plato.unidad && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {" "}
+                    / {etiquetaUnidadPlato(plato.unidad, language)}
+                  </span>
+                )}
               </p>
             </div>
           </DialogContent>

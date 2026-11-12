@@ -88,6 +88,8 @@ describe("ProductoCard — foto en grande y descripción", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ampliar foto — Navajas" }));
     const dialogo = screen.getByRole("dialog", { name: "Navajas" });
     expect(dialogo.querySelector("img")).toHaveAttribute("src", conFotoYDescripcion.imagen_url);
+    // El precio con su unidad, como en la tarjeta (en el marisco al peso importa).
+    expect(dialogo).toHaveTextContent(/18,50\s€\s\/\sUnidad/);
     fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
