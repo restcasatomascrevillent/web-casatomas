@@ -61,6 +61,43 @@ describe("ProductoCard — botón de añadir", () => {
   });
 });
 
+describe("ProductoCard — foto en grande y descripción", () => {
+  const conFotoYDescripcion = {
+    ...navajas,
+    descripcion: "Navajas frescas a la plancha con ajo y perejil.",
+    imagen_url: "https://x.test/platos/navajas.webp",
+  };
+  const pintarConFoto = () =>
+    render(
+      <MemoryRouter>
+        <LanguageProvider>
+          <ProductoCard plato={resolveTranslatedItem(conFotoYDescripcion, "es")} categoria="Mariscos" />
+        </LanguageProvider>
+      </MemoryRouter>,
+    );
+
+  it("la descripción no sale delante: solo detrás, tras la «i»", () => {
+    const { container } = pintarConFoto();
+    expect(container.querySelector('[data-cara="delantera"]')).not.toHaveTextContent(conFotoYDescripcion.descripcion);
+    expect(container.querySelector('[data-cara="trasera"]')).toHaveTextContent(conFotoYDescripcion.descripcion);
+  });
+
+  it("pulsar la foto la abre en grande, con el nombre del plato, y se cierra", () => {
+    pintarConFoto();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Ampliar foto — Navajas" }));
+    const dialogo = screen.getByRole("dialog", { name: "Navajas" });
+    expect(dialogo.querySelector("img")).toHaveAttribute("src", conFotoYDescripcion.imagen_url);
+    fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("sin foto no hay botón de ampliar", () => {
+    pintar(navajas, 0);
+    expect(screen.queryByRole("button", { name: /ampliar foto/i })).toBeNull();
+  });
+});
+
 describe("separarPorFoto", () => {
   const conFoto = (id: string) => ({ id, imagen_url: `https://x.supabase.co/storage/v1/object/public/platos/${id}.webp` });
   const sinFoto = (id: string) => ({ id, imagen_url: undefined });

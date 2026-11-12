@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Info, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ItemTraducido } from "@/lib/carta-i18n";
 import {
   AVISO_SIN_ALERGENOS,
@@ -183,9 +184,10 @@ function BotonGiro({
  * Tarjeta de plato para las páginas de carta (`/carta/:categoria`).
  *
  * Delante: la foto siempre a la vista (en móvil, cuadrada a la izquierda; desde
- * tableta, arriba a todo lo ancho), el nombre, dos líneas de descripción y el
- * precio con el botón de añadir. La «i» gira la tarjeta y detrás está la
- * descripción completa, ingredientes y alérgenos. Las dos caras están en el
+ * tableta, arriba a todo lo ancho; al pulsarla se abre en grande), el nombre y
+ * el precio con el botón de añadir. La descripción no sale de primeras (el
+ * dueño, 12/11/2026): la «i» gira la tarjeta y detrás están la descripción,
+ * ingredientes y alérgenos. Las dos caras están en el
  * HTML del SSG: `[backface-visibility:hidden]` solo cambia cuál mira al
  * visitante, y la que no mira va `inert` (ver `propsCara`).
  */
@@ -200,6 +202,7 @@ const ProductoCard = ({
 }: ProductoCardProps) => {
   const { language, t } = useTranslations();
   const [infoOpen, setInfoOpen] = useState(false);
+  const [fotoGrande, setFotoGrande] = useState(false);
   const imagen = mostrarFoto
     ? resolverImagen(plato.imagen_url, SUPABASE_URL)
     : null;
@@ -284,6 +287,17 @@ const ProductoCard = ({
                     fotoCarta ? "sm:aspect-[4/3]" : "sm:h-48"
                   }`}
                 >
+                  {/* Pulsar la foto la abre en grande. `z-[1]`: por encima de la
+                      foto (la «sticker» se anima con `transform` y, sin z-index,
+                      taparía el botón); el botón de vídeo de `FotoPlato` va en
+                      `z-[2]` y se sigue pudiendo pulsar. */}
+                  <button
+                    type="button"
+                    onClick={() => setFotoGrande(true)}
+                    aria-label={`${t.platos.enlargePhoto} — ${plato.displayNombre}`}
+                    aria-haspopup="dialog"
+                    className="absolute inset-0 z-[1] cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                  />
                   <FotoPlato
                     src={imagenOptimizada(imagen, 768) ?? imagen}
                     imagenOriginal={imagen}
@@ -308,11 +322,6 @@ const ProductoCard = ({
                   </CardTitle>
                   <BotonGiro abierta={false} onGirar={girar} nombre={plato.displayNombre} t={t.platos} />
                 </div>
-                {descripcion && (
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground line-clamp-2">
-                    {descripcion}
-                  </p>
-                )}
               </div>
             </div>
             {pie}
@@ -403,6 +412,34 @@ const ProductoCard = ({
           </Card>
         </div>
       </div>
+
+      {/* La foto en grande. Fuera de las caras: la que no mira va `inert`. */}
+      {imagen && (
+        <Dialog open={fotoGrande} onOpenChange={setFotoGrande}>
+          <DialogContent
+            aria-describedby={undefined}
+            className="w-[calc(100%-1.5rem)] max-w-3xl gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl"
+          >
+            <img
+              src={imagenOptimizada(imagen, 1024) ?? imagen}
+              alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
+              width={1024}
+              height={768}
+              decoding="async"
+              className="block h-auto max-h-[75dvh] w-full bg-muted object-contain"
+              style={encuadre}
+            />
+            <div className="flex items-center justify-between gap-4 px-5 py-4 pr-5">
+              <DialogTitle className="font-libre-baskerville text-lg md:text-xl font-bold leading-snug text-primary">
+                {plato.displayNombre}
+              </DialogTitle>
+              <p className="shrink-0 font-libre-baskerville text-lg font-bold text-accent">
+                {formatearPrecio(plato.precio_eur)}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
