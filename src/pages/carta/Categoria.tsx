@@ -16,7 +16,11 @@ import {
   platosDeCategoria,
   rutaCategoria,
 } from "@/lib/carta-rutas";
-import { agruparPorCategoria, platosParaJsonLd } from "@/lib/carta-ssg";
+import { agruparPorCategoria, platosParaJsonLd, resolverImagen } from "@/lib/carta-ssg";
+import type { ItemTraducido } from "@/lib/carta-i18n";
+import type { PlatoSSG } from "@/lib/carta-ssg-types";
+import { IconoCategoria } from "@/components/icons/IconosCarta";
+import { Wine, Beer } from "lucide-react";
 import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
 import { useMontadoSobreEl404 } from "@/lib/hidratacion-404";
 import NotFound from "@/pages/NotFound";
@@ -30,6 +34,23 @@ import type { Language } from "@/i18n/types";
 import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+
+/**
+ * Platos con foto delante y sin foto detrás, cada grupo en su orden.
+ *
+ * Con las fotos apagadas (`mostrarFotos` false) o si ninguno tiene foto, todos
+ * van en `conFoto` (una sola rejilla, el orden de siempre) y `sinFoto` queda
+ * vacío: no tiene sentido un «También en …» sin nada encima.
+ */
+export function separarPorFoto<T extends Pick<PlatoSSG, "imagen_url">>(
+  platos: T[],
+  mostrarFotos: boolean,
+): { conFoto: T[]; sinFoto: T[] } {
+  if (!mostrarFotos) return { conFoto: platos, sinFoto: [] };
+  const conFoto = platos.filter((plato) => resolverImagen(plato.imagen_url, SUPABASE_URL));
+  if (conFoto.length === 0) return { conFoto: platos, sinFoto: [] };
+  return { conFoto, sinFoto: platos.filter((plato) => !conFoto.includes(plato)) };
+}
 
 /** Lo que dura el anillo del plato al que se llega con `#plato-<id>`. */
 export const DURACION_RESALTADO_MS = 2500;
@@ -68,6 +89,7 @@ const TEXTOS: Record<
     vinos: string;
     bebidas: string;
     vacia: string;
+    tambienEn: (seccion: string) => string;
     noEncontradaTitulo: string;
     noEncontradaTexto: string;
   }
@@ -82,6 +104,7 @@ const TEXTOS: Record<
     vinos: "Vinos",
     bebidas: "Bebidas",
     vacia: "Esta sección de la carta está vacía ahora mismo.",
+    tambienEn: (seccion) => `También en ${seccion}`,
     noEncontradaTitulo: "Categoría no encontrada",
     noEncontradaTexto: "Puede que esa parte de la carta haya cambiado de nombre o ya no esté disponible.",
   },
@@ -95,6 +118,7 @@ const TEXTOS: Record<
     vinos: "Wines",
     bebidas: "Drinks",
     vacia: "This section of the menu is empty right now.",
+    tambienEn: (seccion) => `Also in ${seccion}`,
     noEncontradaTitulo: "Category not found",
     noEncontradaTexto: "This part of the menu may have been renamed or is no longer available.",
   },
@@ -108,6 +132,7 @@ const TEXTOS: Record<
     vinos: "Vins",
     bebidas: "Boissons",
     vacia: "Cette section de la carte est vide pour le moment.",
+    tambienEn: (seccion) => `Aussi dans ${seccion}`,
     noEncontradaTitulo: "Catégorie introuvable",
     noEncontradaTexto: "Cette partie de la carte a peut-être changé de nom ou n'est plus disponible.",
   },
@@ -181,6 +206,33 @@ const CartaCategoria = () => {
   // `etiqueta`, el nombre de la sección en los datos, tenga o no SEO propio.
   const seoPropio = SEO_CATEGORIA[categoria.slug]?.[language];
 
+  // La foto vende el plato: primero los que tienen foto y, debajo, «También
+  // en …» con los que aún no la tienen (cada grupo en el orden de la carta).
+  // Con las fotos apagadas en el panel, o si ninguno tiene foto, una sola
+  // rejilla en el orden de siempre.
+  const grupos = separarPorFoto(platosTraducidos, mostrarFotos);
+  const pintarPlato = (plato: ItemTraducido<PlatoSSG>, indice: number) => (
+    <ProductoCard
+      key={plato.id ?? `${plato.nombre}-${indice}`}
+      plato={plato}
+      categoria={etiqueta}
+      prioridad={indice < 3}
+      cantidadEnPedido={cantidadDe(plato)}
+      mostrarFoto={mostrarFotos}
+      resaltado={platoResaltado === anclaPlato(plato.id)}
+      onAnadir={() => {
+        // Mismo nombre y categoría que guarda `CartaPlatos` desde la
+        // portada: el nombre ya traducido, la categoría cruda (es la
+        // clave con la que el ticket la traduce).
+        anadir({ ...plato, nombre: plato.displayNombre || plato.nombre });
+        toast({
+          title: t.platos.toasts.addedTitle,
+          description: t.platos.toasts.addedDescription.replace("{name}", plato.displayNombre),
+        });
+      }}
+    />
+  );
+
   return (
     <>
       <Seo
@@ -219,6 +271,7 @@ const CartaCategoria = () => {
 
       <CartaPageLayout
         titulo={etiqueta}
+        icono={<IconoCategoria clave={categoria.clave} />}
         detalle={`${platosTraducidos.length} ${textos.plato(platosTraducidos.length)}`}
         migas={[{ nombre: textos.migaCarta, path: "/carta" }, { nombre: etiqueta }]}
       >
@@ -228,29 +281,23 @@ const CartaCategoria = () => {
             quiere subtítulos visibles: «es una app de restaurante»). */}
         <MenuDietario compacto />
         {platosTraducidos.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-start gap-6 md:gap-8 animate-fade-up">
-            {platosTraducidos.map((plato, indice) => (
-              <ProductoCard
-                key={plato.id ?? `${plato.nombre}-${indice}`}
-                plato={plato}
-                categoria={etiqueta}
-                prioridad={indice < 3}
-                cantidadEnPedido={cantidadDe(plato)}
-                mostrarFoto={mostrarFotos}
-                resaltado={platoResaltado === anclaPlato(plato.id)}
-                onAnadir={() => {
-                  // Mismo nombre y categoría que guarda `CartaPlatos` desde la
-                  // portada: el nombre ya traducido, la categoría cruda (es la
-                  // clave con la que el ticket la traduce).
-                  anadir({ ...plato, nombre: plato.displayNombre || plato.nombre });
-                  toast({
-                    title: t.platos.toasts.addedTitle,
-                    description: t.platos.toasts.addedDescription.replace("{name}", plato.displayNombre),
-                  });
-                }}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-up">
+              {grupos.conFoto.map((plato, indice) => pintarPlato(plato, indice))}
+            </div>
+            {grupos.sinFoto.length > 0 && (
+              <section aria-labelledby="tambien-en" className={grupos.conFoto.length > 0 ? "mt-12" : undefined}>
+                {grupos.conFoto.length > 0 && (
+                  <h2 id="tambien-en" className="font-libre-baskerville text-xl md:text-2xl font-bold text-primary mb-4">
+                    {textos.tambienEn(etiqueta)}
+                  </h2>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {grupos.sinFoto.map((plato, indice) => pintarPlato(plato, grupos.conFoto.length + indice))}
+                </div>
+              </section>
+            )}
+          </>
         ) : (
           <p className="text-muted-foreground">{filtros.length ? ({
             es: "No hay platos con información suficiente para estos filtros en esta categoría. Puedes modificarlos arriba o consultar al personal.",
@@ -277,18 +324,20 @@ const CartaCategoria = () => {
               <li key={otra.slug}>
                 <Link
                   to={conFiltros(rutaCategoria(otra.slug, language))}
-                  className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background/70 py-2 pl-2.5 pr-3 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
+                  <IconoCategoria clave={otra.clave} className="h-5 w-5 text-accent" />
                   {etiquetaCategoriaIdioma(otra.clave, language)}
-                  <span className="ml-2 text-xs text-accent font-semibold">{totalCategoria(otra.clave)}</span>
+                  <span className="text-xs text-accent font-semibold">{totalCategoria(otra.clave)}</span>
                 </Link>
               </li>
             ))}
             <li>
               <Link
                 to={conFiltros(construirRutaIdioma("/carta/vinos", language))}
-                className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background/70 py-2 pl-2.5 pr-3 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
               >
+                <Wine className="h-5 w-5 text-accent" strokeWidth={1.6} aria-hidden="true" />
                 {textos.vinos}
               </Link>
             </li>
@@ -297,8 +346,9 @@ const CartaCategoria = () => {
               <li>
                 <Link
                   to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
-                  className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background/70 py-2 pl-2.5 pr-3 text-sm text-muted-foreground transition-all duration-200 hover:border-accent/40 hover:text-foreground"
                 >
+                  <Beer className="h-5 w-5 text-accent" strokeWidth={1.6} aria-hidden="true" />
                   {textos.bebidas}
                 </Link>
               </li>

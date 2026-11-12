@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation, useNavigate, type Location } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AvisoReservaConfirmada, { type ReservaConfirmada } from "@/components/carta/AvisoReservaConfirmada";
 import CartaIndice from "@/pages/carta/Indice";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -210,21 +211,25 @@ describe("AvisoReservaConfirmada", () => {
 describe("/carta (página de verdad)", () => {
   const pintarCarta = (entrada: string | Partial<Location>) =>
     render(
-      <MemoryRouter initialEntries={[entrada]}>
-        <LanguageProvider initialLanguage="es">
-          <Routes>
-            <Route
-              path="/carta"
-              element={
-                <>
-                  <CartaIndice />
-                  <Navegacion />
-                </>
-              }
-            />
-          </Routes>
-        </LanguageProvider>
-      </MemoryRouter>,
+      // La carta lee el interruptor de fotos con React Query (en la web, el
+      // proveedor lo monta `App`).
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter initialEntries={[entrada]}>
+          <LanguageProvider initialLanguage="es">
+            <Routes>
+              <Route
+                path="/carta"
+                element={
+                  <>
+                    <CartaIndice />
+                    <Navegacion />
+                  </>
+                }
+              />
+            </Routes>
+          </LanguageProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
   it("sin state: la carta y ningún pop-up", () => {

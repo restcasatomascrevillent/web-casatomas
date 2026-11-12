@@ -1,23 +1,13 @@
 import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
 import MenuDietario from "@/components/carta/MenuDietario";
 import { Link } from "react-router-dom";
-import {
-  Beef,
-  Beer,
-  Cake,
-  Cookie,
-  Fish,
-  Ham,
-  Salad,
-  Shell,
-  Snowflake,
-  Soup,
-  Sparkles,
-  UtensilsCrossed,
-  Wine,
-} from "lucide-react";
-import PaellaIcon from "@/components/icons/PaellaIcon";
+import { ArrowRight, Beer, Wine } from "lucide-react";
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { IconoCategoria } from "@/components/icons/IconosCarta";
+import ImagenResponsive from "@/components/ImagenResponsive";
+import { useMostrarFotosPlatos } from "@/hooks/useMostrarFotosPlatos";
+import { imagenOptimizada, resolverImagen } from "@/lib/carta-ssg";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
 import CartaPageLayout from "@/components/carta/CartaPageLayout";
@@ -26,6 +16,7 @@ import BuscadorCarta from "@/components/carta/BuscadorCarta";
 import {
   CATEGORIAS_CARTA,
   etiquetaCategoriaIdioma,
+  platosDeCategoria,
   RESUMEN_BEBIDAS,
   RESUMEN_VINOS,
   rutaCategoria,
@@ -125,56 +116,125 @@ const TEXTOS: Record<
   },
 };
 
-/**
- * Un icono por categoría de platos, para que las tarjetas de "Platos" no
- * repitan todas el mismo cubierto genérico. Las claves son las de
- * `CATEGORIAS_PLATOS` (`@/lib/carta-ssg`) — una categoría nueva creada desde
- * el panel de administración, que no esté aquí, cae en ese mismo cubierto
- * genérico en vez de quedarse sin icono.
- */
-const ICONO_POR_CATEGORIA: Record<string, React.ReactNode> = {
-  "NOVEDADES DEL DÍA": <Sparkles className="w-6 h-6" />,
-  SNACK: <Cookie className="w-6 h-6" />,
-  "ENTRANTES FRÍOS": <Snowflake className="w-6 h-6" />,
-  "ENTRANTES CALIENTES": <Soup className="w-6 h-6" />,
-  ENSALADAS: <Salad className="w-6 h-6" />,
-  SALAZONES: <Ham className="w-6 h-6" />,
-  MARISCOS: <Shell className="w-6 h-6" />,
-  PESCADOS: <Fish className="w-6 h-6" />,
-  CARNES: <Beef className="w-6 h-6" />,
-  ARROCES: <PaellaIcon className="w-6 h-6" />,
-  POSTRES: <Cake className="w-6 h-6" />,
-};
-
-const iconoDeCategoria = (clave: string) =>
-  ICONO_POR_CATEGORIA[clave] ?? <UtensilsCrossed className="w-6 h-6" />;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
 /**
- * Tarjeta-enlace de una sección de la carta.
- * Mismo `Card` y mismo `hover:-translate-y-1` que las tarjetas de plato.
+ * Foto de portada de una sección: la del primer plato de la sección que tenga
+ * foto (en el orden de la carta), ya pasada por el optimizador. `null` si
+ * ninguno tiene o si el panel apagó las fotos: la ficha enseña entonces el
+ * icono grande sobre crema.
  */
-const TarjetaSeccion = ({
+export function fotoDeSeccion(clave: string, mostrarFotos: boolean): string | null {
+  if (!mostrarFotos) return null;
+  for (const plato of platosDeCategoria(clave)) {
+    const url = resolverImagen(plato.imagen_url, SUPABASE_URL);
+    if (url) return imagenOptimizada(url, 640) ?? url;
+  }
+  return null;
+}
+
+/** Disco crema con el icono dorado (sistema de diseño «Carta»). */
+const DiscoIcono = ({ children, className = "" }: { children: ReactNode; className?: string }) => (
+  <span
+    aria-hidden="true"
+    className={`flex items-center justify-center rounded-full bg-[hsl(38_50%_93%)] text-accent ${className}`}
+  >
+    {children}
+  </span>
+);
+
+/**
+ * Ficha-enlace de una sección de platos: la foto de un plato de la sección
+ * (todas comparten el fondo camel de estudio, así que la rejilla queda unida),
+ * el icono en un disco que monta sobre la foto, el nombre y cuántos platos hay.
+ * Sin foto, el icono grande sobre crema.
+ */
+const FichaSeccion = ({
   to,
   titulo,
   detalle,
   icono,
+  foto,
+  prioridad,
 }: {
   to: string;
   titulo: string;
   detalle: string;
-  icono: React.ReactNode;
+  icono: ReactNode;
+  foto: string | null;
+  prioridad: boolean;
 }) => (
   <Link to={to} className="group focus-visible:outline-none">
-    <Card className="font-libre-baskerville h-full p-5 flex items-center gap-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-accent">
-      <span className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-accent/10 text-accent">
-        {icono}
-      </span>
-      <span className="min-w-0">
-        <span className="block text-lg font-bold text-primary group-hover:text-accent transition-colors break-words">
+    <Card className="font-libre-baskerville h-full overflow-hidden rounded-2xl border-border/70 transition-all duration-300 motion-reduce:transition-none hover:shadow-xl hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-accent group-focus-visible:ring-offset-2">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[hsl(38_50%_93%)]">
+        {foto ? (
+          <img
+            src={foto}
+            alt=""
+            width={640}
+            height={480}
+            loading={prioridad ? "eager" : "lazy"}
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 motion-reduce:transition-none group-hover:scale-105"
+          />
+        ) : (
+          <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-accent [&>svg]:h-14 [&>svg]:w-14 md:[&>svg]:h-16 md:[&>svg]:w-16">
+            {icono}
+          </span>
+        )}
+      </div>
+      <div className={`relative px-3 pb-4 md:px-4 ${foto ? "pt-7 md:pt-8" : "pt-3 md:pt-4"}`}>
+        {foto && (
+          <DiscoIcono className="absolute -top-6 left-3 md:left-4 h-12 w-12 ring-4 ring-card [&>svg]:h-6 [&>svg]:w-6">
+            {icono}
+          </DiscoIcono>
+        )}
+        <span className="block text-base md:text-lg font-bold leading-snug text-primary group-hover:text-accent transition-colors break-words">
           {titulo}
         </span>
         <span className="block text-sm text-muted-foreground mt-0.5">{detalle}</span>
-      </span>
+      </div>
+    </Card>
+  </Link>
+);
+
+/** Ficha oscura de la bodega (vinos y bebidas), con foto del comedor. */
+const FichaBodega = ({
+  to,
+  titulo,
+  detalle,
+  icono,
+  imagen,
+}: {
+  to: string;
+  titulo: string;
+  detalle: string;
+  icono: ReactNode;
+  imagen: "comedor-2" | "champan";
+}) => (
+  <Link to={to} className="group focus-visible:outline-none">
+    <Card className="font-libre-baskerville h-full overflow-hidden rounded-2xl border-0 bg-dark-slate text-white transition-all duration-300 motion-reduce:transition-none hover:shadow-xl hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-accent group-focus-visible:ring-offset-2">
+      <div className="relative aspect-[4/3] overflow-hidden bg-dark-slate">
+        <ImagenResponsive
+          nombre={imagen}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+          className="h-full w-full object-cover opacity-90 transition-transform duration-500 motion-reduce:transition-none group-hover:scale-105"
+        />
+      </div>
+      <div className="flex items-center justify-between gap-2 px-3 py-4 md:px-4">
+        <span className="min-w-0">
+          <span className="flex items-center gap-2 text-base md:text-lg font-bold leading-snug break-words">
+            <span aria-hidden="true" className="text-gold-light [&>svg]:h-5 [&>svg]:w-5">{icono}</span>
+            {titulo}
+          </span>
+          <span className="block text-sm text-stone-light mt-0.5">{detalle}</span>
+        </span>
+        <ArrowRight className="h-5 w-5 shrink-0 text-gold-light transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+      </div>
     </Card>
   </Link>
 );
@@ -193,6 +253,8 @@ const CartaIndice = () => {
   const { language } = useTranslations();
   const textos = TEXTOS[language];
   const mostrarCartaBebidas = useMostrarCartaBebidas();
+  // Interruptor «Fotos de platos en Casa Tomás»: apagado, las fichas llevan el icono.
+  const mostrarFotos = useMostrarFotosPlatos();
   const secciones = [
     ...CATEGORIAS_CARTA.map((categoria) => ({
       nombre: etiquetaCategoriaIdioma(categoria.clave, language),
@@ -239,14 +301,16 @@ const CartaIndice = () => {
 
           <MenuDietario>
           {CATEGORIAS_CARTA.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-              {CATEGORIAS_CARTA.map((categoria) => (
-                <TarjetaSeccion
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+              {CATEGORIAS_CARTA.map((categoria, indice) => (
+                <FichaSeccion
                   key={categoria.slug}
                   to={conFiltros(rutaCategoria(categoria.slug, language))}
                   titulo={etiquetaCategoriaIdioma(categoria.clave, language)}
                   detalle={`${totalCategoria(categoria.clave)} ${textos.plato(totalCategoria(categoria.clave))}`}
-                  icono={iconoDeCategoria(categoria.clave)}
+                  icono={<IconoCategoria clave={categoria.clave} />}
+                  foto={fotoDeSeccion(categoria.clave, mostrarFotos)}
+                  prioridad={indice < 4}
                 />
               ))}
             </div>
@@ -260,19 +324,21 @@ const CartaIndice = () => {
           <h2 id="bodega" className="text-2xl md:text-3xl font-bold text-primary mb-6">
             {textos.bodegaTitulo}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-            <TarjetaSeccion
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+            <FichaBodega
               to={conFiltros(construirRutaIdioma("/carta/vinos", language))}
               titulo={textos.vinosTitulo}
               detalle={textos.vinosDetalle(RESUMEN_VINOS.total)}
-              icono={<Wine className="w-6 h-6" />}
+              icono={<Wine strokeWidth={1.6} />}
+              imagen="comedor-2"
             />
             {mostrarCartaBebidas && (
-              <TarjetaSeccion
+              <FichaBodega
                 to={conFiltros(construirRutaIdioma("/carta/bebidas", language))}
                 titulo={textos.bebidasTitulo}
                 detalle={textos.bebidasDetalle(RESUMEN_BEBIDAS.total)}
-                icono={<Beer className="w-6 h-6" />}
+                icono={<Beer strokeWidth={1.6} />}
+                imagen="champan"
               />
             )}
           </div>
