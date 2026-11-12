@@ -1,22 +1,8 @@
 import { useFiltrosCarta } from "@/hooks/useFiltrosCarta";
 import MenuDietario from "@/components/carta/MenuDietario";
 import { Link } from "react-router-dom";
-import {
-  Beef,
-  Beer,
-  Cake,
-  Cookie,
-  Fish,
-  Ham,
-  Salad,
-  Shell,
-  Snowflake,
-  Soup,
-  Sparkles,
-  UtensilsCrossed,
-  Wine,
-} from "lucide-react";
-import PaellaIcon from "@/components/icons/PaellaIcon";
+import { Beer, Wine } from "lucide-react";
+import { IconoCategoria } from "@/components/carta/IconoCategoria";
 import { Card } from "@/components/ui/card";
 import { Seo } from "@/components/Seo";
 import { JsonLd } from "@/components/JsonLd";
@@ -126,30 +112,6 @@ const TEXTOS: Record<
 };
 
 /**
- * Un icono por categoría de platos, para que las tarjetas de "Platos" no
- * repitan todas el mismo cubierto genérico. Las claves son las de
- * `CATEGORIAS_PLATOS` (`@/lib/carta-ssg`) — una categoría nueva creada desde
- * el panel de administración, que no esté aquí, cae en ese mismo cubierto
- * genérico en vez de quedarse sin icono.
- */
-const ICONO_POR_CATEGORIA: Record<string, React.ReactNode> = {
-  "NOVEDADES DEL DÍA": <Sparkles className="w-6 h-6" />,
-  SNACK: <Cookie className="w-6 h-6" />,
-  "ENTRANTES FRÍOS": <Snowflake className="w-6 h-6" />,
-  "ENTRANTES CALIENTES": <Soup className="w-6 h-6" />,
-  ENSALADAS: <Salad className="w-6 h-6" />,
-  SALAZONES: <Ham className="w-6 h-6" />,
-  MARISCOS: <Shell className="w-6 h-6" />,
-  PESCADOS: <Fish className="w-6 h-6" />,
-  CARNES: <Beef className="w-6 h-6" />,
-  ARROCES: <PaellaIcon className="w-6 h-6" />,
-  POSTRES: <Cake className="w-6 h-6" />,
-};
-
-const iconoDeCategoria = (clave: string) =>
-  ICONO_POR_CATEGORIA[clave] ?? <UtensilsCrossed className="w-6 h-6" />;
-
-/**
  * Tarjeta-enlace de una sección de la carta.
  * Mismo `Card` y mismo `hover:-translate-y-1` que las tarjetas de plato.
  */
@@ -246,7 +208,7 @@ const CartaIndice = () => {
                   to={conFiltros(rutaCategoria(categoria.slug, language))}
                   titulo={etiquetaCategoriaIdioma(categoria.clave, language)}
                   detalle={`${totalCategoria(categoria.clave)} ${textos.plato(totalCategoria(categoria.clave))}`}
-                  icono={iconoDeCategoria(categoria.clave)}
+                  icono={<IconoCategoria clave={categoria.clave} className="w-6 h-6" />}
                 />
               ))}
             </div>

@@ -124,41 +124,22 @@ const pintar = (mostrarFoto?: boolean) =>
   );
 
 describe("ProductoCard — interruptor de fotos", () => {
-  it("por defecto ofrece el ojo y enseña la foto al pulsarlo (lo de siempre)", () => {
+  it("por defecto la foto está a la vista, sin pulsar nada (sin ojo)", () => {
     pintar();
-    // El ojo sale en las dos caras de la tarjeta (delante y en la de info, tras la "i"):
-    // con cualquiera de los dos se enseña la foto, basta con el primero. La imagen
-    // expandida también se pinta en las dos caras (para no perderla al girar a info).
-    fireEvent.click(screen.getAllByRole("button", { name: /ver foto/i })[0]);
+    expect(screen.queryByRole("button", { name: /ver foto|ocultar foto|sin foto/i })).not.toBeInTheDocument();
     const fotos = screen.getAllByRole("img", { name: "Pulpo a la brasa — Pescados, Casa Tomás Restaurante" });
-    expect(fotos.length).toBeGreaterThan(0);
-    for (const foto of fotos) expect(foto).toHaveAttribute("src", FOTO);
+    expect(fotos).toHaveLength(1);
+    expect(fotos[0]).toHaveAttribute("src", FOTO);
   });
 
-  it("apagado no hay ojo ni foto, y la tarjeta sigue con nombre y precio", () => {
+  it("apagado no hay foto, y la tarjeta sigue con nombre y precio", () => {
     pintar(false);
-    expect(screen.queryByRole("button", { name: /ver foto/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getAllByText("Pulpo a la brasa").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/18,00\s€/).length).toBeGreaterThan(0);
   });
 
-  it("sin foto el ojo sigue saliendo, pero deshabilitado", () => {
-    render(
-      <MemoryRouter>
-        <LanguageProvider>
-          <ProductoCard
-            plato={resolveTranslatedItem({ ...plato, imagen_url: null }, "es")}
-            categoria="Pescados"
-          />
-        </LanguageProvider>
-      </MemoryRouter>,
-    );
-    const ojo = screen.getAllByRole("button", { name: /sin foto/i })[0];
-    expect(ojo).toBeDisabled();
-  });
-
-  it("marcado «foto expandida» pero sin foto: la tarjeta no se despliega (sin hueco vacío)", () => {
+  it("sin foto no queda hueco: ni imagen ni cubiertos", () => {
     const { container } = render(
       <MemoryRouter>
         <LanguageProvider>
@@ -169,28 +150,15 @@ describe("ProductoCard — interruptor de fotos", () => {
         </LanguageProvider>
       </MemoryRouter>,
     );
-    // El hueco «sin foto» (degradado con cubiertos) es lo que se veía antes.
     expect(container.querySelector(".lucide-utensils-crossed")).toBeNull();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /sin foto/i })[0]).toBeDisabled();
+    expect(screen.getAllByText("Pulpo a la brasa").length).toBeGreaterThan(0);
   });
 
-  it("marcado «foto expandida» y con foto: sale desplegada de entrada", () => {
-    render(
-      <MemoryRouter>
-        <LanguageProvider>
-          <ProductoCard plato={resolveTranslatedItem({ ...plato, expanded: true }, "es")} categoria="Pescados" />
-        </LanguageProvider>
-      </MemoryRouter>,
-    );
-    expect(screen.getAllByRole("img", { name: "Pulpo a la brasa — Pescados, Casa Tomás Restaurante" }).length).toBeGreaterThan(0);
-  });
-
-  it("al abrir la información (la 'i') el ojo sigue disponible si hay foto", () => {
-    pintar();
-    // La "i" también sale en las dos caras (para poder volver desde la de info);
-    // cualquiera de las dos abre la información.
-    fireEvent.click(screen.getAllByRole("button", { name: /ver ingredientes y alérgenos/i })[0]);
-    expect(screen.getAllByRole("button", { name: /ver foto/i }).length).toBeGreaterThan(0);
+  it("al girar a la información (la 'i') la foto se queda delante, fuera de la cara visible", () => {
+    const { container } = pintar();
+    fireEvent.click(screen.getByRole("button", { name: /ver ingredientes y alérgenos/i }));
+    expect(container.querySelector('[data-cara="trasera"] img')).toBeNull();
+    expect(container.querySelector('[data-cara="delantera"]')).toHaveAttribute("inert");
   });
 });
