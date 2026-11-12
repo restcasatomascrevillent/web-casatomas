@@ -80,6 +80,11 @@ const SUPABASE_URL = (
 )?.replace(/\/+$/, "");
 
 type PiePlatoProps = {
+  /**
+   * `delante`: en móvil va en la columna de al lado de la foto, sin línea
+   * encima; `detras`: al pie de la cara de información, con su línea.
+   */
+  variante: "delante" | "detras";
   precio: number;
   unidad?: string;
   cantidadEnPedido: number;
@@ -99,6 +104,7 @@ type PiePlatoProps = {
  * `aria-label` del botón.
  */
 const PiePlato = ({
+  variante,
   precio,
   unidad,
   cantidadEnPedido,
@@ -109,8 +115,14 @@ const PiePlato = ({
 }: PiePlatoProps) => {
   const enMesa = cantidadEnPedido > 0;
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-border/60 mt-auto flex-shrink-0 px-4 py-3 sm:px-5">
-      <p className="font-bold text-accent text-lg sm:text-xl leading-tight">
+    <div
+      className={`flex flex-shrink-0 items-center justify-between gap-2 ${
+        variante === "detras"
+          ? "mt-auto border-t border-border/60 px-4 py-3 sm:px-5"
+          : "pl-4 pr-3 pb-3 pt-1 sm:px-5 sm:pb-4 sm:pt-1"
+      }`}
+    >
+      <p className="font-bold text-accent text-[1.05rem] sm:text-xl leading-tight">
         {formatearPrecio(precio)}
         {unidad && (
           <span className="text-xs sm:text-sm font-normal text-muted-foreground">
@@ -131,10 +143,12 @@ const PiePlato = ({
               : t.addAria.replace("{name}", nombre)
           }
           data-en-mesa={enMesa || undefined}
-          className={`inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-bold shadow-md transition-all hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
+          // En móvil, sin nada en la mesa, es un «+» redondo (cabe junto a la
+          // foto); desde tableta lleva también la palabra «Añadir».
+          className={`inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full text-sm font-bold shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent ${
             enMesa
-              ? "min-w-[4.5rem] bg-primary text-primary-foreground hover:bg-primary/90"
-              : "bg-accent text-accent-foreground hover:bg-accent-hover"
+              ? "min-w-[3.25rem] px-3.5 bg-primary text-primary-foreground hover:bg-primary/90"
+              : "w-11 sm:w-auto sm:px-4 bg-accent text-accent-foreground hover:bg-accent-hover"
           }`}
         >
           {enMesa ? (
@@ -144,8 +158,8 @@ const PiePlato = ({
             </span>
           ) : (
             <>
-              <Plus className="w-4 h-4" aria-hidden="true" />
-              {t.add}
+              <Plus className="w-5 h-5 sm:w-4 sm:h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">{t.add}</span>
             </>
           )}
         </button>
@@ -173,7 +187,7 @@ function BotonGiro({
       aria-label={`${abierta ? t.hideInfo : t.viewInfo} — ${nombre}`}
       aria-expanded={abierta}
       data-boton-giro=""
-      className="flex items-center justify-center w-11 h-11 -mr-2 -mt-1.5 rounded-full text-foreground/80 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-colors shrink-0"
+      className="flex items-center justify-center w-11 h-11 -mr-1.5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent transition-colors shrink-0"
     >
       {abierta ? <X className="w-5 h-5" aria-hidden="true" /> : <Info className="w-5 h-5" aria-hidden="true" />}
     </button>
@@ -237,8 +251,9 @@ const ProductoCard = ({
       : undefined;
   const girar = (boton: HTMLElement) =>
     girarYEnfocar(boton, () => setInfoOpen((valor) => !valor));
-  const pie = (
+  const pie = (variante: "delante" | "detras") => (
     <PiePlato
+      variante={variante}
       precio={plato.precio_eur}
       unidad={plato.unidad}
       cantidadEnPedido={cantidadEnPedido}
@@ -275,60 +290,58 @@ const ProductoCard = ({
           data-cara="delantera"
           {...propsCara(infoOpen)}
         >
+          {/* Delante, en rejilla. Móvil: la foto a la izquierda ocupa las dos
+              filas y a su lado van el nombre (centrado en alto, desde la
+              izquierda) y, debajo, precio y «+». Desde tableta, una columna:
+              foto, nombre y precio. Sin foto, nombre y precio. */}
           <Card
-            className={`font-libre-baskerville flex flex-1 flex-col overflow-hidden rounded-2xl border-border/70 transition duration-300 motion-reduce:transition-none hover:shadow-xl sm:hover:-translate-y-1 ${
-              resaltado ? "ring-2 ring-accent ring-offset-2 ring-offset-background" : ""
-            }`}
+            className={`font-libre-baskerville grid flex-1 overflow-hidden rounded-2xl border-border/60 bg-card shadow-sm transition duration-300 motion-reduce:transition-none hover:shadow-lg sm:hover:-translate-y-1 ${
+              imagen
+                ? "grid-cols-[auto_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] sm:grid-cols-1 sm:grid-rows-[auto_minmax(0,1fr)_auto]"
+                : "grid-cols-1 grid-rows-[minmax(0,1fr)_auto]"
+            } ${resaltado ? "ring-2 ring-accent ring-offset-2 ring-offset-background" : ""}`}
           >
-            <div className="flex flex-1 flex-row sm:flex-col">
-              {imagen && (
-                <div
-                  className={`relative m-3 mr-0 h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-muted sm:m-0 sm:h-auto sm:w-full sm:rounded-none ${
-                    fotoCarta ? "sm:aspect-[4/3]" : "sm:h-48"
-                  }`}
-                >
-                  {/* Pulsar la foto la abre en grande. `z-[1]`: por encima de la
-                      foto (la «sticker» se anima con `transform` y, sin z-index,
-                      taparía el botón); el botón de vídeo de `FotoPlato` va en
-                      `z-[2]` y se sigue pudiendo pulsar. */}
-                  <button
-                    type="button"
-                    onClick={() => setFotoGrande(true)}
-                    aria-label={`${t.platos.enlargePhoto} — ${plato.displayNombre}`}
-                    aria-haspopup="dialog"
-                    className="absolute inset-0 z-[1] cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
-                  />
-                  <FotoPlato
-                    src={imagenOptimizada(imagen, 768) ?? imagen}
-                    imagenOriginal={imagen}
-                    video={videoDePlato(plato)}
-                    alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
-                    style={encuadre}
-                    loading={prioridad ? "eager" : "lazy"}
-                    etiquetaReproducir={t.platos.playVideo}
-                    etiquetaPausar={t.platos.pauseVideo}
-                    width={640}
-                    height={fotoCarta ? 480 : 384}
-                  />
-                </div>
-              )}
-              {/* El nombre, centrado en el hueco que queda junto a la foto (en
-                  móvil) o bajo ella (desde tableta). La «i» va en la esquina, en
-                  absoluto, para que no descentre el nombre; el relleno lateral
-                  igual a cada lado le deja sitio. */}
-              <div className="relative flex min-w-0 flex-1 items-center justify-center px-10 py-3 sm:px-12 sm:py-4">
-                <CardTitle
-                  as="h2"
-                  className="min-w-0 text-center text-balance text-base md:text-lg font-bold leading-snug tracking-normal text-primary whitespace-normal break-words"
-                >
-                  {plato.displayNombre}
-                </CardTitle>
-                <div className="absolute right-3 top-2.5 sm:right-4 sm:top-3.5">
-                  <BotonGiro abierta={false} onGirar={girar} nombre={plato.displayNombre} t={t.platos} />
-                </div>
+            {imagen && (
+              <div
+                className={`relative row-span-2 m-3 mr-0 h-28 w-28 self-center overflow-hidden rounded-xl bg-muted sm:row-span-1 sm:m-0 sm:h-auto sm:w-full sm:self-auto sm:rounded-none ${
+                  fotoCarta ? "sm:aspect-[4/3]" : "sm:h-48"
+                }`}
+              >
+                {/* Pulsar la foto la abre en grande. `z-[1]`: por encima de la
+                    foto (la «sticker» se anima con `transform` y, sin z-index,
+                    taparía el botón); el botón de vídeo de `FotoPlato` va en
+                    `z-[2]` y se sigue pudiendo pulsar. */}
+                <button
+                  type="button"
+                  onClick={() => setFotoGrande(true)}
+                  aria-label={`${t.platos.enlargePhoto} — ${plato.displayNombre}`}
+                  aria-haspopup="dialog"
+                  className="absolute inset-0 z-[1] cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+                />
+                <FotoPlato
+                  src={imagenOptimizada(imagen, 768) ?? imagen}
+                  imagenOriginal={imagen}
+                  video={videoDePlato(plato)}
+                  alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
+                  style={encuadre}
+                  loading={prioridad ? "eager" : "lazy"}
+                  etiquetaReproducir={t.platos.playVideo}
+                  etiquetaPausar={t.platos.pauseVideo}
+                  width={640}
+                  height={fotoCarta ? 480 : 384}
+                />
               </div>
+            )}
+            <div className="flex min-w-0 items-center gap-1 pl-4 pr-3 pt-3 sm:px-5 sm:pt-4">
+              <CardTitle
+                as="h2"
+                className="flex-1 min-w-0 text-left text-pretty text-base md:text-lg font-bold leading-snug tracking-normal text-primary whitespace-normal break-words"
+              >
+                {plato.displayNombre}
+              </CardTitle>
+              <BotonGiro abierta={false} onGirar={girar} nombre={plato.displayNombre} t={t.platos} />
             </div>
-            {pie}
+            {pie("delante")}
           </Card>
         </div>
 
@@ -412,7 +425,7 @@ const ProductoCard = ({
                 </p>
               )}
             </div>
-            {pie}
+            {pie("detras")}
           </Card>
         </div>
       </div>
