@@ -2,6 +2,7 @@ import { fechaCaducidad } from "./caducidad.ts";
 import { generarPdfCheque } from "./pdf.ts";
 import { LOGO_CASA_TOMAS_PNG_BASE64 } from "./logo-base64.ts";
 import { PLANTILLA_REGALO, textoRegalo, type PlantillaRegalo } from "./plantilla.ts";
+import { detalleErrorResend } from "./resend-error.ts";
 import type { ChequeParaEmail, OpcionesEnvioCheque } from "./tipos.ts";
 
 /**
@@ -39,10 +40,37 @@ export function construirHtml(cheque: ChequeParaEmail, opciones: OpcionesEnvioCh
   </div>`;
 }
 
-/** La clave de idempotencia evita duplicar un envío si falla el registro posterior. */
-export async function enviarEmailCheque(cheque: ChequeParaEmail, opciones: OpcionesEnvioCheque): Promise<boolean> {
+/**
+ * Resultado de un envío del cheque al comprador. Si no sale, `motivo` dice por
+ * qué y `detalle` lo cuenta (lo enseña el panel al reenviar):
+ *  - `sin_resend`: falta `RESEND_API_KEY` (la demo no la tiene a propósito).
+ *  - `sin_caducidad`: el cheque no tiene `caduca_el` y no se puede hacer el PDF.
+ *  - `resend`: Resend rechazó el envío (código HTTP y su explicación).
+ *  - `excepcion`: falló el PDF o la red.
+ */
+export type ResultadoEnvioCheque =
+  | { ok: true }
+  | { ok: false; motivo: "sin_resend" | "sin_caducidad" | "resend" | "excepcion"; detalle: string };
+
+/**
+ * La clave de idempotencia evita duplicar un envío si falla el registro
+ * posterior (Resend la recuerda 24 h). Por defecto es la del primer envío;
+ * un reenvío desde el panel pasa otra para que el correo salga de nuevo.
+ */
+export async function enviarEmailChequeConDetalle(
+  cheque: ChequeParaEmail,
+  opciones: OpcionesEnvioCheque,
+  claveIdempotencia = "cheque-regalo-" + cheque.id,
+): Promise<ResultadoEnvioCheque> {
   const key = Deno.env.get("RESEND_API_KEY");
-  if (!key || !cheque.caduca_el) return false;
+  if (!key) {
+    console.error(`[cheques-regalo] email del cheque ${cheque.id} no enviado: falta RESEND_API_KEY`);
+    return { ok: false, motivo: "sin_resend", detalle: "falta RESEND_API_KEY" };
+  }
+  if (!cheque.caduca_el) {
+    console.error(`[cheques-regalo] email del cheque ${cheque.id} no enviado: el cheque no tiene caduca_el`);
+    return { ok: false, motivo: "sin_caducidad", detalle: "el cheque no tiene fecha de caducidad" };
+  }
   try {
     const plantilla = { ...PLANTILLA_REGALO, ...cheque.plantilla_cheque };
     const logo = Uint8Array.from(atob(LOGO_CASA_TOMAS_PNG_BASE64), c => c.charCodeAt(0));
@@ -51,7 +79,7 @@ export async function enviarEmailCheque(cheque: ChequeParaEmail, opciones: Opcio
     for (let i = 0; i < bytes.length; i += 0x8000) binario += String.fromCharCode(...bytes.subarray(i,i + 0x8000));
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json", "Idempotency-Key": "cheque-regalo-" + cheque.id },
+      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json", "Idempotency-Key": claveIdempotencia },
       body: JSON.stringify({
         from: Deno.env.get("RESEND_FROM_EMAIL") || "Casa Tomás <onboarding@resend.dev>", to: [cheque.comprador_email],
         subject: textoRegalo(plantilla.email_asunto, cheque, opciones.ocultarImporte),
@@ -60,7 +88,23 @@ export async function enviarEmailCheque(cheque: ChequeParaEmail, opciones: Opcio
         attachments: [{ filename: "Cheque-" + cheque.codigo + ".pdf", content: btoa(binario) }],
       }),
     });
-    if (!response.ok) { console.error("[cheques-regalo] envío falló:", response.status); return false; }
-    return true;
-  } catch (error) { console.error("[cheques-regalo] no se pudo enviar el cheque:", error); return false; }
+    if (!response.ok) {
+      const detalle = `${response.status} ${await detalleErrorResend(response)}`;
+      console.error(`[cheques-regalo] envío del cheque ${cheque.id} falló:`, detalle);
+      return { ok: false, motivo: "resend", detalle };
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error(`[cheques-regalo] no se pudo enviar el cheque ${cheque.id}:`, error);
+    return { ok: false, motivo: "excepcion", detalle: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/** Igual que `enviarEmailChequeConDetalle`, pero solo dice si salió. */
+export async function enviarEmailCheque(
+  cheque: ChequeParaEmail,
+  opciones: OpcionesEnvioCheque,
+  claveIdempotencia?: string,
+): Promise<boolean> {
+  return (await enviarEmailChequeConDetalle(cheque, opciones, claveIdempotencia)).ok;
 }

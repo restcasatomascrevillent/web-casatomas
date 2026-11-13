@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import Stripe from "npm:stripe@23.0.0";
 import { enviarAvisoCompra } from "../_shared/cheques-regalo/aviso-compra.ts";
 import { generarCodigo } from "../_shared/cheques-regalo/codigo.ts";
-import { enviarEmailCheque } from "../_shared/cheques-regalo/email.ts";
+import { enviarEmailChequeConDetalle } from "../_shared/cheques-regalo/email.ts";
 import { prepararChequeEmail } from "../_shared/cheques-regalo/preparar-email.ts";
 import type { ChequeParaEmail } from "../_shared/cheques-regalo/tipos.ts";
 import { enviarFacturaCheque } from "../_shared/enviar-factura-cheque.ts";
@@ -39,7 +39,9 @@ import { enviarFacturaCheque } from "../_shared/enviar-factura-cheque.ts";
  * responde, email que no sale): Stripe vuelve a mandar el evento en vez de
  * darlo por entregado con el cliente cobrado y sin su código. Lo que un
  * reintento no arregla (sesión sin cheque, cheque inexistente) se registra en
- * el log y se responde 200.
+ * el log y se responde 200. Si el email al comprador falla, el aviso al
+ * restaurante (que lo dice) y la comisión de Stripe se hacen igual, y el 500
+ * se devuelve al final (`entregarCheque`).
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -62,9 +64,10 @@ function obtenerStripe(): Stripe | null {
  * Comisión real que cobró Stripe por este cobro, para el panel de métricas de
  * cheques regalo (pestaña "Stripe"). SIEMPRE "a mejor esfuerzo": si falla
  * (clave no configurada, fallo de red, cobro sin balance_transaction todavía)
- * se registra el error y se sigue sin más — el código y el email del cheque
- * YA se entregaron antes de llamar a esto y no dependen de que esto funcione.
- * Si queda sin guardar, el panel estima la comisión con la tarifa estándar.
+ * se registra el error y se sigue sin más — el código del cheque YA está
+ * guardado y el email no depende de esto (ni esto del email: se guarda aunque
+ * el email haya fallado). Si queda sin guardar, el panel estima la comisión
+ * con la tarifa estándar.
  */
 async function guardarComisionStripe(chequeId: string, paymentIntentId: string | null): Promise<void> {
   const stripe = obtenerStripe();
@@ -89,8 +92,8 @@ async function guardarComisionStripe(chequeId: string, paymentIntentId: string |
  */
 async function enviarYMarcarEmail(fila: ChequeParaEmail): Promise<void> {
   const preparado = await prepararChequeEmail(supabase, fila);
-  if (!(await enviarEmailCheque(preparado, { ocultarImporte: preparado.ocultar_importe === true })))
-    throw new Error(`email del cheque ${fila.id} no enviado`);
+  const envio = await enviarEmailChequeConDetalle(preparado, { ocultarImporte: preparado.ocultar_importe === true });
+  if (!envio.ok) throw new Error(`email del cheque ${fila.id} no enviado: ${envio.detalle}`);
 
   const { error } = await supabase
     .from("cheques_regalo")
@@ -98,6 +101,45 @@ async function enviarYMarcarEmail(fila: ChequeParaEmail): Promise<void> {
     .eq("id", fila.id);
   // Sin `throw`: el email ya salió, y un reintento lo mandaría otra vez.
   if (error) console.error("[stripe-webhook-cheques-regalo] no se pudo guardar email_enviado_en:", error);
+}
+
+interface OpcionesEntrega {
+  enviarEmail: boolean;
+  avisar: boolean;
+  /** El aviso dice que el email al comprador falló aunque ahora salga (reintento). */
+  avisoConEmailFallido?: boolean;
+  guardarComision: boolean;
+  paymentIntentId: string | null;
+}
+
+/**
+ * Lo que se hace con un cheque ya pagado y con código: email al comprador,
+ * aviso al restaurante, factura y comisión de Stripe. Cada paso va aunque el
+ * anterior falle: si el email al comprador no sale, el restaurante se entera
+ * igual (el aviso lo dice) y la comisión se guarda. Al final se lanza el
+ * primer fallo (email o factura) para que Stripe reintente; el reintento solo
+ * repite lo pendiente y con las mismas claves de idempotencia.
+ */
+async function entregarCheque(cheque: ChequeParaEmail, opciones: OpcionesEntrega): Promise<void> {
+  let fallo: unknown = null;
+  if (opciones.enviarEmail) {
+    try {
+      await enviarYMarcarEmail(cheque);
+    } catch (error) {
+      fallo = error;
+    }
+  }
+  if (opciones.avisar) {
+    // A mejor esfuerzo: nunca lanza, así un fallo del aviso no hace reintentar a Stripe.
+    await enviarAvisoCompra(cheque, { emailCompradorFallido: opciones.avisoConEmailFallido === true || fallo !== null });
+  }
+  try {
+    await enviarFacturaCheque(supabase, cheque.id);
+  } catch (error) {
+    fallo ??= error;
+  }
+  if (opciones.guardarComision) await guardarComisionStripe(cheque.id, opciones.paymentIntentId);
+  if (fallo) throw fallo;
 }
 
 function chequeIdDeSesion(session: Stripe.Checkout.Session): string | null {
@@ -136,14 +178,19 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
 
   if (fila.estado === "pagado") {
     // Reintento de Stripe. Si lo que falló la otra vez fue el email, se
-    // reenvía con el código ya guardado (y entonces tampoco salió el aviso al
-    // restaurante, que va detrás); si salió, no queda nada por hacer.
-    if (fila.codigo && !fila.email_enviado_en) {
-      await enviarYMarcarEmail({ ...fila, codigo: fila.codigo });
-      await enviarAvisoCompra({ ...fila, codigo: fila.codigo });
-    }
-    await enviarFacturaCheque(supabase, chequeId);
-    if (fila.stripe_fee_eur == null) await guardarComisionStripe(chequeId, fila.stripe_payment_intent_id);
+    // reenvía con el código ya guardado; si salió, no queda nada por hacer.
+    const emailPendiente = Boolean(fila.codigo && !fila.email_enviado_en);
+    await entregarCheque({ ...fila, codigo: fila.codigo ?? "" }, {
+      enviarEmail: emailPendiente,
+      // El aviso ya se intentó en la primera entrega, con el aviso de email
+      // fallido. Se repite IGUAL: con la misma clave de idempotencia Resend no
+      // lo duplica, y si aquella vez no salió (o la compra es de antes de
+      // este cambio, cuando iba detrás del email), sale ahora.
+      avisar: emailPendiente,
+      avisoConEmailFallido: true,
+      guardarComision: fila.stripe_fee_eur == null,
+      paymentIntentId: fila.stripe_payment_intent_id,
+    });
     return;
   }
   if (fila.estado !== "pendiente") {
@@ -179,11 +226,12 @@ async function procesarPagoCompletado(session: Stripe.Checkout.Session): Promise
   }
   if (!codigo || !chequeEmitido) throw new Error(`5 códigos repetidos seguidos para el cheque ${chequeId}`);
 
-  await enviarYMarcarEmail(chequeEmitido);
-  // A mejor esfuerzo: nunca lanza, así un fallo del aviso no hace reintentar a Stripe.
-  await enviarAvisoCompra(chequeEmitido);
-  await enviarFacturaCheque(supabase, chequeId);
-  await guardarComisionStripe(chequeId, paymentIntentId);
+  await entregarCheque(chequeEmitido, {
+    enviarEmail: true,
+    avisar: true,
+    guardarComision: true,
+    paymentIntentId,
+  });
 }
 
 /** Sesión caducada sin pagar, o pago diferido que al final falló. */
