@@ -94,6 +94,39 @@ describe("ProductoCard — foto en grande y descripción", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("si el plato tiene vídeo, en grande sigue siendo vídeo (en bucle, sin sonido, con la foto de póster)", () => {
+    const video = "https://x.test/platos/navajas.mp4";
+    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    const pause = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    try {
+      render(
+        <MemoryRouter>
+          <LanguageProvider>
+            <ProductoCard
+              plato={resolveTranslatedItem({ ...conFotoYDescripcion, video_url: video }, "es")}
+              categoria="Mariscos"
+            />
+          </LanguageProvider>
+        </MemoryRouter>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Ampliar foto — Navajas" }));
+      const dialogo = screen.getByRole("dialog", { name: "Navajas" });
+      const enGrande = dialogo.querySelector("video")!;
+      expect(enGrande).not.toBeNull();
+      expect(enGrande).toHaveAttribute("src", video);
+      expect(enGrande).toHaveAttribute("poster", conFotoYDescripcion.imagen_url);
+      expect(enGrande.autoplay).toBe(true);
+      expect(enGrande.muted).toBe(true);
+      expect(enGrande).toHaveAttribute("loop");
+      expect(enGrande).toHaveAttribute("playsinline");
+      expect(dialogo.querySelector("img")).toBeNull();
+      expect(play).toHaveBeenCalled();
+    } finally {
+      play.mockRestore();
+      pause.mockRestore();
+    }
+  });
+
   it("sin foto no hay botón de ampliar", () => {
     pintar(navajas, 0);
     expect(screen.queryByRole("button", { name: /ampliar foto/i })).toBeNull();
