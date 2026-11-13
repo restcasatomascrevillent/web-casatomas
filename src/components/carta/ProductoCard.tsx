@@ -309,10 +309,10 @@ const ProductoCard = ({
                   fotoCarta ? "sm:aspect-[4/3]" : "sm:h-48"
                 }`}
               >
-                {/* Pulsar la foto la abre en grande. `z-[1]`: por encima de la
-                    foto (la «sticker» se anima con `transform` y, sin z-index,
-                    taparía el botón); el botón de vídeo de `FotoPlato` va en
-                    `z-[2]` y se sigue pudiendo pulsar. */}
+                {/* Pulsar la foto (o el vídeo) la abre en grande. `z-[1]`: por
+                    encima de la foto (la «sticker» se anima con `transform` y,
+                    sin z-index, taparía el botón); el botón de pausa del vídeo
+                    de `FotoPlato` va en `z-[2]` y se sigue pudiendo pulsar. */}
                 <button
                   type="button"
                   onClick={() => setFotoGrande(true)}
@@ -432,22 +432,28 @@ const ProductoCard = ({
         </div>
       </div>
 
-      {/* La foto en grande. Fuera de las caras: la que no mira va `inert`. */}
+      {/* La foto en grande (o el vídeo, si el plato lo tiene: sigue siendo
+          vídeo). Fuera de las caras: la que no mira va `inert`. */}
       {imagen && (
         <Dialog open={fotoGrande} onOpenChange={setFotoGrande}>
           <DialogContent
             aria-describedby={undefined}
             className="w-[calc(100%-1.5rem)] max-w-3xl gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-2xl"
           >
-            <img
-              src={imagenOptimizada(imagen, 1024) ?? imagen}
-              alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
-              width={1024}
-              height={768}
-              decoding="async"
-              className="block h-auto max-h-[75dvh] w-full bg-muted object-contain"
-              style={encuadre}
-            />
+            <div className="relative">
+              <FotoPlato
+                variante="ampliada"
+                src={imagenOptimizada(imagen, 1024) ?? imagen}
+                imagenOriginal={imagen}
+                video={videoDePlato(plato)}
+                alt={`${plato.displayNombre} — ${categoria}, ${NEGOCIO.nombre}`}
+                style={encuadre}
+                etiquetaReproducir={t.platos.playVideo}
+                etiquetaPausar={t.platos.pauseVideo}
+                width={1024}
+                height={768}
+              />
+            </div>
             <div className="flex items-center justify-between gap-4 px-5 py-4 pr-5">
               <DialogTitle className="font-libre-baskerville text-lg md:text-xl font-bold leading-snug text-primary">
                 {plato.displayNombre}

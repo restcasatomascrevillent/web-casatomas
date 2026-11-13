@@ -2,14 +2,16 @@
  * Foto/vídeo de los platos de la carta (`modoFotoPlato`, `videoDePlato`,
  * `FotoPlato`):
  *  - foto `-carta` → sticker animado por CSS; foto antigua → quieta.
- *  - con `video_url` → `<video>` solo tras hidratar y sin reduced-motion;
- *    en el prerenderizado queda el `<img>` (SEO/LCP).
+ *  - con `video_url` → `<video>` solo tras hidratar, sin reduced-motion y sin
+ *    «Ahorro de datos»; en el prerenderizado queda el `<img>` (SEO/LCP).
+ *  - en la carta el vídeo arranca solo al verse (sin pulsar nada), se baja
+ *    solo cerca de la pantalla y se pausa al salir; en grande sigue siendo vídeo.
  *  - `video_url` ausente (columna sin crear), null o basura → sin vídeo.
  */
 import { readFileSync } from "node:fs";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render } from "@testing-library/react";
 
 import FotoPlato from "@/components/carta/FotoPlato";
 import { modoFotoPlato, videoDePlato } from "@/lib/foto-plato";
@@ -57,6 +59,12 @@ describe("modoFotoPlato", () => {
     expect(
       modoFotoPlato({ ...base, reducirMovimiento: true, imagen: STICKER, video: VIDEO }),
     ).toBe("sticker");
+  });
+
+  it("«Ahorro de datos» (Save-Data) → la foto, nunca el vídeo", () => {
+    expect(
+      modoFotoPlato({ ...base, ahorrarDatos: true, imagen: ANTIGUA, video: VIDEO }),
+    ).toBe("foto");
   });
 
   it("sin hidratar (prerenderizado) → la foto", () => {
@@ -109,8 +117,53 @@ describe("CSP de vercel.json", () => {
   });
 });
 
+type Observador = {
+  cb: IntersectionObserverCallback;
+  opciones?: IntersectionObserverInit;
+  observe: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
+  unobserve: ReturnType<typeof vi.fn>;
+};
+
+/** IntersectionObserver de mentira: guarda cada observador para dispararlo a mano. */
+function simularObservadores() {
+  const observadores: Observador[] = [];
+  vi.stubGlobal(
+    "IntersectionObserver",
+    vi.fn(function (cb: IntersectionObserverCallback, opciones?: IntersectionObserverInit) {
+      const o = { cb, opciones, observe: vi.fn(), disconnect: vi.fn(), unobserve: vi.fn() };
+      observadores.push(o);
+      return o;
+    }),
+  );
+  const avisar = (o: Observador | undefined, isIntersecting: boolean) =>
+    act(() => {
+      o!.cb([{ isIntersecting } as IntersectionObserverEntry], o as unknown as IntersectionObserver);
+    });
+  return {
+    observadores,
+    /** El que pone el `src` (con margen, antes de que se vea). */
+    carga: () => observadores.find((o) => o.opciones?.rootMargin),
+    /** El que decide si se reproduce (se ve) o se pausa. */
+    vista: () => observadores.find((o) => !o.opciones?.rootMargin),
+    avisar,
+  };
+}
+
+const espias: { mockRestore: () => void }[] = [];
+
+function espiarVideo() {
+  const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+  const pause = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+  espias.push(play, pause);
+  return { play, pause };
+}
+
 describe("<FotoPlato>", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    espias.splice(0).forEach((espia) => espia.mockRestore());
+  });
 
   const props = { src: STICKER, imagenOriginal: STICKER, alt: "Pulpo", width: 640, height: 480 };
 
@@ -143,8 +196,10 @@ describe("<FotoPlato>", () => {
     expect(container.querySelector(".foto-sticker-brillo")).toBeNull();
   });
 
-  it("con vídeo, tras hidratar → <video> SIN src (no descarga) con póster, preload=none y botón «Reproducir vídeo» de 44 px", () => {
-    const { container, getByRole } = render(<FotoPlato {...props} video={VIDEO} />);
+  it("con vídeo, tras hidratar y lejos de la pantalla → <video> SIN src (no descarga), con póster, en bucle, sin sonido y en línea (iPhone)", () => {
+    simularObservadores();
+    const { play } = espiarVideo();
+    const { container } = render(<FotoPlato {...props} video={VIDEO} />);
     const video = container.querySelector("video")!;
     expect(video).not.toBeNull();
     expect(video.hasAttribute("src")).toBe(false);
@@ -154,25 +209,115 @@ describe("<FotoPlato>", () => {
     expect(video.hasAttribute("playsinline")).toBe(true);
     expect(video.muted).toBe(true);
     expect(container.querySelector("img")).toBeNull();
-    const boton = getByRole("button", { name: "Reproducir vídeo" });
-    expect(boton.className).toContain("h-11");
-    expect(boton.className).toContain("w-11");
+    expect(play).not.toHaveBeenCalled();
   });
 
-  it("al pulsar «Reproducir vídeo» se asigna el src y se reproduce", () => {
-    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+  it("al acercarse a la pantalla se pone el src y, al verse, arranca SOLO (sin pulsar nada)", () => {
+    const io = simularObservadores();
+    const { play } = espiarVideo();
+    const { container } = render(<FotoPlato {...props} video={VIDEO} />);
+    expect(io.carga()!.opciones!.rootMargin).toBeTruthy();
+
+    io.avisar(io.carga(), true);
+    const video = container.querySelector("video")!;
+    expect(video.getAttribute("src")).toBe(VIDEO);
+    expect(video.getAttribute("preload")).toBe("auto");
+    // Con el src puesto ya no hace falta seguir mirando para la carga.
+    expect(io.carga()!.disconnect).toHaveBeenCalled();
+    expect(play).not.toHaveBeenCalled();
+
+    io.avisar(io.vista(), true);
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(video.muted).toBe(true);
+  });
+
+  it("se pausa al salir de pantalla y sigue al volver", () => {
+    const io = simularObservadores();
+    const { play, pause } = espiarVideo();
+    render(<FotoPlato {...props} video={VIDEO} />);
+    io.avisar(io.carga(), true);
+    io.avisar(io.vista(), true);
+    expect(play).toHaveBeenCalledTimes(1);
+
+    io.avisar(io.vista(), false);
+    expect(pause).toHaveBeenCalled();
+    io.avisar(io.vista(), true);
+    expect(play).toHaveBeenCalledTimes(2);
+  });
+
+  it("el botón pequeño de la esquina pausa y reanuda; si el cliente lo pausa, no vuelve a arrancar solo", () => {
+    const io = simularObservadores();
+    const { play, pause } = espiarVideo();
     const { container, getByRole } = render(<FotoPlato {...props} video={VIDEO} />);
+    const video = container.querySelector("video")!;
+    io.avisar(io.carga(), true);
+    io.avisar(io.vista(), true);
+    fireEvent.play(video);
+
+    const boton = getByRole("button", { name: "Pausar vídeo" });
+    // 32 px a la vista, en la esquina, con 44 px de zona de toque.
+    expect(boton.className).toContain("h-8");
+    expect(boton.className).toContain("w-8");
+    expect(boton.className).toContain("before:-inset-1.5");
+    expect(boton.className).toContain("bottom-1.5");
+
+    Object.defineProperty(video, "paused", { configurable: true, value: false });
+    pause.mockClear();
+    fireEvent.click(boton);
+    expect(pause).toHaveBeenCalled();
+    Object.defineProperty(video, "paused", { configurable: true, value: true });
+    fireEvent.pause(video);
+    expect(getByRole("button", { name: "Reproducir vídeo" })).not.toBeNull();
+
+    play.mockClear();
+    io.avisar(io.vista(), false);
+    io.avisar(io.vista(), true);
+    expect(play).not.toHaveBeenCalled();
+
     fireEvent.click(getByRole("button", { name: "Reproducir vídeo" }));
-    expect(container.querySelector("video")!.getAttribute("src")).toBe(VIDEO);
     expect(play).toHaveBeenCalled();
-    play.mockRestore();
+  });
+
+  it("si el navegador no deja arrancar solo (iPhone en ahorro de batería), el botón lo arranca", async () => {
+    const io = simularObservadores();
+    const { play } = espiarVideo();
+    play.mockRejectedValueOnce(new DOMException("bloqueado", "NotAllowedError"));
+    const { getByRole } = render(<FotoPlato {...props} video={VIDEO} />);
+    io.avisar(io.carga(), true);
+    io.avisar(io.vista(), true);
+    await act(async () => undefined);
+    // No sonó: el botón ofrece reproducir, y al pulsarlo se reproduce.
+    fireEvent.click(getByRole("button", { name: "Reproducir vídeo" }));
+    expect(play).toHaveBeenCalledTimes(2);
+  });
+
+  it("pulsar el botón no abre la vista en grande (no se propaga el clic)", () => {
+    simularObservadores();
+    espiarVideo();
+    const abrir = vi.fn();
+    const { getByRole } = render(
+      <div onClick={abrir}>
+        <FotoPlato {...props} video={VIDEO} />
+      </div>,
+    );
+    fireEvent.click(getByRole("button", { name: "Reproducir vídeo" }));
+    expect(abrir).not.toHaveBeenCalled();
   });
 
   it("el botón usa las etiquetas traducidas que recibe", () => {
+    simularObservadores();
     const { getByRole } = render(
       <FotoPlato {...props} video={VIDEO} etiquetaReproducir="Play video" />,
     );
     expect(getByRole("button", { name: "Play video" })).not.toBeNull();
+  });
+
+  it("sin IntersectionObserver (navegador antiguo) arranca sin más", () => {
+    vi.stubGlobal("IntersectionObserver", undefined);
+    const { play } = espiarVideo();
+    const { container } = render(<FotoPlato {...props} video={VIDEO} />);
+    expect(container.querySelector("video")!.getAttribute("src")).toBe(VIDEO);
+    expect(play).toHaveBeenCalled();
   });
 
   it("con reduced-motion → solo la foto", () => {
@@ -189,37 +334,75 @@ describe("<FotoPlato>", () => {
     expect(container.querySelector("img")).not.toBeNull();
   });
 
-  it("tras pulsar, pausa al salir de pantalla (nunca arranca solo)", () => {
-    let callback: IntersectionObserverCallback = () => undefined;
-    vi.stubGlobal(
-      "IntersectionObserver",
-      vi.fn(function (this: unknown, cb: IntersectionObserverCallback) {
-        callback = cb;
-        return { observe: vi.fn(), disconnect: vi.fn(), unobserve: vi.fn() };
-      }),
-    );
-    const play = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
-    const pause = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
-
-    const { getByRole, unmount } = render(<FotoPlato {...props} video={VIDEO} />);
-    expect(play).not.toHaveBeenCalled();
-    fireEvent.click(getByRole("button", { name: "Reproducir vídeo" }));
-    expect(play).toHaveBeenCalledTimes(1);
-    pause.mockClear();
-    callback([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver);
-    expect(pause).toHaveBeenCalled();
-    unmount();
-
-    play.mockRestore();
-    pause.mockRestore();
+  it("con «Ahorro de datos» (Save-Data) → solo la foto", () => {
+    simularObservadores();
+    Object.defineProperty(navigator, "connection", {
+      configurable: true,
+      value: { saveData: true },
+    });
+    try {
+      const { container } = render(<FotoPlato {...props} video={VIDEO} />);
+      expect(container.querySelector("video")).toBeNull();
+      expect(container.querySelector("img")).not.toBeNull();
+    } finally {
+      delete (navigator as { connection?: unknown }).connection;
+    }
   });
 
   it("si el vídeo da error, vuelve a la foto", () => {
-    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
-    const { container, getByRole } = render(<FotoPlato {...props} video={VIDEO} />);
-    fireEvent.click(getByRole("button", { name: "Reproducir vídeo" }));
+    const io = simularObservadores();
+    espiarVideo();
+    const { container } = render(<FotoPlato {...props} video={VIDEO} />);
+    io.avisar(io.carga(), true);
     fireEvent.error(container.querySelector("video")!);
     expect(container.querySelector("video")).toBeNull();
     expect(container.querySelector("img")).not.toBeNull();
+  });
+
+  describe("en grande (variante ampliada)", () => {
+    it("con vídeo, sigue siendo vídeo: arranca enseguida, sin sonido, en bucle, en línea y con la foto de póster", () => {
+      const io = simularObservadores();
+      const { play } = espiarVideo();
+      const { container, getByRole } = render(
+        <FotoPlato {...props} variante="ampliada" video={VIDEO} />,
+      );
+      const video = container.querySelector("video")!;
+      expect(video.getAttribute("src")).toBe(VIDEO);
+      expect(video.getAttribute("poster")).toBe(STICKER);
+      expect(video.autoplay).toBe(true);
+      expect(video.muted).toBe(true);
+      expect(video.hasAttribute("loop")).toBe(true);
+      expect(video.hasAttribute("playsinline")).toBe(true);
+      expect(video.className).toContain("object-contain");
+      expect(play).toHaveBeenCalled();
+      // Se ve entero: no hay observadores de pantalla.
+      expect(io.observadores).toHaveLength(0);
+      expect(container.querySelector("img")).toBeNull();
+
+      fireEvent.play(video);
+      expect(getByRole("button", { name: "Pausar vídeo" }).className).toContain("h-11");
+    });
+
+    it("sin vídeo → la foto entera, sin animación de sticker", () => {
+      const { container } = render(<FotoPlato {...props} variante="ampliada" video={null} />);
+      const img = container.querySelector("img")!;
+      expect(img.className).toContain("object-contain");
+      expect(img.className).not.toContain("foto-sticker");
+      expect(container.querySelector(".foto-sticker-brillo")).toBeNull();
+    });
+
+    it("con reduced-motion → la foto, no el vídeo", () => {
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn().mockReturnValue({
+          matches: true,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }),
+      );
+      const { container } = render(<FotoPlato {...props} variante="ampliada" video={VIDEO} />);
+      expect(container.querySelector("video")).toBeNull();
+      expect(container.querySelector("img")!.getAttribute("src")).toBe(STICKER);
+    });
   });
 });
