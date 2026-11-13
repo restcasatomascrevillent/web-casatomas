@@ -7,12 +7,14 @@ import { esFotoCarta } from "@/lib/carta-ssg";
  *  - `foto`:    foto antigua, `<img>` quieta (object-cover + encuadre).
  *  - `sticker`: foto `-carta` (plato sobre fondo liso): `<img>` con la
  *               animación CSS `foto-sticker` (acercamiento + giro leve + brillo).
- *  - `video`:   el plato tiene `video_url`: `<video>` con la foto de póster.
+ *  - `video`:   el plato tiene `video_url`: `<video>` con la foto de póster,
+ *               que arranca solo (sin sonido) al verse en pantalla.
  *
- * El vídeo solo sale después de hidratar y sin `prefers-reduced-motion`: en el
- * HTML prerenderizado (y para quien pide menos movimiento) queda la foto como
- * `<img>` normal, que es lo que indexa Google y lo que cuenta para el LCP.
- * Sin foto no hay vídeo: la foto es el póster y el respaldo si el vídeo falla.
+ * El vídeo solo sale después de hidratar, sin `prefers-reduced-motion` y sin
+ * «Ahorro de datos» (`navigator.connection.saveData`): en el HTML
+ * prerenderizado (y para quien pide menos movimiento o ahorrar datos) queda la
+ * foto como `<img>` normal, que es lo que indexa Google y lo que cuenta para el
+ * LCP. Sin foto no hay vídeo: la foto es el póster y el respaldo si el vídeo falla.
  */
 export type ModoFotoPlato = "ninguna" | "foto" | "sticker" | "video";
 
@@ -21,6 +23,8 @@ export interface EntradaModoFotoPlato {
   video: string | null | undefined;
   /** `true` si el visitante pide menos movimiento (`prefers-reduced-motion`). */
   reducirMovimiento: boolean;
+  /** `true` si el navegador pide ahorrar datos (`navigator.connection.saveData`). */
+  ahorrarDatos?: boolean;
   /** `false` en el prerenderizado y en el primer render del navegador. */
   hidratado: boolean;
   /** El `<video>` dio error al cargar: se vuelve a la foto. */
@@ -31,11 +35,14 @@ export function modoFotoPlato({
   imagen,
   video,
   reducirMovimiento,
+  ahorrarDatos = false,
   hidratado,
   videoFallido = false,
 }: EntradaModoFotoPlato): ModoFotoPlato {
   if (!imagen) return "ninguna";
-  if (video && hidratado && !reducirMovimiento && !videoFallido) return "video";
+  if (video && hidratado && !reducirMovimiento && !ahorrarDatos && !videoFallido) {
+    return "video";
+  }
   return esFotoCarta(imagen) ? "sticker" : "foto";
 }
 
