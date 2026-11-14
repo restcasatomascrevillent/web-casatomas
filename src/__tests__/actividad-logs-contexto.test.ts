@@ -1,7 +1,8 @@
 /**
  * Contexto de los eventos de Super Admin › Logs (informe del panel, 10/11/2026):
  *   1. Recarga por ficheros caducados: una sola, y el error sale tras recargar
- *      con `props.recargado = true` (sin duplicados ni bucles).
+ *      marcado como recuperado (`accion` y nota en el mensaje: el servidor no
+ *      admite `props.recargado`), o al momento con el porqué si no recarga.
  *   2. Navegadores automatizados: no mandan nada salvo que lo pidan.
  *   3. Versión y despliegue: de la build o, si faltan, de /version.json.
  *   4. Peticiones: método, estado y duración siempre; estado 0 dice si fue
@@ -10,12 +11,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CLAVE_AVISO,
+  _reiniciarRecarga,
+  decidirTrasFallo,
   importarConRecarga,
   informarRecargaPendiente,
   instalarRecargaPorVersion,
-  recargarUnaVez,
+  registrarFalloDeCarga,
+  type Entorno,
 } from "@/lib/recarga-por-version";
-import { _reiniciarRegistro, conectarEmisor, registrarActividad, type DatosActividad } from "@/lib/actividad/registro";
+import { _reiniciarRegistro, capturarErroresTempranos, conectarEmisor, registrarActividad, type DatosActividad } from "@/lib/actividad/registro";
 import { causaSinRespuesta, silenciarPorPrueba } from "@/lib/actividad/clasificar";
 import { instalarSeguimiento, leerVersionPublicada } from "@/lib/actividad/instalar";
 
@@ -38,82 +42,144 @@ const capturar = () => {
 afterEach(() => _reiniciarRegistro());
 
 describe("1 · recarga por ficheros caducados", () => {
-  it("guarda el error al recargar y lo manda UNA vez tras volver, con recargado = true", () => {
+  const entorno = (o: Partial<Entorno> & { publicada?: string | null } = {}): Entorno & { irA: ReturnType<typeof vi.fn> } => {
+    const { publicada = "bbb", ...resto } = o;
+    return {
+      storage: almacen(),
+      build: "aaa",
+      commit: "abc1234",
+      version: "1.11.0",
+      ruta: () => "/carta",
+      buildPublicada: async () => publicada,
+      enLinea: () => true,
+      destino: () => null,
+      irA: vi.fn(),
+      ...resto,
+    } as Entorno & { irA: ReturnType<typeof vi.fn> };
+  };
+  const FALLO = "TypeError: Failed to fetch dynamically imported module: https://x/assets/Categoria-Crjz1JUy.js";
+  const evento = { objetivo: "espacios", props: { componente: "espacios" }, error: { mensaje: FALLO } };
+
+  afterEach(() => _reiniciarRecarga());
+
+  it("si recarga, el error no sale ahora: sale UNA vez tras volver, marcado como recuperado (accion y nota en el mensaje)", async () => {
     const storage = almacen();
-    const recargar = vi.fn();
-    const entorno = { storage, recargar, version: "abc1234", ruta: () => "/carta" };
-    expect(recargarUnaVez(entorno, { tipo: "error_react", datos: { objetivo: "espacios", error: { mensaje: "TypeError: Failed to fetch dynamically imported module" } } })).toBe(true);
-    expect(recargar).toHaveBeenCalledTimes(1);
+    const recibidos = capturar();
+    const e = entorno({ storage });
+    await expect(registrarFalloDeCarga("error_react", evento, new TypeError(FALLO), e)).resolves.toBe("recargar");
+    expect(e.irA).toHaveBeenCalledTimes(1);
+    expect(recibidos).toEqual([]);
     expect(storage.datos.has(CLAVE_AVISO)).toBe(true);
 
-    // «Tras recargar»: registro nuevo, el aviso sale una sola vez.
+    // «Tras recargar»: registro nuevo y la pestaña ya en la build nueva («bbb»).
     _reiniciarRegistro();
-    const recibidos = capturar();
-    expect(informarRecargaPendiente(entorno)).toBe(true);
-    expect(informarRecargaPendiente(entorno)).toBe(false);
-    expect(recibidos).toHaveLength(1);
-    const [tipo, datos] = recibidos[0];
+    _reiniciarRecarga();
+    const tras = capturar();
+    const nueva = entorno({ storage, build: "bbb" });
+    expect(informarRecargaPendiente(nueva)).toBe(true);
+    expect(informarRecargaPendiente(nueva)).toBe(false);
+    expect(tras).toHaveLength(1);
+    const [tipo, datos] = tras[0];
     expect(tipo).toBe("error_react");
-    expect(datos).toMatchObject({ objetivo: "espacios", ruta: "/carta", props: { recargado: true, despliegue_anterior: "abc1234" } });
-    expect(datos.error?.mensaje).toContain("dynamically imported module");
+    expect(datos).toMatchObject({
+      accion: "recuperado_tras_recarga",
+      objetivo: "espacios",
+      ruta: "/carta",
+      props: { componente: "espacios", recargado: true, despliegue_anterior: "abc1234", build_anterior: "aaa" },
+    });
+    // El mensaje empieza igual (el panel agrupa por él los «ficheros caducados») y acaba con la nota.
+    expect(datos.error?.mensaje).toBe(`${FALLO} · recuperado: la pestaña se recargó sola con la versión nueva (antes: v1.11.0 · build aaa)`);
   });
 
-  it("mientras la página se recarga, los errores de esa misma recarga no se mandan", () => {
+  it("si tras recargar sigue la misma build (HTML de una caché), sale como «recarga sin efecto»", async () => {
+    const storage = almacen();
+    await registrarFalloDeCarga("error_react", evento, new TypeError(FALLO), entorno({ storage }));
+    _reiniciarRegistro();
+    const tras = capturar();
+    informarRecargaPendiente(entorno({ storage, build: "aaa" }));
+    expect(tras[0][1]).toMatchObject({ accion: "recarga_sin_efecto" });
+    expect(tras[0][1].error?.mensaje).toContain("se recargó sola pero siguió con la misma versión");
+  });
+
+  it("si no recarga, el error sale en el momento con el porqué", async () => {
+    const casos: Array<[Entorno, string]> = [
+      [entorno({ publicada: "aaa" }), "sin_version_nueva"],
+      [entorno({ publicada: null, enLinea: () => false }), "sin_conexion"],
+      [entorno({ storage: null }), "aviso_version_nueva"],
+    ];
+    for (const [e, accion] of casos) {
+      _reiniciarRecarga();
+      _reiniciarRegistro();
+      const recibidos = capturar();
+      await registrarFalloDeCarga("error_react", evento, new TypeError(FALLO), e);
+      expect(recibidos).toHaveLength(1);
+      expect(recibidos[0][1]).toMatchObject({ accion, objetivo: "espacios" });
+      expect(recibidos[0][1].error?.mensaje?.startsWith(FALLO)).toBe(true);
+    }
+  });
+
+  it("otros errores salen tal cual, sin preguntar nada", async () => {
     const recibidos = capturar();
-    recargarUnaVez({ storage: almacen(), recargar: () => {}, version: "v1" });
-    registrarActividad("error_promesa", { error: { mensaje: "TypeError: Failed to fetch dynamically imported module" } });
+    const e = entorno();
+    const buildPublicada = vi.spyOn(e, "buildPublicada");
+    await registrarFalloDeCarga("error_react", { error: { mensaje: "TypeError: x is undefined" } }, new TypeError("x is undefined"), e);
+    expect(recibidos).toEqual([["error_react", { error: { mensaje: "TypeError: x is undefined" } }]]);
+    expect(buildPublicada).not.toHaveBeenCalled();
+  });
+
+  it("mientras la página se recarga, los errores de esa misma recarga no se mandan", async () => {
+    const recibidos = capturar();
+    await decidirTrasFallo(null, entorno());
+    registrarActividad("error_promesa", { error: { mensaje: FALLO } });
     registrarActividad("clic", { objetivo: "Carta" });
     expect(recibidos.map(([t]) => t)).toEqual(["clic"]);
   });
 
-  it("si ya se recargó por esta versión, no hay segunda recarga ni aviso: el error sigue su curso", () => {
+  it("vite:preloadError y lazy() comparten la decisión: una recarga y el primer aviso", async () => {
     const storage = almacen();
-    const recargar = vi.fn();
-    const entorno = { storage, recargar, version: "v1" };
-    recargarUnaVez(entorno, { tipo: "error_js", datos: {} });
-    storage.datos.delete(CLAVE_AVISO);
-    expect(recargarUnaVez(entorno, { tipo: "error_js", datos: {} })).toBe(false);
-    expect(recargar).toHaveBeenCalledTimes(1);
-    expect(storage.datos.has(CLAVE_AVISO)).toBe(false);
-  });
-
-  it("lazy(): recarga una vez si falla el import() por versión antigua y relanza el error", async () => {
-    const storage = almacen();
-    const recargar = vi.fn();
-    const fallo = new TypeError("Failed to fetch dynamically imported module: https://x/assets/a-1.js");
-    const cargar = importarConRecarga(() => Promise.reject(fallo), () => ({ storage, recargar, version: "v1" }));
-    await expect(cargar()).rejects.toBe(fallo);
-    await expect(cargar()).rejects.toBe(fallo);
-    expect(recargar).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(storage.datos.get(CLAVE_AVISO)!)).toMatchObject({ tipo: "error_promesa", datos: { props: { origen: "lazy" } } });
-  });
-
-  it("lazy(): otros errores no recargan", async () => {
-    const recargar = vi.fn();
-    const cargar = importarConRecarga(() => Promise.reject(new Error("x is undefined")), () => ({ storage: almacen(), recargar, version: "v1" }));
-    await expect(cargar()).rejects.toThrow("x is undefined");
-    expect(recargar).not.toHaveBeenCalled();
-  });
-
-  it("vite:preloadError y lazy() comparten la marca: una sola recarga entre los dos", async () => {
-    const storage = almacen();
-    const recargar = vi.fn();
-    const entorno = () => ({ storage, recargar, version: "v1" });
+    const e = entorno({ storage });
     const objetivo = new EventTarget();
-    instalarRecargaPorVersion(objetivo as unknown as Window, entorno);
-    const ev = Object.assign(new Event("vite:preloadError"), { payload: new Error("Unable to preload CSS for /assets/x.css") });
-    objetivo.dispatchEvent(ev);
-    await expect(importarConRecarga(() => Promise.reject(new TypeError("Importing a module script failed.")), entorno)()).rejects.toThrow();
-    expect(recargar).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(storage.datos.get(CLAVE_AVISO)!)).toMatchObject({ datos: { props: { origen: "vite:preloadError" }, error: { mensaje: "Error: Unable to preload CSS for /assets/x.css" } } });
+    instalarRecargaPorVersion(objetivo as unknown as Window, () => e);
+    objetivo.dispatchEvent(Object.assign(new Event("vite:preloadError"), { payload: new Error("Unable to preload CSS for /assets/x.css") }));
+    await expect(importarConRecarga(() => Promise.reject(new TypeError("Importing a module script failed.")), () => e)()).rejects.toThrow();
+    await vi.waitFor(() => expect(e.irA).toHaveBeenCalledTimes(1));
+    expect(JSON.parse(storage.datos.get(CLAVE_AVISO)!)).toMatchObject({
+      build: "aaa",
+      datos: { props: { origen: "vite:preloadError" }, error: { mensaje: "Error: Unable to preload CSS for /assets/x.css" } },
+    });
   });
 
   it("al instalarse manda el aviso de la recarga anterior", () => {
     const storage = almacen();
-    storage.setItem(CLAVE_AVISO, JSON.stringify({ tipo: "error_promesa", datos: { error: { mensaje: "m" } }, version: "old" }));
+    storage.setItem(CLAVE_AVISO, JSON.stringify({ tipo: "error_promesa", datos: { error: { mensaje: "m" } }, version: "old", build: "zzz" }));
     const recibidos = capturar();
-    instalarRecargaPorVersion(new EventTarget() as unknown as Window, () => ({ storage, recargar: () => {}, version: "new" }));
-    expect(recibidos).toEqual([["error_promesa", { error: { mensaje: "m" }, props: { recargado: true, despliegue_anterior: "old" } }]]);
+    instalarRecargaPorVersion(new EventTarget() as unknown as Window, () => entorno({ storage }));
+    expect(recibidos).toEqual([
+      [
+        "error_promesa",
+        {
+          accion: "recuperado_tras_recarga",
+          error: { mensaje: "m · recuperado: la pestaña se recargó sola con la versión nueva (antes: build zzz)" },
+          props: { recargado: true, despliegue_anterior: "old", build_anterior: "zzz" },
+        },
+      ],
+    ]);
+  });
+
+  it("una promesa sin capturar con un fallo de versión antigua pasa por la decisión antes de ir a Logs", async () => {
+    const e = entorno({ publicada: "aaa" });
+    instalarRecargaPorVersion(new EventTarget() as unknown as Window, () => e);
+    capturarErroresTempranos();
+    const recibidos = capturar();
+    window.dispatchEvent(Object.assign(new Event("unhandledrejection"), { reason: new TypeError("Importing a module script failed.") }));
+    expect(recibidos).toEqual([]);
+    await vi.waitFor(() => expect(recibidos).toHaveLength(1));
+    expect(recibidos[0][0]).toBe("error_promesa");
+    expect(recibidos[0][1]).toMatchObject({ accion: "sin_version_nueva" });
+    // Otros errores, al momento.
+    window.dispatchEvent(Object.assign(new Event("unhandledrejection"), { reason: new Error("x is undefined") }));
+    expect(recibidos).toHaveLength(2);
+    expect(recibidos[1][1]).not.toHaveProperty("accion");
   });
 });
 
