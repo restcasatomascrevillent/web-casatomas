@@ -76,7 +76,7 @@ export function construirAvisoCompra(compra: CompraParaAviso, opciones: Opciones
   const filas: [string, string][] = [
     ["Código del cheque", compra.codigo],
     ["Importe del cheque", euros(importe)],
-    ["Gastos de gestión", euros(gastos)],
+    ["Gastos de preparación y emisión", euros(gastos)],
     ["Total cobrado", euros(importe + gastos)],
     ["Fecha de compra", fechaHoraMadrid(compra.emitido_en)],
     ["Válido hasta", fechaCaducidad(compra.caduca_el)],
