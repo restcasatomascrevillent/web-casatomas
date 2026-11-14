@@ -146,8 +146,10 @@ const vacio = (v) =>
  *  - Quita las traducciones IDÉNTICAS al castellano: `resolveTranslatedItem` ya
  *    cae al valor base cuando la columna falta, así que el resultado que ve el
  *    visitante es exactamente el mismo.
- *  - Quita el cache-buster `?t=` de las imágenes de Storage: en el JSON-LD solo
- *    estorba y son ~14 bytes por plato.
+ *  - Conserva el `?t=` de `imagen_url`: el panel lo cambia cada vez que se
+ *    sube una foto nueva con el mismo nombre de archivo. Sin él la dirección no
+ *    cambia y el navegador (y el optimizador de Vercel, que cachea 30 días)
+ *    siguen enseñando la foto vieja.
  */
 function compactar(fila, permitidas) {
   const salida = {};
@@ -161,7 +163,7 @@ function compactar(fila, permitidas) {
     const traducida = clave.match(/^(.+)_(en|fr)$/);
     if (traducida && fila[traducida[1]] === valor) continue;
 
-    salida[clave] = clave === 'imagen_url' ? String(valor).replace(/\?t=\d+$/, '') : valor;
+    salida[clave] = valor;
   }
   return salida;
 }
