@@ -6,7 +6,7 @@ import { fetchCartaSSG, CARTA_SSG_VACIA, tiendaVisibleEnBuild } from "./scripts/
 import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
 import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
-import { calcularVersion } from "./scripts/version.mjs";
+import { anotarBuildEnVersionJson, calcularVersion } from "./scripts/version.mjs";
 
 /**
  * Un `fetch` a Supabase, TRES módulos virtuales.
@@ -233,6 +233,11 @@ export default defineConfig(({ mode, command }) => {
         // así que no se pueden desactivar; pero ya no hacen falta y en `dist/` se
         // publicarían (/.vite/manifest.json, /.vite/ssr-manifest.json).
         await rm(path.join(path.resolve(dir), ".vite"), { recursive: true, force: true });
+        // Id de esta build en /version.json: la web lo compara con el de su
+        // pestaña para saber si hay una versión nueva (src/lib/recarga-por-version.ts).
+        const build = anotarBuildEnVersionJson(path.resolve(dir));
+        // eslint-disable-next-line no-console
+        console.log(`[version-json] build ${build ?? "SIN ID (no se encontró __VITE_REACT_SSG_HASH__)"}`);
         // Un solo `<html` por página y con el `lang` de su idioma; si no, el build falla.
         // Los `.html` de `public/` (p. ej. la verificación de Search Console) se
         // copian tal cual, no los prerenderiza nadie: quedan fuera de la comprobación.

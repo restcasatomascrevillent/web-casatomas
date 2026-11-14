@@ -24,12 +24,14 @@ import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
 // Mismos módulos que cargan las rutas `/carta/vinos` y `/carta/bebidas` (ver
 // `App.tsx`): Vite dedupea por fichero resuelto, así que precargarlos aquí
 // deja el chunk en caché del navegador para cuando `lazyRoute` lo pida de
-// verdad al navegar.
+// verdad al navegar. Si falla (pestaña con una versión antigua), no pasa nada
+// aquí: lo trata `vite:preloadError` y, al navegar, la ruta (ver
+// `lib/recarga-por-version`); sin `catch` saldría como promesa sin capturar.
 const precargarPaginaVinos = () => {
-  import("@/pages/carta/Vinos");
+  import("@/pages/carta/Vinos").catch(() => undefined);
 };
 const precargarPaginaBebidas = () => {
-  import("@/pages/carta/Bebidas");
+  import("@/pages/carta/Bebidas").catch(() => undefined);
 };
 
 /**

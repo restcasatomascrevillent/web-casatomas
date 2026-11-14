@@ -12,7 +12,7 @@
 //
 // No necesita el historial de git: lee versionado.json y el commit (en Vercel, de sus variables).
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -65,6 +65,26 @@ export function calcularVersion({ ref = "HEAD", cwd = RAIZ, env = process.env } 
     entorno,
     aviso: null,
   };
+}
+
+const RE_HASH_SSG = /__VITE_REACT_SSG_HASH__\s*=\s*['"]([A-Za-z0-9]+)['"]/;
+
+/**
+ * Añade a `<dir>/version.json` el id de ESTA build (`build`): el hash que
+ * vite-react-ssg pone en cada página (`window.__VITE_REACT_SSG_HASH__`). Cambia
+ * en cada build, también cuando el panel reconstruye el mismo commit para
+ * publicar la carta, así que la web sabe si su pestaña tiene una build antigua
+ * (src/lib/recarga-por-version.ts). Devuelve el id, o null si no lo encuentra.
+ * Se llama al terminar el build (vite.config.ts → ssgOptions.onFinished).
+ */
+export function anotarBuildEnVersionJson(dir) {
+  const html = intentar(() => readFileSync(path.join(dir, "index.html"), "utf8"));
+  const build = RE_HASH_SSG.exec(html ?? "")?.[1] ?? null;
+  const fichero = path.join(dir, "version.json");
+  const datos = intentar(() => JSON.parse(readFileSync(fichero, "utf8")));
+  if (!build || !datos) return null;
+  writeFileSync(fichero, JSON.stringify({ ...datos, build }));
+  return build;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
