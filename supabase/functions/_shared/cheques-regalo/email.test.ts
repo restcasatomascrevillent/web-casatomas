@@ -1,6 +1,6 @@
 // Por qué no sale el correo del cheque: falta de RESEND_API_KEY y respuesta de
 // Resend, en el log y en el resultado. Test Deno (`deno test`).
-import { enviarEmailCheque, enviarEmailChequeConDetalle } from "./email.ts";
+import { datosCheque, enviarEmailCheque, enviarEmailChequeConDetalle } from "./email.ts";
 import { CHEQUE_EJEMPLO, PLANTILLA_REGALO } from "./plantilla.ts";
 
 const assert = (v: unknown, mensaje = "Resultado incorrecto") => { if (!v) throw new Error(mensaje); };
@@ -52,4 +52,20 @@ Deno.test("la clave de idempotencia es la del primer envío salvo que se pase ot
     const claves = peticiones.map((p) => new Headers(p.headers).get("Idempotency-Key"));
     assert(claves[0] === "cheque-regalo-" + cheque.id && claves[1] === "cheque-regalo-reenvio-x", claves.join(","));
   });
+});
+
+Deno.test("el correo resume para quién es, el importe, hasta cuándo vale y cómo se canjea", async () => {
+  await conEntorno("clave-de-prueba", null, async (_logs, peticiones) => {
+    assert((await enviarEmailChequeConDetalle(cheque, { ocultarImporte: false })).ok);
+    const cuerpo = JSON.parse(String(peticiones[0].body)) as { html: string; text: string };
+    for (const parte of ["Para", "María", "Importe", "100,00 €", "Válido hasta", "Cómo canjearlo", "canjearse una vez", cheque.codigo]) {
+      assert(cuerpo.html.includes(parte) && cuerpo.text.includes(parte), parte);
+    }
+  });
+});
+
+Deno.test("si el comprador oculta el importe, el resumen no lo enseña", () => {
+  const datos = datosCheque({ ...cheque, destinatario_nombre: null }, { ocultarImporte: true }, PLANTILLA_REGALO);
+  assert(!datos.some(([e]) => e === "Importe" || e === "Para"), JSON.stringify(datos));
+  assert(datos.some(([e]) => e === "Válido hasta") && datos.some(([e]) => e === "Cómo canjearlo"));
 });
