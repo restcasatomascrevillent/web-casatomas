@@ -2,6 +2,20 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.12.0] - 2026-11-14
+
+Objetivo: Vídeo del plato automático, versión antigua que se recupera sola y correos del cheque regalo
+
+### Añadido
+- Cheques regalo: el aviso al restaurante sale aunque falle el correo al cliente, y reenvío del correo desde el panel ([#70](https://github.com/restcasatomascrevillent/web-casatomas/pull/70))
+- Cheques: el correo del cheque regalo lleva sus datos ([#73](https://github.com/restcasatomascrevillent/web-casatomas/pull/73))
+
+### Cambiado
+- Web: la pestaña con una versión antigua se recupera también tras los rebuilds del panel ([#72](https://github.com/restcasatomascrevillent/web-casatomas/pull/72))
+
+### Otros
+- El vídeo del plato arranca solo y en grande sigue siendo vídeo ([#71](https://github.com/restcasatomascrevillent/web-casatomas/pull/71))
+
 ## [1.11.0] - 2026-11-12
 
 Objetivo: Carta nueva: tarjetas de plato con foto, «i» (círculo azul pizarra) que gira para ver la descripción y la cantidad en el botón
