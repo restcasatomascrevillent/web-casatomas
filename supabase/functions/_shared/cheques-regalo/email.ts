@@ -23,6 +23,22 @@ export function textoCondicionesCheque(fechaCaduca: string): string[] {
   ];
 }
 
+/**
+ * Resumen del cheque en el cuerpo del correo, para no depender solo del PDF:
+ * para quién es, cuánto vale (salvo que el comprador pidiera ocultarlo), hasta
+ * cuándo vale y cómo se canjea. El código va aparte, en grande.
+ */
+export function datosCheque(cheque: ChequeParaEmail, opciones: OpcionesEnvioCheque, plantilla: PlantillaRegalo): Array<[string, string]> {
+  const datos: Array<[string, string]> = [];
+  const para = (cheque.destinatario_nombre ?? "").trim();
+  if (para) datos.push(["Para", para]);
+  if (!opciones.ocultarImporte) datos.push(["Importe", Number(cheque.importe_eur).toFixed(2).replace(".", ",") + " €"]);
+  datos.push(["Válido hasta", fechaCaducidad(cheque.caduca_el) + " (incluido)"]);
+  const comoCanjear = (plantilla.pdf_instrucciones || PLANTILLA_REGALO.pdf_instrucciones).trim();
+  if (comoCanjear) datos.push(["Cómo canjearlo", comoCanjear]);
+  return datos;
+}
+
 function escaparHtml(texto: string): string {
   return texto.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
@@ -30,10 +46,14 @@ export function construirHtml(cheque: ChequeParaEmail, opciones: OpcionesEnvioCh
   const mensaje = escaparHtml(textoRegalo(plantilla.email_mensaje, cheque, opciones.ocultarImporte)).replace(/\r?\n/g,"<br>");
   const acento = /^#[\da-f]{6}$/i.test(plantilla.color_acento) ? plantilla.color_acento : PLANTILLA_REGALO.color_acento;
   const condiciones = textoCondicionesCheque(fechaCaducidad(cheque.caduca_el));
+  const filas = datosCheque(cheque, opciones, plantilla)
+    .map(([etiqueta, valor]) => `<tr><td style="padding:4px 12px 4px 0;color:#6a6360;vertical-align:top;white-space:nowrap;">${escaparHtml(etiqueta)}</td><td style="padding:4px 0;">${escaparHtml(valor)}</td></tr>`)
+    .join("");
   return `<div style="font-family:Georgia,serif;max-width:560px;margin:auto;padding:28px;color:#343434;">
     <div style="border-bottom:2px solid ${acento};padding-bottom:18px;margin-bottom:24px;text-align:center;"><strong style="font-size:28px;">Casa Tomás</strong><p style="font-size:11px;letter-spacing:3px;">RESTAURANTE · CREVILLENT</p></div>
     <p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;">${mensaje}</p>
     <div style="margin:24px 0;padding:20px;background:#faf7f1;text-align:center;"><p style="font-size:11px;">CÓDIGO DEL CHEQUE</p><strong style="font-size:26px;color:${acento};">${escaparHtml(cheque.codigo)}</strong>${opciones.ocultarImporte ? "" : `<p>${Number(cheque.importe_eur).toFixed(2).replace(".",",")} €</p>`}</div>
+    <table style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;border-collapse:collapse;margin:0 0 20px;">${filas}</table>
     <p style="font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">${escaparHtml(condiciones[0])}</p>
     <p style="font-family:Arial,sans-serif;font-size:13px;color:#6a6360;">Encontrarás tu cheque regalo adjunto en PDF, listo para imprimir o compartir.</p>
     <p style="font-family:Arial,sans-serif;font-size:12px;color:#6a6360;">${escaparHtml(condiciones[1])} <a href="${escaparHtml(urlCondicionesCheques())}" style="color:#6a6360;">Condiciones de compra de los cheques regalo</a>.</p>
@@ -83,7 +103,7 @@ export async function enviarEmailChequeConDetalle(
       body: JSON.stringify({
         from: Deno.env.get("RESEND_FROM_EMAIL") || "Casa Tomás <onboarding@resend.dev>", to: [cheque.comprador_email],
         subject: textoRegalo(plantilla.email_asunto, cheque, opciones.ocultarImporte),
-        text: textoRegalo(plantilla.email_mensaje, cheque, opciones.ocultarImporte) + "\n\nCódigo: " + cheque.codigo + "\n" + textoCondicionesCheque(fechaCaducidad(cheque.caduca_el)).join("\n"),
+        text: textoRegalo(plantilla.email_mensaje, cheque, opciones.ocultarImporte) + "\n\nCódigo: " + cheque.codigo + "\n" + datosCheque(cheque, opciones, plantilla).map(([e, v]) => e + ": " + v).join("\n") + "\n\n" + textoCondicionesCheque(fechaCaducidad(cheque.caduca_el)).join("\n"),
         html: construirHtml(cheque, opciones, plantilla),
         attachments: [{ filename: "Cheque-" + cheque.codigo + ".pdf", content: btoa(binario) }],
       }),
