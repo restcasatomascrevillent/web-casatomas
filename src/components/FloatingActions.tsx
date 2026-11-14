@@ -10,8 +10,9 @@ import { importarConRecarga } from "@/lib/recarga-por-version";
 const PreviewPedido = lazy(importarConRecarga(() => import("./carta/PreviewPedido")));
 const AIChatbot = lazy(importarConRecarga(() => import("./AIChatbot")));
 
+// Precarga: si falla, ya lo trata `vite:preloadError` (lib/recarga-por-version).
 const precargarChatbot = () => {
-  import("./AIChatbot");
+  import("./AIChatbot").catch(() => undefined);
 };
 
 // Páginas a las que se llega desde un enlace de correo y que tienen su propio

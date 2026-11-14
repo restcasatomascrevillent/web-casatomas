@@ -17,6 +17,7 @@ import { alCambiarConsentimiento, estadisticasAceptadas } from "@/lib/cookie-con
 import { FUNCTIONS_BASE_URL } from "@/lib/supabase-functions";
 import { causaSinRespuesta, clasificarClic, endpointDe, idiomaDeRuta, procedenciaDe, silenciarPorPrueba } from "./clasificar";
 import { conectarEmisor, type DatosActividad } from "./registro";
+import { registrarFalloDeVersion } from "@/lib/recarga-por-version";
 import { Rastreador } from "./rastreador";
 
 export const URL_INGESTA = `${FUNCTIONS_BASE_URL}/registrar-actividad-web`;
@@ -296,7 +297,13 @@ export function instalarSeguimiento(): Seguimiento | null {
     if (destino instanceof HTMLImageElement || destino instanceof HTMLScriptElement || destino instanceof HTMLLinkElement || destino instanceof HTMLVideoElement) {
       const src = (destino as HTMLImageElement).currentSrc || (destino as HTMLImageElement).src || (destino as HTMLLinkElement).href || "";
       if (!src || src.startsWith("data:") || src.startsWith("blob:")) return;
-      r.registrar("error_recurso", { objetivo: src.split(/[?#]/)[0].slice(0, 200), props: { etiqueta: destino.tagName.toLowerCase() } });
+      const datos = { objetivo: src.split(/[?#]/)[0].slice(0, 200), props: { etiqueta: destino.tagName.toLowerCase() } };
+      // Un JS/CSS de la web que no está (404 de la precarga de Vite): casi siempre, pestaña con una build
+      // antigua. Pasa por la misma decisión que el `import()` que lo pidió: si se recarga, es ruido de esa
+      // recarga (el error que importa sale tras volver, marcado); si no, sale con el porqué.
+      const deLaWeb = !(destino instanceof HTMLImageElement || destino instanceof HTMLVideoElement) && datos.objetivo.startsWith(`${window.location.origin}/assets/`);
+      if (deLaWeb) void registrarFalloDeVersion("error_recurso", datos);
+      else r.registrar("error_recurso", datos);
     }
   }, { capture: true, passive: true });
 
