@@ -18,3 +18,5 @@ export function calcularVersion(opciones?: {
   cwd?: string;
   env?: Record<string, string | undefined>;
 }): DatosVersion;
+/** Añade a `<dir>/version.json` el id de la build (`build`, el hash del SSG). Devuelve el id o null. */
+export function anotarBuildEnVersionJson(dir: string): string | null;

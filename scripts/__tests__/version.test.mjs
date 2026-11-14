@@ -1,10 +1,10 @@
 // Reglas de la versión (scripts/version.mjs) sobre un repo de git temporal.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { calcularVersion, detectarEntorno, esRamaDePublicacion } from "../version.mjs";
+import { anotarBuildEnVersionJson, calcularVersion, detectarEntorno, esRamaDePublicacion } from "../version.mjs";
 
 const IDENTIDAD = { GIT_AUTHOR_NAME: "Prueba", GIT_AUTHOR_EMAIL: "prueba@example.com", GIT_COMMITTER_NAME: "Prueba", GIT_COMMITTER_EMAIL: "prueba@example.com" };
 const carpetas = [];
@@ -82,5 +82,28 @@ describe("entorno", () => {
     expect(esRamaDePublicacion("release/1.4")).toBe(false);
     expect(esRamaDePublicacion("staging")).toBe(false);
     expect(esRamaDePublicacion(null)).toBe(false);
+  });
+});
+
+describe("id de la build en /version.json", () => {
+  // Producción se reconstruye con el mismo commit cada vez que el panel publica la carta: la web
+  // necesita saber si su pestaña tiene una build antigua aunque versión y commit sean los mismos.
+  it("añade `build` con el hash del SSG de index.html, sin tocar lo demás", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "version-build-"));
+    carpetas.push(dir);
+    writeFileSync(path.join(dir, "index.html"), "<script>window.__VITE_REACT_SSG_HASH__ = 'mxhlsewn4e'</script>");
+    writeFileSync(path.join(dir, "version.json"), JSON.stringify({ version: "1.11.0", commit: "28554c2" }));
+    expect(anotarBuildEnVersionJson(dir)).toBe("mxhlsewn4e");
+    expect(JSON.parse(readFileSync(path.join(dir, "version.json"), "utf8"))).toEqual({ version: "1.11.0", commit: "28554c2", build: "mxhlsewn4e" });
+  });
+
+  it("sin hash o sin version.json no escribe nada", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "version-build-"));
+    carpetas.push(dir);
+    writeFileSync(path.join(dir, "index.html"), "<p>sin hash</p>");
+    writeFileSync(path.join(dir, "version.json"), "{}");
+    expect(anotarBuildEnVersionJson(dir)).toBeNull();
+    expect(readFileSync(path.join(dir, "version.json"), "utf8")).toBe("{}");
+    expect(anotarBuildEnVersionJson(path.join(dir, "no-existe"))).toBeNull();
   });
 });

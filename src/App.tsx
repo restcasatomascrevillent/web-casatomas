@@ -11,6 +11,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import SaltarAlContenido from "./components/SaltarAlContenido";
 import PageTransition from "./components/PageTransition";
 import { SectionErrorBoundary } from "./components/SectionErrorBoundary";
+import ErrorDeRuta from "./components/ErrorDeRuta";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 import { HANDLE_PAGINA_NO_ENCONTRADA } from "@/lib/hidratacion-404";
@@ -200,10 +201,19 @@ const buildCatchAllRoute = (): RouteRecord => ({
   lazy: lazyRoute(() => import("./pages/NotFound")),
 });
 
+/**
+ * `errorElement` en cada ruta (y en el Layout de cada rama): si una página no
+ * carga al navegar —lo normal: la pestaña tiene una versión antigua y su
+ * fichero ya no existe—, `ErrorDeRuta` recarga o avisa en vez de la pantalla
+ * de desarrollador de react-router («Unexpected Application Error!»).
+ */
+const conErrorDeRuta = (ruta: RouteRecord): RouteRecord => ({ ...ruta, errorElement: <ErrorDeRuta /> });
+
 export const routes: RouteRecord[] = [
   {
     path: "/",
     element: <Layout lang="es" />,
+    errorElement: <ErrorDeRuta />,
     children: [
       ...cartaChildren("es"),
       // Reservas, política de privacidad y condiciones existen en las tres
@@ -232,8 +242,18 @@ export const routes: RouteRecord[] = [
       { path: "404", handle: HANDLE_PAGINA_NO_ENCONTRADA, lazy: lazyRoute(() => import("./pages/NotFound")) },
       // ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE
       buildCatchAllRoute(),
-    ],
+    ].map(conErrorDeRuta),
   },
-  { path: "/en", element: <Layout lang="en" />, children: [...cartaChildren("en"), ...paginasComunes(), buildCatchAllRoute()] },
-  { path: "/fr", element: <Layout lang="fr" />, children: [...cartaChildren("fr"), ...paginasComunes(), buildCatchAllRoute()] },
+  {
+    path: "/en",
+    element: <Layout lang="en" />,
+    errorElement: <ErrorDeRuta />,
+    children: [...cartaChildren("en"), ...paginasComunes(), buildCatchAllRoute()].map(conErrorDeRuta),
+  },
+  {
+    path: "/fr",
+    element: <Layout lang="fr" />,
+    errorElement: <ErrorDeRuta />,
+    children: [...cartaChildren("fr"), ...paginasComunes(), buildCatchAllRoute()].map(conErrorDeRuta),
+  },
 ];

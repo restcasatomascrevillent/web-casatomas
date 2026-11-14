@@ -2,7 +2,8 @@ import { Component, type ReactNode } from "react";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import type { Language } from "@/i18n/types";
 import { registrarActividad } from "@/lib/actividad/registro";
-import { esErrorDeVersionAntigua, recargarUnaVez } from "@/lib/recarga-por-version";
+import { esErrorDeVersionAntigua, registrarFalloDeCarga } from "@/lib/recarga-por-version";
+import { MensajeFalloCarga } from "@/components/AvisoVersionNueva";
 
 const TEXTOS: Record<Language, { mensaje: string; boton: string }> = {
   es: { mensaje: "No se pudo cargar esta sección.", boton: "Recargar página" },
@@ -18,11 +19,13 @@ const TEXTOS: Record<Language, { mensaje: string; boton: string }> = {
  * recoja ese error, `Suspense` deja su esqueleto de carga en pantalla para
  * siempre: la sección se queda a medias y el resto de la página sigue
  * funcionando, dando la sensación de que "no cargó bien".
- * La recarga automática (una por versión) vive en `@/lib/recarga-por-version`.
+ * La recarga automática (o el aviso «Hay una versión nueva de la web») vive en
+ * `@/lib/recarga-por-version`.
  */
 
 interface BoundaryProps {
   id?: string;
+  idioma: Language;
   mensaje: string;
   boton: string;
   children: ReactNode;
@@ -30,13 +33,14 @@ interface BoundaryProps {
 
 interface BoundaryState {
   failed: boolean;
+  porVersion: boolean;
 }
 
 class ErrorBoundaryBase extends Component<BoundaryProps, BoundaryState> {
-  state: BoundaryState = { failed: false };
+  state: BoundaryState = { failed: false, porVersion: false };
 
-  static getDerivedStateFromError() {
-    return { failed: true };
+  static getDerivedStateFromError(error: unknown): BoundaryState {
+    return { failed: true, porVersion: esErrorDeVersionAntigua(error) };
   }
 
   componentDidCatch(error: unknown, info?: { componentStack?: string | null }) {
@@ -49,24 +53,17 @@ class ErrorBoundaryBase extends Component<BoundaryProps, BoundaryState> {
         pila: error instanceof Error ? `${error.stack ?? ""}${info?.componentStack ? `\n${info.componentStack}` : ""}` : undefined,
       },
     };
-    // Versión antigua: una sola recarga por versión (marca con el commit de la
-    // build). Si recarga, el evento sale al volver, con `recargado = true`.
-    if (typeof window !== "undefined" && esErrorDeVersionAntigua(error) && recargarUnaVez(undefined, { tipo: "error_react", datos: evento })) return;
-    registrarActividad("error_react", evento);
+    // Versión antigua: recarga una vez por build nueva o avisa. Si recarga, el
+    // evento sale al volver, marcado como recuperado; si no, ahora con su marca.
+    if (esErrorDeVersionAntigua(error)) void registrarFalloDeCarga("error_react", evento, error);
+    else registrarActividad("error_react", evento);
   }
 
   render() {
     if (this.state.failed) {
       return (
         <section id={this.props.id} className="py-16 px-4 text-center text-muted-foreground">
-          <p className="mb-3">{this.props.mensaje}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="underline underline-offset-4 hover:text-foreground"
-          >
-            {this.props.boton}
-          </button>
+          <MensajeFalloCarga porVersion={this.state.porVersion} idioma={this.props.idioma} mensaje={this.props.mensaje} boton={this.props.boton} />
         </section>
       );
     }
@@ -78,7 +75,7 @@ export const SectionErrorBoundary = ({ id, children }: { id?: string; children: 
   const { language } = useTranslations();
   const textos = TEXTOS[language];
   return (
-    <ErrorBoundaryBase id={id} mensaje={textos.mensaje} boton={textos.boton}>
+    <ErrorBoundaryBase id={id} idioma={language} mensaje={textos.mensaje} boton={textos.boton}>
       {children}
     </ErrorBoundaryBase>
   );

@@ -1,12 +1,14 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enviarCompraManual } from "../_shared/cheques-regalo/enviar-compra-manual.ts";
 import { verificarAdmin } from "../_shared/cheques-regalo/admin-auth.ts";
+import { reenviarEmailChequeWeb } from "../_shared/cheques-regalo/reenviar-email.ts";
 import type { ChequeParaEmail } from "../_shared/cheques-regalo/tipos.ts";
 
 /**
  * Gestión de cheques regalo desde el panel (adminpanelct): listar los ya
  * expedidos, generar uno a mano (sin pasar por Stripe — p. ej. un cheque de
- * cortesía o uno cobrado por otro medio) y eliminar uno. Función APARTE de
+ * cortesía o uno cobrado por otro medio), reenviar al comprador el correo de
+ * uno comprado en la web (`reenviar_email`) y eliminar uno. Función APARTE de
  * `cheques-regalo-web` (venta pública) y `stripe-webhook-cheques-regalo`
  * (confirma el pago de Stripe): aquí SIEMPRE hace falta una sesión de
  * administrador, así que `verify_jwt` se queda en su valor por defecto
@@ -53,7 +55,20 @@ interface AccionEliminar {
   id?: unknown;
 }
 
-type Peticion = AccionListar | AccionCrearManual | AccionEliminar | { accion: "enviar_manual"; id?: unknown };
+/** Reenvía el correo con el PDF de un cheque WEB pagado (`reenviarEmailChequeWeb`). */
+interface AccionReenviarEmail {
+  accion: "reenviar_email";
+  id?: unknown;
+  /** Una por confirmación en el panel: un doble clic no manda dos correos. */
+  clave_envio?: unknown;
+}
+
+type Peticion =
+  | AccionListar
+  | AccionCrearManual
+  | AccionEliminar
+  | AccionReenviarEmail
+  | { accion: "enviar_manual"; id?: unknown };
 
 /**
  * Solo los expedidos de verdad: "pendiente" (carrito de Stripe abandonado,
@@ -80,6 +95,11 @@ async function handleEnviarManual(admin: SupabaseClient, id: unknown): Promise<R
   if (error || !fila?.codigo) return json({ mensaje: "Cheque manual no encontrado" }, 404);
   const envios = await enviarCompraManual(admin, fila as ChequeParaEmail);
   return json({ cheque: fila, ...envios });
+}
+
+async function handleReenviarEmail(admin: SupabaseClient, payload: AccionReenviarEmail): Promise<Response> {
+  const { ok: _ok, status, ...cuerpo } = await reenviarEmailChequeWeb(admin, payload.id, payload.clave_envio);
+  return json(cuerpo, status);
 }
 
 async function handleCrearManual(admin: SupabaseClient, usuario: SupabaseClient, payload: AccionCrearManual): Promise<Response> {
@@ -127,6 +147,8 @@ Deno.serve(async (req) => {
       return handleCrearManual(verificacion.admin, verificacion.usuario, payload);
     case "enviar_manual":
       return handleEnviarManual(verificacion.admin, payload.id);
+    case "reenviar_email":
+      return handleReenviarEmail(verificacion.admin, payload);
     case "eliminar":
       return handleEliminar(verificacion.admin, payload);
     default:
