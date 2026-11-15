@@ -51,6 +51,9 @@ export const TOUZA_URL = (
   (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza.restaurantecasatomascrevillente.es"
 ).replace(/\/+$/, "");
 
+/** Página de Touza «Copas después de cenar» (la crea el PR de Touza; /despues-de-cenar). */
+export const TOUZA_DESPUES_DE_CENAR_URL = `${TOUZA_URL}/despues-de-cenar`;
+
 export const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
 
 export const NEGOCIO = {
@@ -276,6 +279,22 @@ export function restaurantSchema(opts: {
       opens: h.abre,
       closes: h.cierra,
     })),
+    // Touza Cocktail Bar, la coctelería de al lado (n.º 4). Mismo `@id` que usa
+    // su propia web, para que Google y los asistentes de IA unan las dos fichas.
+    subOrganization: {
+      "@type": "BarOrPub",
+      "@id": `${TOUZA_URL}/#bar`,
+      name: "Touza Cocktail Bar",
+      url: `${TOUZA_URL}/`,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Carrer Santa Maria de la Cabeza, 4",
+        addressLocality: NEGOCIO.localidad,
+        addressRegion: NEGOCIO.region,
+        postalCode: NEGOCIO.cp,
+        addressCountry: NEGOCIO.pais,
+      },
+    },
     sameAs: ["https://www.instagram.com/casatomascrevillent/", "https://www.facebook.com/barracasatomas/"],
     servesCuisine: ["Gallega", "Marisco", "Mediterránea", "Arroces"],
     priceRange: "€€", // nunca "$$": el replace() de helmet lo corrompe a "$"
