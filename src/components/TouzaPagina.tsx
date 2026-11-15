@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ImagenResponsive from "@/components/ImagenResponsive";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { TOUZA_URL } from "@/lib/negocio";
+import { TOUZA_DESPUES_DE_CENAR_URL, TOUZA_URL } from "@/lib/negocio";
 import { PAGINAS_INFORMACION } from "@/lib/paginas-informacion";
 import { TOUZA } from "@/lib/touza-marca";
 import "./touza-pagina.css";
@@ -119,6 +119,17 @@ export default function TouzaPagina() {
           <div className="mt-8">
             <BotonTouza texto={t.espacios.visitTouza} />
           </div>
+          <p className="mt-5">
+            <a
+              href={TOUZA_DESPUES_DE_CENAR_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline underline-offset-4"
+              style={{ color: TOUZA.accent }}
+            >
+              {t.espacios.touzaAfterDinner}
+            </a>
+          </p>
         </div>
       </section>
 

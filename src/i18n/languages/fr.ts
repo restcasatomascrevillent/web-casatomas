@@ -209,6 +209,7 @@ export const translations: Translations = {
       ],
       galleryButton: "Voir la galerie photo",
       visitTouza: "Visiter Touza Cocktail",
+      touzaAfterDinner: "Un verre après le dîner au Touza",
       middayMenuTitle: "Menu du midi",
       middayMenuDescription: "Du mardi au jeudi, profitez d'un menu de saison préparé avec des produits frais.",
       todayMenuTitle: "Menu du jour",
