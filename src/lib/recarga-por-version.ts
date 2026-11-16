@@ -15,8 +15,17 @@
  * Qué pasa cuando falla una carga (decisión única por página, compartida):
  *   1. Se pregunta a `/version.json` (sin caché) qué build está publicada.
  *   2. Es la misma que la de la pestaña → no hay versión nueva: es la red o un
- *      fichero que falta de verdad. No se recarga (la sección o la página
- *      enseñan su «No se pudo cargar · Recargar»).
+ *      fichero que falta de verdad. Si lo que falló es una PÁGINA (una ruta
+ *      o una navegación a medias) se recarga UNA vez por build y página, sin
+ *      aviso en Logs: un corte de red de un momento se arregla así, y el
+ *      navegador no deja repetir un `import()` que falló (recuerda el fallo
+ *      hasta que se recarga). Si vuelve a fallar, o es una sección, no se
+ *      recarga: enseñan su «No se pudo cargar · Recargar» y sale en Logs
+ *      (`sin_version_nueva`). Si la página ni siquiera arrancó (falló su
+ *      código en la PRIMERA carga: React no monta y el HTML del SSG se queda
+ *      sin vida), el mensaje es un aviso flotante en DOM puro y el rastreador
+ *      se instala aquí para que el error llegue a Logs (antes pasaba en
+ *      silencio).
  *   3. Es otra → se recarga UNA vez para llegar a ella; si la navegación
  *      estaba a medias, directamente a la página que se pidió. La marca en
  *      `sessionStorage` dice a qué build se intentó llegar: si tras recargar
@@ -47,6 +56,8 @@ import { TEXTOS_VERSION_NUEVA } from "@/lib/textos-version-nueva";
 export const CLAVE_MARCA = "recarga-auto";
 /** Aviso pendiente de mandar tras la recarga (uno como mucho). */
 export const CLAVE_AVISO = "recarga-auto-aviso";
+/** Build y página de la última recarga «de reintento» (sin versión nueva): una por build y página. */
+export const CLAVE_REINTENTO = "recarga-reintento";
 const ESPERA_VERSION_MS = 5_000;
 
 const COMMIT = (import.meta.env.VITE_COMMIT_WEB as string | undefined) || "";
@@ -112,6 +123,10 @@ export interface Entorno {
   destino: () => string | null;
   /** `null`: recargar; una ruta: ir a ella (la navegación que falló). */
   irA: (destino: string | null) => void;
+  /** ¿Llegó a arrancar la web (hay router)? Si falta, se da por arrancada. */
+  arrancada?: () => boolean;
+  /** Instala el rastreador de Logs sin React (la web no arrancó y nadie más lo hará). */
+  instalarRastreador?: () => void;
 }
 
 const entornoNavegador = (): Entorno => {
@@ -135,6 +150,11 @@ const entornoNavegador = (): Entorno => {
       if (destino && destino !== actual) window.location.assign(destino);
       else window.location.reload();
     },
+    // vite-react-ssg carga el código de la ruta ANTES de crear el router: sin router, la web no arrancó.
+    arrancada: () => router !== null,
+    instalarRastreador: () => {
+      void import("@/lib/actividad/instalar").then((m) => void m.instalarSeguimiento()).catch(() => undefined);
+    },
   };
 };
 
@@ -146,6 +166,10 @@ let estado: EstadoRecarga = "normal";
 let enCurso: Promise<Decision> | null = null;
 let avisoOfrecido: AvisoRecarga | null = null;
 let avisosEnLinea = 0;
+/** Alguna puerta ha dicho que lo que falló es una página (ruta), no una sección. */
+let falloDePagina = false;
+/** La recarga decidida es un reintento sin versión nueva: no deja aviso para Logs. */
+let recargaDeReintento = false;
 const oyentes = new Set<() => void>();
 
 const cambiarEstado = (nuevo: EstadoRecarga) => {
@@ -175,6 +199,35 @@ export function registrarAvisoEnLinea(): () => void {
 }
 
 const ID_FLOTANTE = "aviso-version-nueva";
+const ID_PAGINA_SIN_CARGAR = "aviso-pagina-sin-cargar";
+
+/** Caja flotante con un único botón que recarga (DOM puro: tiene que salir aunque React no haya montado). */
+function crearCajaFlotante(id: string, texto: string): HTMLElement {
+  const caja = document.createElement("div");
+  caja.id = id;
+  caja.setAttribute("role", "status");
+  caja.className =
+    "fixed inset-x-4 z-[60] mx-auto max-w-md rounded-xl border border-border bg-background/95 px-4 py-3 text-center text-sm text-foreground shadow-lg backdrop-blur";
+  caja.style.bottom = "calc(1rem + var(--mobile-cta-offset, 0px))";
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "w-full min-h-6 font-medium underline-offset-4 hover:underline";
+  boton.textContent = texto;
+  boton.addEventListener("click", () => window.location.reload());
+  caja.appendChild(boton);
+  return caja;
+}
+
+/**
+ * La página no arrancó (falló su código en la primera carga) y no se va a
+ * recargar sola: «No se pudo cargar esta página. · Recargar página». Sin esto
+ * el visitante ve el HTML del SSG, que parece la página pero no responde.
+ */
+function pintarAvisoPaginaSinCargar(): void {
+  if (typeof document === "undefined" || !document.body || document.getElementById(ID_PAGINA_SIN_CARGAR)) return;
+  const textos = TEXTOS_VERSION_NUEVA[idiomaDeRuta(window.location.pathname)];
+  document.body.appendChild(crearCajaFlotante(ID_PAGINA_SIN_CARGAR, `${textos.falloPagina} · ${textos.recargar}`));
+}
 
 /**
  * Aviso flotante en DOM puro: tiene que salir también si React no llegó a
@@ -191,19 +244,7 @@ function pintarAvisoFlotante(): void {
   }
   if (existente) return;
   const textos = TEXTOS_VERSION_NUEVA[idiomaDeRuta(window.location.pathname)];
-  const caja = document.createElement("div");
-  caja.id = ID_FLOTANTE;
-  caja.setAttribute("role", "status");
-  caja.className =
-    "fixed inset-x-4 z-[60] mx-auto max-w-md rounded-xl border border-border bg-background/95 px-4 py-3 text-center text-sm text-foreground shadow-lg backdrop-blur";
-  caja.style.bottom = "calc(1rem + var(--mobile-cta-offset, 0px))";
-  const boton = document.createElement("button");
-  boton.type = "button";
-  boton.className = "w-full min-h-6 font-medium underline-offset-4 hover:underline";
-  boton.textContent = `${textos.aviso} · ${textos.boton}`;
-  boton.addEventListener("click", () => window.location.reload());
-  caja.appendChild(boton);
-  document.body.appendChild(caja);
+  document.body.appendChild(crearCajaFlotante(ID_FLOTANTE, `${textos.aviso} · ${textos.boton}`));
 }
 
 // ─── Avisos para Super Admin › Logs ──────────────────────────────────────────
@@ -255,9 +296,32 @@ function guardarAviso(e: Entorno, aviso: AvisoRecarga | null): void {
 }
 
 // ─── La decisión ─────────────────────────────────────────────────────────────
+/**
+ * Sin versión nueva: ¿se reintenta recargando? Solo si lo que falló es una
+ * página (lo dijo la puerta o hay una navegación a medias) y solo una vez por
+ * build y página. Sin almacenamiento no se puede evitar un bucle: no.
+ */
+function puedeReintentar(e: Entorno): boolean {
+  const destino = e.destino();
+  if (!falloDePagina && !destino) return false;
+  if (!e.storage) return false;
+  const marca = `${e.build}|${destino ?? e.ruta()}`;
+  try {
+    if (e.storage.getItem(CLAVE_REINTENTO) === marca) return false;
+    e.storage.setItem(CLAVE_REINTENTO, marca);
+  } catch {
+    return false;
+  }
+  return true;
+}
+
 async function decidir(e: Entorno): Promise<Decision> {
   const publicada = await e.buildPublicada();
-  if (publicada && publicada === e.build) return "sin_version_nueva";
+  if (publicada && publicada === e.build) {
+    if (!puedeReintentar(e)) return "sin_version_nueva";
+    recargaDeReintento = true;
+    return "recargar";
+  }
   if (!publicada && e.enLinea() === false) return "sin_conexion";
   // A qué build se quiere llegar. Sin saberla, «cualquiera distinta de la mía».
   const objetivo = publicada ?? `?${e.build}`;
@@ -273,11 +337,19 @@ async function decidir(e: Entorno): Promise<Decision> {
 
 /**
  * Falló una carga por (posible) versión antigua: decide, una vez por página
- * aunque lleguen varios avisos del mismo fallo, si se recarga. Si se recarga,
- * guarda el primer `aviso` para mandarlo al volver.
+ * aunque lleguen varios avisos del mismo fallo, si se recarga. Si se recarga
+ * por una versión nueva, guarda el primer `aviso` para mandarlo al volver.
+ * `pagina`: lo que falló es una ruta (ver `puedeReintentar`).
  */
-export function decidirTrasFallo(aviso: AvisoRecarga | null, entorno?: Entorno): Promise<Decision> {
+export interface OpcionesFallo {
+  pagina?: boolean;
+}
+
+export function decidirTrasFallo(aviso: AvisoRecarga | null, entorno?: Entorno, opciones?: OpcionesFallo): Promise<Decision> {
   avisoOfrecido ??= aviso;
+  // Antes de las salidas rápidas: la primera puerta (p. ej. `vite:preloadError`) no sabe si es una
+  // página; la del `lazy` de la ruta llega justo después, con la decisión aún esperando a /version.json.
+  if (opciones?.pagina) falloDePagina = true;
   if (estado === "recargando") return Promise.resolve("recargar");
   if (estado === "aviso") return Promise.resolve("aviso");
   if (enCurso) return enCurso;
@@ -286,14 +358,23 @@ export function decidirTrasFallo(aviso: AvisoRecarga | null, entorno?: Entorno):
   enCurso = decidir(e).then(
     (d) => {
       if (d === "recargar") {
-        guardarAviso(e, avisoOfrecido);
+        // El reintento sin versión nueva no deja aviso: si arregla el fallo no hay nada que contar
+        // y, si no, el segundo fallo sale en Logs como `sin_version_nueva`.
+        if (!recargaDeReintento) guardarAviso(e, avisoOfrecido);
         // Los errores que salten mientras la página se descarga son ruido de esta misma recarga.
         marcarRecargaEnCurso();
         cambiarEstado("recargando");
         e.irA(e.destino());
       } else {
+        // La página no arrancó y no se recarga sola: que se vea y que llegue a Logs
+        // (sin React no hay ni mensaje de la ruta ni rastreador).
+        if (falloDePagina && e.arrancada?.() === false) {
+          if (d !== "aviso") pintarAvisoPaginaSinCargar();
+          e.instalarRastreador?.();
+        }
         enCurso = null;
         avisoOfrecido = null;
+        falloDePagina = false;
         cambiarEstado(d === "aviso" ? "aviso" : "normal");
       }
       return d;
@@ -301,6 +382,7 @@ export function decidirTrasFallo(aviso: AvisoRecarga | null, entorno?: Entorno):
     () => {
       enCurso = null;
       avisoOfrecido = null;
+      falloDePagina = false;
       cambiarEstado("normal");
       return "sin_version_nueva" as const;
     },
@@ -370,12 +452,14 @@ export function informarRecargaPendiente(entorno: Entorno = entornoNavegador()):
  * Para los `lazy()`: si el `import()` falla por versión antigua, pide la
  * decisión (la misma que el resto). El error sigue su curso: lo recoge el
  * `SectionErrorBoundary` o el `errorElement` de la ruta, que enseñan su aviso.
+ * Las rutas pasan `{ pagina: true }`: sin versión nueva, una página se
+ * reintenta recargando (una vez); una sección, no.
  */
-export function importarConRecarga<T>(cargar: () => Promise<T>, entorno?: () => Entorno): () => Promise<T> {
+export function importarConRecarga<T>(cargar: () => Promise<T>, entorno?: () => Entorno, opciones?: OpcionesFallo): () => Promise<T> {
   return () =>
     cargar().catch((error: unknown) => {
       if (typeof window !== "undefined" && esErrorDeVersionAntigua(error)) {
-        void decidirTrasFallo(avisoDeError(error, "lazy"), entorno?.());
+        void decidirTrasFallo(avisoDeError(error, "lazy"), entorno?.(), opciones);
       }
       throw error;
     });
@@ -409,7 +493,12 @@ export function _reiniciarRecarga(): void {
   enCurso = null;
   avisoOfrecido = null;
   avisosEnLinea = 0;
+  falloDePagina = false;
+  recargaDeReintento = false;
   router = null;
   oyentes.clear();
-  if (typeof document !== "undefined") document.getElementById(ID_FLOTANTE)?.remove();
+  if (typeof document !== "undefined") {
+    document.getElementById(ID_FLOTANTE)?.remove();
+    document.getElementById(ID_PAGINA_SIN_CARGAR)?.remove();
+  }
 }
