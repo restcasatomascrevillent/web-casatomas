@@ -17,8 +17,11 @@
  *   2. Sin bucle: si tras recargar la pestaña sigue con la build vieja (caché),
  *      no hay segunda recarga sino el aviso «Hay una versión nueva de la web ·
  *      Toca para actualizar».
- *   3. Sin versión nueva (falla la red): no recarga; «No se pudo cargar esta
- *      página» en vez de la pantalla de desarrollador de react-router.
+ *   3. Sin versión nueva y el fallo es de un momento (CAS-5): la página se
+ *      reintenta sola con UNA recarga y carga; en Logs no sale nada.
+ *   4. Sin versión nueva y el fallo sigue: tras ese único reintento no hay más
+ *      recargas; «No se pudo cargar esta página» en vez de la pantalla de
+ *      desarrollador de react-router, y en Logs sale como `sin_version_nueva`.
  */
 import { test as base, expect, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
@@ -190,20 +193,60 @@ test("sin bucle: si tras recargar sigue la build vieja (caché), avisa «Hay una
   expect(await page.evaluate(() => (window as Window & { __VITE_REACT_SSG_HASH__?: string }).__VITE_REACT_SSG_HASH__)).toBe(publicada);
 });
 
-test("sin versión nueva (falla la red): no recarga y la página dice «No se pudo cargar esta página»", async ({ page, web, context }) => {
+test("sin versión nueva y un corte de red de un momento: la página se reintenta sola (una recarga) y carga; en Logs no sale nada", async ({ page, web, context }) => {
   await page.goto(`${web.url}/`);
   await esperarHidratacion(page);
   await page.waitForTimeout(3_500);
-  await context.route(`${web.url}/assets/Categoria-*.js`, (route) => route.abort("internetdisconnected"));
+  // Solo falla la PRIMERA petición del código de la página (el móvil pierde la cobertura un momento).
+  let fallos = 0;
+  await context.route(`${web.url}/assets/Categoria-*.js`, (route) => (fallos++ === 0 ? route.abort("internetdisconnected") : route.continue()));
 
   await enlace(page, "/carta/carnes").click();
-  await expect(page.getByText("No se pudo cargar esta página.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Recargar página" })).toBeVisible();
+  await expect(page).toHaveURL(`${web.url}/carta/carnes`);
+  await expect(page.getByText("Carne E2E").first()).toBeVisible();
+  await expect(page.getByText("No se pudo cargar esta página.")).toHaveCount(0);
   await expect(page.getByText(ERROR_ROUTER)).toHaveCount(0);
-  await page.waitForTimeout(2_000);
-  expect(web.srv.documentos).toEqual(["/"]);
+  expect(web.srv.documentos).toEqual(["/", "/carta/carnes"]);
+  // La página recargada funciona (hidrata) y se queda quieta.
+  await esperarHidratacion(page);
+  await page.waitForTimeout(3_500);
+  expect(web.srv.documentos).toHaveLength(2);
+  await expect(page.locator("#aviso-version-nueva")).toHaveCount(0);
 
+  // Nada que contar en Super Admin › Logs: al visitante no le ha fallado nada.
   await vaciar(page);
-  await expect.poll(() => web.eventos.find((e) => e.tipo === "error_react")?.accion, { timeout: 15_000 }).toBe("sin_version_nueva");
-  expect(web.eventos.find((e) => e.tipo === "error_react")?.props).toMatchObject({ componente: "ruta" });
+  await page.waitForTimeout(1_500);
+  expect(web.eventos.filter((e) => e.tipo.startsWith("error_"))).toEqual([]);
+});
+
+test("sin versión nueva y el fallo sigue: un solo reintento; después avisa «No se pudo cargar esta página» y llega a Logs", async ({ page, web, context }) => {
+  await page.goto(`${web.url}/`);
+  await esperarHidratacion(page);
+  await page.waitForTimeout(3_500);
+  let cortado = true;
+  await context.route(`${web.url}/assets/Categoria-*.js`, (route) => (cortado ? route.abort("internetdisconnected") : route.continue()));
+
+  await enlace(page, "/carta/carnes").click();
+  // Un reintento (recarga directa a la página pedida). Vuelve a fallar: la página no arranca (se ve
+  // el HTML del SSG, sin vida) y sale el aviso flotante en vez de quedarse así en silencio.
+  const aviso = page.locator("#aviso-pagina-sin-cargar");
+  await expect(aviso).toHaveText("No se pudo cargar esta página. · Recargar página");
+  await expect(page).toHaveURL(`${web.url}/carta/carnes`);
+  await expect(page.getByText(ERROR_ROUTER)).toHaveCount(0);
+  await page.waitForTimeout(3_500);
+  // Ni una recarga más.
+  expect(web.srv.documentos).toEqual(["/", "/carta/carnes"]);
+
+  // Super Admin › Logs: el fallo que persiste sí llega (sin React, el rastreador se instala solo).
+  await vaciar(page);
+  await expect.poll(() => web.eventos.find((e) => e.tipo.startsWith("error_"))?.accion, { timeout: 15_000 }).toBe("sin_version_nueva");
+  expect(web.eventos.find((e) => e.tipo.startsWith("error_"))?.error?.mensaje).toContain("· no había versión nueva (fallo de carga o de red)");
+
+  // Vuelve la red: tocar el aviso recarga y la página funciona.
+  cortado = false;
+  await aviso.getByRole("button").click();
+  await expect(page.getByText("Carne E2E").first()).toBeVisible();
+  await esperarHidratacion(page);
+  await expect(page.locator("#aviso-pagina-sin-cargar")).toHaveCount(0);
+  expect(web.srv.documentos).toEqual(["/", "/carta/carnes", "/carta/carnes"]);
 });

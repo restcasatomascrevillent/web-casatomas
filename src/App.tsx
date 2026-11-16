@@ -104,7 +104,7 @@ const Layout = ({ lang }: { lang: Language }) => (
 // (a diferencia de React.lazy + Suspense, que renderizaría el fallback vacío).
 const lazyRoute =
   (factory: () => Promise<{ default: ComponentType }>) =>
-  async () => ({ Component: (await importarConRecarga(factory)()).default });
+  async () => ({ Component: (await importarConRecarga(factory, undefined, { pagina: true })()).default });
 
 /**
  * Páginas de la carta para UN idioma: mismos componentes de página en las

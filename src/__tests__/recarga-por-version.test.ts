@@ -9,10 +9,16 @@
  *   · Sin bucles: si tras recargar sigue la build vieja, aviso, no otra recarga.
  *   · Sin versión nueva (fallo de red) no se recarga: no tiene arreglo así.
  *   · Si la navegación estaba a medias, la recarga va a la página pedida.
+ *   · CAS-5 (16/11/2026): un corte de red de un momento dejaba «No se pudo
+ *     cargar esta página». El navegador no repite un `import()` que falló, así
+ *     que una PÁGINA se reintenta recargando, una vez por build y página y sin
+ *     aviso en Logs; una sección, no.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  CLAVE_AVISO,
   CLAVE_MARCA,
+  CLAVE_REINTENTO,
   _reiniciarRecarga,
   decidirTrasFallo,
   destinoPendiente,
@@ -124,6 +130,101 @@ describe("la decisión", () => {
     expect(leerEstadoRecarga()).toBe("normal");
   });
 
+  it("sin versión nueva y falla una PÁGINA: se reintenta recargando, una vez por build y página, sin aviso para Logs", async () => {
+    const storage = almacen();
+    const primera = entorno({ storage, publicada: "aaa", ruta: () => "/carta/carnes" });
+    const aviso = { tipo: "error_promesa" as const, datos: { error: { mensaje: FALLO.message } } };
+    await expect(decidirTrasFallo(aviso, primera.e, { pagina: true })).resolves.toBe("recargar");
+    expect(primera.irA).toHaveBeenCalledTimes(1);
+    expect(primera.irA).toHaveBeenCalledWith(null);
+    expect(storage.getItem(CLAVE_REINTENTO)).toBe("aaa|/carta/carnes");
+    // Ni marca de versión nueva (no la hay) ni aviso que mandar tras recargar.
+    expect(storage.getItem(CLAVE_MARCA)).toBeNull();
+    expect(storage.getItem(CLAVE_AVISO)).toBeNull();
+    expect(leerEstadoRecarga()).toBe("recargando");
+
+    // Tras recargar vuelve a fallar: ya no se recarga; la página enseña su mensaje y sale en Logs.
+    _reiniciarRecarga();
+    const segunda = entorno({ storage, publicada: "aaa", ruta: () => "/carta/carnes" });
+    await expect(decidirTrasFallo(aviso, segunda.e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    expect(segunda.irA).not.toHaveBeenCalled();
+    expect(leerEstadoRecarga()).toBe("normal");
+
+    // Otra página (o la misma con otra build) sí tiene su reintento.
+    _reiniciarRecarga();
+    const otraPagina = entorno({ storage, publicada: "aaa", ruta: () => "/carta/vinos" });
+    await expect(decidirTrasFallo(aviso, otraPagina.e, { pagina: true })).resolves.toBe("recargar");
+    _reiniciarRecarga();
+    const otraBuild = entorno({ storage, build: "bbb", publicada: "bbb", ruta: () => "/carta/vinos" });
+    await expect(decidirTrasFallo(aviso, otraBuild.e, { pagina: true })).resolves.toBe("recargar");
+  });
+
+  it("sin versión nueva con la navegación a medias: el reintento va a la página pedida aunque la puerta no sepa que es una página", async () => {
+    const { e, irA } = entorno({ publicada: "aaa", destino: () => "/carta/carnes?x=1" });
+    await expect(decidirTrasFallo(null, e)).resolves.toBe("recargar");
+    expect(irA).toHaveBeenCalledWith("/carta/carnes?x=1");
+    expect(e.storage!.getItem(CLAVE_REINTENTO)).toBe("aaa|/carta/carnes?x=1");
+  });
+
+  it("sin versión nueva: la puerta que sabe que es una página puede llegar después de la primera (vite:preloadError → lazy de la ruta)", async () => {
+    const { e, irA, buildPublicada } = entorno({ publicada: "aaa" });
+    const r = await Promise.all([decidirTrasFallo(null, e), decidirTrasFallo(null, e, { pagina: true })]);
+    expect(r).toEqual(["recargar", "recargar"]);
+    expect(buildPublicada).toHaveBeenCalledTimes(1);
+    expect(irA).toHaveBeenCalledTimes(1);
+  });
+
+  it("sin versión nueva y sin almacenamiento: no se reintenta (no se podría evitar un bucle)", async () => {
+    const { e, irA } = entorno({ storage: null, publicada: "aaa" });
+    await expect(decidirTrasFallo(null, e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    _reiniciarRecarga();
+    const bloqueado = entorno({ publicada: "aaa", storage: { getItem: () => { throw new Error("bloqueado"); }, setItem: () => undefined } });
+    await expect(decidirTrasFallo(null, bloqueado.e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    expect(irA).not.toHaveBeenCalled();
+    expect(bloqueado.irA).not.toHaveBeenCalled();
+  });
+
+  it("que una página pidiera reintento no se le pega al fallo siguiente de una sección", async () => {
+    const storage = almacen();
+    storage.setItem(CLAVE_REINTENTO, "aaa|/");
+    const { e, irA } = entorno({ storage, publicada: "aaa" });
+    // La página ya gastó su reintento: no recarga.
+    await expect(decidirTrasFallo(null, e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    // Después falla una sección de otra página: sigue sin recargar.
+    const seccion = entorno({ storage, publicada: "aaa", ruta: () => "/reservas" });
+    await expect(decidirTrasFallo(null, seccion.e)).resolves.toBe("sin_version_nueva");
+    expect(irA).not.toHaveBeenCalled();
+    expect(seccion.irA).not.toHaveBeenCalled();
+  });
+
+  it("la página no arrancó (primera carga) y no se recarga sola: aviso «No se pudo cargar esta página» y rastreador para Logs", async () => {
+    const storage = almacen();
+    storage.setItem(CLAVE_REINTENTO, "aaa|/"); // el reintento ya se gastó
+    const instalarRastreador = vi.fn();
+    const { e, irA } = entorno({ storage, publicada: "aaa", arrancada: () => false, instalarRastreador });
+    await expect(decidirTrasFallo(null, e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    expect(irA).not.toHaveBeenCalled();
+    const aviso = document.getElementById("aviso-pagina-sin-cargar");
+    expect(aviso?.textContent).toBe("No se pudo cargar esta página. · Recargar página");
+    expect(aviso?.querySelector("button")).not.toBeNull();
+    expect(instalarRastreador).toHaveBeenCalledTimes(1);
+    // Otro fallo en la misma página no duplica el aviso.
+    await expect(decidirTrasFallo(null, e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    expect(document.querySelectorAll("#aviso-pagina-sin-cargar")).toHaveLength(1);
+  });
+
+  it("con la web arrancada (o si falla una sección) no sale ese aviso: el mensaje lo pone la ruta o la sección", async () => {
+    const storage = almacen();
+    storage.setItem(CLAVE_REINTENTO, "aaa|/");
+    const instalarRastreador = vi.fn();
+    const arrancada = entorno({ storage, publicada: "aaa", arrancada: () => true, instalarRastreador });
+    await expect(decidirTrasFallo(null, arrancada.e, { pagina: true })).resolves.toBe("sin_version_nueva");
+    const seccion = entorno({ storage, publicada: "aaa", arrancada: () => false, instalarRastreador });
+    await expect(decidirTrasFallo(null, seccion.e)).resolves.toBe("sin_version_nueva");
+    expect(document.getElementById("aviso-pagina-sin-cargar")).toBeNull();
+    expect(instalarRastreador).not.toHaveBeenCalled();
+  });
+
   it("sin red no recarga (sería la página de «sin conexión» del navegador)", async () => {
     const { e, irA } = entorno({ publicada: null, enLinea: () => false });
     await expect(decidirTrasFallo(null, e)).resolves.toBe("sin_conexion");
@@ -225,6 +326,18 @@ describe("puertas", () => {
     const cargar = importarConRecarga(() => Promise.reject(FALLO), () => e);
     await expect(cargar()).rejects.toBe(FALLO);
     await vi.waitFor(() => expect(irA).toHaveBeenCalledTimes(1));
+  });
+
+  it("lazy() de una ruta ({ pagina: true }): sin versión nueva se reintenta recargando; el de una sección, no", async () => {
+    const pagina = entorno({ publicada: "aaa" });
+    await expect(importarConRecarga(() => Promise.reject(FALLO), () => pagina.e, { pagina: true })()).rejects.toBe(FALLO);
+    await vi.waitFor(() => expect(pagina.irA).toHaveBeenCalledTimes(1));
+    _reiniciarRecarga();
+    const seccion = entorno({ publicada: "aaa" });
+    await expect(importarConRecarga(() => Promise.reject(FALLO), () => seccion.e)()).rejects.toBe(FALLO);
+    await vi.waitFor(() => expect(seccion.buildPublicada).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(leerEstadoRecarga()).toBe("normal"));
+    expect(seccion.irA).not.toHaveBeenCalled();
   });
 
   it("lazy(): otros errores no preguntan ni recargan", async () => {
