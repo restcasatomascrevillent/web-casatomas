@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.12.1] - 2026-11-16
+
+Objetivo: El check «Candidata en preview» de las releases encuentra la preview de Vercel
+
+### Cambiado
+- Release: la candidata encuentra la preview aunque Vercel no cree deployments en GitHub ([#75](https://github.com/restcasatomascrevillent/web-casatomas/pull/75))
+
 ## [1.12.0] - 2026-11-14
 
 Objetivo: Vídeo del plato automático, versión antigua que se recupera sola y correos del cheque regalo
