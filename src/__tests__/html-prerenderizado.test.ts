@@ -24,6 +24,13 @@ describe("plantilla index.html", () => {
     expect(html.match(/<html[\s>]/gi)).toHaveLength(1);
     expect(/<html[^>]*\blang=/i.test(html)).toBe(false);
   });
+
+  // iPhone: Safari envuelve en un enlace `tel:` lo que le parece un teléfono («890 2010», del vino
+  // «La Rioja Alta Gran Reserva 890 2010») antes de la hidratación, y React fallaba con los errores
+  // #418/#422/#425 en /carta/vinos (CAS-6). Los teléfonos reales ya van en <TelLink>.
+  it("desactiva la detección automática de teléfonos de iOS", () => {
+    expect(html).toMatch(/<meta\s+name="format-detection"\s+content="[^"]*telephone=no[^"]*"\s*\/?>/i);
+  });
 });
 
 describe("verificar-html", () => {
