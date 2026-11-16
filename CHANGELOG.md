@@ -2,6 +2,14 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.12.2] - 2026-11-16
+
+Objetivo: La carta de vinos carga en iPhone y una página que no carga por un corte de red se reintenta sola
+
+### Cambiado
+- Carta: en iPhone la carta de vinos ya no falla al cargar (cifras tomadas por teléfonos) ([#77](https://github.com/restcasatomascrevillent/web-casatomas/pull/77))
+- Web: si una página no carga por un corte de red, se reintenta sola (una recarga) ([#78](https://github.com/restcasatomascrevillent/web-casatomas/pull/78))
+
 ## [1.12.1] - 2026-11-16
 
 Objetivo: El check «Candidata en preview» de las releases encuentra la preview de Vercel
