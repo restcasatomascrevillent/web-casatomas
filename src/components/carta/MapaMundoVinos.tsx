@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "@/i18n/LanguageProvider";
+import { contarCargaMapaVinos } from "@/lib/supabase-functions";
 
 interface Vino {
   id?: string;
@@ -250,6 +251,10 @@ const MapaMundoVinos = ({ vinos, filtroActivo = false, claveFiltro = "" }: MapaM
         touchPitch: false,
         dragRotate: false,
       });
+
+      // Cada mapa creado es una carga que Mapbox cuenta para la factura: se
+      // apunta en el contador del panel (Servicios › Mapbox).
+      contarCargaMapaVinos();
 
       // Controles de navegación adaptados a móvil
       map.current.addControl(
