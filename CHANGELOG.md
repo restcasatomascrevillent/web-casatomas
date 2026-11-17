@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.13.0] - 2026-11-17
+
+Objetivo: Contar las cargas del mapa de vinos para controlar el gasto de Mapbox desde el panel
+
+### Añadido
+- Carta: la web cuenta cada carga del mapa de vinos (control de Mapbox) ([#80](https://github.com/restcasatomascrevillent/web-casatomas/pull/80))
+
 ## [1.12.2] - 2026-11-16
 
 Objetivo: La carta de vinos carga en iPhone y una página que no carga por un corte de red se reintenta sola
