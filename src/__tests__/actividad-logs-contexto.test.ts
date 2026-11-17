@@ -101,6 +101,41 @@ describe("1 · recarga por ficheros caducados", () => {
     expect(tras[0][1].error?.mensaje).toContain("se recargó sola pero siguió con la misma versión");
   });
 
+  it("CAS-5: si se recargó sin saber qué build había publicada (/version.json ilegible) y sigue la misma, no se manda nada", async () => {
+    const storage = almacen();
+    const e = entorno({ storage, publicada: null });
+    await expect(registrarFalloDeCarga("error_react", evento, new TypeError(FALLO), e)).resolves.toBe("recargar");
+    expect(JSON.parse(storage.datos.get(CLAVE_AVISO)!)).toMatchObject({ build: "aaa", objetivo: "?aaa" });
+    // «Tras recargar»: la misma build. Fue la red: no hay «recarga sin efecto» (si el error se repite, saldrá entonces).
+    _reiniciarRegistro();
+    _reiniciarRecarga();
+    const tras = capturar();
+    expect(informarRecargaPendiente(entorno({ storage, build: "aaa" }))).toBe(false);
+    expect(tras).toEqual([]);
+    expect(storage.datos.has(CLAVE_AVISO)).toBe(false);
+  });
+
+  it("CAS-5: sin saber la build publicada pero llegando a otra distinta, sí sale como recuperado", async () => {
+    const storage = almacen();
+    await registrarFalloDeCarga("error_react", evento, new TypeError(FALLO), entorno({ storage, publicada: null }));
+    _reiniciarRegistro();
+    _reiniciarRecarga();
+    const tras = capturar();
+    expect(informarRecargaPendiente(entorno({ storage, build: "ccc" }))).toBe(true);
+    expect(tras[0][1]).toMatchObject({ accion: "recuperado_tras_recarga" });
+  });
+
+  it("con la build publicada conocida (y distinta), seguir en la misma tras recargar sigue saliendo como «recarga sin efecto»", async () => {
+    const storage = almacen();
+    await registrarFalloDeCarga("error_react", evento, new TypeError(FALLO), entorno({ storage, publicada: "bbb" }));
+    expect(JSON.parse(storage.datos.get(CLAVE_AVISO)!)).toMatchObject({ objetivo: "bbb" });
+    _reiniciarRegistro();
+    _reiniciarRecarga();
+    const tras = capturar();
+    expect(informarRecargaPendiente(entorno({ storage, build: "aaa" }))).toBe(true);
+    expect(tras[0][1]).toMatchObject({ accion: "recarga_sin_efecto" });
+  });
+
   it("si no recarga, el error sale en el momento con el porqué", async () => {
     const casos: Array<[Entorno, string]> = [
       [entorno({ publicada: "aaa" }), "sin_version_nueva"],
