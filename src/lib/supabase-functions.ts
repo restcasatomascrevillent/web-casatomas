@@ -138,3 +138,25 @@ export function clasificarFallo(status: number, enLinea: boolean = estaEnLinea()
   if (status > 0) return "servidor";
   return enLinea ? "servidor" : "sin_red";
 }
+
+/**
+ * Suma una carga del mapa de vinos (RPC `mapa_vinos_contar_carga`, migración
+ * 20261209100000 del panel). Mapbox cobra por cada mapa que se dibuja y no
+ * tiene API para saber cuántos van: el panel (Servicios › Mapbox) lo lee de
+ * este contador. No manda nada del visitante —ni sesión, ni página, ni
+ * idioma—: solo «una más», así que no depende de las cookies de estadísticas.
+ * Nunca lanza ni espera respuesta: contar no puede estropear el mapa.
+ */
+export function contarCargaMapaVinos(): void {
+  if (!SUPABASE_URL || !SUPABASE_KEY || typeof fetch !== "function") return;
+  try {
+    void fetch(`${SUPABASE_URL}/rest/v1/rpc/mapa_vinos_contar_carga`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json" },
+      body: "{}",
+      keepalive: true,
+    }).catch(() => undefined);
+  } catch {
+    // Sin red o con fetch bloqueado: el mapa sigue igual.
+  }
+}
