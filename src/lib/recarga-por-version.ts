@@ -16,12 +16,19 @@
  *   1. Se pregunta a `/version.json` (sin caché) qué build está publicada.
  *   2. Es la misma que la de la pestaña → no hay versión nueva: es la red o un
  *      fichero que falta de verdad. Si lo que falló es una PÁGINA (una ruta
- *      o una navegación a medias) se recarga UNA vez por build y página, sin
- *      aviso en Logs: un corte de red de un momento se arregla así, y el
- *      navegador no deja repetir un `import()` que falló (recuerda el fallo
- *      hasta que se recarga). Si vuelve a fallar, o es una sección, no se
- *      recarga: enseñan su «No se pudo cargar · Recargar» y sale en Logs
- *      (`sin_version_nueva`). Si la página ni siquiera arrancó (falló su
+ *      o una navegación a medias) o cualquier cosa durante la CARGA INICIAL
+ *      (los primeros `MARGEN_CARGA_INICIAL_MS` desde que se abrió la página:
+ *      secciones, el `<link>` de un fichero…) se recarga UNA vez por build y
+ *      página, sin aviso en Logs: un corte de red de un momento se arregla así,
+ *      y el navegador no deja repetir un `import()` que falló (recuerda el
+ *      fallo hasta que se recarga). Si vuelve a fallar, o es una sección que
+ *      falla con la página ya abierta (no se le salta la página a quien ya está
+ *      leyendo), no se recarga: enseñan su «No se pudo cargar · Recargar» y
+ *      sale en Logs (`sin_version_nueva`).
+ *      (CAS-5 y CAS-8, 17/11/2026: en iOS, un corte de red en la primera carga
+ *      tiraba a la vez cuatro secciones de la portada y el `<link>` de
+ *      `client-*.js`; los ficheros existían, pero el visitante se quedaba con
+ *      cuatro «No se pudo cargar».) Si la página ni siquiera arrancó (falló su
  *      código en la PRIMERA carga: React no monta y el HTML del SSG se queda
  *      sin vida), el mensaje es un aviso flotante en DOM puro y el rastreador
  *      se instala aquí para que el error llegue a Logs (antes pasaba en
@@ -31,9 +38,13 @@
  *      `sessionStorage` dice a qué build se intentó llegar: si tras recargar
  *      la pestaña sigue sin ella (HTML de una caché), no hay segunda recarga
  *      sino el aviso «Hay una versión nueva de la web · Toca para actualizar».
- *   4. No se puede saber (sin red, `/version.json` antiguo sin `build`) →
- *      sin conexión, no se recarga; si no, una recarga como mucho por build
- *      de la pestaña, con la misma marca.
+ *   4. No se puede saber (sin red, `/version.json` antiguo sin `build` o que no
+ *      responde) → sin conexión, no se recarga; si no, una recarga como mucho
+ *      por build de la pestaña, con la misma marca. Si tras esa recarga la
+ *      pestaña sigue en la misma build, no se manda nada: no había forma de
+ *      saber si había versión nueva y, casi siempre, era la red (CAS-5: en
+ *      Android `/version.json` tampoco respondía y la recarga sí arregló la
+ *      página). Si el error se repite, sale entonces.
  *
  * Puertas (todas llevan a la misma decisión): `vite:preloadError`,
  * `importarConRecarga` en los `lazy()`, `SectionErrorBoundary`, el
@@ -41,7 +52,8 @@
  *
  * Super Admin › Logs: el error que provoca la recarga sale tras recargar,
  * una vez, marcado (`accion` = `recuperado_tras_recarga` o
- * `recarga_sin_efecto` y una nota al final del mensaje: el servidor solo
+ * `recarga_sin_efecto` —este solo si se sabía a qué build ir y no se llegó:
+ * HTML de una caché— y una nota al final del mensaje: el servidor solo
  * admite propiedades de su catálogo y el panel enseña el mensaje). Si no se
  * recarga, sale en el momento con `accion` = `aviso_version_nueva`,
  * `sin_version_nueva` o `sin_conexion`.
@@ -59,6 +71,13 @@ export const CLAVE_AVISO = "recarga-auto-aviso";
 /** Build y página de la última recarga «de reintento» (sin versión nueva): una por build y página. */
 export const CLAVE_REINTENTO = "recarga-reintento";
 const ESPERA_VERSION_MS = 5_000;
+/**
+ * Hasta cuándo (ms desde que se abrió la página) un fallo de carga cuenta como
+ * de la carga inicial: entonces una sección o un recurso se reintentan
+ * recargando como una página (ver `puedeReintentar`). Pasado este margen, el
+ * visitante ya está leyendo y una sección que falla no le recarga la página.
+ */
+export const MARGEN_CARGA_INICIAL_MS = 20_000;
 
 const COMMIT = (import.meta.env.VITE_COMMIT_WEB as string | undefined) || "";
 const VERSION = (import.meta.env.VITE_VERSION_WEB as string | undefined) || "";
@@ -127,6 +146,8 @@ export interface Entorno {
   arrancada?: () => boolean;
   /** Instala el rastreador de Logs sin React (la web no arrancó y nadie más lo hará). */
   instalarRastreador?: () => void;
+  /** Milisegundos desde que se abrió la página (`performance.now()`). Sin él, nunca es la carga inicial. */
+  msDesdeInicio?: () => number;
 }
 
 const entornoNavegador = (): Entorno => {
@@ -155,6 +176,7 @@ const entornoNavegador = (): Entorno => {
     instalarRastreador: () => {
       void import("@/lib/actividad/instalar").then((m) => void m.instalarSeguimiento()).catch(() => undefined);
     },
+    msDesdeInicio: () => (typeof performance !== "undefined" ? performance.now() : Number.POSITIVE_INFINITY),
   };
 };
 
@@ -170,6 +192,8 @@ let avisosEnLinea = 0;
 let falloDePagina = false;
 /** La recarga decidida es un reintento sin versión nueva: no deja aviso para Logs. */
 let recargaDeReintento = false;
+/** Build a la que iba la recarga decidida («?build» si no se sabía cuál había publicada). */
+let objetivoRecarga: string | null = null;
 const oyentes = new Set<() => void>();
 
 const cambiarEstado = (nuevo: EstadoRecarga) => {
@@ -288,7 +312,14 @@ function guardarAviso(e: Entorno, aviso: AvisoRecarga | null): void {
     const ruta = aviso.datos.ruta ?? e.ruta();
     e.storage.setItem(
       CLAVE_AVISO,
-      JSON.stringify({ ...aviso, datos: { ...aviso.datos, ...(ruta ? { ruta } : {}) }, version: e.commit || e.build, build: e.build, publicada: e.version || undefined }),
+      JSON.stringify({
+        ...aviso,
+        datos: { ...aviso.datos, ...(ruta ? { ruta } : {}) },
+        version: e.commit || e.build,
+        build: e.build,
+        publicada: e.version || undefined,
+        ...(objetivoRecarga ? { objetivo: objetivoRecarga } : {}),
+      }),
     );
   } catch {
     // Sin almacenamiento el aviso se pierde: la recarga es lo importante.
@@ -296,14 +327,21 @@ function guardarAviso(e: Entorno, aviso: AvisoRecarga | null): void {
 }
 
 // ─── La decisión ─────────────────────────────────────────────────────────────
+/** ¿El fallo llega durante la carga inicial de la página (ver `MARGEN_CARGA_INICIAL_MS`)? */
+function enCargaInicial(e: Entorno): boolean {
+  const ms = e.msDesdeInicio?.();
+  return typeof ms === "number" && Number.isFinite(ms) && ms >= 0 && ms <= MARGEN_CARGA_INICIAL_MS;
+}
+
 /**
  * Sin versión nueva: ¿se reintenta recargando? Solo si lo que falló es una
- * página (lo dijo la puerta o hay una navegación a medias) y solo una vez por
- * build y página. Sin almacenamiento no se puede evitar un bucle: no.
+ * página (lo dijo la puerta o hay una navegación a medias) o si falló algo
+ * durante la carga inicial (CAS-5/CAS-8), y solo una vez por build y página.
+ * Sin almacenamiento no se puede evitar un bucle: no.
  */
 function puedeReintentar(e: Entorno): boolean {
   const destino = e.destino();
-  if (!falloDePagina && !destino) return false;
+  if (!falloDePagina && !destino && !enCargaInicial(e)) return false;
   if (!e.storage) return false;
   const marca = `${e.build}|${destino ?? e.ruta()}`;
   try {
@@ -316,6 +354,7 @@ function puedeReintentar(e: Entorno): boolean {
 }
 
 async function decidir(e: Entorno): Promise<Decision> {
+  objetivoRecarga = null;
   const publicada = await e.buildPublicada();
   if (publicada && publicada === e.build) {
     if (!puedeReintentar(e)) return "sin_version_nueva";
@@ -325,6 +364,7 @@ async function decidir(e: Entorno): Promise<Decision> {
   if (!publicada && e.enLinea() === false) return "sin_conexion";
   // A qué build se quiere llegar. Sin saberla, «cualquiera distinta de la mía».
   const objetivo = publicada ?? `?${e.build}`;
+  objetivoRecarga = objetivo;
   if (!e.storage) return "aviso";
   try {
     if (e.storage.getItem(CLAVE_MARCA) === objetivo) return "aviso";
@@ -416,7 +456,9 @@ export function registrarFalloDeVersion(tipo: TipoActividad, datos: DatosActivid
  * Tras una recarga automática: manda (una vez) el error que la provocó,
  * marcado como recuperado (o «sin efecto» si la pestaña sigue en la misma
  * build). Va a la cola de `registrarActividad`, que lo entrega cuando se
- * instala el rastreador. Devuelve `true` si había aviso.
+ * instala el rastreador. Si la recarga se hizo sin saber qué build había
+ * publicada (objetivo «?…») y la pestaña sigue en la misma, no manda nada:
+ * fue un reintento por la red (CAS-5). Devuelve `true` si mandó un aviso.
  */
 export function informarRecargaPendiente(entorno: Entorno = entornoNavegador()): boolean {
   let texto: string | null = null;
@@ -428,9 +470,12 @@ export function informarRecargaPendiente(entorno: Entorno = entornoNavegador()):
   }
   if (!texto) return false;
   try {
-    const aviso = JSON.parse(texto) as AvisoRecarga & { version?: string; build?: string; publicada?: string };
+    const aviso = JSON.parse(texto) as AvisoRecarga & { version?: string; build?: string; publicada?: string; objetivo?: string };
     if (!aviso || typeof aviso.tipo !== "string") return false;
-    const marca = aviso.build && aviso.build === entorno.build ? "recarga_sin_efecto" : "recuperado_tras_recarga";
+    const mismaBuild = !!aviso.build && aviso.build === entorno.build;
+    // Sin saber a qué build ir, seguir en la misma no dice nada (casi siempre fue la red): si se repite, saldrá entonces.
+    if (mismaBuild && typeof aviso.objetivo === "string" && aviso.objetivo.startsWith("?")) return false;
+    const marca = mismaBuild ? "recarga_sin_efecto" : "recuperado_tras_recarga";
     const antes = [aviso.publicada && `v${aviso.publicada}`, aviso.build && `build ${aviso.build}`].filter(Boolean).join(" · ");
     const datos: DatosActividad = {
       ...aviso.datos,
@@ -495,6 +540,7 @@ export function _reiniciarRecarga(): void {
   avisosEnLinea = 0;
   falloDePagina = false;
   recargaDeReintento = false;
+  objetivoRecarga = null;
   router = null;
   oyentes.clear();
   if (typeof document !== "undefined") {

@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.13.1] - 2026-11-17
+
+Objetivo: La web se recupera sola de los cortes de red al cargar (CAS-5 y CAS-8)
+
+### Cambiado
+- Web: un corte de red en la primera carga se reintenta recargando (CAS-5, CAS-8) ([#82](https://github.com/restcasatomascrevillent/web-casatomas/pull/82))
+
 ## [1.13.0] - 2026-11-17
 
 Objetivo: Contar las cargas del mapa de vinos para controlar el gasto de Mapbox desde el panel
