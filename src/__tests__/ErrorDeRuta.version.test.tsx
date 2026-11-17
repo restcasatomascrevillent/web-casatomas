@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import ErrorDeRuta from "@/components/ErrorDeRuta";
-import { CLAVE_MARCA, _reiniciarRecarga } from "@/lib/recarga-por-version";
+import { CLAVE_MARCA, CLAVE_REINTENTO, _reiniciarRecarga } from "@/lib/recarga-por-version";
 import { _reiniciarRegistro, conectarEmisor, type DatosActividad } from "@/lib/actividad/registro";
 import { quitarCargadores } from "@/lib/router-cliente";
 
@@ -70,7 +70,10 @@ describe("ErrorDeRuta", () => {
     expect(screen.getByRole("button", { name: "Tap to update" })).toBeTruthy();
   });
 
-  it("sin versión nueva publicada: «No se pudo cargar esta página» y no recarga sola", async () => {
+  it("sin versión nueva publicada y con el reintento ya gastado: «No se pudo cargar esta página» y no recarga sola", async () => {
+    // En la carga inicial (jsdom acaba de arrancar) la primera vez se reintentaría recargando (CAS-5/CAS-8);
+    // aquí ya se gastó ese reintento: es lo que ve el visitante si la página vuelve a fallar tras recargar.
+    window.sessionStorage.setItem(CLAVE_REINTENTO, `vieja|${window.location.pathname}`);
     publicada("vieja");
     await montar("/carta/carnes", VERSION);
     expect(await screen.findByText("No se pudo cargar esta página.")).toBeTruthy();

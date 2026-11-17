@@ -13,12 +13,19 @@
  *     cargar esta página». El navegador no repite un `import()` que falló, así
  *     que una PÁGINA se reintenta recargando, una vez por build y página y sin
  *     aviso en Logs; una sección, no.
+ *   · CAS-5 y CAS-8 (17/11/2026): en iOS, un corte de red en la PRIMERA carga
+ *     tiraba a la vez varias secciones de la portada y el `<link>` de
+ *     `client-*.js` (los ficheros existían). Durante la carga inicial, una
+ *     sección o un recurso se reintentan recargando como una página (una vez
+ *     por build y página); con la página ya abierta, una sección sigue sin
+ *     recargar.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CLAVE_AVISO,
   CLAVE_MARCA,
   CLAVE_REINTENTO,
+  MARGEN_CARGA_INICIAL_MS,
   _reiniciarRecarga,
   decidirTrasFallo,
   destinoPendiente,
@@ -157,6 +164,61 @@ describe("la decisión", () => {
     _reiniciarRecarga();
     const otraBuild = entorno({ storage, build: "bbb", publicada: "bbb", ruta: () => "/carta/vinos" });
     await expect(decidirTrasFallo(aviso, otraBuild.e, { pagina: true })).resolves.toBe("recargar");
+  });
+
+  it("CAS-5/CAS-8: sin versión nueva, una SECCIÓN que falla en la carga inicial (3 s) se reintenta recargando, sin aviso para Logs", async () => {
+    const storage = almacen();
+    const aviso = { tipo: "error_react" as const, datos: { error: { mensaje: "TypeError: Importing a module script failed." } } };
+    const { e, irA } = entorno({ storage, publicada: "aaa", msDesdeInicio: () => 3_000 });
+    // Varias secciones de la portada a la vez (nosotros, contacto, novedades…): una sola pregunta y una sola recarga.
+    const r = await Promise.all([decidirTrasFallo(aviso, e), decidirTrasFallo(aviso, e), decidirTrasFallo(aviso, e)]);
+    expect(r).toEqual(["recargar", "recargar", "recargar"]);
+    expect(irA).toHaveBeenCalledTimes(1);
+    expect(irA).toHaveBeenCalledWith(null);
+    expect(storage.getItem(CLAVE_REINTENTO)).toBe("aaa|/");
+    expect(storage.getItem(CLAVE_AVISO)).toBeNull();
+    expect(storage.getItem(CLAVE_MARCA)).toBeNull();
+  });
+
+  it("CAS-5/CAS-8: con la página ya abierta (60 s) una sección que falla sigue sin recargar", async () => {
+    const { e, irA } = entorno({ publicada: "aaa", msDesdeInicio: () => 60_000 });
+    await expect(decidirTrasFallo(null, e)).resolves.toBe("sin_version_nueva");
+    expect(irA).not.toHaveBeenCalled();
+    expect(e.storage!.getItem(CLAVE_REINTENTO)).toBeNull();
+    // El margen es inclusivo; un milisegundo después ya no es la carga inicial.
+    _reiniciarRecarga();
+    const justo = entorno({ publicada: "aaa", msDesdeInicio: () => MARGEN_CARGA_INICIAL_MS });
+    await expect(decidirTrasFallo(null, justo.e)).resolves.toBe("recargar");
+    _reiniciarRecarga();
+    const pasado = entorno({ publicada: "aaa", msDesdeInicio: () => MARGEN_CARGA_INICIAL_MS + 1 });
+    await expect(decidirTrasFallo(null, pasado.e)).resolves.toBe("sin_version_nueva");
+  });
+
+  it("CAS-5/CAS-8: el reintento de la carga inicial es UNO por build y página: si tras recargar vuelve a fallar, sale en Logs", async () => {
+    const storage = almacen();
+    const primera = entorno({ storage, publicada: "aaa", msDesdeInicio: () => 2_000 });
+    await expect(decidirTrasFallo(null, primera.e)).resolves.toBe("recargar");
+    // Tras recargar, la página vuelve a fallar en su carga inicial: ya no recarga.
+    _reiniciarRecarga();
+    const segunda = entorno({ storage, publicada: "aaa", msDesdeInicio: () => 2_500 });
+    await expect(decidirTrasFallo(null, segunda.e)).resolves.toBe("sin_version_nueva");
+    expect(segunda.irA).not.toHaveBeenCalled();
+    // Comparte la marca con el reintento de la página: si la página ya lo gastó, la sección tampoco recarga.
+    _reiniciarRecarga();
+    const gastado = almacen();
+    gastado.setItem(CLAVE_REINTENTO, "aaa|/");
+    const seccion = entorno({ storage: gastado, publicada: "aaa", msDesdeInicio: () => 1_000 });
+    await expect(decidirTrasFallo(null, seccion.e)).resolves.toBe("sin_version_nueva");
+    expect(seccion.irA).not.toHaveBeenCalled();
+  });
+
+  it("CAS-5/CAS-8: en la carga inicial, si no se sabe la hora (sin performance), se comporta como antes: la sección no recarga", async () => {
+    for (const ms of [Number.NaN, Number.POSITIVE_INFINITY, -5]) {
+      _reiniciarRecarga();
+      const { e, irA } = entorno({ publicada: "aaa", msDesdeInicio: () => ms });
+      await expect(decidirTrasFallo(null, e)).resolves.toBe("sin_version_nueva");
+      expect(irA).not.toHaveBeenCalled();
+    }
   });
 
   it("sin versión nueva con la navegación a medias: el reintento va a la página pedida aunque la puerta no sepa que es una página", async () => {
