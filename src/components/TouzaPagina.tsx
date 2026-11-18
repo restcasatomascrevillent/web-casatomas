@@ -125,7 +125,7 @@ export default function TouzaPagina() {
               href={TOUZA_DESPUES_DE_CENAR_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium underline underline-offset-4"
+              className="inline-flex min-h-6 items-center font-medium underline underline-offset-4"
               style={{ color: TOUZA.accent }}
             >
               {t.espacios.touzaAfterDinner}
