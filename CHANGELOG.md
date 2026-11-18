@@ -2,6 +2,18 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.14.0] - 2026-11-18
+
+Objetivo: Las fotos de la carta cambiadas en el panel se ven al momento, la web enlaza con Touza (datos para Google y «Copas después de cenar») y la página Touza ya no enseña a un camarero que no trabaja allí
+
+### Añadido
+- Seo: unir Casa Tomás con Touza en el JSON-LD y enlazar a «Copas después de cenar» ([66caf82](https://github.com/restcasatomascrevillent/web-casatomas/commit/66caf82eae89405b7583086ac436e63a5b08e410))
+
+### Cambiado
+- Carta: conservar el ?t= de la foto para que una foto cambiada no salga vieja ([7aae863](https://github.com/restcasatomascrevillent/web-casatomas/commit/7aae863b828c1989ad4f0f92ae157c6a01dda16a))
+- Touza: la página Touza ya no enseña al camarero; en su lugar, un cóctel ante la «T» ([#84](https://github.com/restcasatomascrevillent/web-casatomas/pull/84))
+- Touza: el enlace «Copas después de cenar en Touza» mide 24 px de alto para pulsarlo en el móvil ([#85](https://github.com/restcasatomascrevillent/web-casatomas/pull/85))
+
 ## [1.13.1] - 2026-11-17
 
 Objetivo: La web se recupera sola de los cortes de red al cargar (CAS-5 y CAS-8)
