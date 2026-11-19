@@ -19,8 +19,13 @@
  */
 import { test as base, expect, type Page } from "@playwright/test";
 import { translations as es } from "../src/i18n/languages/es";
-import { TEXTOS_VERSION_NUEVA } from "../src/lib/textos-version-nueva";
 
+/**
+ * La pantalla de error de la ruta (`ErrorDeRuta`, texto `falloPagina` de
+ * `src/lib/textos-version-nueva.ts`). Escrito a mano: ese módulo usa el alias
+ * `@/`, que el tsconfig de `e2e/` no resuelve.
+ */
+const FALLO_PAGINA = "No se pudo cargar esta página.";
 const SUPABASE_FALSO = `http://127.0.0.1:${process.env.E2E_SUPABASE_PORT ?? 54329}`;
 const AHORA = new Date("2026-10-05T10:00:00+02:00");
 const HORA = "13:00";
@@ -142,6 +147,6 @@ test("con la página traducida por el navegador, reservar enseña el resguardo (
 
   await expect(page.getByText(f.successTitle)).toBeVisible();
   expect(crear).toHaveLength(1);
-  await expect(page.getByText(TEXTOS_VERSION_NUEVA.es.falloPagina)).toHaveCount(0);
+  await expect(page.getByText(FALLO_PAGINA)).toHaveCount(0);
   expect(errores.filter((m) => /removeChild|insertBefore|not a child of this node/i.test(m))).toEqual([]);
 });
