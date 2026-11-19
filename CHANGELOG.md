@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.13.2] - 2026-11-19
+
+Objetivo: La reserva no se rompe con la página traducida por el navegador (CAS-13)
+
+### Cambiado
+- Web: el traductor del navegador ya no tira la página al reservar (CAS-13) ([#87](https://github.com/restcasatomascrevillent/web-casatomas/pull/87))
+
 ## [1.13.1] - 2026-11-17
 
 Objetivo: La web se recupera sola de los cortes de red al cargar (CAS-5 y CAS-8)
