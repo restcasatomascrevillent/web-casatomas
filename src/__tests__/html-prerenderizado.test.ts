@@ -14,6 +14,7 @@ import {
   idiomaEsperado,
   problemasDeAccesibilidad,
   problemasDeHtml,
+  problemasDeScriptsEnLinea1,
   verificarHtmlPrerenderizado,
 } from "../../scripts/verificar-html.mjs";
 
@@ -135,5 +136,24 @@ describe("verificar-html: accesibilidad de teclado", () => {
 
   it("ignora los elementos con tabindex=\"-1\" y los comentarios", () => {
     expect(problemasDeAccesibilidad(pagina('<!-- <button>x</button> --><div tabindex="-1"></div><a href="#contenido">x</a><main id="contenido" tabindex="-1"></main>'), "index.html")).toEqual([]);
+  });
+});
+
+describe("verificar-html: ningún script nuestro en la línea 1 (CAS-21..28)", () => {
+  // Logs da por «Navegador o extensión» un error con toda la pila en la línea 1 de una página
+  // (los scripts que mete Brave en iPhone). Solo vale si nuestro código nunca está ahí.
+  const cabecera = '<!DOCTYPE html><html lang="es"><head><title>Carta</title>';
+  it("acepta la línea 1 con la cabecera y JSON-LD, y los scripts al final del cuerpo (como el SSG)", () => {
+    const html = `${cabecera}<script type="application/ld+json">{"@type":"Menu"}</script></head>\n<body>\n<script>window.__VITE_REACT_SSG_HASH__ = 'x'</script></body></html>`;
+    expect(problemasDeScriptsEnLinea1(html, "carta.html")).toEqual([]);
+  });
+  it("rechaza un script ejecutable en la línea 1 (en línea, de módulo o con type JavaScript)", () => {
+    for (const script of ["<script>window.a = 1</script>", '<script type="module" src="/assets/app.js"></script>', '<script type="text/javascript">x()</script>']) {
+      expect(problemasDeScriptsEnLinea1(`${cabecera}${script}</head>\n<body></body></html>`, "carta.html")[0]).toMatch(/línea 1/);
+    }
+  });
+  it("forma parte de las comprobaciones de cada página", () => {
+    const html = `${cabecera}<script>window.a = 1</script></head><body><a href="#contenido">Saltar</a><main id="contenido"></main></body></html>`;
+    expect(problemasDeHtml(html, "carta.html").some((p) => /línea 1/.test(p))).toBe(true);
   });
 });
