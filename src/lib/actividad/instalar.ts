@@ -19,6 +19,7 @@ import { causaSinRespuesta, clasificarClic, endpointDe, idiomaDeRuta, procedenci
 import { conectarEmisor, type DatosActividad } from "./registro";
 import { registrarFalloDeVersion } from "@/lib/recarga-por-version";
 import { Rastreador } from "./rastreador";
+import { ACCION_IMAGEN, MAX_COMPROBACIONES_POR_IMAGEN, comprobarImagenFallida, entornoDelNavegador, repintarImagen } from "./imagen-fallida";
 
 export const URL_INGESTA = `${FUNCTIONS_BASE_URL}/registrar-actividad-web`;
 const INACTIVO_MS = 60_000;
@@ -290,6 +291,38 @@ export function instalarSeguimiento(): Seguimiento | null {
   }
 
   // ─── Errores ────────────────────────────────────────────────────────────────
+  // Imágenes de la propia web que no cargan: antes de apuntarlas se mira si es la conexión del
+  // visitante (se reintenta una vez y, si carga, se repinta) o la web (CAS-17, ver imagen-fallida.ts).
+  const entornoImagen = entornoDelNavegador(fetchOriginal);
+  const comprobaciones = new Map<string, number>();
+  const repintadas = new WeakSet<HTMLImageElement>();
+  let activo = true;
+  deshacer.push(() => {
+    activo = false;
+  });
+  const imagenFallida = (img: HTMLImageElement, src: string, datos: DatosActividad) => {
+    const n = (comprobaciones.get(src) ?? 0) + 1;
+    comprobaciones.set(src, n);
+    if (n > MAX_COMPROBACIONES_POR_IMAGEN) {
+      r.registrar("error_recurso", datos);
+      return;
+    }
+    comprobarImagenFallida(src, entornoImagen).then(
+      (resultado) => {
+        if (!activo) return;
+        // Una sola vez por elemento: si al repintarla vuelve a fallar, no hay bucle.
+        if (resultado === "recuperada" && !repintadas.has(img)) {
+          repintadas.add(img);
+          repintarImagen(img);
+        }
+        r.registrar("error_recurso", resultado === "rota" ? datos : { ...datos, accion: ACCION_IMAGEN[resultado] });
+      },
+      () => {
+        if (activo) r.registrar("error_recurso", datos);
+      },
+    );
+  };
+
   // JS y promesas: `capturarErroresTempranos` (registro.ts), desde el arranque.
   // Aquí, los recursos que no cargan (el evento no burbujea: fase de captura).
   escuchar(window, "error", (e) => {
@@ -298,6 +331,10 @@ export function instalarSeguimiento(): Seguimiento | null {
       const src = (destino as HTMLImageElement).currentSrc || (destino as HTMLImageElement).src || (destino as HTMLLinkElement).href || "";
       if (!src || src.startsWith("data:") || src.startsWith("blob:")) return;
       const datos = { objetivo: src.split(/[?#]/)[0].slice(0, 200), props: { etiqueta: destino.tagName.toLowerCase() } };
+      if (destino instanceof HTMLImageElement && src.startsWith(`${window.location.origin}/`)) {
+        imagenFallida(destino, src, datos);
+        return;
+      }
       // Un JS/CSS de la web que no está (404 de la precarga de Vite): casi siempre, pestaña con una build
       // antigua. Pasa por la misma decisión que el `import()` que lo pidió: si se recarga, es ruido de esa
       // recarga (el error que importa sale tras volver, marcado); si no, sale con el porqué.
