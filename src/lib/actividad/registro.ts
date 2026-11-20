@@ -14,13 +14,36 @@
  * botones, cifras y códigos.
  */
 
-import { esHidratacionDePaginaTraducida } from "@/lib/pagina-traducida";
+import { esErrorDeHidratacion, traductorDeLaPagina } from "@/lib/pagina-traducida";
+import { domAjeno } from "@/lib/dom-ajeno";
 
 /**
  * `accion` de un error de hidratación con la página traducida por el navegador.
  * El panel (admin-casatomas, logs-web/origen.ts) lo clasifica como «Navegador o extensión».
  */
 export const ACCION_PAGINA_TRADUCIDA = "pagina_traducida";
+/**
+ * `accion` de un error de hidratación cuando algo de fuera (otro traductor, una
+ * extensión, el propio navegador) cambió la página antes de que React la
+ * reclamara, sin rastro de traductor conocido (ver lib/dom-ajeno). El panel lo
+ * clasifica también como «Navegador o extensión».
+ */
+export const ACCION_DOM_AJENO = "dom_ajeno";
+
+/**
+ * Error de hidratación: ¿lo provocó algo de fuera? `accion` para el panel y, en
+ * `componente`, qué cambió (o que la página estaba intacta: entonces es nuestro).
+ * Se mira AHORA, mientras el rastro sigue en la página.
+ */
+export function contextoDeHidratacion(): Pick<DatosActividad, "accion" | "props"> {
+  const traductor = traductorDeLaPagina();
+  const ajeno = domAjeno();
+  const componente = ajeno.muestra
+    ? `cambio ajeno: ${ajeno.muestra}`.slice(0, 110)
+    : ajeno.activo ? "página intacta antes de hidratar" : undefined;
+  const accion = traductor ? ACCION_PAGINA_TRADUCIDA : ajeno.cambios > 0 ? ACCION_DOM_AJENO : undefined;
+  return { ...(accion ? { accion } : {}), ...(componente ? { props: { componente } } : {}) };
+}
 
 export type TipoActividad =
   | "clic" | "contacto" | "carta_categoria" | "plato_abierto" | "vino_abierto" | "bebida_abierta" | "busqueda" | "filtro"
@@ -114,11 +137,11 @@ export function capturarErroresTempranos(): void {
   capturando = true;
   window.addEventListener("error", (e) => {
     if (!(e instanceof ErrorEvent) || !e.message) return; // recursos: los recoge el rastreador
-    // Hidratación con la página ya traducida por el navegador: no es un fallo de la web (ver
-    // lib/pagina-traducida). Se mira AHORA, mientras el rastro del traductor sigue en la página.
-    const traducida = esHidratacionDePaginaTraducida(e.message);
+    // Hidratación con la página cambiada por el navegador (traductor, extensión…): no es un fallo de
+    // la web (ver lib/pagina-traducida y lib/dom-ajeno).
+    const contexto = esErrorDeHidratacion(e.message) ? contextoDeHidratacion() : {};
     apuntarError("error_js", {
-      ...(traducida ? { accion: ACCION_PAGINA_TRADUCIDA } : {}),
+      ...contexto,
       error: { mensaje: e.message, pila: e.error instanceof Error ? e.error.stack : `at ${e.filename}:${e.lineno}:${e.colno}` },
     }, e.error ?? e.message);
   });
