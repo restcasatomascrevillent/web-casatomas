@@ -3,9 +3,13 @@ import { routes } from "./App";
 import "./index.css";
 import { instalarRecargaPorVersion } from "./lib/recarga-por-version";
 import { instalarProteccionDomTraductor } from "./lib/proteger-dom-traductor";
+import { vigilarDomAjeno } from "./lib/dom-ajeno";
 import { crearRouterCliente } from "./lib/router-cliente";
 
 if (typeof window !== "undefined") {
+  // Antes de hidratar: ¿cambia alguien de fuera la página antes de que React la reclame? Así un
+  // error de hidratación dice si es nuestro o del navegador (CAS-6, ver lib/dom-ajeno).
+  vigilarDomAjeno();
   // Página traducida por el navegador: que React no la tire al quitar un texto
   // que el traductor ya cambió (CAS-13, ver lib/proteger-dom-traductor).
   instalarProteccionDomTraductor();
