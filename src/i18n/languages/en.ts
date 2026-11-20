@@ -111,6 +111,8 @@ export const translations: Translations = {
       title: "My table",
       subtitle: "What you fancy, the total and each person's share",
       note: "Approximate prices · not an online order",
+      avisoNoPedidoTitulo: "This is not an online order",
+      avisoNoPedido: "My table helps you choose and see how much each person pays; at the restaurant, just tell your waiter.",
       emptyTitle: "Add dishes and wines to set up your table",
       emptySubtitle: "Pick what you fancy from the menu, share it with your table and split the bill.",
       emptyCta: "See the menu",
