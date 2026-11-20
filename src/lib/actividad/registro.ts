@@ -14,6 +14,14 @@
  * botones, cifras y códigos.
  */
 
+import { esHidratacionDePaginaTraducida } from "@/lib/pagina-traducida";
+
+/**
+ * `accion` de un error de hidratación con la página traducida por el navegador.
+ * El panel (admin-casatomas, logs-web/origen.ts) lo clasifica como «Navegador o extensión».
+ */
+export const ACCION_PAGINA_TRADUCIDA = "pagina_traducida";
+
 export type TipoActividad =
   | "clic" | "contacto" | "carta_categoria" | "plato_abierto" | "vino_abierto" | "bebida_abierta" | "busqueda" | "filtro"
   | "mapa_vinos" | "pedido" | "media" | "formulario" | "chat" | "reserva_disponibilidad" | "reserva_solicitada"
@@ -106,7 +114,13 @@ export function capturarErroresTempranos(): void {
   capturando = true;
   window.addEventListener("error", (e) => {
     if (!(e instanceof ErrorEvent) || !e.message) return; // recursos: los recoge el rastreador
-    apuntarError("error_js", { error: { mensaje: e.message, pila: e.error instanceof Error ? e.error.stack : `at ${e.filename}:${e.lineno}:${e.colno}` } }, e.error ?? e.message);
+    // Hidratación con la página ya traducida por el navegador: no es un fallo de la web (ver
+    // lib/pagina-traducida). Se mira AHORA, mientras el rastro del traductor sigue en la página.
+    const traducida = esHidratacionDePaginaTraducida(e.message);
+    apuntarError("error_js", {
+      ...(traducida ? { accion: ACCION_PAGINA_TRADUCIDA } : {}),
+      error: { mensaje: e.message, pila: e.error instanceof Error ? e.error.stack : `at ${e.filename}:${e.lineno}:${e.colno}` },
+    }, e.error ?? e.message);
   });
   window.addEventListener("unhandledrejection", (e) => {
     const motivo = e.reason;
