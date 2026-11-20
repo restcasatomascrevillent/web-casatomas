@@ -111,6 +111,8 @@ export const translations = {
       title: "Mi mesa",
       subtitle: "Lo que os apetece, el total y cuánto toca a cada uno",
       note: "Precios orientativos · no es un pedido online",
+      avisoNoPedidoTitulo: "No es un pedido online",
+      avisoNoPedido: "Mi mesa os ayuda a elegir y a ver cuánto toca a cada uno; en el restaurante se lo decís al camarero.",
       emptyTitle: "Añade platos y vinos para preparar tu mesa",
       emptySubtitle: "Elige en la carta lo que os apetece, compártelo con tu mesa y dividid la cuenta.",
       emptyCta: "Ver la carta",
