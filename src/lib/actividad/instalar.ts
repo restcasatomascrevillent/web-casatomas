@@ -22,6 +22,8 @@ import { Rastreador } from "./rastreador";
 import { ACCION_IMAGEN, MAX_COMPROBACIONES_POR_IMAGEN, comprobarImagenFallida, entornoDelNavegador, repintarImagen } from "./imagen-fallida";
 
 export const URL_INGESTA = `${FUNCTIONS_BASE_URL}/registrar-actividad-web`;
+/** Lo que se espera antes de apuntar una petición sin respuesta (ver `fetchMedido`). */
+export const ESPERA_SIN_RESPUESTA_MS = 2_000;
 const INACTIVO_MS = 60_000;
 
 const uuid = (): string =>
@@ -345,6 +347,14 @@ export function instalarSeguimiento(): Seguimiento | null {
   }, { capture: true, passive: true });
 
   // ─── Peticiones a Supabase ──────────────────────────────────────────────────
+  // Peticiones sin respuesta a la espera de decidir (ver `fetchMedido`). Nombres propios: otras
+  // partes del rastreador tienen su propio «activo».
+  const esperasSinRespuesta: ReturnType<typeof setTimeout>[] = [];
+  let decidirSinRespuesta = true;
+  deshacer.push(() => {
+    decidirSinRespuesta = false;
+    esperasSinRespuesta.forEach(clearTimeout);
+  });
   const fetchAnterior = window.fetch;
   const fetchMedido: typeof fetch = async (entrada, init) => {
     const url = typeof entrada === "string" ? entrada : entrada instanceof URL ? entrada.href : entrada.url;
@@ -361,15 +371,25 @@ export function instalarSeguimiento(): Seguimiento | null {
       return res;
     } catch (err) {
       const ms = Math.round(performance.now() - t0);
-      const enLinea = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
-      const causa = causaSinRespuesta(err, { saliendo, enLinea });
-      const props = { endpoint, metodo, status: 0, duracion_ms: ms, causa, en_linea: enLinea };
-      if (causa === "cancelada") {
-        // No es un fallo: queda como petición (con consentimiento), nunca como error.
-        r.registrar("peticion", { valor: ms, props: { ...props, cancelada: true } });
-      } else {
-        r.registrar("error_peticion", { objetivo: endpoint, valor: ms, props, error: { mensaje: `Sin respuesta de ${endpoint}${causa === "sin_red" ? " (sin conexión)" : ""}` } });
-      }
+      const apuntar = () => {
+        const enLinea = typeof navigator.onLine === "boolean" ? navigator.onLine : undefined;
+        const causa = causaSinRespuesta(err, { saliendo, enLinea });
+        const props = { endpoint, metodo, status: 0, duracion_ms: ms, causa, en_linea: enLinea };
+        if (causa === "cancelada") {
+          // No es un fallo: queda como petición (con consentimiento), nunca como error.
+          r.registrar("peticion", { valor: ms, props: { ...props, cancelada: true } });
+        } else {
+          r.registrar("error_peticion", { objetivo: endpoint, valor: ms, props, error: { mensaje: `Sin respuesta de ${endpoint}${causa === "sin_red" ? " (sin conexión)" : ""}` } });
+        }
+      };
+      // Se espera un momento antes de decidir (ESPERA_SIN_RESPUESTA_MS): la mayoría de los «Sin
+      // respuesta» de Logs fallaban a los 20–300 ms de abrir la página y justo después había OTRA carga
+      // de la misma página (la precarga del navegador —Safari «mejor resultado», Chrome al escribir la
+      // dirección— que se tira, o una recarga). Si en ese rato la página se va, cuenta como cancelada;
+      // si desaparece, no se apunta nada. Un corte de red de verdad sigue saliendo, 2 s después.
+      // Cancelada ya (la canceló el código con AbortController, o la página se está yendo): sin esperar.
+      if (causaSinRespuesta(err, { saliendo, enLinea: undefined }) === "cancelada") apuntar();
+      else esperasSinRespuesta.push(setTimeout(() => decidirSinRespuesta && apuntar(), ESPERA_SIN_RESPUESTA_MS));
       throw err;
     }
   };
