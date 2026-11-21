@@ -1,3 +1,4 @@
+import { SIN_CONTENEDOR, irADireccionCanonicaEnElNavegador } from "./lib/direccion-canonica";
 import { ViteReactSSG } from "vite-react-ssg";
 import { routes } from "./App";
 import "./index.css";
@@ -18,7 +19,16 @@ if (typeof window !== "undefined") {
   instalarRecargaPorVersion();
 }
 
+// `/Carta`, `/carta//vinos`…: Vercel sirve otro HTML del que montaría el router
+// (errores de hidratación). Se va a la dirección canónica sin montar React
+// (ver lib/direccion-canonica). Lo de arriba no estorba: la página se va.
+const redirigiendo = irADireccionCanonicaEnElNavegador();
+
 // Entry de vite-react-ssg: monta/hidrata en cliente y prerenderiza en build.
 // El HelmetProvider lo aporta vite-react-ssg internamente (componente <Head />).
 // `customCreateRouter`: sin los cargadores estáticos de vite-react-ssg (ver lib/router-cliente).
-export const createRoot = ViteReactSSG({ routes, customCreateRouter: crearRouterCliente });
+export const createRoot = ViteReactSSG(
+  { routes, customCreateRouter: crearRouterCliente },
+  undefined,
+  redirigiendo ? { rootContainer: SIN_CONTENEDOR } : undefined,
+);
