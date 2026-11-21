@@ -5,6 +5,22 @@
  */
 import { test, expect, type Page } from "@playwright/test";
 
+/**
+ * Posición de scroll ya asentada: `mouse.wheel` vuelve antes de que el navegador aplique el
+ * desplazamiento, y leerla en ese momento daba a veces la de antes (el test fallaba con un «salto»
+ * de exactamente 120 px, lo que mueve la rueda, sin que la página se moviera al filtrar).
+ */
+async function scrollAsentado(page: Page): Promise<number> {
+  let anterior = Number.NaN;
+  for (let i = 0; i < 40; i++) {
+    const y = await page.evaluate(() => window.scrollY);
+    if (y === anterior) return y;
+    anterior = y;
+    await page.waitForTimeout(50);
+  }
+  return anterior;
+}
+
 async function preparar(page: Page, baseURL: string) {
   await page.context().addInitScript(() => {
     window.localStorage.setItem("cookieConsent", JSON.stringify({ maps: false, ts: new Date().toISOString() }));
@@ -25,13 +41,12 @@ for (const [nombre, ancho, alto] of [["móvil", 390, 844], ["escritorio", 1280, 
     await grupo.scrollIntoViewIfNeeded();
     await page.mouse.wheel(0, 120);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
-    const antes = await page.evaluate(() => window.scrollY);
+    const antes = await scrollAsentado(page);
     await grupo.getByRole("button", { name: "Vegetariano" }).click();
     await expect(page).toHaveURL(/dietas=vegetariano/);
     await grupo.getByRole("button", { name: "Celíaco" }).click();
     await expect(page).toHaveURL(/dietas=celiaquia%2Cvegetariano|dietas=vegetariano%2Cceliaquia|dietas=celiaquia,vegetariano|dietas=vegetariano,celiaquia/);
-    await page.waitForTimeout(300);
-    const despues = await page.evaluate(() => window.scrollY);
+    const despues = await scrollAsentado(page);
     expect(Math.abs(despues - antes), "la página no se ha movido").toBeLessThan(40);
     // Los filtros siguen a la vista (antes la página saltaba arriba del todo, al hero).
     await expect(grupo).toBeInViewport();
