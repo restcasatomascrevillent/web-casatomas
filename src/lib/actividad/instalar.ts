@@ -310,11 +310,13 @@ export function instalarSeguimiento(): Seguimiento | null {
   }, { capture: true, passive: true });
 
   // ─── Peticiones a Supabase ──────────────────────────────────────────────────
-  const temporizadores: ReturnType<typeof setTimeout>[] = [];
-  let activo = true;
+  // Peticiones sin respuesta a la espera de decidir (ver `fetchMedido`). Nombres propios: otras
+  // partes del rastreador tienen su propio «activo».
+  const esperasSinRespuesta: ReturnType<typeof setTimeout>[] = [];
+  let decidirSinRespuesta = true;
   deshacer.push(() => {
-    activo = false;
-    temporizadores.forEach(clearTimeout);
+    decidirSinRespuesta = false;
+    esperasSinRespuesta.forEach(clearTimeout);
   });
   const fetchAnterior = window.fetch;
   const fetchMedido: typeof fetch = async (entrada, init) => {
@@ -350,7 +352,7 @@ export function instalarSeguimiento(): Seguimiento | null {
       // si desaparece, no se apunta nada. Un corte de red de verdad sigue saliendo, 2 s después.
       // Cancelada ya (la canceló el código con AbortController, o la página se está yendo): sin esperar.
       if (causaSinRespuesta(err, { saliendo, enLinea: undefined }) === "cancelada") apuntar();
-      else temporizadores.push(setTimeout(() => activo && apuntar(), ESPERA_SIN_RESPUESTA_MS));
+      else esperasSinRespuesta.push(setTimeout(() => decidirSinRespuesta && apuntar(), ESPERA_SIN_RESPUESTA_MS));
       throw err;
     }
   };
