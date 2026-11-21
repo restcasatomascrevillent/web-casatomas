@@ -147,7 +147,7 @@ const manifest = {
   },
   "touza-coctel": {
     "width": 1600,
-    "height": 2398,
+    "height": 2400,
     "widths": [
       400,
       640,

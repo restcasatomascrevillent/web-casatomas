@@ -38,6 +38,16 @@ describe("restaurantSchema — image como ImageObject", () => {
   });
 });
 
+describe("restaurantSchema — Touza como subOrganization", () => {
+  it("enlaza Touza Cocktail Bar (BarOrPub) con el @id de la web de Touza y su dirección", () => {
+    const sub = restaurantSchema({}).subOrganization;
+    expect(sub["@type"]).toBe("BarOrPub");
+    expect(sub["@id"]).toBe("https://touza.restaurantecasatomascrevillente.es/#bar");
+    expect(sub.name).toBe("Touza Cocktail Bar");
+    expect(sub.address.streetAddress).toBe("Carrer Santa Maria de la Cabeza, 4");
+  });
+});
+
 describe("menuSchema — image de cada producto como ImageObject", () => {
   it("con imagen: ImageObject con caption \"nombre — categoría, negocio\"", () => {
     const schema = menuSchema(

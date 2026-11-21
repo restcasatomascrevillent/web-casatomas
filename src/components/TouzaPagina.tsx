@@ -3,17 +3,18 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ImagenResponsive from "@/components/ImagenResponsive";
 import { useTranslations } from "@/i18n/LanguageProvider";
-import { TOUZA_URL } from "@/lib/negocio";
+import { TOUZA_DESPUES_DE_CENAR_URL, TOUZA_URL } from "@/lib/negocio";
 import { PAGINAS_INFORMACION } from "@/lib/paginas-informacion";
 import { TOUZA } from "@/lib/touza-marca";
 import "./touza-pagina.css";
 
 /**
  * Página /touza: cabecera con la foto del local (la misma que abre la web de
- * Touza), entradilla sobre el negro de su marca y el texto con dos fotos más
- * de su barra. Fotos: portada de `TOUZA_URL` (touza-2, -5 y -10), generadas
- * con `scripts/imagenes/gen-responsive.cjs`. Los textos SEO (h1, entradilla,
- * párrafos) salen tal cual de `PAGINAS_INFORMACION`.
+ * Touza), entradilla sobre el negro de su marca y el texto con dos fotos más:
+ * un cóctel ante la «T» iluminada del local y las botellas de su barra. Fotos:
+ * portada de `TOUZA_URL` (touza-2 y -10) y `touza-coctel-t` (sin personas),
+ * generadas con `scripts/imagenes/gen-responsive.cjs`. Los textos SEO (h1,
+ * entradilla, párrafos) salen tal cual de `PAGINAS_INFORMACION`.
  *
  * Animaciones (`touza-pagina.css`): zoom lento en la foto de cabecera, fundido
  * del título y la entradilla, y las fotos de la barra aparecen al llegar con el
@@ -28,9 +29,9 @@ const ALT = {
     fr: "Intérieur du Touza Cocktail Bar à Crevillente : banquette moutarde, tables en marbre et lumière chaude",
   },
   coctel: {
-    es: "Bartender de Touza colando un cóctel sobre hielo en la barra",
-    en: "Touza bartender straining a cocktail over ice at the bar",
-    fr: "Barman du Touza filtrant un cocktail sur glace au comptoir",
+    es: "Cóctel en copa delante de la «T» iluminada de Touza Cocktail Bar",
+    en: "Cocktail in a coupe glass in front of the backlit “T” at Touza Cocktail Bar",
+    fr: "Cocktail en coupe devant le « T » rétroéclairé du Touza Cocktail Bar",
   },
   barra: {
     es: "Botellas de aperitivo y ron en la barra de Touza Cocktail Bar",
@@ -119,6 +120,17 @@ export default function TouzaPagina() {
           <div className="mt-8">
             <BotonTouza texto={t.espacios.visitTouza} />
           </div>
+          <p className="mt-5">
+            <a
+              href={TOUZA_DESPUES_DE_CENAR_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-6 items-center font-medium underline underline-offset-4"
+              style={{ color: TOUZA.accent }}
+            >
+              {t.espacios.touzaAfterDinner}
+            </a>
+          </p>
         </div>
       </section>
 

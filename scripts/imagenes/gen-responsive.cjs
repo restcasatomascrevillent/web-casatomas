@@ -19,7 +19,8 @@ const JOBS = [
   ['pulpo-plato', 'src/assets/pulpo-plato.jpg', [400, 500], 500],
   ['vinos-marques', 'src/assets/vinos-marqués.jpeg', [300], 300],
   ['lampara', 'src/assets/lampara.jpg', [480, 840, 1400], 840],
-  // Touza: fotos del local de su propia web (touza-2/5/10 a 1600 px), para /touza.
+  // Touza: fotos del local para /touza. Interior y barra, de su propia web (touza-2/10 a 1600 px);
+  // el cóctel ante la «T» es `touza-coctel-t` recortada a 2:3 y a 1600 px (sin personas).
   ['touza-interior', 'src/assets/touza/touza-interior.webp', [640, 1024, 1600], 1024],
   ['touza-coctel', 'src/assets/touza/touza-coctel.webp', [400, 640, 800], 640],
   ['touza-barra', 'src/assets/touza/touza-barra.webp', [400, 640, 800], 640],
