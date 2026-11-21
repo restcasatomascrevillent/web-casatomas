@@ -21,7 +21,7 @@ import {
 } from "@/lib/recarga-por-version";
 import { _reiniciarRegistro, capturarErroresTempranos, conectarEmisor, registrarActividad, type DatosActividad } from "@/lib/actividad/registro";
 import { causaSinRespuesta, silenciarPorPrueba } from "@/lib/actividad/clasificar";
-import { instalarSeguimiento, leerVersionPublicada } from "@/lib/actividad/instalar";
+import { ESPERA_SIN_RESPUESTA_MS, instalarSeguimiento, leerVersionPublicada } from "@/lib/actividad/instalar";
 
 const almacen = () => {
   const datos = new Map<string, string>();
@@ -296,10 +296,15 @@ describe("4 · peticiones sin respuesta", () => {
       expect(eventos().map((e) => [e.tipo, e.props?.causa])).toEqual([["peticion", "cancelada"]]);
     });
 
+    /** Los «Sin respuesta» se apuntan tras una espera (la página puede estar a punto de irse o descartarse). */
+    const esperarDecision = () => new Promise((r) => setTimeout(r, ESPERA_SIN_RESPUESTA_MS + 50));
+
     it("sin red: error con causa sin_red", async () => {
       vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
       respuesta = async () => { throw new TypeError("Failed to fetch"); };
       await expect(window.fetch(URL_REST)).rejects.toThrow();
+      expect(eventos()).toEqual([]); // aún no: se espera a ver si la página sigue
+      await esperarDecision();
       expect(eventos()).toEqual([
         expect.objectContaining({ tipo: "error_peticion", props: expect.objectContaining({ status: 0, causa: "sin_red", en_linea: false }), error: expect.objectContaining({ mensaje: "Sin respuesta de rest:platos (sin conexión)" }) }),
       ]);
@@ -308,7 +313,26 @@ describe("4 · peticiones sin respuesta", () => {
     it("con red y sin cancelar: error_red", async () => {
       respuesta = async () => { throw new TypeError("Failed to fetch"); };
       await expect(window.fetch(URL_REST)).rejects.toThrow();
+      await esperarDecision();
       expect(eventos()).toEqual([expect.objectContaining({ tipo: "error_peticion", props: expect.objectContaining({ causa: "error_red", en_linea: true }) })]);
+    });
+
+    it("la página se va en esos 2 s (otra carga, recarga, precarga que se cambia): cancelada, no error", async () => {
+      respuesta = async () => { throw new TypeError("Load failed"); };
+      await expect(window.fetch(URL_REST)).rejects.toThrow();
+      window.dispatchEvent(new Event("pagehide"));
+      await esperarDecision();
+      expect(eventos().map((e) => [e.tipo, e.props?.causa])).toEqual([["peticion", "cancelada"]]);
+    });
+
+    it("la página desaparece antes de decidir (precarga descartada): no se apunta nada", async () => {
+      respuesta = async () => { throw new TypeError("Failed to fetch"); };
+      await expect(window.fetch(URL_REST)).rejects.toThrow();
+      const rastreador = seguimiento!.rastreador;
+      seguimiento!.desinstalar();
+      await esperarDecision();
+      expect(rastreador.pendientes().filter((e) => e.tipo === "peticion" || e.tipo === "error_peticion")).toEqual([]);
+      seguimiento = instalarSeguimiento(); // para el afterEach
     });
   });
 });
