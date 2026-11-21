@@ -6,6 +6,7 @@ import { useTranslations } from "@/i18n/LanguageProvider";
 import { usePedido } from "@/hooks/usePedido";
 import { useChatbotVisible } from "@/hooks/useChatbotVisible";
 import { importarConRecarga } from "@/lib/recarga-por-version";
+import SugerenciaIdioma from "./SugerenciaIdioma";
 
 const PreviewPedido = lazy(importarConRecarga(() => import("./carta/PreviewPedido")));
 const AIChatbot = lazy(importarConRecarga(() => import("./AIChatbot")));
@@ -22,6 +23,9 @@ const OCULTAR_EN = ["/reserva/respuesta", "/newsletter/baja"];
 /**
  * Pila de botones flotantes, abajo a la derecha, en todo el sitio:
  *
+ * - «🌐 View in English» / «Voir en français» (`SugerenciaIdioma`), arriba de
+ *   la pila: ofrece la versión inglesa o francesa a quien tiene el navegador
+ *   en ese idioma. Nunca cambia de idioma solo.
  * - "Pregunta a Tomy": abre el chatbot sin ticket. Es la entrada al chatbot
  *   independiente del pedido (el botón del hero se quitó en 650ccd9 y el
  *   chatbot se quedó sin ningún acceso visible).
@@ -65,6 +69,7 @@ const FloatingActions = () => {
   return (
     <>
       <div className="fixed right-4 md:right-6 bottom-[calc(1.25rem+var(--mobile-cta-offset,0px)+var(--cookie-banner-offset,0px))] lg:bottom-[calc(1.5rem+var(--cookie-banner-offset,0px))] xl:bottom-6 z-40 flex flex-col items-end gap-3 pointer-events-none transition-[bottom] duration-300 [&>*]:pointer-events-auto">
+        <SugerenciaIdioma />
         {chatbotVisible && (
           <Button
             type="button"
