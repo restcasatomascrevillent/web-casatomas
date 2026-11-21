@@ -2,6 +2,29 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.14.0] - 2026-11-21
+
+Objetivo: Menos errores y web más fiable: traductor, cortes de red, direcciones mal escritas y aviso de versión en inglés/francés; menú del día en reservas y mejoras de Touza
+
+### Añadido
+- Seo: unir Casa Tomás con Touza en el JSON-LD y enlazar a «Copas después de cenar» ([66caf82](https://github.com/restcasatomascrevillent/web-casatomas/commit/66caf82eae89405b7583086ac436e63a5b08e410))
+- Carta: Mi mesa avisa arriba, a la vista, de que no es un pedido online (CAS-25) ([#93](https://github.com/restcasatomascrevillent/web-casatomas/pull/93))
+- Web: a quien tiene el navegador en inglés o francés se le ofrece la misma página en su idioma, sin cambiarla sola ([#98](https://github.com/restcasatomascrevillent/web-casatomas/pull/98))
+
+### Cambiado
+- Carta: conservar el ?t= de la foto para que una foto cambiada no salga vieja ([7aae863](https://github.com/restcasatomascrevillent/web-casatomas/commit/7aae863b828c1989ad4f0f92ae157c6a01dda16a))
+- Touza: la página Touza ya no enseña al camarero; en su lugar, un cóctel ante la «T» ([#84](https://github.com/restcasatomascrevillent/web-casatomas/pull/84))
+- Touza: el enlace «Copas después de cenar en Touza» mide 24 px de alto para pulsarlo en el móvil ([#85](https://github.com/restcasatomascrevillent/web-casatomas/pull/85))
+- Build: el build se para si un script nuestro acaba en la línea 1 del HTML (CAS-21, CAS-22, CAS-23, CAS-26, CAS-27, CAS-28) ([#92](https://github.com/restcasatomascrevillent/web-casatomas/pull/92))
+- Web: una imagen que no carga por un corte de la conexión se reintenta y ya no cuenta como fallo de la web (CAS-17) ([#91](https://github.com/restcasatomascrevillent/web-casatomas/pull/91))
+- Logs: las peticiones que corta una precarga o recarga del navegador ya no salen como «Sin respuesta» ([#95](https://github.com/restcasatomascrevillent/web-casatomas/pull/95))
+- Logs: los errores de hidratación provocados por el navegador (traductor o extensión) ya no cuentan como fallo de la web, y los nuestros dicen qué cambió (CAS-6, CAS-18, CAS-19, CAS-20) ([#90](https://github.com/restcasatomascrevillent/web-casatomas/pull/90))
+- Web: si la red se corta al cambiar de página, la página se carga sola en cuanto vuelve la red ([#96](https://github.com/restcasatomascrevillent/web-casatomas/pull/96))
+- Web: una dirección con mayúsculas o barras dobles (/Carta, /carta//vinos) va a la buena sin romper la carga ([#97](https://github.com/restcasatomascrevillent/web-casatomas/pull/97))
+
+### Otros
+- E2e: «filtrar la carta no mueve la página» ya no falla la mitad de las veces por leer el scroll antes de tiempo ([#94](https://github.com/restcasatomascrevillent/web-casatomas/pull/94))
+
 ## [1.13.2] - 2026-11-19
 
 Objetivo: La reserva no se rompe con la página traducida por el navegador (CAS-13)
