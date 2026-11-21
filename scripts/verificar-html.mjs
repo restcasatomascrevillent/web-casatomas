@@ -5,7 +5,8 @@
  * debe ser el del idioma de la ruta: `/en/*` y `en.html` -> en, `/fr/*` y
  * `fr.html` -> fr, el resto -> es. Además, accesibilidad de teclado: un solo
  * `<main>`, con `id="contenido"`, y el enlace «Saltar al contenido»
- * (`href="#contenido"`) como primer elemento enfocable del `<body>`.
+ * (`href="#contenido"`) como primer elemento enfocable del `<body>`. Y ningún
+ * script ejecutable en la línea 1 (ver `problemasDeScriptsEnLinea1`).
  *
  * Se invoca desde `ssgOptions.onFinished` en `vite.config.ts` (build normal y
  * build de los E2E) y lo cubre `src/__tests__/html-prerenderizado.test.ts`.
@@ -41,7 +42,28 @@ export function problemasDeHtml(html, rutaRelativa) {
     problemas.push(`${rutaRelativa}: lang="${lang ?? '(ninguno)'}" y se esperaba "${esperado}"`);
   }
   problemas.push(...problemasDeAccesibilidad(html, rutaRelativa));
+  problemas.push(...problemasDeScriptsEnLinea1(html, rutaRelativa));
   return problemas;
+}
+
+/**
+ * Ningún `<script>` ejecutable en la línea 1 del HTML (los JSON-LD no se
+ * ejecutan y sí pueden estar). Super Admin › Logs da por «Navegador o
+ * extensión» un error cuya pila está entera en la línea 1 de una página
+ * (admin-casatomas, logs-web/origen.ts, `pilaSoloDeLaPagina`): son los scripts
+ * que meten algunos navegadores (Brave en iPhone, CAS-21..28). Esa regla solo
+ * es cierta si nuestro propio código nunca está ahí; si algún cambio del
+ * prerenderizado lo moviera a la línea 1, el build se para aquí.
+ */
+export function problemasDeScriptsEnLinea1(html, rutaRelativa) {
+  const linea1 = html.split('\n', 1)[0];
+  const ejecutables = [...linea1.matchAll(/<script\b([^>]*)>/gi)].filter(([, attrs]) => {
+    const tipo = /\btype="([^"]*)"/i.exec(attrs)?.[1]?.toLowerCase();
+    return !tipo || tipo === 'module' || tipo === 'text/javascript' || tipo === 'application/javascript';
+  });
+  return ejecutables.length
+    ? [`${rutaRelativa}: ${ejecutables.length} <script> ejecutable(s) en la línea 1 (Logs daría sus errores por scripts del navegador)`]
+    : [];
 }
 
 /** Etiquetas que reciben foco con Tab por sí solas (o por `tabindex`). */
