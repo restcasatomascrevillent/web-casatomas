@@ -64,6 +64,10 @@ type ReservationFormProps = {
 type EleccionComida = "menu" | "carta";
 const OPCIONES_COMIDA: readonly EleccionComida[] = ["menu", "carta"];
 
+/** Por dónde quiere el cliente los avisos de su reserva (solo si el servidor ofrece WhatsApp). */
+type CanalAvisos = "email" | "whatsapp";
+const OPCIONES_AVISOS: readonly CanalAvisos[] = ["email", "whatsapp"];
+
 /**
  * Pinta la salida de un rechazo sustituyendo `{phone}` por el telefono
  * pulsable que ya usan el footer y la barra de CTA movil.
@@ -118,6 +122,13 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
   /** Martes a jueves en la comida hay que elegir: menú del día o carta (obligatorio). */
   const [eleccionComida, setEleccionComida] = useState<EleccionComida | null>(null);
+  /**
+   * Avisos por WhatsApp: `reservas-web` dice en la disponibilidad si están
+   * activos (`meta.avisos_whatsapp`). Solo entonces se enseña el selector y se
+   * manda `canal_avisos`; si no, todo va por email como siempre.
+   */
+  const [avisosWhatsAppDisponible, setAvisosWhatsAppDisponible] = useState(false);
+  const [canalAvisos, setCanalAvisos] = useState<CanalAvisos>("email");
   const [errorEleccionComida, setErrorEleccionComida] = useState(false);
   const primeraOpcionComidaRef = useRef<HTMLInputElement>(null);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
@@ -278,6 +289,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
 
       // Dia CERRADO: no es un fallo, es una respuesta valida que dice que ese
       // dia no se reserva. Hasta ahora los dos casos caian en el mismo toast.
+      setAvisosWhatsAppDisponible(resultado.meta.avisos_whatsapp === true);
+
       if (resultado.estado === "cerrado") {
         seguimientoOrigen.consulta(true);
         registrarActividad("reserva_disponibilidad", { accion: "cerrado", props: datosReservaLogs() });
@@ -360,6 +373,8 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
           // ellas); la newsletter es opcional y viaja tal cual.
           acepta_condiciones: data.acepta_condiciones,
           consentimiento_newsletter: data.consentimiento_newsletter,
+          // Avisos por WhatsApp: solo si el servidor los ofrece y el cliente los elige.
+          ...(avisosWhatsAppDisponible && canalAvisos === "whatsapp" ? { canal_avisos: "whatsapp" } : {}),
           // Cómo se hizo (opcional; la función lo valida y, si falla, lo ignora).
           origen: seguimientoOrigen.origen(),
         })
@@ -847,6 +862,45 @@ export const ReservationForm = ({ onSuccessClose, navigateOnClose = true, nivelP
                   </FormItem>
                 )}
               />
+
+              {avisosWhatsAppDisponible && (
+                <fieldset className="space-y-3" aria-describedby="canal-avisos-nota" data-testid="canal-avisos">
+                  <legend className="mb-3 font-medium text-foreground">{t.reservationForm.avisosLegend}</legend>
+                  <div className="grid grid-cols-2 gap-3">
+                    {OPCIONES_AVISOS.map((opcion) => {
+                      const elegida = canalAvisos === opcion;
+                      return (
+                        <label
+                          key={opcion}
+                          className={cn(
+                            "flex min-h-14 cursor-pointer items-center justify-center rounded-xl border-2 px-3 py-3 text-center font-semibold transition-colors",
+                            "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-offset-2",
+                            elegida ? "border-primary bg-primary text-white" : "border-border/60 bg-white text-foreground hover:border-primary/60",
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="canal_avisos"
+                            value={opcion}
+                            checked={elegida}
+                            onChange={() => {
+                              setCanalAvisos(opcion);
+                              tocarCampo("canal_avisos");
+                            }}
+                            className="sr-only"
+                          />
+                          {opcion === "whatsapp" ? t.reservationForm.avisosWhatsApp : t.reservationForm.avisosEmail}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {canalAvisos === "whatsapp" && (
+                    <p id="canal-avisos-nota" className="text-sm text-muted-foreground">
+                      {t.reservationForm.avisosWhatsAppNote}
+                    </p>
+                  )}
+                </fieldset>
+              )}
 
               {/*
                 Dos casillas SEPARADAS a propósito (RGPD/LSSI): aceptar las

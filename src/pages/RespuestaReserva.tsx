@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarDays, CheckCircle2, Clock, Loader2, Phone, Users, AlertTriangle, Info, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Loader2, Phone, Users, AlertTriangle, Info, XCircle, ClipboardCheck } from "lucide-react";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { LOGO_HEIGHT, LOGO_WIDTH, logoSmall } from "@/assets/logo";
@@ -12,6 +12,7 @@ import {
   leerToken,
   llamarEnlace,
   textosEstado,
+  textoEstadoReserva,
   textosSinConexion,
   type RespuestaEnlace,
   type Tono,
@@ -21,7 +22,9 @@ import { ID_CONTENIDO } from "@/components/SaltarAlContenido";
 
 /**
  * /reserva/respuesta?token=... — página de los botones "Aceptar" / "Rechazar"
- * de los correos de reserva (ver `src/lib/respuesta-reserva.ts`).
+ * de los correos de reserva (ver `src/lib/respuesta-reserva.ts`), y de
+ * «Gestionar mi reserva» del WhatsApp (tipo 'gestion': ver la reserva y
+ * cancelarla, con un «¿seguro?» antes).
  *
  * El SSG prerenderiza solo el cascarón ("Cargando…"): el token se lee en el
  * navegador (useEffect), nunca en el build, y la página es `noindex`.
@@ -262,7 +265,10 @@ function Contenido({
   const { respuesta, enviando } = fase;
   const textos = textosEstado(respuesta, nombreNegocio);
   const d = respuesta.detalles;
+  const gestion = respuesta.tipo === "gestion";
   const rechazar = respuesta.accion === "rechazar";
+  // «Gestionar mi reserva»: cancelar pide un segundo toque («¿seguro?»).
+  const [seguroDeCancelar, setSeguroDeCancelar] = useState(false);
 
   return (
     <>
@@ -273,11 +279,42 @@ function Contenido({
           <Dato icono={CalendarDays} etiqueta="Fecha" valor={formatearFecha(d.fecha)} />
           <Dato icono={Clock} etiqueta="Hora" valor={d.hora} />
           <Dato icono={Users} etiqueta="Comensales" valor={String(d.comensales)} />
+          {gestion ? <Dato icono={ClipboardCheck} etiqueta="Estado" valor={textoEstadoReserva(respuesta.estadoReserva)} /> : null}
           {/* Sin "Espacio": en Casa Tomás la sala es interna y la decide el equipo, aunque llegue en `d.espacio`. */}
         </dl>
       ) : null}
 
-      {respuesta.estado === "pendiente" && textos.boton ? (
+      {gestion && respuesta.estado === "pendiente" && textos.boton ? (
+        <div className="mt-6 flex flex-col gap-3">
+          {seguroDeCancelar ? (
+            <>
+              <p className="text-center font-medium text-foreground">¿Seguro que quieres cancelar la reserva?</p>
+              <Button
+                size="lg"
+                variant="destructive"
+                className="w-full min-h-12 text-base"
+                disabled={enviando}
+                onClick={onConfirmar}
+              >
+                {enviando ? <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" /> : null}
+                {enviando ? "Enviando…" : "Sí, cancelar la reserva"}
+              </Button>
+              <Button variant="ghost" className="w-full min-h-12 text-base" disabled={enviando} onClick={() => setSeguroDeCancelar(false)}>
+                No, mantenerla
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild size="lg" className="w-full min-h-12 text-base">
+                <Link to="/carta">Ver la carta</Link>
+              </Button>
+              <Button variant="outline" className="w-full min-h-12 text-base text-destructive" onClick={() => setSeguroDeCancelar(true)}>
+                {textos.boton}
+              </Button>
+            </>
+          )}
+        </div>
+      ) : respuesta.estado === "pendiente" && textos.boton ? (
         <div className="mt-6 flex flex-col gap-3">
           <Button
             size="lg"

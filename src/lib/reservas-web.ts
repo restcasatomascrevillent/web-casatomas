@@ -46,6 +46,12 @@ export type DisponibilidadMeta = {
   aforo_turno?: Partial<Record<"comida" | "cena", AforoTurno>>;
   total_periodos?: number;
   total_ocupacion?: number;
+  /**
+   * Avisos por WhatsApp (prueba de concepto, 21/11/2026): solo llega `true`
+   * si están activos en ese entorno (hoy, la demo). Entonces el formulario
+   * deja elegir email o WhatsApp y manda `canal_avisos` a `/crear`.
+   */
+  avisos_whatsapp?: boolean;
 };
 
 /** Una fila activa de `configuracion_turnos` para el día de la semana pedido. */
