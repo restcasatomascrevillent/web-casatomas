@@ -37,6 +37,13 @@ describe.each(Object.entries(packs))("Mi mesa — textos (%s)", (idioma, pack) =
     expect(t.preview.note.length).toBeGreaterThan(10);
   });
 
+  it("aviso visible arriba de Mi mesa: no es un pedido online, ayuda a elegir y a dividir; se pide en el restaurante (CAS-25)", () => {
+    expect(t.preview.avisoNoPedidoTitulo).toMatch(/online|en ligne/i);
+    expect(t.preview.avisoNoPedido).toContain(mesa);
+    expect(t.preview.avisoNoPedido).toMatch(/restaurant/i);
+    expect(t.preview.avisoNoPedido.length).toBeLessThan(120); // corto: se lee de un vistazo en el móvil
+  });
+
   it("tiene los textos del reparto, compartir, reservar y Tomy con sus marcadores", () => {
     expect(t.preview.perPerson).toContain("{amount}");
     expect(t.preview.bookCta).toContain("{n}");

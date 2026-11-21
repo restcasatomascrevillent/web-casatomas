@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { Bot, Receipt, Share2, UtensilsCrossed, X } from "lucide-react";
+import { Bot, Info, Receipt, Share2, UtensilsCrossed, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -100,7 +100,7 @@ const PreviewPedido = () => {
   const isMobile = useIsMobile();
   const mesa = useMiMesa();
   const chatbotVisible = useChatbotVisible();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const [pedido, setPedido] = useState<LineaPedido[]>([]);
   const [abierto, setAbierto] = useState(false);
@@ -374,6 +374,16 @@ const PreviewPedido = () => {
     if (!abierto) setConfirmarVaciar(false);
   }, [abierto]);
 
+  // Al abrir Mi mesa se cierran los avisos de «Añadido a Mi mesa»: en escritorio salen arriba a la
+  // derecha y tapaban la cabecera de la hoja, justo donde está el aviso de que no es un pedido online.
+  // Solo al abrir (no en cada render: `dismiss` cambia en cada uno), así un aviso posterior con la
+  // hoja abierta (p. ej. «No se pudo preparar la imagen») sí se ve.
+  const cerrarAvisos = useRef(dismiss);
+  cerrarAvisos.current = dismiss;
+  useEffect(() => {
+    if (abierto) cerrarAvisos.current();
+  }, [abierto]);
+
   const fecha = abierto
     ? new Date().toLocaleDateString(LOCALE_POR_IDIOMA[language], { day: "numeric", month: "long", year: "numeric" })
     : "";
@@ -410,6 +420,20 @@ const PreviewPedido = () => {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5">
+        {/* Siempre arriba, con platos o sin ellos (CAS-25, 20/11/2026): al pulsar «Añadir» en la
+            carta había clientes que creían haber hecho un pedido online. La nota del pie del
+            ticket (12 px, color suave) no bastaba. Fuera de `TicketMesa`: la imagen que se
+            comparte ya lleva su nota y no tiene por qué cambiar. */}
+        <div
+          role="note"
+          data-testid="aviso-no-pedido"
+          className="mb-4 flex items-start gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-left"
+        >
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
+          <p className="text-sm leading-snug text-ticket-ink text-pretty">
+            <strong className="font-semibold">{tp.avisoNoPedidoTitulo}.</strong> {tp.avisoNoPedido}
+          </p>
+        </div>
         {vacia ? (
           <div className="flex flex-col items-center py-12 text-center">
             <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent">
