@@ -148,6 +148,8 @@ export interface Entorno {
   instalarRastreador?: () => void;
   /** Milisegundos desde que se abrió la página (`performance.now()`). Sin él, nunca es la carga inicial. */
   msDesdeInicio?: () => number;
+  /** Avisa una vez cuando vuelve la red (evento `online`). Sin él, no se espera a la red. */
+  alVolverLaRed?: (fn: () => void) => void;
 }
 
 const entornoNavegador = (): Entorno => {
@@ -177,6 +179,7 @@ const entornoNavegador = (): Entorno => {
       void import("@/lib/actividad/instalar").then((m) => void m.instalarSeguimiento()).catch(() => undefined);
     },
     msDesdeInicio: () => (typeof performance !== "undefined" ? performance.now() : Number.POSITIVE_INFINITY),
+    alVolverLaRed: (fn) => window.addEventListener("online", fn, { once: true }),
   };
 };
 
@@ -342,6 +345,11 @@ function enCargaInicial(e: Entorno): boolean {
 function puedeReintentar(e: Entorno): boolean {
   const destino = e.destino();
   if (!falloDePagina && !destino && !enCargaInicial(e)) return false;
+  return marcarReintento(e, destino);
+}
+
+/** Una recarga de reintento por build y página (marca en `sessionStorage`); sin almacenamiento, ninguna. */
+function marcarReintento(e: Entorno, destino: string | null): boolean {
   if (!e.storage) return false;
   const marca = `${e.build}|${destino ?? e.ruta()}`;
   try {
@@ -376,6 +384,27 @@ async function decidir(e: Entorno): Promise<Decision> {
 }
 
 /**
+ * La carga falló sin conexión: al volver la red se recarga UNA vez (la misma regla que el reintento
+ * sin versión nueva: solo si falló una página, una navegación a medias o algo de la carga inicial, y
+ * una vez por build y página). La decisión se toma ahora (luego `falloDePagina` se olvida); la
+ * recarga, cuando vuelve la red. Si la página sigue sin poder cargar, se queda el aviso de siempre.
+ */
+let esperandoRed = false;
+function esperarRedYRecargar(e: Entorno): void {
+  if (esperandoRed || !e.alVolverLaRed) return;
+  if (!falloDePagina && !e.destino() && !enCargaInicial(e)) return;
+  const destino = e.destino();
+  esperandoRed = true;
+  e.alVolverLaRed(() => {
+    esperandoRed = false;
+    if (estado === "recargando" || !marcarReintento(e, destino)) return;
+    marcarRecargaEnCurso();
+    cambiarEstado("recargando");
+    e.irA(destino);
+  });
+}
+
+/**
  * Falló una carga por (posible) versión antigua: decide, una vez por página
  * aunque lleguen varios avisos del mismo fallo, si se recarga. Si se recarga
  * por una versión nueva, guarda el primer `aviso` para mandarlo al volver.
@@ -406,6 +435,10 @@ export function decidirTrasFallo(aviso: AvisoRecarga | null, entorno?: Entorno, 
         cambiarEstado("recargando");
         e.irA(e.destino());
       } else {
+        // Sin conexión: en cuanto vuelva la red, una recarga a lo que se pidió (21/11/2026: en
+        // producción, cortar la red al pulsar un enlace dejaba «No se pudo cargar esta página» para
+        // siempre, aunque la red volviera; el navegador no deja repetir el `import()` que falló).
+        if (d === "sin_conexion") esperarRedYRecargar(e);
         // La página no arrancó y no se recarga sola: que se vea y que llegue a Logs
         // (sin React no hay ni mensaje de la ruta ni rastreador).
         if (falloDePagina && e.arrancada?.() === false) {
@@ -534,6 +567,7 @@ export function instalarRecargaPorVersion(objetivo: Pick<Window, "addEventListen
 
 /** Solo para pruebas. */
 export function _reiniciarRecarga(): void {
+  esperandoRed = false;
   estado = "normal";
   enCurso = null;
   avisoOfrecido = null;

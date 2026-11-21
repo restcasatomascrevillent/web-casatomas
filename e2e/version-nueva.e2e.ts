@@ -250,3 +250,24 @@ test("sin versión nueva y el fallo sigue: un solo reintento; después avisa «N
   await expect(page.locator("#aviso-pagina-sin-cargar")).toHaveCount(0);
   expect(web.srv.documentos).toEqual(["/", "/carta/carnes", "/carta/carnes"]);
 });
+
+test("sin red al pulsar un enlace: no se queda en «No se pudo cargar»; al volver la red carga sola la página pedida (21/11/2026)", async ({ page, web, context }) => {
+  await page.goto(`${web.url}/`);
+  await esperarHidratacion(page);
+  await page.waitForTimeout(3_500);
+  // El móvil se queda sin cobertura justo al pulsar (en producción, la página se quedaba en el aviso
+  // aunque la red volviera, hasta tocar «Recargar» a mano).
+  await context.setOffline(true);
+  await enlace(page, "/carta/carnes").click();
+  await page.waitForTimeout(2_500);
+  expect(web.srv.documentos).toEqual(["/"]); // sin red no se recarga (sería la página de error del navegador)
+
+  // Vuelve la red: una recarga sola, directa a la página pedida, y funciona.
+  await context.setOffline(false);
+  await expect(page).toHaveURL(`${web.url}/carta/carnes`);
+  await expect(page.getByText("Carne E2E").first()).toBeVisible({ timeout: 15_000 });
+  await esperarHidratacion(page);
+  await expect(page.getByText("No se pudo cargar esta página.")).toHaveCount(0);
+  await page.waitForTimeout(3_500);
+  expect(web.srv.documentos).toEqual(["/", "/carta/carnes"]); // una sola recarga
+});

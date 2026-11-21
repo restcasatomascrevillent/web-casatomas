@@ -293,6 +293,51 @@ describe("la decisión", () => {
     expect(irA).not.toHaveBeenCalled();
   });
 
+  describe("sin red: al volver la red, una recarga a lo que se pidió (21/11/2026)", () => {
+    /** Entorno sin red que guarda quién espera a que vuelva. */
+    const sinRed = (o: Partial<Entorno> = {}) => {
+      let alVolver: (() => void) | null = null;
+      const r = entorno({ publicada: null, enLinea: () => false, alVolverLaRed: (fn) => { alVolver = fn; }, ...o });
+      return { ...r, volverLaRed: () => alVolver?.(), esperando: () => alVolver !== null };
+    };
+
+    it("una página que falló sin red: no recarga ahora, sí al volver la red (a la página pedida)", async () => {
+      const { e, irA, volverLaRed } = sinRed({ destino: () => "/carta/arroces" });
+      await expect(decidirTrasFallo(null, e, { pagina: true })).resolves.toBe("sin_conexion");
+      expect(irA).not.toHaveBeenCalled();
+      volverLaRed();
+      expect(irA).toHaveBeenCalledWith("/carta/arroces");
+      expect(leerEstadoRecarga()).toBe("recargando");
+    });
+
+    it("solo una vez por build y página: si tras recargar vuelve a fallar sin red, se queda el aviso", async () => {
+      const storage = almacen();
+      const primera = sinRed({ storage, destino: () => "/carta/arroces" });
+      await decidirTrasFallo(null, primera.e, { pagina: true });
+      primera.volverLaRed();
+      expect(primera.irA).toHaveBeenCalledTimes(1);
+      _reiniciarRecarga();
+      const segunda = sinRed({ storage, destino: () => "/carta/arroces" });
+      await decidirTrasFallo(null, segunda.e, { pagina: true });
+      segunda.volverLaRed();
+      expect(segunda.irA).not.toHaveBeenCalled();
+    });
+
+    it("una sección que falla con la página ya abierta (fuera de la carga inicial) no recarga al volver la red", async () => {
+      const { e, irA, esperando } = sinRed({ msDesdeInicio: () => MARGEN_CARGA_INICIAL_MS + 1 });
+      await decidirTrasFallo(null, e);
+      expect(esperando()).toBe(false);
+      expect(irA).not.toHaveBeenCalled();
+    });
+
+    it("varios fallos a la vez esperan una sola vez a la red", async () => {
+      let esperas = 0;
+      const { e } = sinRed({ destino: () => "/carta", alVolverLaRed: () => { esperas++; } });
+      await Promise.all([decidirTrasFallo(null, e, { pagina: true }), decidirTrasFallo(null, e, { pagina: true })]);
+      expect(esperas).toBe(1);
+    });
+  });
+
   it("sin saber qué build hay publicada (/version.json antiguo): una recarga como mucho por build de la pestaña", async () => {
     const storage = almacen();
     const primera = entorno({ storage, publicada: null });
