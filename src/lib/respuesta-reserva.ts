@@ -33,8 +33,9 @@ export type EstadoEnlace =
   | "fecha_pasada"
   | "error";
 
-export type TipoEnlace = "contraoferta" | "propuesta";
-export type AccionWeb = "aceptar" | "rechazar";
+/** 'gestion' = «Gestionar mi reserva» (botón del WhatsApp de reserva recibida): ver y cancelar. */
+export type TipoEnlace = "contraoferta" | "propuesta" | "gestion";
+export type AccionWeb = "aceptar" | "rechazar" | "cancelar";
 
 export interface NegocioEnlace {
   marca: string;
@@ -59,6 +60,8 @@ export interface RespuestaEnlace {
   accion: AccionWeb | null;
   negocio: NegocioEnlace | null;
   detalles: DetallesEnlace | null;
+  /** Solo en 'gestion': estado actual de la reserva ('pendiente', 'verificada', 'confirmada', 'cancelada'…). */
+  estadoReserva?: string | null;
 }
 
 const ESTADOS: readonly EstadoEnlace[] = [
@@ -92,8 +95,9 @@ export function normalizarRespuesta(x: unknown): RespuestaEnlace | null {
   return {
     ok: x.ok === true,
     estado: x.estado as EstadoEnlace,
-    tipo: x.tipo === "contraoferta" || x.tipo === "propuesta" ? x.tipo : null,
-    accion: x.accion === "aceptar" || x.accion === "rechazar" ? x.accion : null,
+    tipo: x.tipo === "contraoferta" || x.tipo === "propuesta" || x.tipo === "gestion" ? x.tipo : null,
+    accion: x.accion === "aceptar" || x.accion === "rechazar" || x.accion === "cancelar" ? x.accion : null,
+    ...(x.tipo === "gestion" ? { estadoReserva: typeof x.estadoReserva === "string" ? x.estadoReserva : null } : {}),
     negocio:
       n && typeof n.nombre === "string"
         ? {
@@ -194,8 +198,82 @@ export interface TextosEstado {
   conDetalles: boolean;
 }
 
+/** En qué punto está la reserva, dicho para el cliente («Gestionar mi reserva»). */
+export function textoEstadoReserva(estadoReserva: string | null | undefined): string {
+  switch (estadoReserva) {
+    case "pendiente":
+      return "Pendiente de revisar";
+    case "verificada":
+      return "Pendiente de que la confirmes";
+    case "confirmada":
+      return "Confirmada";
+    case "cancelada":
+      return "Cancelada";
+    default:
+      return "—";
+  }
+}
+
+/** «Gestionar mi reserva»: ver la reserva y cancelarla. */
+function textosGestion(r: Pick<RespuestaEnlace, "estado" | "detalles" | "estadoReserva">, negocio: string): TextosEstado {
+  const nombre = r.detalles?.nombre?.trim();
+  const saludo = nombre ? `Hola, ${nombre}. ` : "";
+  switch (r.estado) {
+    case "pendiente": {
+      const situacion =
+        r.estadoReserva === "confirmada"
+          ? "Tu reserva está confirmada. ¡Te esperamos!"
+          : r.estadoReserva === "verificada"
+            ? "Tu mesa está casi lista: confírmala desde el WhatsApp que te hemos enviado."
+            : "Hemos recibido tu solicitud: la revisaremos y te escribiremos por WhatsApp para que la confirmes.";
+      return {
+        titulo: "Tu reserva",
+        parrafos: [`${saludo}${situacion}`, "Si no puedes venir, cancélala aquí y dejaremos la mesa libre para otros clientes."],
+        tono: r.estadoReserva === "confirmada" ? "exito" : "neutro",
+        boton: "Cancelar mi reserva",
+        conDetalles: true,
+      };
+    }
+    case "hecho":
+      return {
+        titulo: "Reserva cancelada",
+        parrafos: ["Hemos cancelado tu reserva. Gracias por avisarnos.", `Esperamos verte en otra ocasión en ${negocio}.`],
+        tono: "neutro",
+        conDetalles: true,
+      };
+    case "ya_hecho":
+      return {
+        titulo: "Esta reserva está cancelada",
+        parrafos: ["No hace falta que hagas nada más. Si quieres reservar otro día, hazlo desde la web o llámanos."],
+        tono: "neutro",
+        conDetalles: true,
+      };
+    case "fecha_pasada":
+      return { titulo: "Esta reserva ya ha pasado", parrafos: ["El día de la reserva ya ha pasado."], tono: "neutro", conDetalles: false };
+    case "invalido":
+      return {
+        titulo: "Este enlace ya no es válido",
+        parrafos: ["Puede que la reserva ya no se pueda gestionar o que el enlace haya caducado."],
+        tono: "neutro",
+        conDetalles: false,
+      };
+    case "error":
+    default:
+      return {
+        titulo: "No hemos podido cancelar la reserva",
+        parrafos: ["Ha ocurrido un problema. Llámanos y lo resolvemos enseguida."],
+        tono: "aviso",
+        conDetalles: false,
+      };
+  }
+}
+
 /** Textos de cada estado. `negocio` = nombre ("Casa Tomás", "Touza"). */
-export function textosEstado(r: Pick<RespuestaEnlace, "estado" | "tipo" | "accion" | "detalles">, negocio: string): TextosEstado {
+export function textosEstado(
+  r: Pick<RespuestaEnlace, "estado" | "tipo" | "accion" | "detalles" | "estadoReserva">,
+  negocio: string,
+): TextosEstado {
+  if (r.tipo === "gestion") return textosGestion(r, negocio);
   const aceptar = r.accion !== "rechazar";
   const contraoferta = r.tipo === "contraoferta";
   const nombre = r.detalles?.nombre?.trim();
