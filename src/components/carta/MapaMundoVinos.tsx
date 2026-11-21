@@ -362,7 +362,9 @@ const MapaMundoVinos = ({ vinos, filtroActivo = false, claveFiltro = "" }: MapaM
       </p>
       <div className="relative">
         <div 
-          ref={mapContainer} 
+          ref={mapContainer}
+          // Mapbox llena este div a mano: no es «DOM ajeno» (ver lib/dom-ajeno).
+          data-dom-ajeno="permitido" 
           className="w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-lg shadow-xl border-2 border-border touch-pan-y max-w-full"
           style={{ maxWidth: '100%', overflow: 'hidden' }}
         />
