@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.15.0] - 2026-11-23
+
+Objetivo: Elegir email o WhatsApp para los avisos de la reserva (apagado en producción hasta activarlo)
+
+### Añadido
+- Reservas: elegir email o WhatsApp para los avisos y «Gestionar mi reserva» ([#100](https://github.com/restcasatomascrevillent/web-casatomas/pull/100))
+
 ## [1.14.0] - 2026-11-21
 
 Objetivo: Menos errores y web más fiable: traductor, cortes de red, direcciones mal escritas y aviso de versión en inglés/francés; menú del día en reservas y mejoras de Touza
