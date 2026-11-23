@@ -163,6 +163,26 @@ describe("textosEstado", () => {
   });
 });
 
+describe("«Gestionar mi reserva» (tipo gestion)", () => {
+  it("normalizarRespuesta acepta el tipo, la acción y el estado de la reserva", () => {
+    const r = normalizarRespuesta({ ...respuesta(), tipo: "gestion", accion: "cancelar", estadoReserva: "confirmada" });
+    expect(r).toMatchObject({ tipo: "gestion", accion: "cancelar", estadoReserva: "confirmada" });
+    // Los otros tipos no llevan estadoReserva (el contrato de siempre no cambia).
+    expect(normalizarRespuesta({ ...respuesta(), estadoReserva: "confirmada" })).not.toHaveProperty("estadoReserva");
+  });
+
+  it("textos: dónde está la reserva y el botón de cancelar solo mientras se puede", () => {
+    const base = { tipo: "gestion" as const, accion: "cancelar" as const, detalles: DETALLES };
+    const pendiente = textosEstado({ ...base, estado: "pendiente", estadoReserva: "pendiente" }, "Casa Tomás");
+    expect(pendiente).toMatchObject({ titulo: "Tu reserva", boton: "Cancelar mi reserva", conDetalles: true });
+    expect(pendiente.parrafos[0]).toContain("te escribiremos por WhatsApp");
+    expect(textosEstado({ ...base, estado: "pendiente", estadoReserva: "confirmada" }, "Casa Tomás").parrafos[0]).toContain("está confirmada");
+    expect(textosEstado({ ...base, estado: "hecho", estadoReserva: "cancelada" }, "Casa Tomás")).toMatchObject({ titulo: "Reserva cancelada" });
+    expect(textosEstado({ ...base, estado: "ya_hecho" }, "Casa Tomás").boton).toBeUndefined();
+    expect(textosEstado({ ...base, estado: "fecha_pasada" }, "Casa Tomás").titulo).toBe("Esta reserva ya ha pasado");
+  });
+});
+
 describe("<RespuestaReserva />", () => {
   const original = window.location;
   beforeEach(() => {
@@ -227,6 +247,31 @@ describe("<RespuestaReserva />", () => {
     expect(await screen.findByRole("dialog", { name: "¡Reserva confirmada!" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1][0]).toBe(ENLACE_EJECUTAR_URL);
+  });
+
+  it("gestionar: enseña el estado y «Ver la carta»; cancelar pide confirmación y solo entonces ejecuta", async () => {
+    const gestion = { tipo: "gestion" as const, accion: "cancelar" as const, estadoReserva: "confirmada" };
+    const fetchMock = conClic({ estado: "hecho", estadoReserva: "cancelada" }, gestion);
+
+    await pintar();
+    expect(await screen.findByRole("heading", { name: "Tu reserva" })).toBeInTheDocument();
+    expect(screen.getByText("Confirmada")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ver la carta" })).toHaveAttribute("href", "/carta");
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar mi reserva" }));
+    expect(screen.getByText("¿Seguro que quieres cancelar la reserva?")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // «No, mantenerla» vuelve atrás sin llamar a nada.
+    await userEvent.click(screen.getByRole("button", { name: "No, mantenerla" }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar mi reserva" }));
+    await userEvent.click(screen.getByRole("button", { name: "Sí, cancelar la reserva" }));
+    expect(await screen.findByRole("heading", { name: "Reserva cancelada" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toBe(ENLACE_EJECUTAR_URL);
+    expect(screen.queryByTestId("carta")).not.toBeInTheDocument();
   });
 
   it("confirmada con el clic: a la carta (replace) con el aviso; los datos van en el state, no en la URL", async () => {
