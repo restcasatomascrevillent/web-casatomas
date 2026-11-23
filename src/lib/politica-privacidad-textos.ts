@@ -21,6 +21,12 @@
  * anónimas (Vercel Web Analytics, sin cookies). Proveedores con su nombre y las
  * transferencias a EE. UU.
  *
+ * Revisión del 23/11/2026: avisos de la reserva por WhatsApp (el cliente lo
+ * elige al reservar; prueba de concepto en la demo). Se añade en «Datos»,
+ * «Comunicaciones relacionadas con la reserva» y Meta (WhatsApp Business) como
+ * proveedor. El texto es válido aunque WhatsApp aún no esté activo: dice «si lo
+ * elige al reservar».
+ *
  * Los párrafos admiten un marcado mínimo (`renderTextoRico` en la página):
  * `**negrita**`, `[texto](https://enlace)`, `{phone}` y `{email}`.
  */
@@ -112,7 +118,7 @@ const es: TextosPrivacidad = {
     intro:
       "Solo recogemos los datos necesarios para cada servicio que usa. Nuestros servicios no se dirigen a menores de 14 años.",
     items: [
-      "Reservas: nombre y apellidos, teléfono, email (opcional), fecha, hora y número de comensales, y las peticiones especiales que nos indique.",
+      "Reservas: nombre y apellidos, teléfono, email (opcional), fecha, hora y número de comensales, y las peticiones especiales que nos indique. Si elige recibir los avisos de la reserva por WhatsApp, usamos ese mismo teléfono para enviárselos y guardamos sus respuestas a los botones de los mensajes.",
       "Newsletter: su nombre y email, su consentimiento, la fecha en que lo dio y la fecha en que confirmó su email.",
       "Cheques regalo: nombre, email y teléfono (opcional) de quien compra; nombre de quien lo recibe y dedicatoria (opcionales); y, si pide factura, nombre o razón social, NIF y dirección. El pago lo procesa Stripe: no vemos ni guardamos los datos de su tarjeta.",
       "Asistente de la web (chat): los mensajes que escribe. No incluya en el chat datos de salud ni otros datos sensibles; para alergias, hable con el personal.",
@@ -134,7 +140,8 @@ const es: TextosPrivacidad = {
       {
         purpose: "Comunicaciones relacionadas con la reserva",
         basis: "Interés legítimo (Art. 6.1.f RGPD)",
-        description: "Confirmación, recordatorios o cancelaciones de su reserva por teléfono o email.",
+        description:
+          "Confirmación, recordatorios o cancelaciones de su reserva por teléfono, por email o, si lo elige al reservar, por WhatsApp, desde el número del restaurante. Puede pedirnos en cualquier momento que le avisemos por email en lugar de por WhatsApp.",
       },
       {
         purpose: "Seguridad y prevención de abusos",
@@ -350,6 +357,11 @@ const es: TextosPrivacidad = {
         href: "https://resend.com/legal/privacy-policy",
       },
       {
+        name: "Meta (WhatsApp Business):",
+        text: "Solo si elige recibir los avisos de la reserva por WhatsApp: envío de esos mensajes (con su nombre, su teléfono y los datos de la reserva) y recepción de sus respuestas. Meta Platforms Ireland (Unión Europea) y Meta Platforms, Inc. (Estados Unidos).",
+        href: "https://www.whatsapp.com/legal/privacy-policy-eea",
+      },
+      {
         name: "Stripe (pagos):",
         text: "Cobro de los cheques regalo con tarjeta. Stripe trata los datos de pago como responsable independiente.",
         href: "https://stripe.com/es/privacy",
@@ -388,7 +400,7 @@ const en: TextosPrivacidad = {
     intro:
       "We only collect the data needed for each service you use. Our services are not aimed at children under 14.",
     items: [
-      "Bookings: first name and surname, telephone, email (optional), date, time and number of guests, and any special requests you give us.",
+      "Bookings: first name and surname, telephone, email (optional), date, time and number of guests, and any special requests you give us. If you choose to receive your booking notices by WhatsApp, we use that same telephone number to send them and keep your replies to the buttons in the messages.",
       "Newsletter: your name and email, your consent, the date you gave it and the date you confirmed your email.",
       "Gift vouchers: name, email and telephone (optional) of the buyer; name of the recipient and dedication (optional); and, if you ask for an invoice, name or company name, tax ID and address. Payment is processed by Stripe: we never see or store your card details.",
       "Website assistant (chat): the messages you write. Please do not include health data or other sensitive data in the chat; for allergies, speak to our staff.",
@@ -410,7 +422,8 @@ const en: TextosPrivacidad = {
       {
         purpose: "Communications related to the booking",
         basis: "Legitimate interest (Art. 6.1.f GDPR)",
-        description: "Confirmation, reminders or cancellations of your booking by phone or email.",
+        description:
+          "Confirmation, reminders or cancellations of your booking by phone, by email or, if you choose it when booking, by WhatsApp, from the restaurant's number. You can ask us at any time to notify you by email instead of WhatsApp.",
       },
       {
         purpose: "Security and abuse prevention",
@@ -626,6 +639,11 @@ const en: TextosPrivacidad = {
         href: "https://resend.com/legal/privacy-policy",
       },
       {
+        name: "Meta (WhatsApp Business):",
+        text: "Only if you choose to receive your booking notices by WhatsApp: sending those messages (with your name, telephone number and booking details) and receiving your replies. Meta Platforms Ireland (European Union) and Meta Platforms, Inc. (United States).",
+        href: "https://www.whatsapp.com/legal/privacy-policy-eea",
+      },
+      {
         name: "Stripe (payments):",
         text: "Card payment for gift vouchers. Stripe processes payment data as an independent controller.",
         href: "https://stripe.com/es/privacy",
@@ -664,7 +682,7 @@ const fr: TextosPrivacidad = {
     intro:
       "Nous ne collectons que les données nécessaires à chaque service que vous utilisez. Nos services ne s'adressent pas aux mineurs de moins de 14 ans.",
     items: [
-      "Réservations : nom et prénom, téléphone, e-mail (facultatif), date, heure et nombre de convives, ainsi que les demandes particulières que vous nous indiquez.",
+      "Réservations : nom et prénom, téléphone, e-mail (facultatif), date, heure et nombre de convives, ainsi que les demandes particulières que vous nous indiquez. Si vous choisissez de recevoir les avis de votre réservation par WhatsApp, nous utilisons ce même numéro de téléphone pour vous les envoyer et conservons vos réponses aux boutons des messages.",
       "Newsletter : votre nom et votre e-mail, votre consentement, la date à laquelle vous l'avez donné et la date à laquelle vous avez confirmé votre e-mail.",
       "Chèques-cadeaux : nom, e-mail et téléphone (facultatif) de l'acheteur ; nom du bénéficiaire et dédicace (facultatifs) ; et, si vous demandez une facture, nom ou raison sociale, numéro fiscal et adresse. Le paiement est traité par Stripe : nous ne voyons ni ne conservons les données de votre carte.",
       "Assistant du site (chat) : les messages que vous écrivez. N'indiquez pas de données de santé ni d'autres données sensibles dans le chat ; pour les allergies, adressez-vous au personnel.",
@@ -686,7 +704,8 @@ const fr: TextosPrivacidad = {
       {
         purpose: "Communications liées à la réservation",
         basis: "Intérêt légitime (Art. 6.1.f RGPD)",
-        description: "Confirmation, rappels ou annulations de votre réservation par téléphone ou par e-mail.",
+        description:
+          "Confirmation, rappels ou annulations de votre réservation par téléphone, par e-mail ou, si vous le choisissez lors de la réservation, par WhatsApp, depuis le numéro du restaurant. Vous pouvez nous demander à tout moment de vous prévenir par e-mail plutôt que par WhatsApp.",
       },
       {
         purpose: "Sécurité et prévention des abus",
@@ -900,6 +919,11 @@ const fr: TextosPrivacidad = {
         name: "Resend (envoi d'e-mails) :",
         text: "Envoi des e-mails de réservation, des chèques-cadeaux et, si vous y êtes abonné, de la newsletter. États-Unis.",
         href: "https://resend.com/legal/privacy-policy",
+      },
+      {
+        name: "Meta (WhatsApp Business) :",
+        text: "Uniquement si vous choisissez de recevoir les avis de votre réservation par WhatsApp : envoi de ces messages (avec votre nom, votre numéro de téléphone et les données de la réservation) et réception de vos réponses. Meta Platforms Ireland (Union européenne) et Meta Platforms, Inc. (États-Unis).",
+        href: "https://www.whatsapp.com/legal/privacy-policy-eea",
       },
       {
         name: "Stripe (paiements) :",

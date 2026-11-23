@@ -657,6 +657,7 @@ export const translations = {
             "Cuando la hayamos revisado, te enviaremos un email con la propuesta de reserva. La reserva queda confirmada cuando pulsas en ese email el botón para confirmarla y lo confirmas en la página que se abre; después recibirás un email de confirmación.",
             "Si te proponemos una hora distinta de la que pediste, desde ese mismo email puedes aceptarla, y la reserva queda confirmada, o rechazarla, y la reserva queda cancelada.",
             "Si no te llega el correo, revisa la carpeta de spam o llámanos al {phone}.",
+            "Si al reservar eliges recibir los avisos por WhatsApp, te enviaremos la propuesta y la confirmación por WhatsApp, desde el número del restaurante, en lugar de por email: podrás confirmar o cancelar con los botones del propio mensaje.",
           ],
         },
         {
@@ -669,7 +670,7 @@ export const translations = {
         {
           title: "3. Cancelaciones y cambios",
           paragraphs: [
-            "Si no puedes venir o necesitas cambiar la fecha, la hora o el número de comensales, avísanos con la mayor antelación posible: desde el enlace del email de tu reserva o llamándonos al {phone}. Así podremos ofrecer la mesa a otras personas.",
+            "Si no puedes venir o necesitas cambiar la fecha, la hora o el número de comensales, avísanos con la mayor antelación posible: desde el enlace del email (o del WhatsApp) de tu reserva o llamándonos al {phone}. Así podremos ofrecer la mesa a otras personas.",
           ],
         },
         {
