@@ -6,7 +6,8 @@
  * `fr.html` -> fr, el resto -> es. Además, accesibilidad de teclado: un solo
  * `<main>`, con `id="contenido"`, y el enlace «Saltar al contenido»
  * (`href="#contenido"`) como primer elemento enfocable del `<body>`. Y ningún
- * script ejecutable en la línea 1 (ver `problemasDeScriptsEnLinea1`).
+ * script ejecutable en la línea 1 (ver `problemasDeScriptsEnLinea1`) ni de la
+ * línea 100 en adelante (ver `problemasDeScriptsFueraDelHtml`).
  *
  * Se invoca desde `ssgOptions.onFinished` en `vite.config.ts` (build normal y
  * build de los E2E) y lo cubre `src/__tests__/html-prerenderizado.test.ts`.
@@ -43,6 +44,7 @@ export function problemasDeHtml(html, rutaRelativa) {
   }
   problemas.push(...problemasDeAccesibilidad(html, rutaRelativa));
   problemas.push(...problemasDeScriptsEnLinea1(html, rutaRelativa));
+  problemas.push(...problemasDeScriptsFueraDelHtml(html, rutaRelativa));
   return problemas;
 }
 
@@ -63,6 +65,32 @@ export function problemasDeScriptsEnLinea1(html, rutaRelativa) {
   });
   return ejecutables.length
     ? [`${rutaRelativa}: ${ejecutables.length} <script> ejecutable(s) en la línea 1 (Logs daría sus errores por scripts del navegador)`]
+    : [];
+}
+
+/** Primera línea del HTML en la que Logs ya no espera código nuestro. */
+export const LINEA_FUERA_DEL_HTML = 100;
+
+/**
+ * Ningún `<script>` ejecutable que empiece o siga en la línea 100 o posterior
+ * (los JSON-LD no cuentan). Super Admin › Logs da por «Navegador o extensión»
+ * un error cuya pila está entera en líneas de la página de la 100 en adelante
+ * (admin-casatomas, logs-web/origen.ts, `pilaFueraDelHtml`): el HTML de la web
+ * no llega ahí (unas 25 líneas la página más larga el 24/11/2026), así que es
+ * un script que metió el navegador (Chrome en iPhone, CAS-33/34). Si una
+ * página creciera tanto que un script nuestro cayera en esas líneas, el build
+ * se para aquí: hay que quitar saltos de línea del HTML o subir el límite en
+ * los dos repos a la vez.
+ */
+export function problemasDeScriptsFueraDelHtml(html, rutaRelativa) {
+  const lineaDe = (indice) => html.slice(0, indice).split('\n').length;
+  const fuera = [...html.matchAll(/<script\b([^>]*)>[\s\S]*?<\/script>/gi)].filter((m) => {
+    const tipo = /\btype="([^"]*)"/i.exec(m[1])?.[1]?.toLowerCase();
+    const ejecutable = !tipo || tipo === 'module' || tipo === 'text/javascript' || tipo === 'application/javascript';
+    return ejecutable && lineaDe(m.index + m[0].length) >= LINEA_FUERA_DEL_HTML;
+  });
+  return fuera.length
+    ? [`${rutaRelativa}: ${fuera.length} <script> ejecutable(s) en la línea ${LINEA_FUERA_DEL_HTML} o posterior (Logs daría sus errores por scripts del navegador)`]
     : [];
 }
 
