@@ -646,6 +646,7 @@ export const translations: Translations = {
             "Après l'avoir examinée, nous vous enverrons un email avec la proposition de réservation. Votre réservation est confirmée lorsque vous cliquez sur le bouton de confirmation de cet email, puis confirmez sur la page qui s'ouvre ; vous recevrez ensuite un email de confirmation.",
             "Si nous vous proposons un horaire différent de celui que vous aviez demandé, vous pouvez l'accepter depuis ce même email, et votre réservation est confirmée, ou le refuser, et votre réservation est annulée.",
             "Si vous ne recevez pas l'email, vérifiez vos courriers indésirables ou appelez-nous au {phone}.",
+            "Si vous choisissez de recevoir les avis de votre réservation par WhatsApp, nous vous enverrons la proposition et la confirmation par WhatsApp, depuis le numéro du restaurant, au lieu de l'email : vous pourrez confirmer ou annuler avec les boutons du message.",
           ],
         },
         {
@@ -658,7 +659,7 @@ export const translations: Translations = {
         {
           title: "3. Annulations et modifications",
           paragraphs: [
-            "Si vous ne pouvez pas venir ou souhaitez changer la date, l'heure ou le nombre de convives, prévenez-nous le plus tôt possible : via le lien de l'email de votre réservation ou en nous appelant au {phone}. Nous pourrons ainsi proposer la table à d'autres personnes.",
+            "Si vous ne pouvez pas venir ou souhaitez changer la date, l'heure ou le nombre de convives, prévenez-nous le plus tôt possible : via le lien de l'email (ou du WhatsApp) de votre réservation ou en nous appelant au {phone}. Nous pourrons ainsi proposer la table à d'autres personnes.",
           ],
         },
         {

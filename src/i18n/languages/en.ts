@@ -646,6 +646,7 @@ export const translations: Translations = {
             "Once we've reviewed it, we'll send you an email with the booking proposal. Your booking is confirmed when you click the button to confirm it in that email and then confirm on the page that opens; you'll then receive a confirmation email.",
             "If we suggest a different time from the one you asked for, you can accept it from that same email, and your booking is confirmed, or decline it, and your booking is cancelled.",
             "If the email doesn't arrive, check your spam folder or call us on {phone}.",
+            "If you choose to receive your booking notices by WhatsApp when booking, we'll send you the proposal and the confirmation by WhatsApp, from the restaurant's number, instead of by email: you can confirm or cancel with the buttons in the message itself.",
           ],
         },
         {
@@ -658,7 +659,7 @@ export const translations: Translations = {
         {
           title: "3. Cancellations and changes",
           paragraphs: [
-            "If you can't come or need to change the date, time or number of guests, let us know as early as possible: through the link in your booking email or by calling us on {phone}. That way we can offer the table to someone else.",
+            "If you can't come or need to change the date, time or number of guests, let us know as early as possible: through the link in your booking email (or WhatsApp) or by calling us on {phone}. That way we can offer the table to someone else.",
           ],
         },
         {
