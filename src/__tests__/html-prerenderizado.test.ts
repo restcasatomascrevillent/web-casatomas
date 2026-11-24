@@ -15,6 +15,7 @@ import {
   problemasDeAccesibilidad,
   problemasDeHtml,
   problemasDeScriptsEnLinea1,
+  problemasDeScriptsFueraDelHtml,
   verificarHtmlPrerenderizado,
 } from "../../scripts/verificar-html.mjs";
 
@@ -155,5 +156,25 @@ describe("verificar-html: ningún script nuestro en la línea 1 (CAS-21..28)", (
   it("forma parte de las comprobaciones de cada página", () => {
     const html = `${cabecera}<script>window.a = 1</script></head><body><a href="#contenido">Saltar</a><main id="contenido"></main></body></html>`;
     expect(problemasDeHtml(html, "carta.html").some((p) => /línea 1/.test(p))).toBe(true);
+  });
+});
+
+describe("verificar-html: ningún script nuestro de la línea 100 en adelante (CAS-33, CAS-34)", () => {
+  // Logs da por «Navegador o extensión» un error con toda la pila en líneas de la página de la 100 en
+  // adelante (un script que metió Chrome en iPhone). Solo vale si nuestro código nunca está ahí.
+  const pagina = (saltos: number, script: string) =>
+    `<!DOCTYPE html><html lang="es"><head><title>Carta</title></head>\n<body>${"<p>x</p>\n".repeat(saltos)}${script}</body></html>`;
+  it("acepta los scripts del SSG al final de una página normal", () => {
+    expect(problemasDeScriptsFueraDelHtml(pagina(22, "<script>window.__VITE_REACT_SSG_HASH__ = 'x'</script>"), "carta.html")).toEqual([]);
+    expect(problemasDeScriptsFueraDelHtml(pagina(97, "<script>window.a = 1</script>"), "carta.html")).toEqual([]);
+  });
+  it("rechaza un script ejecutable que empieza o acaba en la línea 100 o posterior", () => {
+    expect(problemasDeScriptsFueraDelHtml(pagina(98, "<script>window.a = 1</script>"), "carta.html")[0]).toMatch(/línea 100/);
+    expect(problemasDeScriptsFueraDelHtml(pagina(97, "<script>window.a = 1\nwindow.b = 2</script>"), "carta.html")[0]).toMatch(/línea 100/);
+    expect(problemasDeScriptsFueraDelHtml(pagina(150, '<script type="module" src="/assets/app.js"></script>'), "carta.html")[0]).toMatch(/línea 100/);
+  });
+  it("no cuenta los JSON-LD y forma parte de las comprobaciones de cada página", () => {
+    expect(problemasDeScriptsFueraDelHtml(pagina(150, '<script type="application/ld+json">{"@type":"Menu"}</script>'), "carta.html")).toEqual([]);
+    expect(problemasDeHtml(pagina(150, "<script>window.a = 1</script>"), "carta.html").some((p) => /línea 100/.test(p))).toBe(true);
   });
 });
