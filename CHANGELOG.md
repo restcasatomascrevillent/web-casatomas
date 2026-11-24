@@ -2,6 +2,13 @@
 
 Publicaciones en producción de web-casatomas. Cada entrada la escribe `scripts/release.mjs` al preparar la release y recoge solo los cambios incluidos en ella. La numeración 1.x empieza en 1.0.0; las versiones 0.N anteriores están en las Releases de GitHub.
 
+## [1.15.1] - 2026-11-24
+
+Objetivo: Revisión diaria de Linear 24/11: garantía de build para CAS-33 y CAS-34
+
+### Cambiado
+- Build: el build se para si un script nuestro cae en la línea 100 o posterior del HTML (CAS-33, CAS-34) ([#103](https://github.com/restcasatomascrevillent/web-casatomas/pull/103))
+
 ## [1.15.0] - 2026-11-23
 
 Objetivo: Elegir email o WhatsApp para los avisos de la reserva (apagado en producción hasta activarlo)
