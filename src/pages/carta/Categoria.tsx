@@ -32,6 +32,8 @@ import { useToast } from "@/hooks/use-toast";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import type { Language } from "@/i18n/types";
 import { useMostrarCartaBebidas } from "@/hooks/useMostrarCartaBebidas";
+import { conFondoDePrueba, useFondoPrueba } from "@/lib/fondo-prueba";
+import SelectorFondoPrueba from "@/components/carta/SelectorFondoPrueba";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
@@ -165,6 +167,8 @@ const CartaCategoria = () => {
   const mostrarFotos = useMostrarFotosPlatos();
   const platoResaltado = usePlatoResaltado();
   const montadoSobreEl404 = useMontadoSobreEl404();
+  // Solo demo: `?fondo=a|b|c` cambia las fotos de los platos (ver `fondo-prueba.ts`).
+  const fondoPrueba = useFondoPrueba();
 
   if (!categoria && montadoSobreEl404) return <NotFound />;
   if (!categoria) {
@@ -190,7 +194,12 @@ const CartaCategoria = () => {
     );
   }
 
-  const platos = platosDeCategoria(categoria.clave);
+  const platos = conFondoDePrueba(
+    platosDeCategoria(categoria.clave),
+    fondoPrueba.variante,
+    fondoPrueba.ids,
+    typeof window === "undefined" ? "" : window.location.origin,
+  );
   const etiqueta = etiquetaCategoriaIdioma(categoria.clave, language);
   const rutaEs = rutaCategoria(categoria.slug); // sin prefijo: la pide `breadcrumbSchema`
   const url = `${SITE_URL}${rutaCategoria(categoria.slug, language)}`;
@@ -356,6 +365,9 @@ const CartaCategoria = () => {
           </ul>
         </nav>
       </CartaPageLayout>
+      {fondoPrueba.variante && (
+        <SelectorFondoPrueba variante={fondoPrueba.variante} onCambiar={fondoPrueba.cambiar} />
+      )}
     </>
   );
 };
