@@ -100,6 +100,16 @@ export function useFondoPrueba(): {
     setVariante(elegida);
   }, []);
 
+  // Con un fondo de prueba activo, la web apaga el brillo animado de las fotos (ver index.css).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (variante) document.documentElement.dataset.fondoPrueba = variante;
+    else delete document.documentElement.dataset.fondoPrueba;
+    return () => {
+      delete document.documentElement.dataset.fondoPrueba;
+    };
+  }, [variante]);
+
   useEffect(() => {
     if (!variante || ids) return;
     let vivo = true;
