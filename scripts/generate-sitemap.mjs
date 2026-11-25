@@ -34,6 +34,33 @@ const PRIORIDADES = { '/': '1.0', '/carta': '0.9' };
 const FRECUENCIAS = { '/': 'weekly' };
 const esCarta = (rutaEs) => rutaEs === '/carta' || rutaEs.startsWith('/carta/');
 
+/**
+ * Rastreadores de buscadores y asistentes con IA que se nombran en
+ * `robots.txt`. Nombres según la documentación de cada empresa (25/11/2026):
+ * OpenAI (GPTBot entrena, OAI-SearchBot indexa para ChatGPT search,
+ * ChatGPT-User abre una página cuando lo pide un usuario), Anthropic
+ * (ClaudeBot, Claude-SearchBot, Claude-User), Perplexity (PerplexityBot,
+ * Perplexity-User), Google (Google-Extended: Gemini), Apple (Applebot,
+ * Applebot-Extended), Microsoft (Bingbot: alimenta Copilot y las búsquedas de
+ * ChatGPT), DuckDuckGo (DuckAssistBot) y Mistral (MistralAI-User).
+ */
+export const BOTS_IA = [
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'Claude-SearchBot',
+  'Claude-User',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Google-Extended',
+  'Applebot',
+  'Applebot-Extended',
+  'Bingbot',
+  'DuckAssistBot',
+  'MistralAI-User',
+];
+
 const PREFIJOS_IDIOMA = { en: '/en', fr: '/fr' };
 const IDIOMAS = ['es', 'en', 'fr'];
 
@@ -195,14 +222,15 @@ export async function generarSitemapYRobots(dir, siteUrl, { ignorar = [] } = {})
     `</urlset>\n`;
 
   // Los bots de IA se permiten a propósito: queremos que nos citen cuando
-  // alguien pregunta "¿dónde comer arroz en Crevillente?".
+  // alguien pregunta "¿dónde comer arroz en Crevillente?". `User-agent: *`
+  // ya los deja pasar; nombrarlos uno a uno deja claro que es una decisión
+  // (y que nadie los bloquee sin querer al añadir una regla general).
   const robots =
     `User-agent: *\n` +
     `Allow: /\n\n` +
-    `# Buscadores con IA — permitidos a propósito\n` +
-    ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended']
-      .map((bot) => `User-agent: ${bot}\nAllow: /\n`)
-      .join('') +
+    `# Buscadores y asistentes con IA — permitidos a propósito\n` +
+    `# Resumen para asistentes de IA: ${base}/llms.txt (carta completa: ${base}/llms-full.txt)\n` +
+    BOTS_IA.map((bot) => `User-agent: ${bot}\nAllow: /\n`).join('') +
     `\nSitemap: ${base}/sitemap.xml\n`;
 
   await writeFile(join(dir, 'sitemap.xml'), sitemap, 'utf8');
