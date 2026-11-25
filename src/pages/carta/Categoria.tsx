@@ -288,6 +288,9 @@ const CartaCategoria = () => {
             (`seoPropio.h2`) y el texto descriptivo van al pie, dentro del
             desplegable cerrado `MasSobreSeccion` (09/11/2026, el dueño no
             quiere subtítulos visibles: «es una app de restaurante»). */}
+        {fondoPrueba.variante && (
+          <SelectorFondoPrueba variante={fondoPrueba.variante} onCambiar={fondoPrueba.cambiar} />
+        )}
         <MenuDietario compacto />
         {platosTraducidos.length > 0 ? (
           <>
@@ -365,9 +368,6 @@ const CartaCategoria = () => {
           </ul>
         </nav>
       </CartaPageLayout>
-      {fondoPrueba.variante && (
-        <SelectorFondoPrueba variante={fondoPrueba.variante} onCambiar={fondoPrueba.cambiar} />
-      )}
     </>
   );
 };
