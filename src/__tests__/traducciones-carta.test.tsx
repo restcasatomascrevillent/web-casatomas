@@ -23,6 +23,14 @@ describe("unidad del precio (F-14)", () => {
     expect(etiquetaUnidadPlato("Unidad", "es")).toBe("Unidad");
   });
 
+  it("traduce «Persona», también con las formas que se escriben a mano", () => {
+    expect(etiquetaUnidadPlato("Persona", "es")).toBe("Persona");
+    expect(etiquetaUnidadPlato("Persona", "en")).toBe("Person");
+    expect(etiquetaUnidadPlato("Persona", "fr")).toBe("Personne");
+    expect(etiquetaUnidadPlato("por persona", "en")).toBe("Person");
+    expect(etiquetaUnidadPlato("pax", "es")).toBe("Persona");
+  });
+
   it("deja kg, gramos y textos libres como están", () => {
     expect(etiquetaUnidadPlato("kg", "en")).toBe("kg");
     expect(etiquetaUnidadPlato("150 gr", "fr")).toBe("150 g");

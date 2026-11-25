@@ -17,14 +17,16 @@ export function normalizarUnidadPlato(valor?: string | null): string {
   if (gramos && Number(gramos[1].replace(",", ".")) > 0)
     return `${Number(gramos[1].replace(",", "."))} g`;
   if (/^racion(es)?$/.test(clave)) return "Ración";
+  if (/^((por|x|\/) ?)?persona(s)?$|^pax$|^p\/?p$/.test(clave)) return "Persona";
   return texto;
 }
-/** "Unidad" y "Ración" son palabras: en la carta pública se pintan en el
+/** "Unidad", "Ración" y "Persona" son palabras: en la carta pública se pintan en el
  * idioma de la página. "kg" y "150 g" se quedan como están; un texto libre
  * del panel que no se reconoce también (no se inventa traducción). */
 const UNIDADES_TRADUCIDAS: Record<string, Record<Language, string>> = {
   Unidad: { es: "Unidad", en: "Unit", fr: "Unité" },
   Ración: { es: "Ración", en: "Portion", fr: "Portion" },
+  Persona: { es: "Persona", en: "Person", fr: "Personne" },
 };
 export function etiquetaUnidadPlato(
   valor: string | null | undefined,
