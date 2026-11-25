@@ -11,6 +11,17 @@ import type { PlatoSSG } from "./carta-ssg-types";
 import { resolverImagen, type SeccionCarta } from "./carta-ssg";
 import { etiquetaAlergeno } from "./alergenos";
 import { construirRutaIdioma } from "@/i18n/routing";
+import {
+  NEGOCIO,
+  HORARIOS,
+  PERFILES,
+  ANO_FUNDACION,
+  OFERTA,
+  GOOGLE_PLACE_ID_POR_DEFECTO,
+  TOUZA_URL_POR_DEFECTO,
+  TOUZA_CALLE,
+  DESCRIPCION_RESTAURANTE,
+} from "./datos-negocio";
 import type { Language } from "@/i18n/types";
 
 export const SITE_URL = (
@@ -30,7 +41,7 @@ export const SITE_URL = (
  * puede sobreescribir por entorno sin tocar código.
  */
 export const GOOGLE_PLACE_ID =
-  (import.meta.env.VITE_GOOGLE_PLACE_ID as string | undefined) || "ChIJsS3PCWq5Yw0RL0gH6hiZvu0";
+  (import.meta.env.VITE_GOOGLE_PLACE_ID as string | undefined) || GOOGLE_PLACE_ID_POR_DEFECTO;
 
 /**
  * Forma canónica que documenta Google para enlazar a un sitio por Place ID.
@@ -48,7 +59,7 @@ export const GOOGLE_MAPS_URL = `https://www.google.com/maps/place/?q=place_id:${
  * `oficiososia` y no se enlaza.
  */
 export const TOUZA_URL = (
-  (import.meta.env.VITE_TOUZA_URL as string | undefined) || "https://touza.restaurantecasatomascrevillente.es"
+  (import.meta.env.VITE_TOUZA_URL as string | undefined) || TOUZA_URL_POR_DEFECTO
 ).replace(/\/+$/, "");
 
 /** Página de Touza «Copas después de cenar» (la crea el PR de Touza; /despues-de-cenar). */
@@ -56,18 +67,7 @@ export const TOUZA_DESPUES_DE_CENAR_URL = `${TOUZA_URL}/despues-de-cenar`;
 
 export const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
 
-export const NEGOCIO = {
-  nombre: "Casa Tomás Restaurante",
-  /** Nombre de la ficha de Google. Cubre además la grafía castellana del topónimo. */
-  nombreAlternativo: "Casa Tomás Restaurante Crevillente",
-  telefono: "+34966107887",
-  email: "casatomascrevillent@gmail.com",
-  calle: "Carrer Santa Maria de la Cabeza, 2",
-  localidad: "Crevillent",
-  region: "Alicante",
-  cp: "03330",
-  pais: "ES",
-} as const;
+export { NEGOCIO, HORARIOS, PERFILES, ANO_FUNDACION, DESCRIPCION_RESTAURANTE } from "./datos-negocio";
 
 /** Titular de la web (aviso legal, política de privacidad): vive en `titular.ts`, sin dependencias. */
 export { TITULAR } from "./titular";
@@ -79,30 +79,6 @@ export { TITULAR } from "./titular";
  * dejar que diverja.
  */
 export const OG_IMAGE_CAPTION = `Carne a la brasa servida con patatas asadas — ${NEGOCIO.nombre}, ${NEGOCIO.localidad}`;
-
-/**
- * Horario de apertura.
- *
- * ⚠️ En el repo conviven CUATRO fuentes que se contradicen:
- *   1. El JSON-LD anterior (`Index.tsx`): L-V 13:00-16:00 y S-D 13:00-16:30 —
- *      el único que decía que abre los LUNES.
- *   2. El horario visible de la web (`i18n/languages/{es,en,fr}.ts`), idéntico
- *      en los tres idiomas: lunes cerrado, Ma-J 09:30-23:00, V 09:00-23:30,
- *      S 10:30-23:30, D 11:00-16:00.
- *   3. `configuracion_turnos` en Supabase: comida 13:00-16:00 y cena 20:00-23:00
- *      — son los TURNOS DE RESERVA, no el horario de apertura del local.
- *   4. La ficha de Google (no accesible desde aquí).
- *
- * Se publica la fuente 2 porque es la única que el propio sitio muestra al
- * visitante: un JSON-LD que contradice la página que lo contiene es precisamente
- * lo que Google penaliza. PENDIENTE DE CONFIRMAR POR EL DUEÑO.
- */
-export const HORARIOS = [
-  { dias: ["Tuesday", "Wednesday", "Thursday"], abre: "09:30", cierra: "23:00" },
-  { dias: ["Friday"], abre: "09:00", cierra: "23:30" },
-  { dias: ["Saturday"], abre: "10:30", cierra: "23:30" },
-  { dias: ["Sunday"], abre: "11:00", cierra: "16:00" },
-] as const;
 
 const ID_RESTAURANTE = `${SITE_URL}/#restaurante`;
 
@@ -244,6 +220,8 @@ export function restaurantSchema(opts: {
     "@id": ID_RESTAURANTE,
     name: NEGOCIO.nombre,
     alternateName: NEGOCIO.nombreAlternativo,
+    description: DESCRIPCION_RESTAURANTE,
+    foundingDate: ANO_FUNDACION,
     image: {
       "@type": "ImageObject",
       url: `${SITE_URL}/og-image.jpg`,
@@ -288,20 +266,20 @@ export function restaurantSchema(opts: {
       url: `${TOUZA_URL}/`,
       address: {
         "@type": "PostalAddress",
-        streetAddress: "Carrer Santa Maria de la Cabeza, 4",
+        streetAddress: TOUZA_CALLE,
         addressLocality: NEGOCIO.localidad,
         addressRegion: NEGOCIO.region,
         postalCode: NEGOCIO.cp,
         addressCountry: NEGOCIO.pais,
       },
     },
-    sameAs: ["https://www.instagram.com/casatomascrevillent/", "https://www.facebook.com/barracasatomas/"],
-    servesCuisine: ["Gallega", "Marisco", "Mediterránea", "Arroces"],
-    priceRange: "€€", // nunca "$$": el replace() de helmet lo corrompe a "$"
+    sameAs: [PERFILES.instagram, PERFILES.facebook, PERFILES.tripadvisor],
+    servesCuisine: [...OFERTA.cocina],
+    priceRange: OFERTA.rangoPrecio,
     currenciesAccepted: "EUR",
-    paymentAccepted: "Efectivo, Tarjeta de crédito",
+    paymentAccepted: OFERTA.pago,
     acceptsReservations: `${SITE_URL}/reservas`,
-    petsAllowed: false,
+    petsAllowed: OFERTA.mascotas,
     ...(menu ? { hasMenu: menu } : {}),
     potentialAction: {
       "@type": "ReserveAction",
@@ -321,6 +299,24 @@ export function restaurantSchema(opts: {
     // Sin `aggregateRating`: el restaurante tiene 4,5★ con 1.657 opiniones en
     // Google, pero marcar en tu propio sitio valoraciones de otra plataforma
     // incumple las directrices de Google y puede acarrear penalización.
+  };
+}
+
+/**
+ * `WebSite` de la portada: es lo que Google lee para el nombre del sitio en los
+ * resultados («Casa Tomás» en vez del dominio) y une la web con la ficha del
+ * restaurante (`publisher` → mismo `@id` que `restaurantSchema`).
+ */
+export function websiteSchema(lang: Language = "es") {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#web`,
+    name: "Casa Tomás",
+    alternateName: [NEGOCIO.nombre, NEGOCIO.nombreAlternativo],
+    url: `${SITE_URL}/`,
+    inLanguage: lang,
+    publisher: { "@id": ID_RESTAURANTE },
   };
 }
 

@@ -5,6 +5,18 @@ import { rm } from "fs/promises";
 import { fetchCartaSSG, CARTA_SSG_VACIA, tiendaVisibleEnBuild } from "./scripts/carta-ssg.mjs";
 import { fetchNovedadesSSG, NOVEDADES_SSG_VACIA } from "./scripts/novedades-ssg.mjs";
 import { generarSitemapYRobots } from "./scripts/generate-sitemap.mjs";
+import { generarLlms } from "./scripts/generate-llms.mjs";
+import {
+  ANO_FUNDACION,
+  DESCRIPCION_RESTAURANTE,
+  GOOGLE_PLACE_ID_POR_DEFECTO,
+  HORARIOS,
+  NEGOCIO,
+  OFERTA,
+  PERFILES,
+  TOUZA_CALLE,
+  TOUZA_URL_POR_DEFECTO,
+} from "./src/lib/datos-negocio";
 import { htmlDePublic, verificarHtmlPrerenderizado } from "./scripts/verificar-html.mjs";
 import { anotarBuildEnVersionJson, calcularVersion } from "./scripts/version.mjs";
 
@@ -249,6 +261,25 @@ export default defineConfig(({ mode, command }) => {
         const rutas = await generarSitemapYRobots(dir, siteUrl, { ignorar: dePublic });
         // eslint-disable-next-line no-console
         console.log(`[sitemap] ${rutas.length} URLs indexables: ${rutas.join(", ")}`);
+        // `llms.txt` / `llms-full.txt` para los asistentes de IA, con la misma carta
+        // que se acaba de prerenderizar (ya en caché: no se vuelve a pedir a Supabase).
+        const carta = await (globalThis as Record<symbol, unknown>)[Symbol.for("casa-tomas.carta-ssg")];
+        const placeId = env.VITE_GOOGLE_PLACE_ID || GOOGLE_PLACE_ID_POR_DEFECTO;
+        await generarLlms(dir, {
+          siteUrl,
+          rutas,
+          negocio: NEGOCIO,
+          horarios: HORARIOS,
+          oferta: OFERTA,
+          perfiles: PERFILES,
+          anoFundacion: ANO_FUNDACION,
+          descripcion: DESCRIPCION_RESTAURANTE,
+          mapsUrl: `https://www.google.com/maps/place/?q=place_id:${placeId}`,
+          touza: { url: (env.VITE_TOUZA_URL || TOUZA_URL_POR_DEFECTO).replace(/\/+$/, ""), calle: TOUZA_CALLE },
+          carta: (carta ?? CARTA_SSG_VACIA) as Parameters<typeof generarLlms>[1]["carta"],
+        });
+        // eslint-disable-next-line no-console
+        console.log("[llms] llms.txt y llms-full.txt generados");
       },
     },
   };

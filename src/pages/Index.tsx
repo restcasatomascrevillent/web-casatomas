@@ -8,7 +8,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { SectionErrorBoundary } from "@/components/SectionErrorBoundary";
 import { useTranslations } from "@/i18n/LanguageProvider";
 import { agruparPorCategoria, cartaSSG, CATEGORIAS_PLATOS, platosParaJsonLd } from "@/lib/carta-ssg";
-import { menuSchema, restaurantSchema, SITE_URL } from "@/lib/negocio";
+import { menuSchema, restaurantSchema, SITE_URL, websiteSchema } from "@/lib/negocio";
 import { alternatesDePagina, construirRutaIdioma } from "@/i18n/routing";
 import { idleImport } from "@/lib/lazyIdle";
 import type { Language } from "@/i18n/types";
@@ -192,6 +192,7 @@ const Index = () => {
         languageAlternates={alternatesDePagina("/", SITE_URL)}
       />
       <JsonLd data={schema} />
+      <JsonLd data={websiteSchema(language)} />
       <Header />
       <div className="min-h-screen bg-background">
         <main id={ID_CONTENIDO} tabIndex={-1} className="outline-none">

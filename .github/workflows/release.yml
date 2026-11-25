@@ -137,3 +137,10 @@ jobs:
           gh release edit "v$VERSION" --notes-file notas.md
           echo "$LINEA" >> "$GITHUB_STEP_SUMMARY"
           exit $ESTADO
+
+      # Bing (y con él Copilot y las búsquedas de ChatGPT), Yandex, Seznam y Naver se enteran en
+      # minutos de la versión nueva en vez de esperar a volver a rastrear (scripts/indexnow.mjs).
+      # Solo si producción ya sirve esta versión; si IndexNow falla, no rompe la release.
+      - name: Avisar a los buscadores (IndexNow)
+        continue-on-error: true
+        run: node scripts/indexnow.mjs https://restaurantecasatomascrevillente.es
