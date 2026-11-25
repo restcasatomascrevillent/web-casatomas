@@ -609,6 +609,8 @@ section[id] { scroll-margin-top: calc(4rem + 1px); }
   animation: foto-sticker-brillo 9s ease-in-out 1.5s infinite;
   opacity: 0;
 }
+/* Fondos de prueba (solo demo, `?fondo=`): sin la franja de brillo sobre la foto. */
+html[data-fondo-prueba] .foto-sticker-brillo { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .foto-sticker { animation: none; will-change: auto; }
   .foto-sticker-brillo { display: none; }
